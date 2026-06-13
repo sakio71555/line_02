@@ -7,10 +7,12 @@ import type {
 
 export const DEFAULT_API_BASE_URL = "http://localhost:4000";
 export const DEFAULT_TENANT_ID = "tenant_amamihome";
+export const DEFAULT_STAFF_ID = "dev_staff";
 
 export interface AdminApiConfig {
   apiBaseUrl: string;
   tenantId: string;
+  staffId?: string;
 }
 
 export interface AdminCustomerListItem extends DomainCustomerListItem {
@@ -88,6 +90,19 @@ export interface AdminRagAnswerDraftResponse {
   provider?: "mock" | "openai";
 }
 
+export interface AdminStaffReplyResponse {
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  message: CustomerTimelineMessage;
+  customer: {
+    id: string;
+    tenant_id: string;
+    response_mode: ResponseMode;
+    last_staff_reply_at: string | null;
+  };
+}
+
 export interface AdminApiRequestOptions {
   config?: AdminApiConfig;
   fetchFn?: AdminApiFetch;
@@ -98,7 +113,8 @@ type AdminApiFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<R
 export function getAdminApiConfig(env: NodeJS.ProcessEnv = process.env): AdminApiConfig {
   return {
     apiBaseUrl: env.API_BASE_URL ?? DEFAULT_API_BASE_URL,
-    tenantId: env.TENANT_ID ?? DEFAULT_TENANT_ID
+    tenantId: env.TENANT_ID ?? DEFAULT_TENANT_ID,
+    staffId: env.STAFF_ID ?? DEFAULT_STAFF_ID
   };
 }
 
@@ -162,6 +178,10 @@ export function adminCustomerAiReplyDraftPath(customerId: string): string {
   return `/api/admin/customers/${encodeURIComponent(customerId)}/ai-reply-draft`;
 }
 
+export function adminCustomerReplyPath(customerId: string): string {
+  return `/api/admin/customers/${encodeURIComponent(customerId)}/reply`;
+}
+
 export async function getAdminCustomers(): Promise<AdminCustomersResponse> {
   return adminApiFetch<AdminCustomersResponse>("/api/admin/customers");
 }
@@ -221,5 +241,30 @@ export async function createRagAnswerDraft(
       })
     },
     options
+  );
+}
+
+export async function sendStaffReply(
+  input: { customerId: string; body: string },
+  options: AdminApiRequestOptions = {}
+): Promise<AdminStaffReplyResponse> {
+  const config = options.config ?? getAdminApiConfig();
+
+  return adminApiFetch<AdminStaffReplyResponse>(
+    adminCustomerReplyPath(input.customerId),
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-staff-id": config.staffId ?? DEFAULT_STAFF_ID
+      },
+      body: JSON.stringify({
+        body: input.body
+      })
+    },
+    {
+      ...options,
+      config
+    }
   );
 }

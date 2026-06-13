@@ -64,6 +64,8 @@ Loop 014の初期UIでは、Next.js Server Componentsでread-onlyの管理画面
 
 Loop 016の初期action UIでは、顧客詳細画面からAI要約、AI返信下書き、RAG回答案を開発確認できます。CORSを避けるため、画面はServer Action経由でadmin server側からHono APIへ `x-tenant-id` 付きでPOSTします。LINE送信UI、staff reply送信UI、本番認証、本番AI接続はまだ実装しません。
 
+Loop 017のstaff reply UIでは、顧客詳細画面から担当者返信文を入力し、Server Action経由で既存の `POST /api/admin/customers/:customerId/reply` を呼びます。開発中はAPI側の `MockLineClient` 境界を前提にし、本物のLINE access tokenや本番LINE送信はまだ接続しません。
+
 主な画面は以下です。
 
 - 顧客一覧

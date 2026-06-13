@@ -1,7 +1,8 @@
 import type {
   AdminAiReplyDraftResponse,
   AdminAiSummaryResponse,
-  AdminRagAnswerDraftResponse
+  AdminRagAnswerDraftResponse,
+  AdminStaffReplyResponse
 } from "../../../src/admin-api";
 
 export type ActionStatus = "idle" | "success" | "error";
@@ -21,5 +22,11 @@ export interface AiReplyDraftActionState {
 export interface RagAnswerDraftActionState {
   status: ActionStatus;
   result?: AdminRagAnswerDraftResponse;
+  error?: string;
+}
+
+export interface StaffReplyActionState {
+  status: ActionStatus;
+  result?: AdminStaffReplyResponse;
   error?: string;
 }

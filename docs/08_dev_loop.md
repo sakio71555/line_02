@@ -35,6 +35,8 @@ UI確認Loopでは、必要に応じて開発専用の `POST /api/dev/seed-demo-
 
 Action UI loopでは、まずAI要約、AI返信下書き、RAG回答案のような担当者確認用アクションだけを画面から試せるようにします。LINE送信やstaff reply送信UIは別Loopに分け、AI結果をお客様へ自動送信しない状態を維持します。
 
+Staff reply UI loopでは、既存のstaff reply APIと `MockLineClient` 境界を前提に、管理画面から担当者返信を開発確認できるところまでにします。本番LINE access token利用、本物のLINE push送信、認証/RLS連携は別Loopで扱います。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

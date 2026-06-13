@@ -59,6 +59,8 @@ BOT自動対応は `response_mode = bot_auto` の場合だけ許可します。
 
 Loop 006の初期APIでは、`POST /api/admin/customers/:customerId/reply` を用意します。開発用に `x-tenant-id` と任意の `x-staff-id` headerを使い、customerをtenant scopedに取得してから `LineClient.pushMessage` 境界に渡します。本番LINE APIは呼ばず、MockLineClient送信成功時だけ `role = staff` のtext messageを保存し、`last_staff_reply_at` と `response_mode = human_active` を更新します。
 
+Loop 017の初期UIでは、顧客詳細画面に担当者返信フォームを追加します。フォームはServer Action経由でadmin server側からstaff reply APIを呼び、`x-tenant-id` と開発用 `x-staff-id` を付けます。成功時は画面更新でtimelineにstaff messageが見えるようにし、本番LINE送信UIや本番LINE API接続は後続Loopに分けます。
+
 ## 未返信アラート
 
 未返信判定は、顧客の最新inbound messageと担当者の最新outbound messageを比較して行います。

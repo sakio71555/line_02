@@ -5,12 +5,14 @@ import { revalidatePath } from "next/cache";
 import {
   createAiReplyDraft,
   createAiSummary,
-  createRagAnswerDraft
+  createRagAnswerDraft,
+  sendStaffReply
 } from "../../../src/admin-api";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
-  RagAnswerDraftActionState
+  RagAnswerDraftActionState,
+  StaffReplyActionState
 } from "./action-types";
 
 export async function runAiSummaryAction(
@@ -69,6 +71,36 @@ export async function runRagAnswerDraftAction(
     return {
       status: "success",
       result: await createRagAnswerDraft({ query, limit: 5 })
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      error: formatActionError(error)
+    };
+  }
+}
+
+export async function runStaffReplyAction(
+  customerId: string,
+  _previousState: StaffReplyActionState,
+  formData: FormData
+): Promise<StaffReplyActionState> {
+  const body = readTrimmedFormValue(formData, "body");
+
+  if (!body) {
+    return {
+      status: "error",
+      error: "返信文を入力してください。"
+    };
+  }
+
+  try {
+    const result = await sendStaffReply({ customerId, body });
+    revalidatePath(`/customers/${customerId}`);
+
+    return {
+      status: "success",
+      result
     };
   } catch (error) {
     return {

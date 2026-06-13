@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import {
   runAiReplyDraftAction,
   runAiSummaryAction,
-  runRagAnswerDraftAction
+  runRagAnswerDraftAction,
+  runStaffReplyAction
 } from "./actions";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
-  RagAnswerDraftActionState
+  RagAnswerDraftActionState,
+  StaffReplyActionState
 } from "./action-types";
 
 const initialAiSummaryState: AiSummaryActionState = {
@@ -26,8 +28,16 @@ const initialRagAnswerDraftState: RagAnswerDraftActionState = {
   status: "idle"
 };
 
+const initialStaffReplyState: StaffReplyActionState = {
+  status: "idle"
+};
+
 export function CustomerActionPanel({ customerId }: { customerId: string }) {
   const router = useRouter();
+  const [staffReplyState, runStaffReply, staffReplyPending] = useActionState(
+    runStaffReplyAction.bind(null, customerId),
+    initialStaffReplyState
+  );
   const [summaryState, runSummary, summaryPending] = useActionState(
     runAiSummaryAction.bind(null, customerId),
     initialAiSummaryState
@@ -42,15 +52,42 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
   );
 
   useEffect(() => {
-    if (summaryState.status === "success") {
+    if (summaryState.status === "success" || staffReplyState.status === "success") {
       router.refresh();
     }
-  }, [router, summaryState.status, summaryState.result?.message.id]);
+  }, [
+    router,
+    staffReplyState.status,
+    staffReplyState.result?.message.id,
+    summaryState.status,
+    summaryState.result?.message.id
+  ]);
 
   return (
     <section className="section">
-      <h2>AI / RAG 開発アクション</h2>
+      <h2>管理アクション</h2>
       <div className="action-grid">
+        <article className="action-panel action-panel-wide">
+          <h3>担当者返信</h3>
+          <p className="meta">
+            現在は開発用Mock送信です。本番LINE送信は後続Loopで接続します。
+          </p>
+          <form action={runStaffReply} className="action-form">
+            <label htmlFor="staff-reply-body">返信文</label>
+            <textarea
+              id="staff-reply-body"
+              name="body"
+              placeholder="担当者として返信する内容を入力"
+              rows={4}
+              required
+            />
+            <button type="submit" disabled={staffReplyPending}>
+              {staffReplyPending ? "送信中..." : "担当者返信を送信"}
+            </button>
+          </form>
+          <StaffReplyResult state={staffReplyState} />
+        </article>
+
         <article className="action-panel">
           <h3>AI要約</h3>
           <form action={runSummary} className="action-form">
@@ -89,6 +126,35 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
         </article>
       </div>
     </section>
+  );
+}
+
+function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
+  if (state.status === "idle") {
+    return null;
+  }
+
+  if (state.status === "error") {
+    return <ActionError message={state.error} />;
+  }
+
+  const result = state.result;
+
+  if (!result) {
+    return null;
+  }
+
+  return (
+    <div className="action-result">
+      <p className="result-label">送信結果</p>
+      <p>担当者返信をMock送信し、timelineへ保存しました。</p>
+      <ResultField label="message_id" value={result.message.id} />
+      <ResultField label="response_mode" value={result.customer.response_mode} />
+      <ResultField
+        label="last_staff_reply_at"
+        value={result.customer.last_staff_reply_at ?? "-"}
+      />
+    </div>
   );
 }
 
