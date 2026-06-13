@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   adminApiFetch,
   adminCustomerDetailPath,
+  checkUnrepliedAlerts,
   createAiReplyDraft,
   createAiSummary,
   createAdminApiUrl,
@@ -11,6 +12,8 @@ import {
   DEFAULT_STAFF_ID,
   DEFAULT_TENANT_ID,
   getAdminApiConfig,
+  listAlerts,
+  notifyOpenAlerts,
   sendStaffReply
 } from "../../apps/admin/src/admin-api";
 
@@ -255,6 +258,86 @@ describe("admin read-only API client", () => {
         }
       )
     ).rejects.toThrow("Admin API request failed: 409 Conflict");
+  });
+
+  it("lists alerts with optional status filter and x-tenant-id", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await listAlerts("open", {
+      config: {
+        apiBaseUrl: "http://localhost:4000",
+        tenantId: "tenant_amamihome"
+      },
+      fetchFn: async (input, init) => {
+        calls.push({ input, init });
+        return jsonResponse({ ok: true, alerts: [] });
+      }
+    });
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(calls[0]?.input).toBe("http://localhost:4000/api/admin/alerts?status=open");
+    expect(calls[0]?.init?.method).toBeUndefined();
+    expect(calls[0]?.init?.cache).toBe("no-store");
+    expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
+  });
+
+  it("posts unreplied alert checks with x-tenant-id", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await checkUnrepliedAlerts({
+      config: {
+        apiBaseUrl: "http://localhost:4000",
+        tenantId: "tenant_amamihome"
+      },
+      fetchFn: async (input, init) => {
+        calls.push({ input, init });
+        return jsonResponse({ ok: true });
+      }
+    });
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(calls[0]?.input).toBe("http://localhost:4000/api/admin/alerts/check-unreplied");
+    expect(calls[0]?.init?.method).toBe("POST");
+    expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
+  });
+
+  it("posts open alert notifications with x-tenant-id", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await notifyOpenAlerts({
+      config: {
+        apiBaseUrl: "http://localhost:4000",
+        tenantId: "tenant_amamihome"
+      },
+      fetchFn: async (input, init) => {
+        calls.push({ input, init });
+        return jsonResponse({ ok: true });
+      }
+    });
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(calls[0]?.input).toBe("http://localhost:4000/api/admin/alerts/notify-open");
+    expect(calls[0]?.init?.method).toBe("POST");
+    expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
+  });
+
+  it("treats alert API errors as thrown errors", async () => {
+    await expect(
+      listAlerts("open", {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome"
+        },
+        fetchFn: async () =>
+          new Response(JSON.stringify({ ok: false, error: "unknown_tenant_id" }), {
+            status: 403,
+            statusText: "Forbidden"
+          })
+      })
+    ).rejects.toThrow("Admin API request failed: 403 Forbidden");
   });
 });
 

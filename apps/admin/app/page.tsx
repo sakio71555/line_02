@@ -30,6 +30,9 @@ export default function AdminHomePage() {
           <li>
             <Link href="/customers">顧客一覧</Link>
           </li>
+          <li>
+            <Link href="/alerts">アラート</Link>
+          </li>
         </ul>
       </section>
     </main>

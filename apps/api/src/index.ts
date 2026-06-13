@@ -21,6 +21,7 @@ import {
   notifyOpenAlerts,
   recordAiSummaryMessage,
   recordStaffTextReply,
+  type Alert,
   type AlertRepository,
   type Customer,
   type CustomerRepository,
@@ -490,6 +491,31 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     });
   });
 
+  api.get("/api/admin/alerts", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const status = c.req.query("status");
+    const alerts = await alertRepository.listByTenant(tenant.tenantId);
+    const filteredAlerts = status
+      ? alerts.filter((alert) => alert.status === status)
+      : alerts;
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      alerts: filteredAlerts.map(toAdminAlert)
+    });
+  });
+
   api.post("/api/admin/alerts/check-unreplied", async (c) => {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
@@ -870,6 +896,32 @@ function toAiRagAnswerSources(
     excerpt: result.excerpt,
     score: result.score
   }));
+}
+
+function toAdminAlert(alert: Alert): {
+  id: string;
+  tenant_id: string;
+  customer_id: string;
+  type: string;
+  severity: string;
+  status: string;
+  message: string;
+  notified_at: string | null;
+  resolved_at: string | null;
+  created_at: string;
+} {
+  return {
+    id: alert.id,
+    tenant_id: alert.tenant_id,
+    customer_id: alert.customer_id,
+    type: alert.alert_type,
+    severity: alert.severity,
+    status: alert.status,
+    message: alert.message,
+    notified_at: alert.notified_at,
+    resolved_at: alert.resolved_at,
+    created_at: alert.created_at
+  };
 }
 
 type ResolvedAdminTenant =

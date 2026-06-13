@@ -1,4 +1,7 @@
 import type {
+  AlertSeverity,
+  AlertStatus,
+  AlertType,
   CustomerDetail,
   CustomerListItem as DomainCustomerListItem,
   CustomerTimelineMessage,
@@ -103,6 +106,43 @@ export interface AdminStaffReplyResponse {
   };
 }
 
+export interface AdminAlertListItem {
+  id: string;
+  tenant_id: string;
+  customer_id: string;
+  type: AlertType;
+  severity: AlertSeverity;
+  status: AlertStatus;
+  message: string;
+  notified_at: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
+export interface AdminAlertsResponse {
+  ok: true;
+  tenant_id: string;
+  alerts: AdminAlertListItem[];
+}
+
+export interface AdminCheckUnrepliedAlertsResponse {
+  ok: true;
+  tenant_id: string;
+  checked_customers: number;
+  alerts_created: number;
+  alerts: AdminAlertListItem[];
+}
+
+export interface AdminNotifyOpenAlertsResponse {
+  ok: true;
+  tenant_id: string;
+  notified: number;
+  failed: number;
+  skipped: number;
+  notified_alerts: unknown[];
+  failed_alerts: unknown[];
+}
+
 export interface AdminApiRequestOptions {
   config?: AdminApiConfig;
   fetchFn?: AdminApiFetch;
@@ -196,6 +236,39 @@ export async function getAdminCustomerTimeline(
   customerId: string
 ): Promise<AdminCustomerTimelineResponse> {
   return adminApiFetch<AdminCustomerTimelineResponse>(adminCustomerTimelinePath(customerId));
+}
+
+export async function listAlerts(
+  status?: AlertStatus,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminAlertsResponse> {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+
+  return adminApiFetch<AdminAlertsResponse>(`/api/admin/alerts${query}`, {}, options);
+}
+
+export async function checkUnrepliedAlerts(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminCheckUnrepliedAlertsResponse> {
+  return adminApiFetch<AdminCheckUnrepliedAlertsResponse>(
+    "/api/admin/alerts/check-unreplied",
+    {
+      method: "POST"
+    },
+    options
+  );
+}
+
+export async function notifyOpenAlerts(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminNotifyOpenAlertsResponse> {
+  return adminApiFetch<AdminNotifyOpenAlertsResponse>(
+    "/api/admin/alerts/notify-open",
+    {
+      method: "POST"
+    },
+    options
+  );
 }
 
 export async function createAiSummary(
