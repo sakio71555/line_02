@@ -164,10 +164,11 @@ create index if not exists alerts_tenant_status_severity_idx
 create table if not exists knowledge_pages (
   id text primary key,
   tenant_id text not null references tenants(id) on delete cascade,
-  source_url text not null,
+  url text not null,
+  category text not null,
   source_type text not null check (source_type in ('official_site', 'faq', 'manual', 'campaign')),
   title text not null,
-  body text not null,
+  content text not null,
   checksum text,
   allowed_for_ai boolean not null default false,
   last_crawled_at timestamptz,

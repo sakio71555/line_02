@@ -77,7 +77,9 @@ export type AlertType =
   | "stale"
   | "emergency"
   | "ai_risk";
-export type KnowledgeSourceType = "official_site" | "faq" | "manual" | "campaign";
+export const knowledgeSourceTypes = ["official_site", "faq", "manual", "campaign"] as const;
+
+export type KnowledgeSourceType = (typeof knowledgeSourceTypes)[number];
 export type ReservationType =
   | "model_home"
   | "online_consultation"
@@ -155,10 +157,11 @@ export interface Alert extends TenantScoped, Timestamped {
 
 export interface KnowledgePage extends TenantScoped, Timestamped {
   id: string;
-  source_url: string;
+  url: string;
+  category: string;
   source_type: KnowledgeSourceType;
   title: string;
-  body: string;
+  content: string;
   checksum: string | null;
   allowed_for_ai: boolean;
   last_crawled_at: string | null;
@@ -203,6 +206,7 @@ export const messageRoleSchema = z.enum(messageRoles);
 export const messageTypeSchema = z.enum(messageTypes);
 export const alertStatusSchema = z.enum(alertStatuses);
 export const alertSeveritySchema = z.enum(alertSeverities);
+export const knowledgeSourceTypeSchema = z.enum(knowledgeSourceTypes);
 
 export const customerCreateSchema = z.object({
   tenant_id: tenantIdSchema,
@@ -248,6 +252,20 @@ export const alertCreateSchema = z.object({
 });
 
 export type AlertCreateInput = z.infer<typeof alertCreateSchema>;
+
+export const knowledgePageSchema = z.object({
+  tenant_id: tenantIdSchema,
+  url: z.string().min(1),
+  category: z.string().min(1),
+  source_type: knowledgeSourceTypeSchema,
+  title: z.string().min(1),
+  content: z.string().min(1),
+  checksum: z.string().min(1).nullable().optional(),
+  allowed_for_ai: z.boolean().default(false),
+  last_crawled_at: z.string().datetime().nullable().optional()
+});
+
+export type KnowledgePageInput = z.infer<typeof knowledgePageSchema>;
 
 export interface CustomerRepository {
   findByIdForTenant(tenantId: string, customerId: string): Promise<Customer | null>;
@@ -372,6 +390,15 @@ export interface RecordStaffTextReplyInput {
 export interface RecordStaffTextReplyResult {
   customer: Customer;
   message: Message;
+}
+
+export interface RecordAiSummaryMessageInput {
+  tenant_id: string;
+  customer: Customer;
+  body: string;
+  messageRepository: MessageRepository;
+  createId?: () => string;
+  now?: () => string;
 }
 
 export interface CheckUnrepliedAlertsInput {
@@ -560,6 +587,39 @@ export async function recordStaffTextReply(
     customer: savedCustomer,
     message: savedMessage
   };
+}
+
+export async function recordAiSummaryMessage(input: RecordAiSummaryMessageInput): Promise<Message> {
+  assertTenantScoped(input.customer, input.tenant_id);
+
+  const now = input.now?.() ?? new Date().toISOString();
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer.id,
+    line_message_id: null,
+    role: "ai",
+    message_type: "summary",
+    body: input.body,
+    ai_generated: true,
+    sent_to_line_at: null
+  });
+  const message: Message = {
+    id: input.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: parsed.consultation_id ?? null,
+    line_message_id: parsed.line_message_id ?? null,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: parsed.media_storage_path ?? null,
+    staff_user_id: parsed.staff_user_id ?? null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: parsed.sent_to_line_at ?? null,
+    created_at: now
+  };
+
+  return input.messageRepository.insert(message);
 }
 
 export async function checkUnrepliedAlerts(

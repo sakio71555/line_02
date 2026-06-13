@@ -1,6 +1,11 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
+import {
+  createMockAiProvider,
+  type AiConversationTurn,
+  type AiProvider
+} from "@amami-line-crm/ai";
 import { loadAppConfig } from "@amami-line-crm/config";
 import {
   checkUnrepliedAlerts,
@@ -13,9 +18,11 @@ import {
   logLineWebhookEvents,
   MockStaffNotifier,
   notifyOpenAlerts,
+  recordAiSummaryMessage,
   recordStaffTextReply,
   type AlertRepository,
   type CustomerRepository,
+  type Message,
   type MessageRepository,
   type StaffNotifier
 } from "@amami-line-crm/domain";
@@ -25,6 +32,11 @@ import {
   verifyLineSignature,
   type LineClient
 } from "@amami-line-crm/line";
+import {
+  InMemoryKnowledgePageRepository,
+  searchTenantKnowledge,
+  type KnowledgePageRepository
+} from "@amami-line-crm/rag";
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
@@ -32,6 +44,8 @@ export interface ApiAppDependencies {
   messageRepository?: MessageRepository;
   lineClient?: LineClient;
   staffNotifier?: StaffNotifier;
+  aiProvider?: AiProvider;
+  knowledgePageRepository?: KnowledgePageRepository;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
 }
@@ -41,6 +55,8 @@ const defaultCustomerRepository = new InMemoryCustomerRepository();
 const defaultMessageRepository = new InMemoryMessageRepository();
 const defaultLineClient = new MockLineClient();
 const defaultStaffNotifier = new MockStaffNotifier();
+const defaultAiProvider = createMockAiProvider();
+const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository([]);
 
 export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const api = new Hono();
@@ -49,6 +65,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const messageRepository = dependencies.messageRepository ?? defaultMessageRepository;
   const lineClient = dependencies.lineClient ?? defaultLineClient;
   const staffNotifier = dependencies.staffNotifier ?? defaultStaffNotifier;
+  const aiProvider = dependencies.aiProvider ?? defaultAiProvider;
+  const knowledgePageRepository =
+    dependencies.knowledgePageRepository ?? defaultKnowledgePageRepository;
   const now = dependencies.now;
   const env = dependencies.env ?? process.env;
 
@@ -150,6 +169,149 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: tenant.tenantId,
       customer_id: customerId,
       messages
+    });
+  });
+
+  api.post("/api/admin/customers/:customerId/ai-summary", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const customerId = c.req.param("customerId");
+    const customer = await customerRepository.findByIdForTenant(tenant.tenantId, customerId);
+
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const timelineMessages = await listCustomerTimeline({
+      tenant_id: tenant.tenantId,
+      customer_id: customerId,
+      messageRepository
+    });
+    const conversation = toAiConversationTurns(timelineMessages);
+
+    if (conversation.length === 0) {
+      return c.json({ ok: false, error: "cannot_summarize_empty_timeline" }, 409);
+    }
+
+    try {
+      const summary = await aiProvider.summarizeConversation({
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        conversation
+      });
+      const message = await recordAiSummaryMessage({
+        tenant_id: tenant.tenantId,
+        customer,
+        body: JSON.stringify(summary),
+        messageRepository,
+        ...(now ? { now } : {})
+      });
+
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        summary,
+        message: toAdminTimelineMessage(message)
+      });
+    } catch {
+      return c.json({ ok: false, error: "ai_summary_failed" }, 502);
+    }
+  });
+
+  api.post("/api/admin/customers/:customerId/ai-reply-draft", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const customerId = c.req.param("customerId");
+    const customer = await customerRepository.findByIdForTenant(tenant.tenantId, customerId);
+
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const timelineMessages = await listCustomerTimeline({
+      tenant_id: tenant.tenantId,
+      customer_id: customerId,
+      messageRepository
+    });
+    const conversation = toAiConversationTurns(timelineMessages);
+
+    if (conversation.length === 0) {
+      return c.json({ ok: false, error: "cannot_draft_reply_empty_timeline" }, 409);
+    }
+
+    try {
+      const draft = await aiProvider.draftReply({
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        conversation
+      });
+
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        draft_body: draft.draft_body,
+        next_questions: draft.next_questions,
+        risk_flags: draft.risk_flags,
+        recommended_response_mode: draft.recommended_response_mode,
+        should_handoff: draft.should_handoff,
+        provider: draft.provider
+      });
+    } catch {
+      return c.json({ ok: false, error: "ai_reply_draft_failed" }, 502);
+    }
+  });
+
+  api.post("/api/admin/rag/search", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const searchBody = await readRagSearchBody(c.req.raw);
+
+    if (!searchBody) {
+      return c.json({ ok: false, error: "invalid_rag_search_request" }, 400);
+    }
+
+    const results = await searchTenantKnowledge({
+      tenant_id: tenant.tenantId,
+      query: searchBody.query,
+      limit: searchBody.limit,
+      repository: knowledgePageRepository
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      query: searchBody.query,
+      limit: searchBody.limit,
+      results
     });
   });
 
@@ -360,6 +522,39 @@ async function readStaffReplyBody(request: Request): Promise<string | null> {
   return body.length > 0 ? body : null;
 }
 
+async function readRagSearchBody(
+  request: Request
+): Promise<{ query: string; limit: number } | null> {
+  let parsed: unknown;
+
+  try {
+    parsed = await request.json();
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed) || typeof parsed.query !== "string") {
+    return null;
+  }
+
+  const query = parsed.query.trim();
+
+  if (!query) {
+    return null;
+  }
+
+  const limit = parsed.limit ?? 5;
+
+  if (!Number.isInteger(limit) || typeof limit !== "number" || limit < 1 || limit > 10) {
+    return null;
+  }
+
+  return {
+    query,
+    limit
+  };
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -368,6 +563,47 @@ function readOptionalHeader(value: string | undefined): string | null {
   const trimmed = value?.trim();
 
   return trimmed ? trimmed : null;
+}
+
+function toAiConversationTurns(
+  messages: Array<{
+    role: AiConversationTurn["role"];
+    message_type: string;
+    body: string | null;
+    created_at: string;
+  }>
+): AiConversationTurn[] {
+  return messages
+    .filter((message) => message.message_type !== "summary" && message.body?.trim())
+    .map((message) => ({
+      role: message.role,
+      content: message.body?.trim() ?? "",
+      created_at: message.created_at
+    }));
+}
+
+function toAdminTimelineMessage(message: Message): {
+  id: string;
+  tenant_id: string;
+  customer_id: string;
+  role: string;
+  message_type: string;
+  body: string | null;
+  line_message_id: string | null;
+  source_url: string | null;
+  created_at: string;
+} {
+  return {
+    id: message.id,
+    tenant_id: message.tenant_id,
+    customer_id: message.customer_id,
+    role: message.role,
+    message_type: message.message_type,
+    body: message.body,
+    line_message_id: message.line_message_id,
+    source_url: message.media_storage_path,
+    created_at: message.created_at
+  };
 }
 
 type ResolvedAdminTenant =

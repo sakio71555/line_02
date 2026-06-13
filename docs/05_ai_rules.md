@@ -67,6 +67,27 @@ AIは以下を断定しません。
 
 AIが生成した返信下書きは、そのまま顧客へ送る前に担当者が確認します。
 
+Loop 009では、管理者が `POST /api/admin/customers/:customerId/ai-summary` を実行したときだけ、tenant scopedなtimelineから会話要約を生成します。Phase 0は `MockAiProvider` のみを使い、OpenAI APIは呼びません。生成結果は担当者支援用の `role = ai` / `message_type = summary` messageとして保存し、顧客へ自動送信しません。
+
+会話要約の出力は最低限以下を含みます。
+
+- `summary`
+- `next_actions`
+- `risk_flags`
+- `recommended_response_mode`
+
+Loop 010では、管理者が `POST /api/admin/customers/:customerId/ai-reply-draft` を実行したときだけ、tenant scopedなtimelineから担当者確認用の返信下書きを生成します。Phase 0は `MockAiProvider` のみを使い、OpenAI APIは呼びません。返信下書きはAPIレスポンスで返すだけで、messagesへ保存せず、LINE送信もしません。
+
+返信下書きの出力は最低限以下を含みます。
+
+- `draft_body`
+- `next_questions`
+- `risk_flags`
+- `recommended_response_mode`
+- `should_handoff`
+
+Loop 011では、管理者が `POST /api/admin/rag/search` を実行したときだけ、tenant scopedな `knowledge_pages` を簡易キーワード検索します。Phase 0はembedding生成、OpenAI API、公式HPクロール、AI回答生成を行わず、検索結果を返すだけにします。
+
 ## 人間対応中の挙動
 
 `response_mode` が以下の場合、AIは自動返信しません。

@@ -176,12 +176,13 @@ LINE、管理画面、AI下書きなどの時系列ログです。
 
 - `id`
 - `tenant_id`
-- `source_url`
+- `url`
+- `category`
 - `source_type`: `official_site` / `faq` / `manual` / `campaign`
 - `title`
-- `body`
+- `content`
 - `checksum`
-- `allowed_for_ai`
+- `allowed_for_ai`: RAG検索でAI利用できるページだけを返すためのflag
 - `last_crawled_at`
 - `created_at`
 - `updated_at`

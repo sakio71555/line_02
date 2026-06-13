@@ -55,6 +55,8 @@ RAG検索では、検索queryより先にtenant境界を確定します。
 
 AIにtenant選択を任せません。
 
+Loop 011の初期RAG検索API `POST /api/admin/rag/search` も同じ方針です。開発用には `x-tenant-id` headerでtenantを確定し、そのtenantの `knowledge_pages` だけをrepositoryから取得してから、`allowed_for_ai = true` と簡易キーワード検索を適用します。他tenantのknowledgeをスコアリング対象に含めません。
+
 ## 禁止事項
 
 - tenant未確定のままAIへ入力を渡す。

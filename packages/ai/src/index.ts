@@ -2,8 +2,17 @@ import OpenAI from "openai";
 
 import type { TenantScoped } from "@amami-line-crm/shared";
 
+export type AiConversationRole = "customer" | "bot" | "staff" | "system" | "ai";
+
+export type AiRecommendedResponseMode =
+  | "bot_auto"
+  | "human_required"
+  | "human_active"
+  | "emergency"
+  | "closed";
+
 export interface AiConversationTurn {
-  role: "customer" | "staff" | "system";
+  role: AiConversationRole;
   content: string;
   created_at: string;
 }
@@ -19,8 +28,9 @@ export interface AiSummaryInput extends AiRequestBase {
 
 export interface AiSummary {
   summary: string;
-  risks: string[];
-  next_action: string;
+  next_actions: string[];
+  risk_flags: string[];
+  recommended_response_mode: AiRecommendedResponseMode;
   provider: "mock" | "openai";
 }
 
@@ -30,9 +40,11 @@ export interface AiReplyDraftInput extends AiRequestBase {
 }
 
 export interface AiReplyDraft {
-  reply: string;
-  should_escalate_to_human: boolean;
-  reasons: string[];
+  draft_body: string;
+  next_questions: string[];
+  risk_flags: string[];
+  recommended_response_mode: AiRecommendedResponseMode;
+  should_handoff: boolean;
   provider: "mock" | "openai";
 }
 
@@ -46,9 +58,10 @@ export class MockAiProvider implements AiProvider {
     const latest = input.conversation.at(-1)?.content ?? "相談内容はまだありません";
 
     return {
-      summary: `顧客 ${input.customer_id} の最新相談: ${latest}`,
-      risks: [],
-      next_action: "担当者が内容を確認し、必要に応じて返信する",
+      summary: `顧客 ${input.customer_id} の会話要約: ${latest}`,
+      next_actions: ["担当者が内容を確認し、必要に応じて返信する"],
+      risk_flags: ["見積金額、土地価格、在庫、補助金、契約条件、保証判断は断定しない"],
+      recommended_response_mode: "human_required",
       provider: "mock"
     };
   }
@@ -57,11 +70,13 @@ export class MockAiProvider implements AiProvider {
     const latest = input.conversation.at(-1)?.content ?? "";
 
     return {
-      reply: latest
-        ? "お問い合わせありがとうございます。担当者が内容を確認してご案内します。"
+      draft_body: latest
+        ? "お問い合わせありがとうございます。ご相談内容を確認しました。担当者より詳しい内容を確認のうえご案内します。"
         : "お問い合わせありがとうございます。ご相談内容をお送りください。",
-      should_escalate_to_human: true,
-      reasons: ["Phase 0ではAI自動返信ではなく、担当者確認前提の返信下書きのみ生成します"],
+      next_questions: ["ご希望時期", "建築予定エリア", "見学または相談の希望日時"],
+      risk_flags: ["見積金額、土地価格、在庫、補助金、契約条件、保証判断は断定しない"],
+      recommended_response_mode: "human_required",
+      should_handoff: true,
       provider: "mock"
     };
   }

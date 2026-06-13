@@ -20,7 +20,7 @@ describe("Phase 0 scaffold", () => {
     });
 
     expect(draft.provider).toBe("mock");
-    expect(draft.should_escalate_to_human).toBe(true);
+    expect(draft.should_handoff).toBe(true);
   });
 
   it("filters RAG knowledge by tenant_id before returning pages", async () => {
@@ -28,17 +28,21 @@ describe("Phase 0 scaffold", () => {
       {
         id: "page_1",
         tenant_id: initialTenant.id,
-        source_url: "https://amamihome.net/example",
+        url: "https://amamihome.net/example",
         title: "モデルホーム",
-        body: "オンライン相談とモデルホーム予約",
+        category: "相談",
+        source_type: "official_site",
+        content: "オンライン相談とモデルホーム予約",
         allowed_for_ai: true
       },
       {
         id: "page_other",
         tenant_id: "tenant_other",
-        source_url: "https://example.com",
+        url: "https://example.com",
         title: "モデルホーム",
-        body: "他社の情報",
+        category: "相談",
+        source_type: "official_site",
+        content: "他社の情報",
         allowed_for_ai: true
       }
     ]);

@@ -7,6 +7,7 @@ import {
   alertStatusSchema,
   alertCreateSchema,
   customerCreateSchema,
+  knowledgePageSchema,
   messageCreateSchema,
   messageRoleSchema,
   messageTypeSchema,
@@ -83,6 +84,33 @@ describe("Loop 001 database migration", () => {
     expect(migrationSql).toMatch(/knowledge_pages_tenant_id_idx/i);
     expect(migrationSql).toMatch(/construction_cases_tenant_id_idx/i);
     expect(migrationSql).toMatch(/alerts_tenant_status_severity_idx/i);
+  });
+
+  it("keeps knowledge_pages aligned with tenant-scoped RAG search", () => {
+    const definition = tableDefinition("knowledge_pages");
+
+    expect(definition).toMatch(/\btenant_id\b/i);
+    expect(definition).toMatch(/\btitle\b/i);
+    expect(definition).toMatch(/\burl\b/i);
+    expect(definition).toMatch(/\bcategory\b/i);
+    expect(definition).toMatch(/\bsource_type\b/i);
+    expect(definition).toMatch(/\bcontent\b/i);
+    expect(definition).toMatch(/\ballowed_for_ai boolean not null default false\b/i);
+    expect(definition).toMatch(/\blast_crawled_at\b/i);
+    expect(migrationSql).toMatch(/knowledge_pages_tenant_id_idx/i);
+    expect(migrationSql).toMatch(/knowledge_pages_tenant_allowed_for_ai_idx/i);
+    expect(
+      knowledgePageSchema.parse({
+        tenant_id: "tenant_amamihome",
+        url: "https://amamihome.net/example",
+        category: "相談",
+        source_type: "official_site",
+        title: "オンライン相談",
+        content: "オンライン相談の説明です。",
+        allowed_for_ai: true,
+        last_crawled_at: "2026-06-13T00:00:00.000Z"
+      }).allowed_for_ai
+    ).toBe(true);
   });
 
   it("keeps the unreplied alert type aligned between migration and domain validation", () => {
