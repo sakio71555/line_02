@@ -159,7 +159,7 @@ LINE、管理画面、AI下書きなどの時系列ログです。
 - `tenant_id`
 - `customer_id`
 - `consultation_id`
-- `alert_type`: `unreplied` / `stale` / `emergency` / `ai_risk`
+- `alert_type`: `unreplied` / `unreplied_customer_message` / `stale` / `emergency` / `ai_risk`
 - `severity`: `low` / `medium` / `high` / `critical`
 - `status`: `open` / `notified` / `resolved` / `dismissed`
 - `message`

@@ -145,7 +145,9 @@ create table if not exists alerts (
   tenant_id text not null references tenants(id) on delete cascade,
   customer_id text not null references customers(id) on delete cascade,
   consultation_id text references consultations(id) on delete set null,
-  alert_type text not null check (alert_type in ('unreplied', 'stale', 'emergency', 'ai_risk')),
+  alert_type text not null check (
+    alert_type in ('unreplied', 'unreplied_customer_message', 'stale', 'emergency', 'ai_risk')
+  ),
   status text not null default 'open' check (status in ('open', 'notified', 'resolved', 'dismissed')),
   severity text not null default 'medium' check (severity in ('low', 'medium', 'high', 'critical')),
   message text not null,

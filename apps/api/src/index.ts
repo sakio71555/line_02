@@ -3,15 +3,21 @@ import { Hono } from "hono";
 
 import { loadAppConfig } from "@amami-line-crm/config";
 import {
+  checkUnrepliedAlerts,
   getCustomerDetail,
+  InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
   listCustomerListItems,
   listCustomerTimeline,
   logLineWebhookEvents,
+  MockStaffNotifier,
+  notifyOpenAlerts,
   recordStaffTextReply,
+  type AlertRepository,
   type CustomerRepository,
-  type MessageRepository
+  type MessageRepository,
+  type StaffNotifier
 } from "@amami-line-crm/domain";
 import {
   MockLineClient,
@@ -21,21 +27,29 @@ import {
 } from "@amami-line-crm/line";
 
 export interface ApiAppDependencies {
+  alertRepository?: AlertRepository;
   customerRepository?: CustomerRepository;
   messageRepository?: MessageRepository;
   lineClient?: LineClient;
+  staffNotifier?: StaffNotifier;
+  now?: () => string;
   env?: NodeJS.ProcessEnv;
 }
 
+const defaultAlertRepository = new InMemoryAlertRepository();
 const defaultCustomerRepository = new InMemoryCustomerRepository();
 const defaultMessageRepository = new InMemoryMessageRepository();
 const defaultLineClient = new MockLineClient();
+const defaultStaffNotifier = new MockStaffNotifier();
 
 export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const api = new Hono();
+  const alertRepository = dependencies.alertRepository ?? defaultAlertRepository;
   const customerRepository = dependencies.customerRepository ?? defaultCustomerRepository;
   const messageRepository = dependencies.messageRepository ?? defaultMessageRepository;
   const lineClient = dependencies.lineClient ?? defaultLineClient;
+  const staffNotifier = dependencies.staffNotifier ?? defaultStaffNotifier;
+  const now = dependencies.now;
   const env = dependencies.env ?? process.env;
 
   api.get("/health", (c) => {
@@ -206,6 +220,67 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         response_mode: result.customer.response_mode,
         last_staff_reply_at: result.customer.last_staff_reply_at
       }
+    });
+  });
+
+  api.post("/api/admin/alerts/check-unreplied", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const result = await checkUnrepliedAlerts({
+      tenant_id: tenant.tenantId,
+      customerRepository,
+      alertRepository,
+      ...(now ? { now } : {})
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      checked_customers: result.checked_customers,
+      alerts_created: result.alerts_created,
+      alerts: result.alerts.map((alert) => ({
+        ...alert,
+        type: alert.alert_type
+      }))
+    });
+  });
+
+  api.post("/api/admin/alerts/notify-open", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const result = await notifyOpenAlerts({
+      tenant_id: tenant.tenantId,
+      alertRepository,
+      staffNotifier,
+      ...(now ? { now } : {})
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      notified: result.notified,
+      failed: result.failed,
+      skipped: result.skipped,
+      notified_alerts: result.notified_alerts,
+      failed_alerts: result.failed_alerts
     });
   });
 

@@ -71,7 +71,12 @@ export type ConsultationCategory =
   | "document_request"
   | "other";
 export type ConsultationStatus = "open" | "waiting_customer" | "waiting_staff" | "closed";
-export type AlertType = "unreplied" | "stale" | "emergency" | "ai_risk";
+export type AlertType =
+  | "unreplied"
+  | "unreplied_customer_message"
+  | "stale"
+  | "emergency"
+  | "ai_risk";
 export type KnowledgeSourceType = "official_site" | "faq" | "manual" | "campaign";
 export type ReservationType =
   | "model_home"
@@ -235,7 +240,7 @@ export const alertCreateSchema = z.object({
   tenant_id: tenantIdSchema,
   customer_id: z.string().min(1),
   consultation_id: z.string().min(1).nullable().optional(),
-  alert_type: z.enum(["unreplied", "stale", "emergency", "ai_risk"]),
+  alert_type: z.enum(["unreplied", "unreplied_customer_message", "stale", "emergency", "ai_risk"]),
   status: alertStatusSchema.default("open"),
   severity: alertSeveritySchema.default("medium"),
   message: z.string().min(1),
@@ -255,6 +260,38 @@ export interface MessageRepository {
   insert(message: Message): Promise<Message>;
   findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>>;
   listByCustomer(tenantId: string, customerId: string): Promise<Message[]>;
+}
+
+export interface AlertRepository {
+  create(alert: Alert): Promise<Alert>;
+  listByTenant(tenantId: string): Promise<Alert[]>;
+  listOpenByTenant(tenantId: string): Promise<Alert[]>;
+  findActiveByCustomerAndType(
+    tenantId: string,
+    customerId: string,
+    alertType: AlertType
+  ): Promise<Alert | null>;
+  updateStatus(input: {
+    tenant_id: string;
+    alert_id: string;
+    status: AlertStatus;
+    notified_at?: string | null;
+    resolved_at?: string | null;
+    updated_at: string;
+  }): Promise<Alert | null>;
+}
+
+export interface StaffNotificationPayload extends TenantScoped {
+  alert_id: string;
+  customer_id: string;
+  alert_type: AlertType;
+  severity: AlertSeverity;
+  message: string;
+  admin_url: string;
+}
+
+export interface StaffNotifier {
+  notify(payload: StaffNotificationPayload): Promise<void>;
 }
 
 export interface CustomerListItem {
@@ -335,6 +372,37 @@ export interface RecordStaffTextReplyInput {
 export interface RecordStaffTextReplyResult {
   customer: Customer;
   message: Message;
+}
+
+export interface CheckUnrepliedAlertsInput {
+  tenant_id: string;
+  customerRepository: CustomerRepository;
+  alertRepository: AlertRepository;
+  createId?: () => string;
+  now?: () => string;
+}
+
+export interface CheckUnrepliedAlertsResult {
+  tenant_id: string;
+  checked_customers: number;
+  alerts_created: number;
+  alerts: Alert[];
+}
+
+export interface NotifyOpenAlertsInput {
+  tenant_id: string;
+  alertRepository: AlertRepository;
+  staffNotifier: StaffNotifier;
+  now?: () => string;
+}
+
+export interface NotifyOpenAlertsResult {
+  tenant_id: string;
+  notified: number;
+  failed: number;
+  skipped: number;
+  notified_alerts: Alert[];
+  failed_alerts: Alert[];
 }
 
 export interface MessageLoggingLineEvent {
@@ -491,6 +559,89 @@ export async function recordStaffTextReply(
   return {
     customer: savedCustomer,
     message: savedMessage
+  };
+}
+
+export async function checkUnrepliedAlerts(
+  input: CheckUnrepliedAlertsInput
+): Promise<CheckUnrepliedAlertsResult> {
+  const now = input.now?.() ?? new Date().toISOString();
+  const nowTime = Date.parse(now);
+  const customers = await input.customerRepository.listByTenant(input.tenant_id);
+  const alerts: Alert[] = [];
+
+  for (const customer of customers) {
+    if (!shouldCreateUnrepliedAlert(customer, nowTime)) {
+      continue;
+    }
+
+    const existingAlert = await input.alertRepository.findActiveByCustomerAndType(
+      input.tenant_id,
+      customer.id,
+      "unreplied_customer_message"
+    );
+
+    if (existingAlert) {
+      continue;
+    }
+
+    const alert = createUnrepliedAlert({
+      tenant_id: input.tenant_id,
+      customer,
+      now,
+      ...(input.createId ? { createId: input.createId } : {})
+    });
+
+    alerts.push(await input.alertRepository.create(alert));
+  }
+
+  return {
+    tenant_id: input.tenant_id,
+    checked_customers: customers.length,
+    alerts_created: alerts.length,
+    alerts
+  };
+}
+
+export async function notifyOpenAlerts(
+  input: NotifyOpenAlertsInput
+): Promise<NotifyOpenAlertsResult> {
+  const now = input.now?.() ?? new Date().toISOString();
+  const tenantAlerts = await input.alertRepository.listByTenant(input.tenant_id);
+  const openAlerts = await input.alertRepository.listOpenByTenant(input.tenant_id);
+  const notifiedAlerts: Alert[] = [];
+  const failedAlerts: Alert[] = [];
+
+  for (const alert of openAlerts) {
+    const payload = buildStaffNotificationPayload(alert);
+
+    try {
+      await input.staffNotifier.notify(payload);
+    } catch {
+      failedAlerts.push(alert);
+      continue;
+    }
+
+    const updated = await input.alertRepository.updateStatus({
+      tenant_id: input.tenant_id,
+      alert_id: alert.id,
+      status: "notified",
+      notified_at: now,
+      updated_at: now
+    });
+
+    if (updated) {
+      notifiedAlerts.push(updated);
+    }
+  }
+
+  return {
+    tenant_id: input.tenant_id,
+    notified: notifiedAlerts.length,
+    failed: failedAlerts.length,
+    skipped: tenantAlerts.length - openAlerts.length,
+    notified_alerts: notifiedAlerts,
+    failed_alerts: failedAlerts
   };
 }
 
@@ -660,6 +811,94 @@ function toCustomerTimelineMessage(message: Message): CustomerTimelineMessage {
   };
 }
 
+function shouldCreateUnrepliedAlert(customer: Customer, nowTime: number): boolean {
+  if (!isHumanResponseMode(customer.response_mode) || !customer.last_customer_message_at) {
+    return false;
+  }
+
+  if (
+    customer.last_staff_reply_at &&
+    customer.last_staff_reply_at >= customer.last_customer_message_at
+  ) {
+    return false;
+  }
+
+  const lastCustomerMessageTime = Date.parse(customer.last_customer_message_at);
+  const thresholdMinutes = customer.response_mode === "emergency" ? 0 : 30;
+
+  return nowTime - lastCustomerMessageTime >= thresholdMinutes * 60 * 1000;
+}
+
+function isHumanResponseMode(responseMode: ResponseMode): boolean {
+  return (
+    responseMode === "human_required" ||
+    responseMode === "human_active" ||
+    responseMode === "emergency"
+  );
+}
+
+function createUnrepliedAlert(input: {
+  tenant_id: string;
+  customer: Customer;
+  now: string;
+  createId?: () => string;
+}): Alert {
+  const severity: AlertSeverity =
+    input.customer.response_mode === "emergency" ? "critical" : "high";
+  const parsed = alertCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer.id,
+    consultation_id: null,
+    alert_type: "unreplied_customer_message",
+    status: "open",
+    severity,
+    message: `customer ${input.customer.id} is unreplied in response_mode ${input.customer.response_mode}.`,
+    triggered_at: input.now
+  });
+
+  return {
+    id: input.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: parsed.consultation_id ?? null,
+    alert_type: parsed.alert_type,
+    status: parsed.status,
+    severity: parsed.severity,
+    message: parsed.message,
+    triggered_at: parsed.triggered_at ?? input.now,
+    notified_at: null,
+    resolved_at: null,
+    created_at: input.now,
+    updated_at: input.now
+  };
+}
+
+export function buildStaffNotificationPayload(alert: Alert): StaffNotificationPayload {
+  return {
+    tenant_id: alert.tenant_id,
+    alert_id: alert.id,
+    customer_id: alert.customer_id,
+    alert_type: alert.alert_type,
+    severity: alert.severity,
+    message: [
+      `Alert type: ${alert.alert_type}`,
+      `Severity: ${alert.severity}`,
+      `Customer: ${alert.customer_id}`,
+      `Message: ${alert.message}`,
+      `Admin URL: https://admin.example.local/customers/${alert.customer_id}`
+    ].join("\n"),
+    admin_url: `https://admin.example.local/customers/${alert.customer_id}`
+  };
+}
+
+export class MockStaffNotifier implements StaffNotifier {
+  readonly notifications: StaffNotificationPayload[] = [];
+
+  async notify(payload: StaffNotificationPayload): Promise<void> {
+    this.notifications.push(payload);
+  }
+}
+
 function createMessageLoggingServiceOptions(
   input: Pick<LogLineWebhookEventsInput, "createId" | "now">
 ): { createId?: () => string; now?: () => string } {
@@ -754,6 +993,73 @@ export class InMemoryMessageRepository implements MessageRepository {
 
   clear(): void {
     this.messagesById.clear();
+  }
+}
+
+export class InMemoryAlertRepository implements AlertRepository {
+  private readonly alertsById = new Map<string, Alert>();
+
+  async create(alert: Alert): Promise<Alert> {
+    this.alertsById.set(alert.id, alert);
+    return alert;
+  }
+
+  async listByTenant(tenantId: string): Promise<Alert[]> {
+    return this.list().filter((alert) => alert.tenant_id === tenantId);
+  }
+
+  async listOpenByTenant(tenantId: string): Promise<Alert[]> {
+    return this.list().filter((alert) => alert.tenant_id === tenantId && alert.status === "open");
+  }
+
+  async findActiveByCustomerAndType(
+    tenantId: string,
+    customerId: string,
+    alertType: AlertType
+  ): Promise<Alert | null> {
+    return (
+      this.list().find(
+        (alert) =>
+          alert.tenant_id === tenantId &&
+          alert.customer_id === customerId &&
+          alert.alert_type === alertType &&
+          (alert.status === "open" || alert.status === "notified")
+      ) ?? null
+    );
+  }
+
+  async updateStatus(input: {
+    tenant_id: string;
+    alert_id: string;
+    status: AlertStatus;
+    notified_at?: string | null;
+    resolved_at?: string | null;
+    updated_at: string;
+  }): Promise<Alert | null> {
+    const existing = this.alertsById.get(input.alert_id);
+
+    if (!existing || existing.tenant_id !== input.tenant_id) {
+      return null;
+    }
+
+    const updated: Alert = {
+      ...existing,
+      status: input.status,
+      notified_at: input.notified_at ?? existing.notified_at,
+      resolved_at: input.resolved_at ?? existing.resolved_at,
+      updated_at: input.updated_at
+    };
+
+    this.alertsById.set(updated.id, updated);
+    return updated;
+  }
+
+  list(): Alert[] {
+    return Array.from(this.alertsById.values());
+  }
+
+  clear(): void {
+    this.alertsById.clear();
   }
 }
 

@@ -85,6 +85,18 @@ describe("Loop 001 database migration", () => {
     expect(migrationSql).toMatch(/alerts_tenant_status_severity_idx/i);
   });
 
+  it("keeps the unreplied alert type aligned between migration and domain validation", () => {
+    expect(tableDefinition("alerts")).toMatch(/\bunreplied_customer_message\b/);
+    expect(
+      alertCreateSchema.parse({
+        tenant_id: "tenant_amamihome",
+        customer_id: "customer_1",
+        alert_type: "unreplied_customer_message",
+        message: "未返信です"
+      }).alert_type
+    ).toBe("unreplied_customer_message");
+  });
+
   it("validates enum-like values through Zod schemas", () => {
     expect(tenantIdSchema.parse("tenant_amamihome")).toBe("tenant_amamihome");
     expect(tenantIdSchema.safeParse("amamihome").success).toBe(false);
