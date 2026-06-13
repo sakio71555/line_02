@@ -1,5 +1,9 @@
 # Loop 004: Admin Customer List
 
+## Status
+
+API portion implemented in Loop 004. Admin UI remains out of scope for this loop.
+
 ## Goal
 
 管理画面向けの顧客一覧APIと最小UIを作る。
@@ -22,6 +26,18 @@
 - APIはtenant_idで顧客を絞る。
 - 他tenantの顧客が一覧に出ないテストがある。
 - UIはmockまたはAPI境界を通して最小表示できる。
+- `GET /api/admin/customers` が存在する。
+- 開発用に `x-tenant-id` headerでtenantを判定する。
+- `x-tenant-id` なしは401、unknown tenantは403を返す。
+- LINE webhookでin-memory保存されたcustomerが一覧APIから見える。
+- 最新message情報を一覧view modelに含める。
+
+## Implementation Notes
+
+- Loop 004ではAPI部分だけ実装済み。
+- `CustomerRepository.listByTenant` と `MessageRepository.findLatestByCustomerIds` を追加。
+- `CustomerListItem` view modelを追加。
+- 本格認証、Next.js管理画面UI、Supabase接続は未実装。
 
 ## Files likely affected
 
@@ -33,9 +49,10 @@
 
 ## Test requirements
 
-- `pnpm lint`
-- `pnpm typecheck`
-- `pnpm test`
+- `npx pnpm@10.12.1 lint`
+- `npx pnpm@10.12.1 typecheck`
+- `npx pnpm@10.12.1 test`
+- `npx pnpm@10.12.1 test:integration`
 
 ## Codex Prompt
 

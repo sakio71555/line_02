@@ -5,6 +5,7 @@ import { loadAppConfig } from "@amami-line-crm/config";
 import {
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  listCustomerListItems,
   logLineWebhookEvents,
   type CustomerRepository,
   type MessageRepository
@@ -33,6 +34,31 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: config.tenant.id,
       tenant_slug: config.tenant.slug,
       external_connections: "disabled"
+    });
+  });
+
+  api.get("/api/admin/customers", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const customers = await listCustomerListItems({
+      tenant_id: tenant.tenantId,
+      customerRepository,
+      messageRepository
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customers
     });
   });
 
@@ -92,6 +118,28 @@ interface ResolvedWebhookTenant {
   tenantId: string;
   tenantSlug: string;
   channelSecret: string | undefined;
+}
+
+type ResolvedAdminTenant =
+  | { status: "ok"; tenantId: string }
+  | { status: "missing" }
+  | { status: "unknown" };
+
+function resolveAdminTenant(
+  tenantId: string | undefined,
+  env: NodeJS.ProcessEnv
+): ResolvedAdminTenant {
+  if (!tenantId) {
+    return { status: "missing" };
+  }
+
+  const config = loadAppConfig(env);
+
+  if (tenantId !== config.tenant.id) {
+    return { status: "unknown" };
+  }
+
+  return { status: "ok", tenantId };
 }
 
 function resolveWebhookTenant(

@@ -56,6 +56,8 @@ DBはSupabase PostgreSQLを想定します。主要テーブルには必ず `ten
 
 管理画面はNext.jsです。担当者はログイン後、自分が所属するtenantの顧客だけを閲覧します。
 
+Loop 004の初期APIでは、本格認証の前段として `GET /api/admin/customers` を用意します。開発用に `x-tenant-id` headerでtenantを判定し、known tenantのcustomerだけをin-memory repositoryから返します。Supabase Auth、JWT、RLS、Next.js管理画面UIは後続Loopで実装します。
+
 主な画面は以下です。
 
 - 顧客一覧

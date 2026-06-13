@@ -246,11 +246,27 @@ export type AlertCreateInput = z.infer<typeof alertCreateSchema>;
 
 export interface CustomerRepository {
   findByTenantAndLineUserId(tenantId: string, lineUserId: string): Promise<Customer | null>;
+  listByTenant(tenantId: string): Promise<Customer[]>;
   save(customer: Customer): Promise<Customer>;
 }
 
 export interface MessageRepository {
   insert(message: Message): Promise<Message>;
+  findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>>;
+}
+
+export interface CustomerListItem {
+  id: string;
+  tenant_id: string;
+  line_user_id: string | null;
+  display_name: string | null;
+  response_mode: ResponseMode;
+  status: CustomerStatus;
+  last_message_body: string | null;
+  last_message_at: string | null;
+  last_customer_message_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UpsertLineCustomerInput {
@@ -443,6 +459,45 @@ export async function logLineWebhookEvents(
   };
 }
 
+export async function listCustomerListItems(input: {
+  tenant_id: string;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+}): Promise<CustomerListItem[]> {
+  const customers = await input.customerRepository.listByTenant(input.tenant_id);
+  const latestMessages = await input.messageRepository.findLatestByCustomerIds(
+    input.tenant_id,
+    customers.map((customer) => customer.id)
+  );
+
+  return customers
+    .map((customer) => {
+      const latestMessage = latestMessages.get(customer.id);
+
+      return {
+        id: customer.id,
+        tenant_id: customer.tenant_id,
+        line_user_id: customer.line_user_id,
+        display_name: customer.display_name,
+        response_mode: customer.response_mode,
+        status: customer.status,
+        last_message_body: latestMessage?.body ?? null,
+        last_message_at: latestMessage?.created_at ?? customer.last_message_at,
+        last_customer_message_at: customer.last_customer_message_at,
+        created_at: customer.created_at,
+        updated_at: customer.updated_at
+      };
+    })
+    .sort(compareCustomerListItems);
+}
+
+function compareCustomerListItems(a: CustomerListItem, b: CustomerListItem): number {
+  const aTime = a.last_message_at ?? a.created_at;
+  const bTime = b.last_message_at ?? b.created_at;
+
+  return bTime.localeCompare(aTime);
+}
+
 function createMessageLoggingServiceOptions(
   input: Pick<LogLineWebhookEventsInput, "createId" | "now">
 ): { createId?: () => string; now?: () => string } {
@@ -470,6 +525,10 @@ export class InMemoryCustomerRepository implements CustomerRepository {
     );
   }
 
+  async listByTenant(tenantId: string): Promise<Customer[]> {
+    return this.list().filter((customer) => customer.tenant_id === tenantId);
+  }
+
   async save(customer: Customer): Promise<Customer> {
     this.customersById.set(customer.id, customer);
     return customer;
@@ -490,6 +549,25 @@ export class InMemoryMessageRepository implements MessageRepository {
   async insert(message: Message): Promise<Message> {
     this.messagesById.set(message.id, message);
     return message;
+  }
+
+  async findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>> {
+    const customerIdSet = new Set(customerIds);
+    const latestByCustomerId = new Map<string, Message>();
+
+    for (const message of this.list()) {
+      if (message.tenant_id !== tenantId || !customerIdSet.has(message.customer_id)) {
+        continue;
+      }
+
+      const current = latestByCustomerId.get(message.customer_id);
+
+      if (!current || message.created_at > current.created_at) {
+        latestByCustomerId.set(message.customer_id, message);
+      }
+    }
+
+    return latestByCustomerId;
   }
 
   list(): Message[] {
