@@ -48,9 +48,35 @@ export interface AiReplyDraft {
   provider: "mock" | "openai";
 }
 
+export interface AiRagAnswerSource {
+  id: string;
+  title: string;
+  url: string;
+  category: string;
+  source_type: string;
+  excerpt: string;
+  score: number;
+}
+
+export interface AiRagAnswerDraftInput extends TenantScoped {
+  query: string;
+  sources: AiRagAnswerSource[];
+}
+
+export interface AiRagAnswerDraft {
+  can_answer: boolean;
+  answer_body: string;
+  sources: AiRagAnswerSource[];
+  risk_flags: string[];
+  handoff_required: boolean;
+  recommended_response_mode: AiRecommendedResponseMode;
+  provider: "mock" | "openai";
+}
+
 export interface AiProvider {
   summarizeConversation(input: AiSummaryInput): Promise<AiSummary>;
   draftReply(input: AiReplyDraftInput): Promise<AiReplyDraft>;
+  draftRagAnswer(input: AiRagAnswerDraftInput): Promise<AiRagAnswerDraft>;
 }
 
 export class MockAiProvider implements AiProvider {
@@ -77,6 +103,23 @@ export class MockAiProvider implements AiProvider {
       risk_flags: ["見積金額、土地価格、在庫、補助金、契約条件、保証判断は断定しない"],
       recommended_response_mode: "human_required",
       should_handoff: true,
+      provider: "mock"
+    };
+  }
+
+  async draftRagAnswer(input: AiRagAnswerDraftInput): Promise<AiRagAnswerDraft> {
+    const primarySource = input.sources[0];
+    const answerBody = primarySource
+      ? `${primarySource.title}について、公式情報候補を確認しました。詳細や最新状況は担当者が確認してご案内します。`
+      : "公式情報では確認できません。担当者が確認します。";
+
+    return {
+      can_answer: input.sources.length > 0,
+      answer_body: answerBody,
+      sources: input.sources,
+      risk_flags: ["見積金額、土地価格、在庫、補助金、契約条件、保証判断は断定しない"],
+      handoff_required: true,
+      recommended_response_mode: "human_required",
       provider: "mock"
     };
   }
@@ -108,6 +151,10 @@ export class OpenAiProvider implements AiProvider {
   }
 
   async draftReply(_input: AiReplyDraftInput): Promise<AiReplyDraft> {
+    throw new Error("OpenAiProvider is scaffolded only in Phase 0; use MockAiProvider.");
+  }
+
+  async draftRagAnswer(_input: AiRagAnswerDraftInput): Promise<AiRagAnswerDraft> {
     throw new Error("OpenAiProvider is scaffolded only in Phase 0; use MockAiProvider.");
   }
 }

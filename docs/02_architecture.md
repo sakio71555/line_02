@@ -60,6 +60,8 @@ Loop 004の初期APIでは、本格認証の前段として `GET /api/admin/cust
 
 Loop 005の初期APIでは、`GET /api/admin/customers/:customerId` と `GET /api/admin/customers/:customerId/timeline` を用意します。どちらも `x-tenant-id` でknown tenantを判定し、customer detailとtimeline messageをtenant scopedにin-memory repositoryから返します。存在しないcustomerと別tenantのcustomerは同じ404として扱い、他tenantの存在を推測できないようにします。
 
+Loop 014の初期UIでは、Next.js Server Componentsでread-onlyの管理画面トップ、顧客一覧、顧客詳細、タイムライン表示だけを用意します。`API_BASE_URL` と `TENANT_ID` からHono APIへ `x-tenant-id` 付きでfetchし、返信送信、AI実行、RAG実行などのmutation UIは後続Loopに分けます。
+
 主な画面は以下です。
 
 - 顧客一覧

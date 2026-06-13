@@ -4,7 +4,8 @@ import { Hono } from "hono";
 import {
   createMockAiProvider,
   type AiConversationTurn,
-  type AiProvider
+  type AiProvider,
+  type AiRagAnswerSource
 } from "@amami-line-crm/ai";
 import { loadAppConfig } from "@amami-line-crm/config";
 import {
@@ -315,6 +316,70 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     });
   });
 
+  api.post("/api/admin/rag/answer-draft", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const searchBody = await readRagSearchBody(c.req.raw);
+
+    if (!searchBody) {
+      return c.json({ ok: false, error: "invalid_rag_answer_draft_request" }, 400);
+    }
+
+    const results = await searchTenantKnowledge({
+      tenant_id: tenant.tenantId,
+      query: searchBody.query,
+      limit: searchBody.limit,
+      repository: knowledgePageRepository
+    });
+    const sources = toAiRagAnswerSources(results);
+
+    if (sources.length === 0) {
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        query: searchBody.query,
+        can_answer: false,
+        answer_body: "公式情報では確認できません。担当者が確認します。",
+        sources: [],
+        risk_flags: ["no_source"],
+        handoff_required: true,
+        recommended_response_mode: "human_required"
+      });
+    }
+
+    try {
+      const draft = await aiProvider.draftRagAnswer({
+        tenant_id: tenant.tenantId,
+        query: searchBody.query,
+        sources
+      });
+
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        query: searchBody.query,
+        can_answer: draft.can_answer,
+        answer_body: draft.answer_body,
+        sources: draft.sources,
+        risk_flags: draft.risk_flags,
+        handoff_required: draft.handoff_required,
+        recommended_response_mode: draft.recommended_response_mode,
+        provider: draft.provider
+      });
+    } catch {
+      return c.json({ ok: false, error: "rag_answer_draft_failed" }, 502);
+    }
+  });
+
   api.post("/api/admin/customers/:customerId/reply", async (c) => {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
@@ -604,6 +669,28 @@ function toAdminTimelineMessage(message: Message): {
     source_url: message.media_storage_path,
     created_at: message.created_at
   };
+}
+
+function toAiRagAnswerSources(
+  results: Array<{
+    id: string;
+    title: string;
+    url: string;
+    category: string;
+    source_type: string;
+    excerpt: string;
+    score: number;
+  }>
+): AiRagAnswerSource[] {
+  return results.map((result) => ({
+    id: result.id,
+    title: result.title,
+    url: result.url,
+    category: result.category,
+    source_type: result.source_type,
+    excerpt: result.excerpt,
+    score: result.score
+  }));
 }
 
 type ResolvedAdminTenant =

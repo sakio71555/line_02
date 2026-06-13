@@ -90,6 +90,8 @@ Loop 011では、管理者が `POST /api/admin/rag/search` を実行したとき
 
 Loop 012のアマミホーム初期knowledge seedも、`tenant_id = tenant_amamihome` かつ `allowed_for_ai = true` の項目だけをAI回答候補にします。静的seedは公式HP確認前の仮データなので、変動情報や保証判断は断定しません。
 
+Loop 013では、管理者が `POST /api/admin/rag/answer-draft` を実行したときだけ、tenant scopedなRAG検索結果を根拠sourceとして回答案を生成します。検索結果がない場合はAI providerを呼ばず、「公式情報では確認できません。担当者が確認します。」というfallbackを返します。回答案はAPIレスポンスで返すだけで、messagesへ保存せず、LINE送信もしません。
+
 ## 人間対応中の挙動
 
 `response_mode` が以下の場合、AIは自動返信しません。

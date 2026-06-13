@@ -59,6 +59,8 @@ Loop 011の初期RAG検索API `POST /api/admin/rag/search` も同じ方針です
 
 Loop 012のアマミホーム初期knowledge importでも、すべてのfixtureとSQL seedに `tenant_id = tenant_amamihome` を明示します。他tenantへ流用する場合は別tenant_idのseedとして作り直し、AIにtenantを選ばせません。
 
+Loop 013のRAG回答案APIも、回答生成前に `tenant_id` と `allowed_for_ai = true` で絞ったsourceだけをAI providerへ渡します。sourceがない場合はAI providerを呼ばず、他tenant情報を推測させません。
+
 ## 禁止事項
 
 - tenant未確定のままAIへ入力を渡す。

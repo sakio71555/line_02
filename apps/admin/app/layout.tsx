@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import "./globals.css";
+
 export const metadata: Metadata = {
   title: "Amami LINE CRM Admin",
   description: "AI顧客カルテ付きLINE相談CRMの管理画面"
