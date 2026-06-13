@@ -88,6 +88,8 @@ Loop 010では、管理者が `POST /api/admin/customers/:customerId/ai-reply-dr
 
 Loop 011では、管理者が `POST /api/admin/rag/search` を実行したときだけ、tenant scopedな `knowledge_pages` を簡易キーワード検索します。Phase 0はembedding生成、OpenAI API、公式HPクロール、AI回答生成を行わず、検索結果を返すだけにします。
 
+Loop 012のアマミホーム初期knowledge seedも、`tenant_id = tenant_amamihome` かつ `allowed_for_ai = true` の項目だけをAI回答候補にします。静的seedは公式HP確認前の仮データなので、変動情報や保証判断は断定しません。
+
 ## 人間対応中の挙動
 
 `response_mode` が以下の場合、AIは自動返信しません。

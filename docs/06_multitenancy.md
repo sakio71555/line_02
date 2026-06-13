@@ -57,6 +57,8 @@ AIにtenant選択を任せません。
 
 Loop 011の初期RAG検索API `POST /api/admin/rag/search` も同じ方針です。開発用には `x-tenant-id` headerでtenantを確定し、そのtenantの `knowledge_pages` だけをrepositoryから取得してから、`allowed_for_ai = true` と簡易キーワード検索を適用します。他tenantのknowledgeをスコアリング対象に含めません。
 
+Loop 012のアマミホーム初期knowledge importでも、すべてのfixtureとSQL seedに `tenant_id = tenant_amamihome` を明示します。他tenantへ流用する場合は別tenant_idのseedとして作り直し、AIにtenantを選ばせません。
+
 ## 禁止事項
 
 - tenant未確定のままAIへ入力を渡す。

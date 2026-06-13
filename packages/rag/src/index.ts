@@ -45,6 +45,19 @@ export class InMemoryKnowledgePageRepository implements KnowledgePageRepository 
   async listByTenant(tenantId: string): Promise<KnowledgePage[]> {
     return this.pages.filter((page) => page.tenant_id === tenantId);
   }
+
+  upsertMany(pages: KnowledgePage[]): void {
+    for (const page of pages) {
+      const existingIndex = this.pages.findIndex((item) => item.id === page.id);
+
+      if (existingIndex >= 0) {
+        this.pages[existingIndex] = page;
+        continue;
+      }
+
+      this.pages.push(page);
+    }
+  }
 }
 
 export class InMemoryKnowledgeSearchRepository
@@ -161,3 +174,5 @@ function compareKnowledgeSearchResults(
 
   return a.title.localeCompare(b.title);
 }
+
+export * from "./amamihome-knowledge";
