@@ -112,6 +112,10 @@ Phase 0では以下を行いません。
 
 LINE実機テストが必要になったら、開発段階では本番ドメインを用意せず、ngrokまたはCloudflare TunnelでWebhook URLを一時公開します。
 
+## Supabase永続化について
+
+Supabase PostgreSQLはDB想定ですが、現時点ではin-memory repositoryで動作しており、Supabase永続化は未実装です。Loop 020では実装前の導入計画だけを追加しました。詳細は [docs/11_codex_tasks/020_supabase_persistence_planning.md](docs/11_codex_tasks/020_supabase_persistence_planning.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
