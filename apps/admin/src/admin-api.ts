@@ -1,7 +1,8 @@
 import type {
   CustomerDetail,
   CustomerListItem as DomainCustomerListItem,
-  CustomerTimelineMessage
+  CustomerTimelineMessage,
+  ResponseMode
 } from "@amami-line-crm/domain";
 
 export const DEFAULT_API_BASE_URL = "http://localhost:4000";
@@ -36,6 +37,62 @@ export interface AdminCustomerTimelineResponse {
   messages: CustomerTimelineMessage[];
 }
 
+export interface AdminAiSummary {
+  summary: string;
+  next_actions: string[];
+  risk_flags: string[];
+  recommended_response_mode: ResponseMode;
+  provider: "mock" | "openai";
+}
+
+export interface AdminAiSummaryResponse {
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  summary: AdminAiSummary;
+  message: CustomerTimelineMessage;
+}
+
+export interface AdminAiReplyDraftResponse {
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  draft_body: string;
+  next_questions: string[];
+  risk_flags: string[];
+  recommended_response_mode: ResponseMode;
+  should_handoff: boolean;
+  provider: "mock" | "openai";
+}
+
+export interface AdminRagAnswerSource {
+  id: string;
+  title: string;
+  url: string;
+  category: string;
+  source_type: string;
+  excerpt: string;
+  score: number;
+}
+
+export interface AdminRagAnswerDraftResponse {
+  ok: true;
+  tenant_id: string;
+  query: string;
+  can_answer: boolean;
+  answer_body: string;
+  sources: AdminRagAnswerSource[];
+  risk_flags: string[];
+  handoff_required: boolean;
+  recommended_response_mode: ResponseMode;
+  provider?: "mock" | "openai";
+}
+
+export interface AdminApiRequestOptions {
+  config?: AdminApiConfig;
+  fetchFn?: AdminApiFetch;
+}
+
 type AdminApiFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export function getAdminApiConfig(env: NodeJS.ProcessEnv = process.env): AdminApiConfig {
@@ -55,14 +112,12 @@ export function createAdminApiUrl(path: string, config: AdminApiConfig = getAdmi
 export async function adminApiFetch<T>(
   path: string,
   init: RequestInit = {},
-  options: {
-    config?: AdminApiConfig;
-    fetchFn?: AdminApiFetch;
-  } = {}
+  options: AdminApiRequestOptions = {}
 ): Promise<T> {
   const config = options.config ?? getAdminApiConfig();
   const fetchFn = options.fetchFn ?? fetch;
   const headers = new Headers(init.headers);
+  const method = init.method?.toUpperCase() ?? "GET";
 
   headers.set("x-tenant-id", config.tenantId);
 
@@ -70,11 +125,16 @@ export async function adminApiFetch<T>(
     headers.set("accept", "application/json");
   }
 
-  const response = await fetchFn(createAdminApiUrl(path, config), {
+  const requestInit: RequestInit = {
     ...init,
-    headers,
-    cache: "no-store"
-  });
+    headers
+  };
+
+  if (init.cache || method === "GET" || method === "HEAD") {
+    requestInit.cache = init.cache ?? "no-store";
+  }
+
+  const response = await fetchFn(createAdminApiUrl(path, config), requestInit);
 
   if (!response.ok) {
     const responseBody = await response.text();
@@ -94,6 +154,14 @@ export function adminCustomerTimelinePath(customerId: string): string {
   return `/api/admin/customers/${encodeURIComponent(customerId)}/timeline`;
 }
 
+export function adminCustomerAiSummaryPath(customerId: string): string {
+  return `/api/admin/customers/${encodeURIComponent(customerId)}/ai-summary`;
+}
+
+export function adminCustomerAiReplyDraftPath(customerId: string): string {
+  return `/api/admin/customers/${encodeURIComponent(customerId)}/ai-reply-draft`;
+}
+
 export async function getAdminCustomers(): Promise<AdminCustomersResponse> {
   return adminApiFetch<AdminCustomersResponse>("/api/admin/customers");
 }
@@ -108,4 +176,50 @@ export async function getAdminCustomerTimeline(
   customerId: string
 ): Promise<AdminCustomerTimelineResponse> {
   return adminApiFetch<AdminCustomerTimelineResponse>(adminCustomerTimelinePath(customerId));
+}
+
+export async function createAiSummary(
+  customerId: string,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminAiSummaryResponse> {
+  return adminApiFetch<AdminAiSummaryResponse>(
+    adminCustomerAiSummaryPath(customerId),
+    {
+      method: "POST"
+    },
+    options
+  );
+}
+
+export async function createAiReplyDraft(
+  customerId: string,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminAiReplyDraftResponse> {
+  return adminApiFetch<AdminAiReplyDraftResponse>(
+    adminCustomerAiReplyDraftPath(customerId),
+    {
+      method: "POST"
+    },
+    options
+  );
+}
+
+export async function createRagAnswerDraft(
+  input: { query: string; limit?: number },
+  options: AdminApiRequestOptions = {}
+): Promise<AdminRagAnswerDraftResponse> {
+  return adminApiFetch<AdminRagAnswerDraftResponse>(
+    "/api/admin/rag/answer-draft",
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        query: input.query,
+        limit: input.limit ?? 5
+      })
+    },
+    options
+  );
 }

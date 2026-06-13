@@ -62,6 +62,8 @@ Loop 005の初期APIでは、`GET /api/admin/customers/:customerId` と `GET /ap
 
 Loop 014の初期UIでは、Next.js Server Componentsでread-onlyの管理画面トップ、顧客一覧、顧客詳細、タイムライン表示だけを用意します。`API_BASE_URL` と `TENANT_ID` からHono APIへ `x-tenant-id` 付きでfetchし、返信送信、AI実行、RAG実行などのmutation UIは後続Loopに分けます。
 
+Loop 016の初期action UIでは、顧客詳細画面からAI要約、AI返信下書き、RAG回答案を開発確認できます。CORSを避けるため、画面はServer Action経由でadmin server側からHono APIへ `x-tenant-id` 付きでPOSTします。LINE送信UI、staff reply送信UI、本番認証、本番AI接続はまだ実装しません。
+
 主な画面は以下です。
 
 - 顧客一覧

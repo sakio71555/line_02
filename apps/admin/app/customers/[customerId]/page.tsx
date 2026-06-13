@@ -5,6 +5,7 @@ import {
   getAdminCustomerDetail,
   getAdminCustomerTimeline
 } from "../../../src/admin-api";
+import { CustomerActionPanel } from "./customer-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,8 @@ export default async function CustomerDetailPage({
           </dl>
         )}
       </section>
+
+      {detail.status === "error" ? null : <CustomerActionPanel customerId={customerId} />}
 
       <section className="section">
         <h2>タイムライン</h2>
