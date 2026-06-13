@@ -22,6 +22,7 @@ import {
   recordAiSummaryMessage,
   recordStaffTextReply,
   type AlertRepository,
+  type Customer,
   type CustomerRepository,
   type Message,
   type MessageRepository,
@@ -79,6 +80,45 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: config.tenant.id,
       tenant_slug: config.tenant.slug,
       external_connections: "disabled"
+    });
+  });
+
+  api.post("/api/dev/seed-demo-data", async (c) => {
+    if (isProductionRuntime(env)) {
+      return c.json({ ok: false, error: "dev_seed_disabled" }, 404);
+    }
+
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const seeded = await seedDemoData({
+      tenant_id: tenant.tenantId,
+      customerRepository,
+      messageRepository
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_ids: seeded.customers.map((customer) => customer.id),
+      customers: seeded.customers.map((customer) => ({
+        id: customer.id,
+        tenant_id: customer.tenant_id,
+        line_user_id: customer.line_user_id,
+        display_name: customer.display_name,
+        response_mode: customer.response_mode,
+        last_customer_message_at: customer.last_customer_message_at,
+        last_staff_reply_at: customer.last_staff_reply_at
+      })),
+      message_count: seeded.messages.length
     });
   });
 
@@ -567,6 +607,145 @@ interface ResolvedWebhookTenant {
   tenantId: string;
   tenantSlug: string;
   channelSecret: string | undefined;
+}
+
+interface DemoSeedResult {
+  customers: Customer[];
+  messages: Message[];
+}
+
+async function seedDemoData(input: {
+  tenant_id: string;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+}): Promise<DemoSeedResult> {
+  const customers = createDemoCustomers(input.tenant_id);
+  const messages = createDemoMessages(input.tenant_id);
+
+  for (const customer of customers) {
+    await input.customerRepository.save(customer);
+  }
+
+  for (const message of messages) {
+    await input.messageRepository.insert(message);
+  }
+
+  return {
+    customers,
+    messages
+  };
+}
+
+function createDemoCustomers(tenantId: string): Customer[] {
+  return [
+    {
+      id: "customer_demo_yamada_taro",
+      tenant_id: tenantId,
+      line_user_id: "U_DEMO_YAMADA_TARO",
+      display_name: "山田 太郎",
+      picture_url: null,
+      phone: null,
+      email: null,
+      postal_code: null,
+      address: null,
+      interest_tags: ["平屋", "SoToNo MA", "モデルホーム見学"],
+      response_mode: "human_required",
+      status: "active",
+      last_message_at: "2026-06-13T10:18:00.000Z",
+      last_customer_message_at: "2026-06-13T10:18:00.000Z",
+      last_staff_reply_at: null,
+      created_at: "2026-06-13T10:00:00.000Z",
+      updated_at: "2026-06-13T10:18:00.000Z"
+    },
+    {
+      id: "customer_demo_sato_hanako",
+      tenant_id: tenantId,
+      line_user_id: "U_DEMO_SATO_HANAKO",
+      display_name: "佐藤 花子",
+      picture_url: null,
+      phone: null,
+      email: null,
+      postal_code: null,
+      address: null,
+      interest_tags: ["オンライン相談", "資料請求"],
+      response_mode: "human_active",
+      status: "active",
+      last_message_at: "2026-06-13T10:35:00.000Z",
+      last_customer_message_at: "2026-06-13T10:14:00.000Z",
+      last_staff_reply_at: "2026-06-13T10:35:00.000Z",
+      created_at: "2026-06-13T10:05:00.000Z",
+      updated_at: "2026-06-13T10:35:00.000Z"
+    }
+  ];
+}
+
+function createDemoMessages(tenantId: string): Message[] {
+  return [
+    {
+      id: "message_demo_yamada_1",
+      tenant_id: tenantId,
+      customer_id: "customer_demo_yamada_taro",
+      consultation_id: null,
+      line_message_id: "demo-line-message-yamada-1",
+      role: "customer",
+      message_type: "text",
+      body: "平屋の施工事例とSoToNo MAについて相談したいです。",
+      media_storage_path: null,
+      staff_user_id: null,
+      ai_generated: false,
+      sent_to_line_at: null,
+      created_at: "2026-06-13T10:08:00.000Z"
+    },
+    {
+      id: "message_demo_yamada_2",
+      tenant_id: tenantId,
+      customer_id: "customer_demo_yamada_taro",
+      consultation_id: null,
+      line_message_id: "demo-line-message-yamada-2",
+      role: "customer",
+      message_type: "text",
+      body: "モデルホーム見学の日程も知りたいです。",
+      media_storage_path: null,
+      staff_user_id: null,
+      ai_generated: false,
+      sent_to_line_at: null,
+      created_at: "2026-06-13T10:18:00.000Z"
+    },
+    {
+      id: "message_demo_sato_1",
+      tenant_id: tenantId,
+      customer_id: "customer_demo_sato_hanako",
+      consultation_id: null,
+      line_message_id: "demo-line-message-sato-1",
+      role: "customer",
+      message_type: "text",
+      body: "オンライン相談と資料請求をお願いしたいです。",
+      media_storage_path: null,
+      staff_user_id: null,
+      ai_generated: false,
+      sent_to_line_at: null,
+      created_at: "2026-06-13T10:14:00.000Z"
+    },
+    {
+      id: "message_demo_sato_2",
+      tenant_id: tenantId,
+      customer_id: "customer_demo_sato_hanako",
+      consultation_id: null,
+      line_message_id: null,
+      role: "staff",
+      message_type: "text",
+      body: "オンライン相談の日程候補と資料請求の送付先を確認します。",
+      media_storage_path: null,
+      staff_user_id: "staff_demo_admin",
+      ai_generated: false,
+      sent_to_line_at: "2026-06-13T10:35:00.000Z",
+      created_at: "2026-06-13T10:35:00.000Z"
+    }
+  ];
+}
+
+function isProductionRuntime(env: NodeJS.ProcessEnv): boolean {
+  return env.APP_ENV === "production" || env.NODE_ENV === "production";
 }
 
 async function readStaffReplyBody(request: Request): Promise<string | null> {

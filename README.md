@@ -48,6 +48,37 @@ npx pnpm@10.12.1 test
 - `npx pnpm@10.12.1 test:integration`: integration test
 - `npx pnpm@10.12.1 format`: Prettier
 
+## ローカル管理画面確認
+
+Loop 015時点の管理画面はread-onlyです。ローカル確認ではAPIを先に起動し、開発専用のin-memory demo seedを投入してからadmin画面を開きます。
+
+API server:
+
+```bash
+TENANT_ID=tenant_amamihome TENANT_SLUG=amamihome npx pnpm@10.12.1 --filter @amami-line-crm/api dev
+```
+
+Admin server:
+
+```bash
+API_BASE_URL=http://localhost:4000 TENANT_ID=tenant_amamihome npx pnpm@10.12.1 --filter @amami-line-crm/admin dev
+```
+
+Demo data seed:
+
+```bash
+curl -X POST http://localhost:4000/api/dev/seed-demo-data \
+  -H "x-tenant-id: tenant_amamihome"
+```
+
+その後、以下を確認します。
+
+- `http://localhost:3000/customers`: デモ顧客一覧
+- `http://localhost:3000/customers/customer_demo_yamada_taro`: 未返信っぽいデモ顧客の詳細・タイムライン
+- `http://localhost:3000/customers/customer_demo_sato_hanako`: 返信済みっぽいデモ顧客の詳細・タイムライン
+
+`API_BASE_URL` はadminが参照するAPIのURL、`TENANT_ID` はadmin APIへ送る開発用tenantです。demo seedはin-memoryの開発確認専用で、API processを再起動すると消えます。`APP_ENV=production` または `NODE_ENV=production` では使えません。
+
 ## Codex開発ループ
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。

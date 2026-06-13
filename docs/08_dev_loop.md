@@ -30,6 +30,8 @@
 
 UI loopではNext.js buildが必要になる場合があります。ただし、Loop 014のread-only UI foundationでは使用量節約のため、原則として `lint`、`typecheck`、`test`、`test:integration` を優先し、buildが必要な場合だけ理由を記録して実行します。
 
+UI確認Loopでは、必要に応じて開発専用の `POST /api/dev/seed-demo-data` を使い、in-memoryにデモ顧客・デモメッセージを投入してread-only管理画面を確認します。このdemo seedは本番用途ではなく、`APP_ENV=production` または `NODE_ENV=production` では使えない前提です。
+
 ## 1. 仕様を書く
 
 実装前に `docs/11_codex_tasks/` のタスクカードを確認します。必要なら `docs/` の設計書またはADRを更新します。
@@ -132,6 +134,8 @@ UI loopではNext.js buildが必要になる場合があります。ただし、
 13. Loop 012: Amami Home knowledge import
 14. Loop 013: LIFF forms
 15. Loop 014: Amami-specific features
+16. Loop 015: local dev runbook and demo seed
+17. Loop 016: admin action UI foundation
 
 ## 完了報告フォーマット
 
