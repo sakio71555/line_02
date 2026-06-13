@@ -1,0 +1,19 @@
+{
+  "name": "@amami-line-crm/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@amami-line-crm/ai": "workspace:*",
+    "@amami-line-crm/config": "workspace:*",
+    "@amami-line-crm/domain": "workspace:*",
+    "@amami-line-crm/line": "workspace:*",
+    "@hono/node-server": "^1.14.4",
+    "hono": "^4.8.2"
+  }
+}

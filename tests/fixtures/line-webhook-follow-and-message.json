@@ -1,0 +1,32 @@
+{
+  "destination": "U_TEST_DESTINATION",
+  "events": [
+    {
+      "type": "follow",
+      "webhookEventId": "01TESTFOLLOWEVENT",
+      "timestamp": 1710000000000,
+      "replyToken": "test-follow-reply-token",
+      "source": {
+        "type": "user",
+        "userId": "U_TEST_USER_001"
+      },
+      "mode": "active"
+    },
+    {
+      "type": "message",
+      "webhookEventId": "01TESTMESSAGEEVENT",
+      "timestamp": 1710000001000,
+      "replyToken": "test-message-reply-token",
+      "source": {
+        "type": "user",
+        "userId": "U_TEST_USER_001"
+      },
+      "message": {
+        "id": "test-line-message-001",
+        "type": "text",
+        "text": "モデルホームを見学したいです"
+      },
+      "mode": "active"
+    }
+  ]
+}
