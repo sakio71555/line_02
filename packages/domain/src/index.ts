@@ -245,6 +245,7 @@ export const alertCreateSchema = z.object({
 export type AlertCreateInput = z.infer<typeof alertCreateSchema>;
 
 export interface CustomerRepository {
+  findByIdForTenant(tenantId: string, customerId: string): Promise<Customer | null>;
   findByTenantAndLineUserId(tenantId: string, lineUserId: string): Promise<Customer | null>;
   listByTenant(tenantId: string): Promise<Customer[]>;
   save(customer: Customer): Promise<Customer>;
@@ -253,6 +254,7 @@ export interface CustomerRepository {
 export interface MessageRepository {
   insert(message: Message): Promise<Message>;
   findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>>;
+  listByCustomer(tenantId: string, customerId: string): Promise<Message[]>;
 }
 
 export interface CustomerListItem {
@@ -269,6 +271,41 @@ export interface CustomerListItem {
   updated_at: string;
 }
 
+export interface CustomerDetail {
+  id: string;
+  tenant_id: string;
+  line_user_id: string | null;
+  line_display_name: string | null;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  status: CustomerStatus;
+  response_mode: ResponseMode;
+  assigned_staff_id: string | null;
+  address_area: string | null;
+  planned_area: string | null;
+  has_land: boolean | null;
+  desired_timing: string | null;
+  temperature_score: number | null;
+  tags: string[];
+  last_customer_message_at: string | null;
+  last_staff_reply_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerTimelineMessage {
+  id: string;
+  tenant_id: string;
+  customer_id: string;
+  role: MessageRole;
+  message_type: MessageType;
+  body: string | null;
+  line_message_id: string | null;
+  source_url: string | null;
+  created_at: string;
+}
+
 export interface UpsertLineCustomerInput {
   tenant_id: string;
   line_user_id: string;
@@ -282,6 +319,22 @@ export interface InsertLineTextMessageInput {
   line_message_id: string;
   body: string | null;
   created_at: string;
+}
+
+export interface RecordStaffTextReplyInput {
+  tenant_id: string;
+  customer: Customer;
+  body: string;
+  staff_user_id?: string | null;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+  createId?: () => string;
+  now?: () => string;
+}
+
+export interface RecordStaffTextReplyResult {
+  customer: Customer;
+  message: Message;
 }
 
 export interface MessageLoggingLineEvent {
@@ -394,6 +447,53 @@ export async function insertLineTextMessage(
   return repository.insert(message);
 }
 
+export async function recordStaffTextReply(
+  input: RecordStaffTextReplyInput
+): Promise<RecordStaffTextReplyResult> {
+  assertTenantScoped(input.customer, input.tenant_id);
+
+  const now = input.now?.() ?? new Date().toISOString();
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer.id,
+    line_message_id: null,
+    role: "staff",
+    message_type: "text",
+    body: input.body,
+    staff_user_id: input.staff_user_id ?? null,
+    sent_to_line_at: now
+  });
+  const message: Message = {
+    id: input.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: parsed.consultation_id ?? null,
+    line_message_id: parsed.line_message_id ?? null,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: parsed.media_storage_path ?? null,
+    staff_user_id: parsed.staff_user_id ?? null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: parsed.sent_to_line_at ?? null,
+    created_at: now
+  };
+  const updatedCustomer: Customer = {
+    ...input.customer,
+    response_mode: "human_active",
+    last_staff_reply_at: now,
+    updated_at: now
+  };
+
+  const savedMessage = await input.messageRepository.insert(message);
+  const savedCustomer = await input.customerRepository.save(updatedCustomer);
+
+  return {
+    customer: savedCustomer,
+    message: savedMessage
+  };
+}
+
 export async function logLineWebhookEvents(
   input: LogLineWebhookEventsInput
 ): Promise<LogLineWebhookEventsResult> {
@@ -491,11 +591,73 @@ export async function listCustomerListItems(input: {
     .sort(compareCustomerListItems);
 }
 
+export async function getCustomerDetail(input: {
+  tenant_id: string;
+  customer_id: string;
+  customerRepository: CustomerRepository;
+}): Promise<CustomerDetail | null> {
+  const customer = await input.customerRepository.findByIdForTenant(
+    input.tenant_id,
+    input.customer_id
+  );
+
+  return customer ? toCustomerDetail(customer) : null;
+}
+
+export async function listCustomerTimeline(input: {
+  tenant_id: string;
+  customer_id: string;
+  messageRepository: MessageRepository;
+}): Promise<CustomerTimelineMessage[]> {
+  const messages = await input.messageRepository.listByCustomer(input.tenant_id, input.customer_id);
+
+  return messages.map(toCustomerTimelineMessage);
+}
+
 function compareCustomerListItems(a: CustomerListItem, b: CustomerListItem): number {
   const aTime = a.last_message_at ?? a.created_at;
   const bTime = b.last_message_at ?? b.created_at;
 
   return bTime.localeCompare(aTime);
+}
+
+function toCustomerDetail(customer: Customer): CustomerDetail {
+  return {
+    id: customer.id,
+    tenant_id: customer.tenant_id,
+    line_user_id: customer.line_user_id,
+    line_display_name: customer.display_name,
+    name: null,
+    phone: customer.phone,
+    email: customer.email,
+    status: customer.status,
+    response_mode: customer.response_mode,
+    assigned_staff_id: null,
+    address_area: customer.address,
+    planned_area: null,
+    has_land: null,
+    desired_timing: null,
+    temperature_score: null,
+    tags: customer.interest_tags,
+    last_customer_message_at: customer.last_customer_message_at,
+    last_staff_reply_at: customer.last_staff_reply_at,
+    created_at: customer.created_at,
+    updated_at: customer.updated_at
+  };
+}
+
+function toCustomerTimelineMessage(message: Message): CustomerTimelineMessage {
+  return {
+    id: message.id,
+    tenant_id: message.tenant_id,
+    customer_id: message.customer_id,
+    role: message.role,
+    message_type: message.message_type,
+    body: message.body,
+    line_message_id: message.line_message_id,
+    source_url: message.media_storage_path,
+    created_at: message.created_at
+  };
 }
 
 function createMessageLoggingServiceOptions(
@@ -516,6 +678,16 @@ function createMessageLoggingServiceOptions(
 
 export class InMemoryCustomerRepository implements CustomerRepository {
   private readonly customersById = new Map<string, Customer>();
+
+  async findByIdForTenant(tenantId: string, customerId: string): Promise<Customer | null> {
+    const customer = this.customersById.get(customerId);
+
+    if (!customer || customer.tenant_id !== tenantId) {
+      return null;
+    }
+
+    return customer;
+  }
 
   async findByTenantAndLineUserId(tenantId: string, lineUserId: string): Promise<Customer | null> {
     return (
@@ -570,6 +742,12 @@ export class InMemoryMessageRepository implements MessageRepository {
     return latestByCustomerId;
   }
 
+  async listByCustomer(tenantId: string, customerId: string): Promise<Message[]> {
+    return this.list()
+      .filter((message) => message.tenant_id === tenantId && message.customer_id === customerId)
+      .sort(compareMessagesByCreatedAtAsc);
+  }
+
   list(): Message[] {
     return Array.from(this.messagesById.values());
   }
@@ -577,6 +755,10 @@ export class InMemoryMessageRepository implements MessageRepository {
   clear(): void {
     this.messagesById.clear();
   }
+}
+
+function compareMessagesByCreatedAtAsc(a: Message, b: Message): number {
+  return a.created_at.localeCompare(b.created_at);
 }
 
 function lineEventTimestampToIsoString(

@@ -57,6 +57,8 @@ BOT自動対応は `response_mode = bot_auto` の場合だけ許可します。
 6. `messages` にoutbound messageとして保存する。
 7. `consultations` と `alerts` の状態を更新する。
 
+Loop 006の初期APIでは、`POST /api/admin/customers/:customerId/reply` を用意します。開発用に `x-tenant-id` と任意の `x-staff-id` headerを使い、customerをtenant scopedに取得してから `LineClient.pushMessage` 境界に渡します。本番LINE APIは呼ばず、MockLineClient送信成功時だけ `role = staff` のtext messageを保存し、`last_staff_reply_at` と `response_mode = human_active` を更新します。
+
 ## 未返信アラート
 
 未返信判定は、顧客の最新inbound messageと担当者の最新outbound messageを比較して行います。

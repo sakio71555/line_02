@@ -3,28 +3,39 @@ import { Hono } from "hono";
 
 import { loadAppConfig } from "@amami-line-crm/config";
 import {
+  getCustomerDetail,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
   listCustomerListItems,
+  listCustomerTimeline,
   logLineWebhookEvents,
+  recordStaffTextReply,
   type CustomerRepository,
   type MessageRepository
 } from "@amami-line-crm/domain";
-import { parseLineWebhookPayload, verifyLineSignature } from "@amami-line-crm/line";
+import {
+  MockLineClient,
+  parseLineWebhookPayload,
+  verifyLineSignature,
+  type LineClient
+} from "@amami-line-crm/line";
 
 export interface ApiAppDependencies {
   customerRepository?: CustomerRepository;
   messageRepository?: MessageRepository;
+  lineClient?: LineClient;
   env?: NodeJS.ProcessEnv;
 }
 
 const defaultCustomerRepository = new InMemoryCustomerRepository();
 const defaultMessageRepository = new InMemoryMessageRepository();
+const defaultLineClient = new MockLineClient();
 
 export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const api = new Hono();
   const customerRepository = dependencies.customerRepository ?? defaultCustomerRepository;
   const messageRepository = dependencies.messageRepository ?? defaultMessageRepository;
+  const lineClient = dependencies.lineClient ?? defaultLineClient;
   const env = dependencies.env ?? process.env;
 
   api.get("/health", (c) => {
@@ -59,6 +70,142 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       ok: true,
       tenant_id: tenant.tenantId,
       customers
+    });
+  });
+
+  api.get("/api/admin/customers/:customerId", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const customer = await getCustomerDetail({
+      tenant_id: tenant.tenantId,
+      customer_id: c.req.param("customerId"),
+      customerRepository
+    });
+
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer
+    });
+  });
+
+  api.get("/api/admin/customers/:customerId/timeline", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const customerId = c.req.param("customerId");
+    const customer = await getCustomerDetail({
+      tenant_id: tenant.tenantId,
+      customer_id: customerId,
+      customerRepository
+    });
+
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const messages = await listCustomerTimeline({
+      tenant_id: tenant.tenantId,
+      customer_id: customerId,
+      messageRepository
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_id: customerId,
+      messages
+    });
+  });
+
+  api.post("/api/admin/customers/:customerId/reply", async (c) => {
+    const tenantId = c.req.header("x-tenant-id");
+    const tenant = resolveAdminTenant(tenantId, env);
+
+    if (tenant.status === "missing") {
+      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
+    }
+
+    if (tenant.status === "unknown") {
+      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    }
+
+    const customer = await customerRepository.findByIdForTenant(
+      tenant.tenantId,
+      c.req.param("customerId")
+    );
+
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const replyBody = await readStaffReplyBody(c.req.raw);
+
+    if (!replyBody) {
+      return c.json({ ok: false, error: "invalid_reply_body" }, 400);
+    }
+
+    if (!customer.line_user_id) {
+      return c.json({ ok: false, error: "cannot_reply_without_line_user_id" }, 409);
+    }
+
+    try {
+      await lineClient.pushMessage(customer.line_user_id, [{ type: "text", text: replyBody }]);
+    } catch {
+      return c.json({ ok: false, error: "line_send_failed" }, 502);
+    }
+
+    const result = await recordStaffTextReply({
+      tenant_id: tenant.tenantId,
+      customer,
+      body: replyBody,
+      staff_user_id: readOptionalHeader(c.req.header("x-staff-id")),
+      customerRepository,
+      messageRepository
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_id: customer.id,
+      message: {
+        id: result.message.id,
+        tenant_id: result.message.tenant_id,
+        customer_id: result.message.customer_id,
+        role: result.message.role,
+        message_type: result.message.message_type,
+        body: result.message.body,
+        line_message_id: result.message.line_message_id,
+        source_url: result.message.media_storage_path,
+        created_at: result.message.created_at
+      },
+      customer: {
+        id: result.customer.id,
+        tenant_id: result.customer.tenant_id,
+        response_mode: result.customer.response_mode,
+        last_staff_reply_at: result.customer.last_staff_reply_at
+      }
     });
   });
 
@@ -118,6 +265,34 @@ interface ResolvedWebhookTenant {
   tenantId: string;
   tenantSlug: string;
   channelSecret: string | undefined;
+}
+
+async function readStaffReplyBody(request: Request): Promise<string | null> {
+  let parsed: unknown;
+
+  try {
+    parsed = await request.json();
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed) || typeof parsed.body !== "string") {
+    return null;
+  }
+
+  const body = parsed.body.trim();
+
+  return body.length > 0 ? body : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readOptionalHeader(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+
+  return trimmed ? trimmed : null;
 }
 
 type ResolvedAdminTenant =
