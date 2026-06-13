@@ -103,6 +103,7 @@ export interface Customer extends TenantScoped, Timestamped {
   response_mode: ResponseMode;
   status: CustomerStatus;
   last_message_at: string | null;
+  last_customer_message_at: string | null;
   last_staff_reply_at: string | null;
 }
 
@@ -242,3 +243,275 @@ export const alertCreateSchema = z.object({
 });
 
 export type AlertCreateInput = z.infer<typeof alertCreateSchema>;
+
+export interface CustomerRepository {
+  findByTenantAndLineUserId(tenantId: string, lineUserId: string): Promise<Customer | null>;
+  save(customer: Customer): Promise<Customer>;
+}
+
+export interface MessageRepository {
+  insert(message: Message): Promise<Message>;
+}
+
+export interface UpsertLineCustomerInput {
+  tenant_id: string;
+  line_user_id: string;
+  display_name?: string | null;
+  last_customer_message_at?: string | null;
+}
+
+export interface InsertLineTextMessageInput {
+  tenant_id: string;
+  customer_id: string;
+  line_message_id: string;
+  body: string | null;
+  created_at: string;
+}
+
+export interface MessageLoggingLineEvent {
+  type: string;
+  timestamp: number | null;
+  source_user_id: string | null;
+  message_id: string | null;
+  message_type: string | null;
+  text: string | null;
+}
+
+export interface LogLineWebhookEventsInput {
+  tenant_id: string;
+  events: MessageLoggingLineEvent[];
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+  createId?: () => string;
+  now?: () => string;
+}
+
+export interface LogLineWebhookEventsResult {
+  customers_upserted: number;
+  messages_inserted: number;
+  unsupported_events: number;
+}
+
+export async function upsertLineCustomer(
+  repository: CustomerRepository,
+  input: UpsertLineCustomerInput,
+  options: { createId?: () => string; now?: () => string } = {}
+): Promise<Customer> {
+  const parsed = customerCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    line_user_id: input.line_user_id,
+    display_name: input.display_name ?? null,
+    response_mode: "bot_auto",
+    status: "new"
+  });
+  const now = options.now?.() ?? new Date().toISOString();
+  const existing = await repository.findByTenantAndLineUserId(
+    parsed.tenant_id,
+    input.line_user_id
+  );
+
+  if (existing) {
+    const updated: Customer = {
+      ...existing,
+      display_name: parsed.display_name ?? existing.display_name,
+      last_message_at: input.last_customer_message_at ?? existing.last_message_at,
+      last_customer_message_at:
+        input.last_customer_message_at ?? existing.last_customer_message_at,
+      updated_at: now
+    };
+
+    return repository.save(updated);
+  }
+
+  const customer: Customer = {
+    id: options.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    line_user_id: input.line_user_id,
+    display_name: parsed.display_name ?? null,
+    picture_url: null,
+    phone: null,
+    email: null,
+    postal_code: null,
+    address: null,
+    interest_tags: parsed.interest_tags,
+    response_mode: parsed.response_mode,
+    status: parsed.status,
+    last_message_at: input.last_customer_message_at ?? null,
+    last_customer_message_at: input.last_customer_message_at ?? null,
+    last_staff_reply_at: null,
+    created_at: now,
+    updated_at: now
+  };
+
+  return repository.save(customer);
+}
+
+export async function insertLineTextMessage(
+  repository: MessageRepository,
+  input: InsertLineTextMessageInput,
+  options: { createId?: () => string } = {}
+): Promise<Message> {
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer_id,
+    line_message_id: input.line_message_id,
+    role: "customer",
+    message_type: "text",
+    body: input.body
+  });
+  const message: Message = {
+    id: options.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: null,
+    line_message_id: input.line_message_id,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: null,
+    staff_user_id: null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: null,
+    created_at: input.created_at
+  };
+
+  return repository.insert(message);
+}
+
+export async function logLineWebhookEvents(
+  input: LogLineWebhookEventsInput
+): Promise<LogLineWebhookEventsResult> {
+  let customersUpserted = 0;
+  let messagesInserted = 0;
+  let unsupportedEvents = 0;
+  const serviceOptions = createMessageLoggingServiceOptions(input);
+
+  for (const event of input.events) {
+    const eventTime = lineEventTimestampToIsoString(event.timestamp, input.now);
+
+    if (event.type === "follow" && event.source_user_id) {
+      await upsertLineCustomer(
+        input.customerRepository,
+        {
+          tenant_id: input.tenant_id,
+          line_user_id: event.source_user_id
+        },
+        serviceOptions
+      );
+      customersUpserted += 1;
+      continue;
+    }
+
+    if (
+      event.type === "message" &&
+      event.message_type === "text" &&
+      event.source_user_id &&
+      event.message_id
+    ) {
+      const customer = await upsertLineCustomer(
+        input.customerRepository,
+        {
+          tenant_id: input.tenant_id,
+          line_user_id: event.source_user_id,
+          last_customer_message_at: eventTime
+        },
+        serviceOptions
+      );
+      await insertLineTextMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: customer.id,
+          line_message_id: event.message_id,
+          body: event.text,
+          created_at: eventTime
+        },
+        serviceOptions
+      );
+      customersUpserted += 1;
+      messagesInserted += 1;
+      continue;
+    }
+
+    unsupportedEvents += 1;
+  }
+
+  return {
+    customers_upserted: customersUpserted,
+    messages_inserted: messagesInserted,
+    unsupported_events: unsupportedEvents
+  };
+}
+
+function createMessageLoggingServiceOptions(
+  input: Pick<LogLineWebhookEventsInput, "createId" | "now">
+): { createId?: () => string; now?: () => string } {
+  const options: { createId?: () => string; now?: () => string } = {};
+
+  if (input.createId) {
+    options.createId = input.createId;
+  }
+
+  if (input.now) {
+    options.now = input.now;
+  }
+
+  return options;
+}
+
+export class InMemoryCustomerRepository implements CustomerRepository {
+  private readonly customersById = new Map<string, Customer>();
+
+  async findByTenantAndLineUserId(tenantId: string, lineUserId: string): Promise<Customer | null> {
+    return (
+      this.list().find(
+        (customer) => customer.tenant_id === tenantId && customer.line_user_id === lineUserId
+      ) ?? null
+    );
+  }
+
+  async save(customer: Customer): Promise<Customer> {
+    this.customersById.set(customer.id, customer);
+    return customer;
+  }
+
+  list(): Customer[] {
+    return Array.from(this.customersById.values());
+  }
+
+  clear(): void {
+    this.customersById.clear();
+  }
+}
+
+export class InMemoryMessageRepository implements MessageRepository {
+  private readonly messagesById = new Map<string, Message>();
+
+  async insert(message: Message): Promise<Message> {
+    this.messagesById.set(message.id, message);
+    return message;
+  }
+
+  list(): Message[] {
+    return Array.from(this.messagesById.values());
+  }
+
+  clear(): void {
+    this.messagesById.clear();
+  }
+}
+
+function lineEventTimestampToIsoString(
+  timestamp: number | null,
+  now: (() => string) | undefined
+): string {
+  if (timestamp !== null) {
+    return new Date(timestamp).toISOString();
+  }
+
+  return now?.() ?? new Date().toISOString();
+}
+
+function createDefaultId(): string {
+  return globalThis.crypto.randomUUID();
+}

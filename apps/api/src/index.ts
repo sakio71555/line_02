@@ -2,59 +2,91 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
 import { loadAppConfig } from "@amami-line-crm/config";
+import {
+  InMemoryCustomerRepository,
+  InMemoryMessageRepository,
+  logLineWebhookEvents,
+  type CustomerRepository,
+  type MessageRepository
+} from "@amami-line-crm/domain";
 import { parseLineWebhookPayload, verifyLineSignature } from "@amami-line-crm/line";
 
-export const app = new Hono();
+export interface ApiAppDependencies {
+  customerRepository?: CustomerRepository;
+  messageRepository?: MessageRepository;
+  env?: NodeJS.ProcessEnv;
+}
 
-app.get("/health", (c) => {
-  const config = loadAppConfig();
-  return c.json({
-    ok: true,
-    tenant_id: config.tenant.id,
-    tenant_slug: config.tenant.slug,
-    external_connections: "disabled"
-  });
-});
+const defaultCustomerRepository = new InMemoryCustomerRepository();
+const defaultMessageRepository = new InMemoryMessageRepository();
 
-app.post("/api/line/webhook/:webhookSecret", async (c) => {
-  const webhookSecret = c.req.param("webhookSecret");
-  const tenant = resolveWebhookTenant(webhookSecret, process.env);
+export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
+  const api = new Hono();
+  const customerRepository = dependencies.customerRepository ?? defaultCustomerRepository;
+  const messageRepository = dependencies.messageRepository ?? defaultMessageRepository;
+  const env = dependencies.env ?? process.env;
 
-  if (!tenant) {
-    return c.json({ ok: false, error: "unknown_webhook_path" }, 404);
-  }
-
-  if (!tenant.channelSecret) {
-    return c.json({ ok: false, error: "line_channel_secret_not_configured" }, 500);
-  }
-
-  const rawBody = await c.req.text();
-  const signature = c.req.header("x-line-signature") ?? "";
-  const signatureValid = verifyLineSignature({
-    channelSecret: tenant.channelSecret,
-    body: rawBody,
-    signature
-  });
-
-  if (!signatureValid) {
-    return c.json({ ok: false, error: "invalid_line_signature" }, 401);
-  }
-
-  try {
-    const payload = parseLineWebhookPayload(rawBody);
-
+  api.get("/health", (c) => {
+    const config = loadAppConfig(env);
     return c.json({
       ok: true,
-      tenant_id: tenant.tenantId,
-      tenant_slug: tenant.tenantSlug,
-      destination: payload.destination,
-      event_count: payload.events.length,
-      events: payload.events
+      tenant_id: config.tenant.id,
+      tenant_slug: config.tenant.slug,
+      external_connections: "disabled"
     });
-  } catch {
-    return c.json({ ok: false, error: "malformed_line_webhook_body" }, 400);
-  }
-});
+  });
+
+  api.post("/api/line/webhook/:webhookSecret", async (c) => {
+    const webhookSecret = c.req.param("webhookSecret");
+    const tenant = resolveWebhookTenant(webhookSecret, env);
+
+    if (!tenant) {
+      return c.json({ ok: false, error: "unknown_webhook_path" }, 404);
+    }
+
+    if (!tenant.channelSecret) {
+      return c.json({ ok: false, error: "line_channel_secret_not_configured" }, 500);
+    }
+
+    const rawBody = await c.req.text();
+    const signature = c.req.header("x-line-signature") ?? "";
+    const signatureValid = verifyLineSignature({
+      channelSecret: tenant.channelSecret,
+      body: rawBody,
+      signature
+    });
+
+    if (!signatureValid) {
+      return c.json({ ok: false, error: "invalid_line_signature" }, 401);
+    }
+
+    try {
+      const payload = parseLineWebhookPayload(rawBody);
+      const logging = await logLineWebhookEvents({
+        tenant_id: tenant.tenantId,
+        events: payload.events,
+        customerRepository,
+        messageRepository
+      });
+
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        tenant_slug: tenant.tenantSlug,
+        destination: payload.destination,
+        event_count: payload.events.length,
+        events: payload.events,
+        logging
+      });
+    } catch {
+      return c.json({ ok: false, error: "malformed_line_webhook_body" }, 400);
+    }
+  });
+
+  return api;
+}
+
+export const app = createApiApp();
 
 interface ResolvedWebhookTenant {
   tenantId: string;

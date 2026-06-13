@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { app } from "../../apps/api/src/index";
+import { createApiApp } from "../../apps/api/src/index";
+import { InMemoryCustomerRepository, InMemoryMessageRepository } from "@amami-line-crm/domain";
 
 const channelSecret = "test_line_channel_secret";
 const knownWebhookSecret = "wh_dev_amamihome";
@@ -27,97 +28,156 @@ function signBody(body: string): string {
   return createHmac("sha256", channelSecret).update(body).digest("base64");
 }
 
-function withLineEnv<T>(callback: () => Promise<T>): Promise<T> {
-  const previousSecret = process.env.LINE_CHANNEL_SECRET;
-  const previousWebhookPath = process.env.LINE_WEBHOOK_SECRET_PATH;
-  const previousTenantId = process.env.TENANT_ID;
-  const previousTenantSlug = process.env.TENANT_SLUG;
-
-  process.env.LINE_CHANNEL_SECRET = channelSecret;
-  process.env.LINE_WEBHOOK_SECRET_PATH = knownWebhookSecret;
-  process.env.TENANT_ID = "tenant_amamihome";
-  process.env.TENANT_SLUG = "amamihome";
-
-  return callback().finally(() => {
-    restoreEnv("LINE_CHANNEL_SECRET", previousSecret);
-    restoreEnv("LINE_WEBHOOK_SECRET_PATH", previousWebhookPath);
-    restoreEnv("TENANT_ID", previousTenantId);
-    restoreEnv("TENANT_SLUG", previousTenantSlug);
+function createTestContext(input: { tenantId?: string; tenantSlug?: string; webhookSecret?: string } = {}) {
+  const customerRepository = new InMemoryCustomerRepository();
+  const messageRepository = new InMemoryMessageRepository();
+  const app = createApiApp({
+    customerRepository,
+    messageRepository,
+    env: {
+      LINE_CHANNEL_SECRET: channelSecret,
+      LINE_WEBHOOK_SECRET_PATH: input.webhookSecret ?? knownWebhookSecret,
+      TENANT_ID: input.tenantId ?? "tenant_amamihome",
+      TENANT_SLUG: input.tenantSlug ?? "amamihome"
+    }
   });
-}
 
-function restoreEnv(key: string, value: string | undefined): void {
-  if (value === undefined) {
-    delete process.env[key];
-    return;
-  }
-
-  process.env[key] = value;
+  return {
+    app,
+    customerRepository,
+    messageRepository
+  };
 }
 
 describe("LINE webhook foundation", () => {
-  it("returns 200 for a known webhook secret and a valid raw-body signature", async () => {
-    await withLineEnv(async () => {
-      const response = await app.fetch(
-        signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
-      );
-      const body = await response.json();
+  it("returns 200 and logs follow/text message events for a valid request", async () => {
+    const { app, customerRepository, messageRepository } = createTestContext();
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
+    );
+    const body = await response.json();
 
-      expect(response.status).toBe(200);
-      expect(body).toMatchObject({
-        ok: true,
-        tenant_id: "tenant_amamihome",
-        tenant_slug: "amamihome",
-        destination: "U_TEST_DESTINATION",
-        event_count: 2
-      });
-      expect(body.events[0]).toMatchObject({
-        event_id: "01TESTFOLLOWEVENT",
-        type: "follow",
-        source_user_id: "U_TEST_USER_001"
-      });
-      expect(body.events[1]).toMatchObject({
-        event_id: "01TESTMESSAGEEVENT",
-        type: "message",
-        message_id: "test-line-message-001",
-        message_type: "text",
-        text: "モデルホームを見学したいです"
-      });
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      tenant_slug: "amamihome",
+      destination: "U_TEST_DESTINATION",
+      event_count: 2,
+      logging: {
+        customers_upserted: 2,
+        messages_inserted: 1,
+        unsupported_events: 0
+      }
+    });
+    expect(body.events[0]).toMatchObject({
+      event_id: "01TESTFOLLOWEVENT",
+      type: "follow",
+      source_user_id: "U_TEST_USER_001"
+    });
+    expect(body.events[1]).toMatchObject({
+      event_id: "01TESTMESSAGEEVENT",
+      type: "message",
+      message_id: "test-line-message-001",
+      message_type: "text",
+      text: "モデルホームを見学したいです"
+    });
+
+    const customers = customerRepository.list();
+    expect(customers).toHaveLength(1);
+    expect(customers[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      line_user_id: "U_TEST_USER_001",
+      response_mode: "bot_auto",
+      last_customer_message_at: new Date(1710000001000).toISOString()
+    });
+
+    const messages = messageRepository.list();
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customers[0]?.id,
+      line_message_id: "test-line-message-001",
+      role: "customer",
+      message_type: "text",
+      body: "モデルホームを見学したいです"
     });
   });
 
   it("returns 401 when the raw-body signature is invalid", async () => {
-    await withLineEnv(async () => {
-      const response = await app.fetch(
-        signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody, "invalid-signature")
-      );
-      const body = await response.json();
+    const { app, customerRepository, messageRepository } = createTestContext();
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody, "invalid-signature")
+    );
+    const body = await response.json();
 
-      expect(response.status).toBe(401);
-      expect(body).toEqual({ ok: false, error: "invalid_line_signature" });
-    });
+    expect(response.status).toBe(401);
+    expect(body).toEqual({ ok: false, error: "invalid_line_signature" });
+    expect(customerRepository.list()).toHaveLength(0);
+    expect(messageRepository.list()).toHaveLength(0);
   });
 
   it("returns 404 for an unknown webhook secret before trusting the body", async () => {
-    await withLineEnv(async () => {
-      const response = await app.fetch(signedRequest("/api/line/webhook/unknown", fixtureBody));
-      const body = await response.json();
+    const { app, customerRepository, messageRepository } = createTestContext();
+    const response = await app.fetch(signedRequest("/api/line/webhook/unknown", fixtureBody));
+    const body = await response.json();
 
-      expect(response.status).toBe(404);
-      expect(body).toEqual({ ok: false, error: "unknown_webhook_path" });
-    });
+    expect(response.status).toBe(404);
+    expect(body).toEqual({ ok: false, error: "unknown_webhook_path" });
+    expect(customerRepository.list()).toHaveLength(0);
+    expect(messageRepository.list()).toHaveLength(0);
   });
 
   it("returns 400 for malformed JSON after signature verification passes", async () => {
-    await withLineEnv(async () => {
-      const malformedBody = "{not valid json";
-      const response = await app.fetch(
-        signedRequest(`/api/line/webhook/${knownWebhookSecret}`, malformedBody)
-      );
-      const body = await response.json();
+    const { app, customerRepository, messageRepository } = createTestContext();
+    const malformedBody = "{not valid json";
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, malformedBody)
+    );
+    const body = await response.json();
 
-      expect(response.status).toBe(400);
-      expect(body).toEqual({ ok: false, error: "malformed_line_webhook_body" });
+    expect(response.status).toBe(400);
+    expect(body).toEqual({ ok: false, error: "malformed_line_webhook_body" });
+    expect(customerRepository.list()).toHaveLength(0);
+    expect(messageRepository.list()).toHaveLength(0);
+  });
+
+  it("keeps the same LINE user separated by webhook-resolved tenant_id", async () => {
+    const customerRepository = new InMemoryCustomerRepository();
+    const messageRepository = new InMemoryMessageRepository();
+    const amamiApp = createApiApp({
+      customerRepository,
+      messageRepository,
+      env: {
+        LINE_CHANNEL_SECRET: channelSecret,
+        LINE_WEBHOOK_SECRET_PATH: "wh_dev_amamihome",
+        TENANT_ID: "tenant_amamihome",
+        TENANT_SLUG: "amamihome"
+      }
     });
+    const otherApp = createApiApp({
+      customerRepository,
+      messageRepository,
+      env: {
+        LINE_CHANNEL_SECRET: channelSecret,
+        LINE_WEBHOOK_SECRET_PATH: "wh_dev_other",
+        TENANT_ID: "tenant_other",
+        TENANT_SLUG: "other"
+      }
+    });
+
+    await amamiApp.fetch(signedRequest("/api/line/webhook/wh_dev_amamihome", fixtureBody));
+    await otherApp.fetch(signedRequest("/api/line/webhook/wh_dev_other", fixtureBody));
+
+    expect(customerRepository.list()).toHaveLength(2);
+    expect(customerRepository.list().map((customer) => customer.tenant_id).sort()).toEqual([
+      "tenant_amamihome",
+      "tenant_other"
+    ]);
+    expect(messageRepository.list()).toHaveLength(2);
+    expect(messageRepository.list().map((message) => message.tenant_id).sort()).toEqual([
+      "tenant_amamihome",
+      "tenant_other"
+    ]);
   });
 });

@@ -7,7 +7,7 @@
 3. Webhook URLまたはchannel設定からtenantを確定する。
 4. raw bodyと `x-line-signature` でLINE署名検証を行う。
 5. JSON parseし、Webhook eventを正規化する。
-6. `customers` に `tenant_id`、`line_user_id`、初期 `response_mode = bot_auto` で顧客カルテを作る処理はLoop 003以降で実装する。
+6. follow eventでは、in-memory repository上で `customers` に `tenant_id`、`line_user_id`、初期 `response_mode = bot_auto` の顧客カルテを作成または更新する。
 7. 初回案内の実送信は後続Phaseで実装する。
 
 ## テキストメッセージ受信
@@ -16,14 +16,15 @@
 2. `webhookSecret` からtenantを確定する。
 3. raw bodyと `x-line-signature` で署名検証する。
 4. JSON parseし、Webhook eventを正規化する。
-5. `customers` 取得または作成、`messages` 保存、`consultations` 更新はLoop 003以降で実装する。
-6. `response_mode` を確認する処理は、message保存後のループで実装する。
+5. text message eventでは、`tenant_id + line_user_id` でcustomerを作成または更新し、`last_customer_message_at` を更新する。
+6. text message eventでは、`tenant_id`、`customer_id`、`line_message_id`、本文を持つmessageをin-memory repositoryへ保存する。
+7. consultation更新、response_modeに応じた自動応答判定、永続DB保存は後続Loopで実装する。
 
 ## 画像受信
 
 1. LINE Webhookで画像message eventを受信する。
 2. tenantを確定し、raw bodyで署名検証する。
-3. Loop 002ではevent正規化まで行い、画像取得は行わない。
+3. Loop 003では画像eventは保存対象外として扱い、画像取得は行わない。
 4. 後続PhaseではLINE content APIから画像を取得し、Supabase Storageへ保存する。
 5. `messages.media_storage_path` に保存先を記録する。
 6. 画像に個人情報や住宅内部写真が含まれる可能性があるため、公開URL化しない。
