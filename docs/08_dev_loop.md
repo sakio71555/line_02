@@ -13,7 +13,8 @@
 7. `npx pnpm@10.12.1 test` を実行する。
 8. 失敗した場合は原因を修正して再実行する。
 9. READMEまたはdocsに反映する必要があれば更新する。
-10. 最後に変更ファイル、実行コマンド、残リスク、次タスクを報告する。
+10. 必要に応じて `docs/14_dev_logs/YYYY-MM-DD.md` に作業ログを追記する。
+11. 最後に変更ファイル、実行コマンド、残リスク、次タスクを報告する。
 
 ## 検証コマンド方針
 
@@ -31,6 +32,8 @@
 UI loopではNext.js buildが必要になる場合があります。ただし、Loop 014のread-only UI foundationでは使用量節約のため、原則として `lint`、`typecheck`、`test`、`test:integration` を優先し、buildが必要な場合だけ理由を記録して実行します。
 
 UI確認Loopでは、必要に応じて開発専用の `POST /api/dev/seed-demo-data` を使い、in-memoryにデモ顧客・デモメッセージを投入してread-only管理画面を確認します。このdemo seedは本番用途ではなく、`APP_ENV=production` または `NODE_ENV=production` では使えない前提です。
+
+Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く
 

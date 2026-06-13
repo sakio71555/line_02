@@ -19,7 +19,8 @@ This project must be built by loop engineering. Never implement broad features i
 7. `npx pnpm@10.12.1 test` を実行する。
 8. 失敗した場合は原因を修正して再実行する。
 9. 実装内容をREADMEまたはdocsに反映する必要があれば更新する。
-10. 最後に変更ファイル、実行コマンド、残リスク、次タスクを報告する。
+10. 必要に応じて `docs/14_dev_logs/YYYY-MM-DD.md` に作業ログを追記する。
+11. 最後に変更ファイル、実行コマンド、残リスク、次タスクを報告する。
 
 ## Standard Commands
 
@@ -54,6 +55,10 @@ This project must be built by loop engineering. Never implement broad features i
 - 仕様、テスト、実装、ドキュメントを同じ変更セットで揃える。
 - 不確かな住宅価格、補助金可否、土地・建売在庫、契約条件、保証判断をAIで断定しない。
 - 後続Codexタスクは `docs/11_codex_tasks/` のタスクカードを起点に進める。
+- Loop完了時は、必要に応じて `docs/14_dev_logs/YYYY-MM-DD.md` に作業ログを追記する。
+- 作業ログはObsidianで見返すためのMarkdown記録であり、プロダクト機能ではない。
+- 作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書かない。
+- 作業ログには完了報告の要点、テスト結果、tenant_id分離、外部API mock確認、残リスク、次Loopを書く。
 
 ## Loop Report Format
 
