@@ -10,3 +10,4 @@ export {
   createSupabaseAnonServerClient,
   createSupabaseServiceRoleServerClient
 } from "./client";
+export * from "./repositories";

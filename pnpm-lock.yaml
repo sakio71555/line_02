@@ -118,6 +118,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@amami-line-crm/domain':
+        specifier: workspace:*
+        version: link:../domain
       '@amami-line-crm/shared':
         specifier: workspace:*
         version: link:../shared
