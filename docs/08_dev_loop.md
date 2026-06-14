@@ -73,6 +73,8 @@ Admin API role guardは `route/action mapping plan -> API guard boundary -> repr
 
 API guard boundary loopでは、`AdminTenantContext(source: authenticated_staff)` だけをrole判定対象にし、dev-only `source: dev_header` は `authenticated_staff_required` として扱います。route接続は別Loopに分け、現在のlocal MVP runtimeを暗黙にrole-authorized扱いしません。
 
+representative route/test loopでは、まず `view_customers` のような読み取り系代表actionで `authenticated_staff` contextのallow/denyと `permission_denied` response mappingを確認します。既存MVP routeを壊さないため、dev-header runtimeへの全体適用はfull rolloutやauthenticated runtime接続とは分けます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

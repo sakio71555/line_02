@@ -164,6 +164,8 @@ Loop 042ではAdmin API role guard connection planを追加しました。Admin 
 
 Loop 043ではAdmin API role guard boundaryを追加しました。`AdminTenantContext(source: authenticated_staff)` と `AdminAction` を組み合わせてrole permissionを判定し、`dev_header` は `authenticated_staff_required` として拒否します。ただしAdmin API routeへの接続、UI制御、authenticated runtime接続はまだ未実装です。詳細は [docs/11_codex_tasks/043_admin_api_role_guard_boundary.md](docs/11_codex_tasks/043_admin_api_role_guard_boundary.md) を参照してください。
 
+Loop 044ではAdmin API role guardを代表actionで検証しました。`view_customers` を代表actionに、authenticated staff contextでのrole判定と `permission_denied` response mappingを確認しましたが、全Admin API route展開、Supabase Auth/JWT接続、UI制御はまだ未実装です。詳細は [docs/11_codex_tasks/044_admin_api_role_guard_representative_route.md](docs/11_codex_tasks/044_admin_api_role_guard_representative_route.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
