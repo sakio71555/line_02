@@ -45,6 +45,12 @@ import {
   mapAdminTenantGuardErrorToHttp,
   resolveAdminTenantContext
 } from "./admin/tenant-context";
+import { mapAdminAuthErrorToHttp } from "./admin/auth-error-response";
+import {
+  resolveAuthenticatedAdminRuntimeContext,
+  type AuthenticatedAdminRuntimeDependencies,
+  type AuthenticatedAdminRuntimeInput
+} from "./admin/authenticated-runtime";
 import {
   adminRouteActions,
   evaluateAdminRouteRoleGuardCompatibility
@@ -58,6 +64,8 @@ export interface ApiAppDependencies {
   staffNotifier?: StaffNotifier;
   aiProvider?: AiProvider;
   knowledgePageRepository?: KnowledgePageRepository;
+  adminAuthRuntime?: AuthenticatedAdminRuntimeDependencies;
+  authenticatedSelectedTenantId?: string | null;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
 }
@@ -80,6 +88,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const aiProvider = dependencies.aiProvider ?? defaultAiProvider;
   const knowledgePageRepository =
     dependencies.knowledgePageRepository ?? defaultKnowledgePageRepository;
+  const adminAuthRuntime = dependencies.adminAuthRuntime;
+  const authenticatedSelectedTenantId = dependencies.authenticatedSelectedTenantId;
   const now = dependencies.now;
   const env = dependencies.env ?? process.env;
 
@@ -129,6 +139,40 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/customers", async (c) => {
+    const authorizationHeader = c.req.header("authorization");
+
+    if (hasAuthorizationHeader(authorizationHeader)) {
+      if (!adminAuthRuntime) {
+        const response = mapAdminAuthErrorToHttp({ code: "authenticated_staff_required" });
+        return c.json(response.body, response.status);
+      }
+
+      const runtime = await resolveAuthenticatedAdminRuntimeContext(
+        createListCustomersAuthenticatedRuntimeInput(
+          authorizationHeader,
+          authenticatedSelectedTenantId
+        ),
+        adminAuthRuntime
+      );
+
+      if (!runtime.ok) {
+        const response = mapAdminAuthErrorToHttp(runtime.error);
+        return c.json(response.body, response.status);
+      }
+
+      const customers = await listCustomerListItems({
+        tenant_id: runtime.tenantId,
+        customerRepository,
+        messageRepository
+      });
+
+      return c.json({
+        ok: true,
+        tenant_id: runtime.tenantId,
+        customers
+      });
+    }
+
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
@@ -688,6 +732,26 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 }
 
 export const app = createApiApp();
+
+function hasAuthorizationHeader(authorizationHeader: string | undefined): authorizationHeader is string {
+  return Boolean(authorizationHeader?.trim());
+}
+
+function createListCustomersAuthenticatedRuntimeInput(
+  authorizationHeader: string,
+  selectedTenantId: string | null | undefined
+): AuthenticatedAdminRuntimeInput {
+  const input: AuthenticatedAdminRuntimeInput = {
+    authorizationHeader,
+    action: adminRouteActions.listCustomers
+  };
+
+  if (selectedTenantId !== undefined) {
+    input.selectedTenantId = selectedTenantId;
+  }
+
+  return input;
+}
 
 interface ResolvedWebhookTenant {
   tenantId: string;

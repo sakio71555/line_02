@@ -91,6 +91,8 @@ Supabase Auth session extractionは、Admin API routeへ接続する前にserver
 
 fake authenticated runtime接続では、session extraction boundary、fake verifier、fake `StaffAuthLookup`、authenticated staff tenant guard、role guardをroute非接続のまま組み合わせて検証します。これにより、representative route接続へ進む前に `authenticated_staff` contextと `AdminAction` permissionの流れを固定します。
 
+representative Admin API route wiringでは、まず `GET /api/admin/customers` のようなread-only route 1本だけにfake authenticated runtimeを接続します。既存 `dev_header` MVP互換を維持し、全route rollout、Admin UI token forwarding、production `dev_header` rejectionは次以降へ分けます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く
