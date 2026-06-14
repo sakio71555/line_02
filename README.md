@@ -180,6 +180,8 @@ Loop 050ではdev header production rejection planを追加しました。`x-ten
 
 Loop 051ではAdmin API向けのSupabase Auth session extraction boundaryを追加しました。`Authorization: Bearer <token>` の解析、token verifier interface、session extraction error mappingを用意しましたが、まだAdmin API route、Supabase Auth実接続、Admin UI token forwardingには接続していません。詳細は [docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md](docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md) を参照してください。
 
+Loop 052ではfake authenticated staff runtime connectionを追加しました。fake `AuthSessionVerifier` とfake `StaffAuthLookup` を使い、Bearer tokenから `AdminTenantContext(source=authenticated_staff)` とrole guardまで通す境界を検証しましたが、Admin API route接続、Supabase Auth本接続、JWT本検証はまだ未実装です。詳細は [docs/11_codex_tasks/052_fake_authenticated_staff_runtime_connection.md](docs/11_codex_tasks/052_fake_authenticated_staff_runtime_connection.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。

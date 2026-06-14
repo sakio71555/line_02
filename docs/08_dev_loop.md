@@ -89,6 +89,8 @@ dev_header production rejectionは `plan -> session extraction boundary -> fake 
 
 Supabase Auth session extractionは、Admin API routeへ接続する前にserver-side boundaryとして切り出します。`Authorization: Bearer <token>` の解析、token verifier interface、error mappingを先に固定し、Supabase Auth実接続、Admin UI token forwarding、`dev_header` rejectionは後続Loopへ分けます。
 
+fake authenticated runtime接続では、session extraction boundary、fake verifier、fake `StaffAuthLookup`、authenticated staff tenant guard、role guardをroute非接続のまま組み合わせて検証します。これにより、representative route接続へ進む前に `authenticated_staff` contextと `AdminAction` permissionの流れを固定します。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く
