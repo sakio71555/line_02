@@ -168,6 +168,8 @@ Loop 044ではAdmin API role guardを代表actionで検証しました。`view_c
 
 Loop 045ではAdmin API role guardを全Admin routeへ展開できる形に整理しました。`authenticated_staff` ではAdminActionごとにrole guardをenforceし、`dev_header` では既存MVP互換のため暫定skipします。ただしSupabase Auth/JWT接続、UI制御、production dev_header拒否はまだ未実装です。詳細は [docs/11_codex_tasks/045_admin_api_role_guard_full_route_rollout.md](docs/11_codex_tasks/045_admin_api_role_guard_full_route_rollout.md) を参照してください。
 
+Loop 046ではAdmin UI role visibility planを追加しました。Admin UI操作と `AdminAction` の対応、`owner` / `manager` / `staff` の表示/disabled方針を整理しましたが、UI制御実装、API helper変更、authenticated runtime接続はまだ未実装です。詳細は [docs/11_codex_tasks/046_admin_ui_role_visibility_plan.md](docs/11_codex_tasks/046_admin_ui_role_visibility_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
