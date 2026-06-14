@@ -9,6 +9,7 @@ import {
   runRagAnswerDraftAction,
   runStaffReplyAction
 } from "./actions";
+import { RoleVisibilityNote } from "../../role-visibility-note";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
@@ -66,6 +67,7 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
   return (
     <section className="section">
       <h2>管理アクション</h2>
+      <RoleVisibilityNote variant="customer-actions" />
       <div className="action-grid">
         <article className="action-panel action-panel-wide">
           <h3>担当者返信</h3>

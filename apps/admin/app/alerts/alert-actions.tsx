@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { runCheckUnrepliedAction, runNotifyOpenAction } from "./actions";
+import { RoleVisibilityNote } from "../role-visibility-note";
 import type { CheckUnrepliedActionState, NotifyOpenActionState } from "./action-types";
 
 const initialCheckState: CheckUnrepliedActionState = {
@@ -37,6 +38,7 @@ export function AlertActionPanel() {
       <p className="meta">
         現在は開発用Mock通知です。本番LINEグループ通知は後続Loopで接続します。
       </p>
+      <RoleVisibilityNote variant="alerts" />
       <div className="action-grid">
         <article className="action-panel">
           <h3>未返信チェック</h3>

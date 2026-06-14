@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getAdminApiConfig } from "../src/admin-api";
+import { RoleVisibilityNote } from "./role-visibility-note";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,8 @@ export default function AdminHomePage() {
           <span className="mono">{config.apiBaseUrl}</span>
         </p>
       </div>
+
+      <RoleVisibilityNote />
 
       <section className="section">
         <h2>Navigation</h2>

@@ -79,6 +79,8 @@ role guard full rollout loopでは、全Admin routeへ `AdminAction` mappingとg
 
 Admin UI role visibilityは `plan -> placeholder -> test fixtures -> authenticated runtime接続` の順に進めます。UIの表示/disabledは補助であり、権限の正本はAdmin API guardです。`dev_header` runtimeでは本番role visibilityとして扱わず、authenticated staff contextが来てから有効化します。
 
+role visibility placeholder loopでは、既存ボタンを非表示/disabledにせず、将来の `owner` / `manager` / `staff` 制御方針だけをUIに表示します。本物のrole判定、API helper変更、authenticated runtime接続は次以降のLoopに分けます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

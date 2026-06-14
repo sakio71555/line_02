@@ -107,6 +107,22 @@ input:disabled {
   color: #8f1f1f;
 }
 
+.role-visibility-note {
+  background: #fff;
+  border: 1px solid #b8c7d6;
+  margin: 16px 0;
+  padding: 14px 16px;
+}
+
+.role-visibility-note ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.role-visibility-note li {
+  margin: 4px 0;
+}
+
 .meta {
   color: #607080;
   font-size: 13px;
