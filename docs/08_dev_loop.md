@@ -67,6 +67,8 @@ tenant selection UIも `placeholder -> disabled selection -> membership API/sess
 
 role-based admin action guardは `plan -> API guard boundary -> UI visibility/disabled control -> authenticated runtime connection` の順に分けて進めます。権限の本丸はAPI側guardに置き、UIのbutton非表示やdisabled表示は補助として扱います。dev-only `x-tenant-id` runtimeの間は本番role guardとして扱いません。
 
+permission判定は、まずHTTP/UI/DB非依存のpure boundaryとして `packages/domain` に置きます。API routeへ接続するLoopでは `AdminTenantContext(source: authenticated_staff, role)` と組み合わせ、dev-only `x-tenant-id` runtimeとは混ぜません。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

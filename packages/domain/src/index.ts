@@ -8,6 +8,7 @@ import {
 import { z } from "zod";
 
 export * from "./auth-context";
+export * from "./admin-permissions";
 
 export interface Tenant extends Timestamped {
   id: string;

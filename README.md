@@ -158,6 +158,8 @@ Loop 039ではtenant selection UIを整理しました。`/select-tenant` に `t
 
 Loop 040ではrole-based admin action guard planを追加しました。`owner` / `manager` / `staff` の操作許可matrixとAPI/UI制御方針を整理しましたが、role guard実装、UI制御、API接続はまだ未実装です。詳細は [docs/11_codex_tasks/040_role_based_admin_action_guard_plan.md](docs/11_codex_tasks/040_role_based_admin_action_guard_plan.md) を参照してください。
 
+Loop 041ではAdmin role permission boundaryを追加しました。`owner` / `manager` / `staff` と `AdminAction` の許可判定をpure function化しましたが、API route guard接続、UI制御、authenticated runtime接続はまだ未実装です。詳細は [docs/11_codex_tasks/041_admin_role_permission_boundary.md](docs/11_codex_tasks/041_admin_role_permission_boundary.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
