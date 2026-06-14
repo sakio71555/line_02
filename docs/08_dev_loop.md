@@ -87,6 +87,8 @@ authenticated runtime接続は `connection plan -> token/session extraction boun
 
 dev_header production rejectionは `plan -> session extraction boundary -> fake authenticated runtime -> representative route -> Admin API rollout -> staging rejection -> production rejection` の順で進めます。拒否実装を先に入れず、local/testのMVP互換とstagingのdummy staff検証を通してからproduction hardeningへ進みます。
 
+Supabase Auth session extractionは、Admin API routeへ接続する前にserver-side boundaryとして切り出します。`Authorization: Bearer <token>` の解析、token verifier interface、error mappingを先に固定し、Supabase Auth実接続、Admin UI token forwarding、`dev_header` rejectionは後続Loopへ分けます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

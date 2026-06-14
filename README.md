@@ -178,6 +178,8 @@ Loop 049ではauthenticated runtime connection planを追加しました。`dev_
 
 Loop 050ではdev header production rejection planを追加しました。`x-tenant-id` / `dev_header` をproductionで拒否するためのruntime mode、環境判定、error response、staging移行、local/test互換方針を整理しましたが、拒否実装、JWT/session接続、API差し替えはまだ未実装です。詳細は [docs/11_codex_tasks/050_dev_header_production_rejection_plan.md](docs/11_codex_tasks/050_dev_header_production_rejection_plan.md) を参照してください。
 
+Loop 051ではAdmin API向けのSupabase Auth session extraction boundaryを追加しました。`Authorization: Bearer <token>` の解析、token verifier interface、session extraction error mappingを用意しましたが、まだAdmin API route、Supabase Auth実接続、Admin UI token forwardingには接続していません。詳細は [docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md](docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
