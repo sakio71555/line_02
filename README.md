@@ -122,6 +122,8 @@ Loop 022では `CustomerRepository` / `MessageRepository` に対応するSupabas
 
 Loop 022.1では `customers.last_customer_message_at` を初期migrationへ追加し、domain `Customer` とSupabase customer mappingの差異を解消しました。詳細は [docs/11_codex_tasks/022_1_customer_schema_sync.md](docs/11_codex_tasks/022_1_customer_schema_sync.md) を参照してください。
 
+Loop 023では `AlertRepository` に対応するSupabase版repositoryを追加しました。ただし、まだAPI routeやUIには接続しておらず、既存runtimeはin-memoryのままです。詳細は [docs/11_codex_tasks/023_supabase_alert_repository.md](docs/11_codex_tasks/023_supabase_alert_repository.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
