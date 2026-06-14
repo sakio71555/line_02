@@ -27,9 +27,21 @@ describe("admin auth placeholder pages", () => {
     const html = renderToStaticMarkup(<SelectTenantPlaceholderPage />);
 
     expect(html).toContain("テナント選択");
+    expect(html).toContain("アマミホーム");
     expect(html).toContain("tenant_amamihome");
+    expect(html).toContain("amamihome");
+    expect(html).toContain("amamihome.net");
+    expect(html).toContain("dev placeholder / 未接続");
+    expect(html).toContain("<button type=\"button\" disabled=\"\"");
+    expect(html).toContain("選択機能は未接続");
     expect(html).toContain("tenant一覧取得requestは行いません");
+    expect(html).toContain("tenant選択結果は保存しない");
+    expect(html).toContain("API取得は行いません");
     expect(html).toContain("Supabase Auth未接続");
+    expect(html).toContain("ログインplaceholder");
+    expect(html).toContain("dev顧客一覧へ進む");
+    expect(html).toContain("devアラートへ進む");
+    expect(html).not.toContain("action=");
   });
 
   it("renders the permission denied placeholder without role guard wiring", () => {
