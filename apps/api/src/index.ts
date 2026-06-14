@@ -41,7 +41,10 @@ import {
   type KnowledgePageRepository
 } from "@amami-line-crm/rag";
 
-import { resolveAdminTenantContext } from "./admin/tenant-context";
+import {
+  mapAdminTenantGuardErrorToHttp,
+  resolveAdminTenantContext
+} from "./admin/tenant-context";
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
@@ -94,12 +97,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const seeded = await seedDemoData({
@@ -129,12 +128,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const customers = await listCustomerListItems({
@@ -154,12 +149,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const customer = await getCustomerDetail({
@@ -183,12 +174,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const customerId = c.req.param("customerId");
@@ -220,12 +207,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const customerId = c.req.param("customerId");
@@ -276,12 +259,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const customerId = c.req.param("customerId");
@@ -329,12 +308,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const searchBody = await readRagSearchBody(c.req.raw);
@@ -363,12 +338,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const searchBody = await readRagSearchBody(c.req.raw);
@@ -427,12 +398,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const customer = await customerRepository.findByIdForTenant(
@@ -497,12 +464,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const status = c.req.query("status");
@@ -522,12 +485,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const result = await checkUnrepliedAlerts({
@@ -553,12 +512,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const tenantId = c.req.header("x-tenant-id");
     const tenant = resolveAdminTenant(tenantId, env);
 
-    if (tenant.status === "missing") {
-      return c.json({ ok: false, error: "missing_tenant_id" }, 401);
-    }
-
-    if (tenant.status === "unknown") {
-      return c.json({ ok: false, error: "unknown_tenant_id" }, 403);
+    if (tenant.status !== "ok") {
+      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
     const result = await notifyOpenAlerts({
@@ -927,10 +882,19 @@ function toAdminAlert(alert: Alert): {
 }
 
 function resolveAdminTenant(tenantId: string | undefined, env: NodeJS.ProcessEnv) {
-  return resolveAdminTenantContext({
+  const result = resolveAdminTenantContext({
     tenantIdHeader: tenantId,
     env
   });
+
+  if (result.status === "ok") {
+    return result;
+  }
+
+  return {
+    ...result,
+    httpResponse: mapAdminTenantGuardErrorToHttp(result.error)
+  };
 }
 
 function resolveWebhookTenant(

@@ -1,6 +1,12 @@
 import { loadAppConfig } from "@amami-line-crm/config";
 import type { StaffRole } from "@amami-line-crm/domain";
 
+import {
+  mapAdminAuthErrorToHttp,
+  type AdminAuthErrorCode,
+  type AdminAuthErrorHttpResponse
+} from "./auth-error-response";
+
 export type AdminTenantContextSource = "dev_header" | "authenticated_staff";
 
 export interface AdminTenantContext {
@@ -11,13 +17,15 @@ export interface AdminTenantContext {
   role?: StaffRole;
 }
 
-export type AdminTenantGuardErrorCode =
+export type AdminTenantGuardErrorCode = Extract<
+  AdminAuthErrorCode,
   | "missing_tenant_context"
   | "unknown_tenant"
   | "dev_tenant_header_not_allowed"
   | "authenticated_staff_required"
   | "tenant_membership_denied"
-  | "tenant_selection_required";
+  | "tenant_selection_required"
+>;
 
 export interface AdminTenantGuardError {
   code: AdminTenantGuardErrorCode;
@@ -28,9 +36,7 @@ export type AdminTenantGuardResult =
   | { status: "missing"; error: AdminTenantGuardError }
   | { status: "unknown"; error: AdminTenantGuardError };
 
-export type AdminTenantGuardHttpResponse =
-  | { status: 401; body: { ok: false; error: "missing_tenant_id" } }
-  | { status: 403; body: { ok: false; error: "unknown_tenant_id" } };
+export type AdminTenantGuardHttpResponse = AdminAuthErrorHttpResponse;
 
 export function resolveAdminTenantContext(input: {
   tenantIdHeader: string | undefined;
@@ -67,20 +73,5 @@ export function resolveAdminTenantContext(input: {
 export function mapAdminTenantGuardErrorToHttp(
   error: AdminTenantGuardError
 ): AdminTenantGuardHttpResponse {
-  switch (error.code) {
-    case "missing_tenant_context":
-    case "authenticated_staff_required":
-    case "tenant_selection_required":
-      return {
-        status: 401,
-        body: { ok: false, error: "missing_tenant_id" }
-      };
-    case "unknown_tenant":
-    case "dev_tenant_header_not_allowed":
-    case "tenant_membership_denied":
-      return {
-        status: 403,
-        body: { ok: false, error: "unknown_tenant_id" }
-      };
-  }
+  return mapAdminAuthErrorToHttp(error);
 }

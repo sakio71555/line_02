@@ -42,7 +42,8 @@ describe("admin tenant context guard", () => {
     if (result.status !== "ok") {
       expect(mapAdminTenantGuardErrorToHttp(result.error)).toEqual({
         status: 401,
-        body: { ok: false, error: "missing_tenant_id" }
+        body: { ok: false, error: "missing_tenant_id" },
+        placeholderRoute: "/login"
       });
     }
   });
@@ -63,7 +64,8 @@ describe("admin tenant context guard", () => {
     if (result.status !== "ok") {
       expect(mapAdminTenantGuardErrorToHttp(result.error)).toEqual({
         status: 403,
-        body: { ok: false, error: "unknown_tenant_id" }
+        body: { ok: false, error: "unknown_tenant_id" },
+        placeholderRoute: "/permission-denied"
       });
     }
   });

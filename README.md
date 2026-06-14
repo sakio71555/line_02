@@ -144,6 +144,8 @@ Loop 032ではAdmin auth placeholder UI planを追加しました。将来のlog
 
 Loop 033ではAdmin auth placeholder UIを追加しました。`/login`、`/select-tenant`、`/permission-denied`、`/session-expired` のplaceholder画面を追加しましたが、Supabase Auth、JWT/session、Admin API authenticated_staff guard連携はまだ未実装です。詳細は [docs/11_codex_tasks/033_admin_auth_ui_placeholder.md](docs/11_codex_tasks/033_admin_auth_ui_placeholder.md) を参照してください。
 
+Loop 034ではAdmin API auth error response mappingを追加しました。tenant/auth/permission系error codeをHTTP responseへ変換する境界を整えましたが、Supabase Auth、JWT/session、Admin UI redirect、RLSはまだ未実装です。詳細は [docs/11_codex_tasks/034_admin_api_auth_error_response_mapping.md](docs/11_codex_tasks/034_admin_api_auth_error_response_mapping.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
