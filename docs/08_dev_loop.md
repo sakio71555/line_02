@@ -57,6 +57,8 @@ Admin API auth error mapping loopでは、既存 `missing_tenant_id` / `unknown_
 
 Supabase Auth関連は、`config/client boundary -> Admin login UI integration -> session/JWT verification -> authenticated_staff guard -> runtime connection` の順に分けて進めます。Auth client boundary loopでは `SUPABASE_URL` / `SUPABASE_ANON_KEY` の境界とclient factoryだけを扱い、login/logout/session保存やAdmin API guard接続は実装しません。
 
+staff auth lookup repository loopでは、JWT/sessionから得た `auth_user_id` をstaff identityとtenant membershipへ変換するrepository境界だけを追加します。Admin API authenticated_staff guardへの接続、JWT検証、Supabase Auth session取得は次以降のLoopに分けます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

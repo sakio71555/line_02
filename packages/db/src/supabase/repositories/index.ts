@@ -5,6 +5,7 @@ export {
 } from "./message-repository";
 export { SupabaseAlertRepository } from "./alert-repository";
 export { SupabaseKnowledgePageRepository } from "./knowledge-page-repository";
+export { SupabaseStaffAuthLookupRepository } from "./staff-auth-lookup-repository";
 export {
   SupabaseRepositoryError,
   type SupabaseRepositoryErrorLike,

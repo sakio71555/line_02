@@ -118,6 +118,12 @@ Loop 035では、`SUPABASE_URL` / `SUPABASE_ANON_KEY` からSupabase Auth用conf
 
 詳細は [docs/11_codex_tasks/035_supabase_auth_client_boundary.md](11_codex_tasks/035_supabase_auth_client_boundary.md) を参照してください。
 
+## staff auth lookup repository
+
+Loop 036では、`staff_users.auth_user_id` と `staff_tenant_memberships.staff_user_id` を読むSupabase lookup repositoryを追加しました。取得したstaff identityとmembershipはLoop 030の `resolveAuthenticatedTenantContext` に渡せますが、Admin API runtime、Supabase Auth、JWT検証、RLS SQLにはまだ接続していません。
+
+詳細は [docs/11_codex_tasks/036_staff_auth_lookup_repository.md](11_codex_tasks/036_staff_auth_lookup_repository.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。

@@ -148,6 +148,8 @@ Loop 034ではAdmin API auth error response mappingを追加しました。tenan
 
 Loop 035ではSupabase Auth client boundaryを追加しました。`SUPABASE_URL` / `SUPABASE_ANON_KEY` からAuth config/clientを作る境界を追加しましたが、login/logout/session/JWT/Admin API guard接続はまだ未実装です。詳細は [docs/11_codex_tasks/035_supabase_auth_client_boundary.md](docs/11_codex_tasks/035_supabase_auth_client_boundary.md) を参照してください。
 
+Loop 036ではstaff auth lookup repositoryを追加しました。`auth_user_id` からstaff identityとtenant membershipを取得するSupabase repository境界を追加しましたが、Supabase Auth/JWT/Admin API guard接続はまだ未実装です。詳細は [docs/11_codex_tasks/036_staff_auth_lookup_repository.md](docs/11_codex_tasks/036_staff_auth_lookup_repository.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
