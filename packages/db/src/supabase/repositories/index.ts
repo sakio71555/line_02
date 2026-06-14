@@ -4,6 +4,7 @@ export {
   type SupabaseMessageRepositoryClient
 } from "./message-repository";
 export { SupabaseAlertRepository } from "./alert-repository";
+export { SupabaseKnowledgePageRepository } from "./knowledge-page-repository";
 export {
   SupabaseRepositoryError,
   type SupabaseRepositoryErrorLike,
