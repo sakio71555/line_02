@@ -83,6 +83,8 @@ role visibility placeholder loopでは、既存ボタンを非表示/disabledに
 
 role visibility test fixture loopでは、UI operationと `AdminAction` の対応、`owner` / `manager` / `staff` ごとの将来 `expectedVisibility` をtest fixtureとして固定します。fixtureはまだUIへ接続せず、permission boundaryとの整合だけを自動テストで守ってから、後続LoopでUI controlへ進みます。
 
+authenticated runtime接続は `connection plan -> token/session extraction boundary -> fake authenticated runtime -> Admin API integration -> Admin UI token forwarding -> production dev_header rejection` の順で進めます。`dev_header` はlocal MVP維持用であり、productionでは認証済みstaff contextが動いてから拒否します。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

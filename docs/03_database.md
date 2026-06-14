@@ -130,6 +130,12 @@ Loop 037では、`AuthUserIdentity` と `StaffAuthLookup` から `AdminTenantCon
 
 詳細は [docs/11_codex_tasks/037_authenticated_staff_tenant_guard.md](11_codex_tasks/037_authenticated_staff_tenant_guard.md) を参照してください。
 
+## authenticated runtime connection plan
+
+Loop 049では、現在の `dev_header` runtimeから `authenticated_staff` runtimeへ移行するための接続計画を追加しました。`staff_users.auth_user_id` と `staff_tenant_memberships` は将来の `StaffAuthLookup` / tenant context解決で参照予定ですが、Loop 049ではSupabase Auth/JWT検証、Admin API runtime差し替え、RLS SQL実装、Supabase本番接続は行っていません。
+
+詳細は [docs/11_codex_tasks/049_authenticated_runtime_connection_plan.md](11_codex_tasks/049_authenticated_runtime_connection_plan.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。

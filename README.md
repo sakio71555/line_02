@@ -174,6 +174,8 @@ Loop 047ではAdmin UI role visibility placeholderを追加しました。顧客
 
 Loop 048ではAdmin UI role visibility test fixturesを追加しました。UI操作と `AdminAction` の対応、`owner` / `manager` / `staff` の期待visibilityをfixture化し、permission boundaryとの整合をtestしましたが、本物のUI制御、button disabled、authenticated runtime接続はまだ未実装です。詳細は [docs/11_codex_tasks/048_admin_ui_role_visibility_test_fixtures.md](docs/11_codex_tasks/048_admin_ui_role_visibility_test_fixtures.md) を参照してください。
 
+Loop 049ではauthenticated runtime connection planを追加しました。`dev_header` runtimeから `authenticated_staff` runtimeへ移行するためのJWT/session extraction、StaffAuthLookup注入、selectedTenantId、runtime mode、production dev_header rejection方針を整理しましたが、実装、API差し替え、Supabase Auth/JWT接続はまだ未実装です。詳細は [docs/11_codex_tasks/049_authenticated_runtime_connection_plan.md](docs/11_codex_tasks/049_authenticated_runtime_connection_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
