@@ -136,6 +136,8 @@ Loop 028ではstaff/admin tenant schema planを追加しました。staff member
 
 Loop 029ではstaff tenant schema migrationを追加しました。`staff_users` にauth連携/status系columnを追加し、`staff_tenant_memberships` でtenant所属を表現する準備をしました。ただしSupabase Auth、JWT検証、API差し替え、RLS SQLはまだ未実装です。詳細は [docs/11_codex_tasks/029_staff_tenant_schema_migration.md](docs/11_codex_tasks/029_staff_tenant_schema_migration.md) を参照してください。
 
+Loop 030ではauth context boundaryを追加しました。`auth_user_id` からactive staff / active membershipを検証してtenant contextを作るpure resolverを追加しましたが、Supabase Auth、JWT検証、API差し替えはまだ未実装です。詳細は [docs/11_codex_tasks/030_auth_context_boundary.md](docs/11_codex_tasks/030_auth_context_boundary.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
