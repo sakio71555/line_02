@@ -162,6 +162,8 @@ Loop 041ではAdmin role permission boundaryを追加しました。`owner` / `m
 
 Loop 042ではAdmin API role guard connection planを追加しました。Admin API routeと `AdminAction` の対応表を整理しましたが、role guard接続、API route変更、UI制御はまだ未実装です。詳細は [docs/11_codex_tasks/042_admin_api_role_guard_connection_plan.md](docs/11_codex_tasks/042_admin_api_role_guard_connection_plan.md) を参照してください。
 
+Loop 043ではAdmin API role guard boundaryを追加しました。`AdminTenantContext(source: authenticated_staff)` と `AdminAction` を組み合わせてrole permissionを判定し、`dev_header` は `authenticated_staff_required` として拒否します。ただしAdmin API routeへの接続、UI制御、authenticated runtime接続はまだ未実装です。詳細は [docs/11_codex_tasks/043_admin_api_role_guard_boundary.md](docs/11_codex_tasks/043_admin_api_role_guard_boundary.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
