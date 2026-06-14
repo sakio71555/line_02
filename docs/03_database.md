@@ -112,6 +112,12 @@ Loop 032では、Admin login、tenant selection、permission denied、session ex
 
 詳細は [docs/11_codex_tasks/032_admin_auth_placeholder_ui_plan.md](11_codex_tasks/032_admin_auth_placeholder_ui_plan.md) を参照してください。
 
+## Supabase Auth client boundary
+
+Loop 035では、`SUPABASE_URL` / `SUPABASE_ANON_KEY` からSupabase Auth用config/clientを作る境界を `packages/db` に追加しました。Auth boundaryは `SUPABASE_SERVICE_ROLE_KEY` を読まず、login/logout/session保存/JWT検証/Admin API guard接続はまだ行っていません。
+
+詳細は [docs/11_codex_tasks/035_supabase_auth_client_boundary.md](11_codex_tasks/035_supabase_auth_client_boundary.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。
