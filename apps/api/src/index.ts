@@ -45,6 +45,10 @@ import {
   mapAdminTenantGuardErrorToHttp,
   resolveAdminTenantContext
 } from "./admin/tenant-context";
+import {
+  adminRouteActions,
+  evaluateAdminRouteRoleGuardCompatibility
+} from "./admin/role-guarded-handler";
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
@@ -132,6 +136,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.listCustomers
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
+    }
+
     const customers = await listCustomerListItems({
       tenant_id: tenant.tenantId,
       customerRepository,
@@ -151,6 +164,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (tenant.status !== "ok") {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
+    }
+
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.getCustomerDetail
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
     }
 
     const customer = await getCustomerDetail({
@@ -176,6 +198,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (tenant.status !== "ok") {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
+    }
+
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.getCustomerTimeline
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
     }
 
     const customerId = c.req.param("customerId");
@@ -209,6 +240,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (tenant.status !== "ok") {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
+    }
+
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.createAiSummary
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
     }
 
     const customerId = c.req.param("customerId");
@@ -263,6 +303,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.createAiReplyDraft
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
+    }
+
     const customerId = c.req.param("customerId");
     const customer = await customerRepository.findByIdForTenant(tenant.tenantId, customerId);
 
@@ -312,6 +361,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.searchRag
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
+    }
+
     const searchBody = await readRagSearchBody(c.req.raw);
 
     if (!searchBody) {
@@ -340,6 +398,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (tenant.status !== "ok") {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
+    }
+
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.createRagAnswerDraft
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
     }
 
     const searchBody = await readRagSearchBody(c.req.raw);
@@ -400,6 +467,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (tenant.status !== "ok") {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
+    }
+
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.sendStaffReply
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
     }
 
     const customer = await customerRepository.findByIdForTenant(
@@ -468,6 +544,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
     }
 
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.listAlerts
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
+    }
+
     const status = c.req.query("status");
     const alerts = await alertRepository.listByTenant(tenant.tenantId);
     const filteredAlerts = status
@@ -487,6 +572,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (tenant.status !== "ok") {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
+    }
+
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.checkUnrepliedAlerts
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
     }
 
     const result = await checkUnrepliedAlerts({
@@ -514,6 +608,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (tenant.status !== "ok") {
       return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
+    }
+
+    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+      context: tenant.context,
+      action: adminRouteActions.notifyOpenAlerts
+    });
+
+    if (!roleGuard.ok) {
+      return c.json(roleGuard.body, roleGuard.status);
     }
 
     const result = await notifyOpenAlerts({
