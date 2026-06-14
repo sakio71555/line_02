@@ -69,6 +69,8 @@ role-based admin action guardは `plan -> API guard boundary -> UI visibility/di
 
 permission判定は、まずHTTP/UI/DB非依存のpure boundaryとして `packages/domain` に置きます。API routeへ接続するLoopでは `AdminTenantContext(source: authenticated_staff, role)` と組み合わせ、dev-only `x-tenant-id` runtimeとは混ぜません。
 
+Admin API role guardは `route/action mapping plan -> API guard boundary -> representative route -> full route rollout` の順に分けます。いきなり全Admin APIへenforceせず、まずrouteごとの `AdminAction` 対応とdev-only/non-admin route除外方針を固めます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く
