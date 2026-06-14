@@ -105,6 +105,7 @@ LINE友だち単位の顧客カルテです。
 - `response_mode`: `bot_auto` / `human_required` / `human_active` / `emergency` / `closed`
 - `status`: `new` / `active` / `archived`
 - `last_message_at`
+- `last_customer_message_at`
 - `last_staff_reply_at`
 - `created_at`
 - `updated_at`

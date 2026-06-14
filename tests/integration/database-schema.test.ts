@@ -86,6 +86,14 @@ describe("Loop 001 database migration", () => {
     expect(migrationSql).toMatch(/alerts_tenant_status_severity_idx/i);
   });
 
+  it("keeps customers aligned with domain timestamp fields", () => {
+    const definition = tableDefinition("customers");
+
+    expect(definition).toMatch(/\blast_message_at timestamptz\b/i);
+    expect(definition).toMatch(/\blast_customer_message_at timestamptz\b/i);
+    expect(definition).toMatch(/\blast_staff_reply_at timestamptz\b/i);
+  });
+
   it("keeps knowledge_pages aligned with tenant-scoped RAG search", () => {
     const definition = tableDefinition("knowledge_pages");
 

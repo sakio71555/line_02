@@ -211,7 +211,8 @@ describe("Supabase customer/message repositories", () => {
         payload: expect.objectContaining({
           id: "customer_1",
           tenant_id: tenantId,
-          line_user_id: "line_user_1"
+          line_user_id: "line_user_1",
+          last_customer_message_at: "2026-06-14T00:00:00.000Z"
         }),
         options: { onConflict: "id" }
       })
@@ -363,7 +364,7 @@ function createCustomer(overrides: Partial<Customer> = {}): Customer {
     response_mode: "bot_auto",
     status: "new",
     last_message_at: now,
-    last_customer_message_at: null,
+    last_customer_message_at: now,
     last_staff_reply_at: null,
     created_at: now,
     updated_at: now,

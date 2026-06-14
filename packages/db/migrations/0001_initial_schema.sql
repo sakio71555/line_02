@@ -69,6 +69,7 @@ create table if not exists customers (
   ),
   status text not null default 'new' check (status in ('new', 'active', 'archived')),
   last_message_at timestamptz,
+  last_customer_message_at timestamptz,
   last_staff_reply_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

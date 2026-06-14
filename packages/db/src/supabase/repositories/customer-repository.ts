@@ -19,13 +19,13 @@ interface SupabaseCustomerRow {
   response_mode: Customer["response_mode"];
   status: Customer["status"];
   last_message_at: string | null;
-  last_customer_message_at?: string | null;
+  last_customer_message_at: string | null;
   last_staff_reply_at: string | null;
   created_at: string;
   updated_at: string;
 }
 
-type SupabaseCustomerWriteRow = Omit<SupabaseCustomerRow, "last_customer_message_at">;
+type SupabaseCustomerWriteRow = SupabaseCustomerRow;
 
 export class SupabaseCustomerRepository implements CustomerRepository {
   constructor(private readonly client: SupabaseRepositoryClient) {}
@@ -103,7 +103,7 @@ function toCustomer(row: SupabaseCustomerRow): Customer {
     response_mode: row.response_mode,
     status: row.status,
     last_message_at: row.last_message_at,
-    last_customer_message_at: row.last_customer_message_at ?? null,
+    last_customer_message_at: row.last_customer_message_at,
     last_staff_reply_at: row.last_staff_reply_at,
     created_at: row.created_at,
     updated_at: row.updated_at
@@ -125,6 +125,7 @@ function toCustomerWriteRow(customer: Customer): SupabaseCustomerWriteRow {
     response_mode: customer.response_mode,
     status: customer.status,
     last_message_at: customer.last_message_at,
+    last_customer_message_at: customer.last_customer_message_at,
     last_staff_reply_at: customer.last_staff_reply_at,
     created_at: customer.created_at,
     updated_at: customer.updated_at
