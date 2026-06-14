@@ -130,6 +130,8 @@ Loop 025ではSupabase RLS policy planを追加しました。ただし、まだ
 
 Loop 026ではSupabase local migration testの手順を整理しました。現在の環境ではDocker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行で、SQL validation testを強化しています。詳細は [docs/11_codex_tasks/026_supabase_local_migration_test.md](docs/11_codex_tasks/026_supabase_local_migration_test.md) と [docs/15_runbooks/supabase_local_migration_test.md](docs/15_runbooks/supabase_local_migration_test.md) を参照してください。
 
+Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
