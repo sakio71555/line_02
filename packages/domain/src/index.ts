@@ -60,7 +60,17 @@ export const alertSeverities = ["low", "medium", "high", "critical"] as const;
 export type AlertSeverity = (typeof alertSeverities)[number];
 
 export type TenantStatus = "active" | "paused";
-export type StaffRole = "owner" | "manager" | "staff";
+export const staffRoles = ["owner", "manager", "staff"] as const;
+
+export type StaffRole = (typeof staffRoles)[number];
+
+export const staffStatuses = ["active", "disabled", "archived"] as const;
+
+export type StaffStatus = (typeof staffStatuses)[number];
+
+export const staffMembershipStatuses = ["invited", "active", "disabled", "archived"] as const;
+
+export type StaffMembershipStatus = (typeof staffMembershipStatuses)[number];
 export type CustomerStatus = "new" | "active" | "archived";
 export type ConsultationCategory =
   | "new_build"
@@ -89,12 +99,27 @@ export type ReservationStatus = "requested" | "confirmed" | "cancelled" | "compl
 
 export interface StaffUser extends TenantScoped, Timestamped {
   id: string;
+  auth_user_id: string | null;
   email: string;
   display_name: string;
   role: StaffRole;
+  status: StaffStatus;
   line_user_id: string | null;
   is_active: boolean;
   last_login_at: string | null;
+  disabled_at: string | null;
+  archived_at: string | null;
+}
+
+export interface StaffTenantMembership extends TenantScoped, Timestamped {
+  id: string;
+  staff_user_id: string;
+  role: StaffRole;
+  status: StaffMembershipStatus;
+  invited_at: string | null;
+  accepted_at: string | null;
+  disabled_at: string | null;
+  archived_at: string | null;
 }
 
 export interface Customer extends TenantScoped, Timestamped {
@@ -207,6 +232,9 @@ export const messageTypeSchema = z.enum(messageTypes);
 export const alertStatusSchema = z.enum(alertStatuses);
 export const alertSeveritySchema = z.enum(alertSeverities);
 export const knowledgeSourceTypeSchema = z.enum(knowledgeSourceTypes);
+export const staffRoleSchema = z.enum(staffRoles);
+export const staffStatusSchema = z.enum(staffStatuses);
+export const staffMembershipStatusSchema = z.enum(staffMembershipStatuses);
 
 export const customerCreateSchema = z.object({
   tenant_id: tenantIdSchema,

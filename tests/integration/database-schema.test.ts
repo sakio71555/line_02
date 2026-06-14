@@ -12,6 +12,9 @@ import {
   messageRoleSchema,
   messageTypeSchema,
   responseModeSchema,
+  staffMembershipStatusSchema,
+  staffRoleSchema,
+  staffStatusSchema,
   tenantIdSchema
 } from "@amami-line-crm/domain";
 
@@ -30,6 +33,7 @@ const majorTables = [
   "tenant_line_settings",
   "tenant_ai_settings",
   "staff_users",
+  "staff_tenant_memberships",
   "customers",
   "messages",
   "consultations",
@@ -83,6 +87,13 @@ describe("Loop 001 database migration", () => {
     expect(tableDefinition("tenant_line_settings")).toMatch(/\btenant_id text primary key\b/i);
     expect(tableDefinition("tenant_ai_settings")).toMatch(/\btenant_id text primary key\b/i);
     expect(tableDefinition("staff_users")).toMatch(/unique \(tenant_id, email\)/i);
+    expect(migrationSql).toMatch(/staff_users_auth_user_id_unique/i);
+    expect(migrationSql).toMatch(/staff_users_email_idx/i);
+    expect(migrationSql).toMatch(/staff_users_status_idx/i);
+    expect(migrationSql).toMatch(/staff_tenant_memberships_tenant_id_idx/i);
+    expect(migrationSql).toMatch(/staff_tenant_memberships_staff_user_id_idx/i);
+    expect(migrationSql).toMatch(/staff_tenant_memberships_tenant_status_idx/i);
+    expect(migrationSql).toMatch(/staff_tenant_memberships_staff_status_idx/i);
     expect(migrationSql).toMatch(/customers_tenant_id_idx/i);
     expect(migrationSql).toMatch(/customers_tenant_response_mode_idx/i);
     expect(migrationSql).toMatch(/messages_tenant_customer_created_at_idx/i);
@@ -109,6 +120,44 @@ describe("Loop 001 database migration", () => {
     expect(definition).toMatch(/\blast_message_at timestamptz\b/i);
     expect(definition).toMatch(/\blast_customer_message_at timestamptz\b/i);
     expect(definition).toMatch(/\blast_staff_reply_at timestamptz\b/i);
+  });
+
+  it("keeps staff auth and membership schema ready for tenant context", () => {
+    const staffDefinition = tableDefinition("staff_users");
+    const membershipDefinition = tableDefinition("staff_tenant_memberships");
+
+    expect(staffDefinition).toMatch(/\bauth_user_id text\b/i);
+    expect(staffDefinition).toMatch(
+      /\bstatus text not null default 'active' check \(status in \('active', 'disabled', 'archived'\)\)/i
+    );
+    expect(staffDefinition).toMatch(/\bdisabled_at timestamptz\b/i);
+    expect(staffDefinition).toMatch(/\barchived_at timestamptz\b/i);
+    expect(migrationSql).toMatch(
+      /create unique index if not exists staff_users_auth_user_id_unique\s+on staff_users \(auth_user_id\)\s+where auth_user_id is not null;/i
+    );
+
+    expect(membershipDefinition).toMatch(
+      /\btenant_id text not null references tenants\(id\) on delete cascade\b/i
+    );
+    expect(membershipDefinition).toMatch(
+      /\bstaff_user_id text not null references staff_users\(id\) on delete cascade\b/i
+    );
+    expect(membershipDefinition).toMatch(
+      /\brole text not null default 'staff' check \(role in \('owner', 'manager', 'staff'\)\)/i
+    );
+    expect(membershipDefinition).toMatch(
+      /\bstatus text not null default 'active' check \(status in \('invited', 'active', 'disabled', 'archived'\)\)/i
+    );
+    expect(membershipDefinition).toMatch(/\binvited_at timestamptz\b/i);
+    expect(membershipDefinition).toMatch(/\baccepted_at timestamptz\b/i);
+    expect(membershipDefinition).toMatch(/\bdisabled_at timestamptz\b/i);
+    expect(membershipDefinition).toMatch(/\barchived_at timestamptz\b/i);
+    expect(membershipDefinition).toMatch(/unique \(tenant_id, staff_user_id\)/i);
+
+    expect(staffRoleSchema.parse("owner")).toBe("owner");
+    expect(staffStatusSchema.parse("disabled")).toBe("disabled");
+    expect(staffMembershipStatusSchema.parse("invited")).toBe("invited");
+    expect(staffRoleSchema.safeParse("platform_admin").success).toBe(false);
   });
 
   it("keeps knowledge_pages aligned with tenant-scoped RAG search", () => {

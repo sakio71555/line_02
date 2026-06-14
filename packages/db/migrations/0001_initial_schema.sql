@@ -42,16 +42,54 @@ create table if not exists tenant_ai_settings (
 create table if not exists staff_users (
   id text primary key,
   tenant_id text not null references tenants(id) on delete cascade,
+  auth_user_id text,
   email text not null,
   display_name text not null,
   role text not null default 'staff' check (role in ('owner', 'manager', 'staff')),
+  status text not null default 'active' check (status in ('active', 'disabled', 'archived')),
   line_user_id text,
   is_active boolean not null default true,
   last_login_at timestamptz,
+  disabled_at timestamptz,
+  archived_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (tenant_id, email)
 );
+
+create unique index if not exists staff_users_auth_user_id_unique
+  on staff_users (auth_user_id)
+  where auth_user_id is not null;
+
+create index if not exists staff_users_email_idx on staff_users (email);
+create index if not exists staff_users_status_idx on staff_users (status);
+
+create table if not exists staff_tenant_memberships (
+  id text primary key,
+  tenant_id text not null references tenants(id) on delete cascade,
+  staff_user_id text not null references staff_users(id) on delete cascade,
+  role text not null default 'staff' check (role in ('owner', 'manager', 'staff')),
+  status text not null default 'active' check (status in ('invited', 'active', 'disabled', 'archived')),
+  invited_at timestamptz,
+  accepted_at timestamptz,
+  disabled_at timestamptz,
+  archived_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (tenant_id, staff_user_id)
+);
+
+create index if not exists staff_tenant_memberships_tenant_id_idx
+  on staff_tenant_memberships (tenant_id);
+
+create index if not exists staff_tenant_memberships_staff_user_id_idx
+  on staff_tenant_memberships (staff_user_id);
+
+create index if not exists staff_tenant_memberships_tenant_status_idx
+  on staff_tenant_memberships (tenant_id, status);
+
+create index if not exists staff_tenant_memberships_staff_status_idx
+  on staff_tenant_memberships (staff_user_id, status);
 
 create table if not exists customers (
   id text primary key,

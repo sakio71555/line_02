@@ -2,6 +2,7 @@ export const tenantScopedTables = [
   "tenant_line_settings",
   "tenant_ai_settings",
   "staff_users",
+  "staff_tenant_memberships",
   "customers",
   "messages",
   "consultations",
@@ -24,6 +25,11 @@ export const tableDefinitions: TableDefinition[] = [
   { name: "tenant_line_settings", has_tenant_id: true, purpose: "LINE公式アカウント設定" },
   { name: "tenant_ai_settings", has_tenant_id: true, purpose: "AIモデル・RAG設定" },
   { name: "staff_users", has_tenant_id: true, purpose: "管理画面を使う担当者" },
+  {
+    name: "staff_tenant_memberships",
+    has_tenant_id: true,
+    purpose: "担当者とtenantの所属・権限"
+  },
   { name: "customers", has_tenant_id: true, purpose: "LINE友だち単位の顧客カルテ" },
   { name: "messages", has_tenant_id: true, purpose: "LINE・管理画面返信ログ" },
   { name: "consultations", has_tenant_id: true, purpose: "相談案件のまとまり" },
