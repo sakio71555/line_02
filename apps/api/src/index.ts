@@ -41,6 +41,8 @@ import {
   type KnowledgePageRepository
 } from "@amami-line-crm/rag";
 
+import { resolveAdminTenantContext } from "./admin/tenant-context";
+
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
   customerRepository?: CustomerRepository;
@@ -924,26 +926,11 @@ function toAdminAlert(alert: Alert): {
   };
 }
 
-type ResolvedAdminTenant =
-  | { status: "ok"; tenantId: string }
-  | { status: "missing" }
-  | { status: "unknown" };
-
-function resolveAdminTenant(
-  tenantId: string | undefined,
-  env: NodeJS.ProcessEnv
-): ResolvedAdminTenant {
-  if (!tenantId) {
-    return { status: "missing" };
-  }
-
-  const config = loadAppConfig(env);
-
-  if (tenantId !== config.tenant.id) {
-    return { status: "unknown" };
-  }
-
-  return { status: "ok", tenantId };
+function resolveAdminTenant(tenantId: string | undefined, env: NodeJS.ProcessEnv) {
+  return resolveAdminTenantContext({
+    tenantIdHeader: tenantId,
+    env
+  });
 }
 
 function resolveWebhookTenant(
