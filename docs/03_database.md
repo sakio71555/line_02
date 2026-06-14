@@ -20,6 +20,21 @@ DBはSupabase PostgreSQLを想定します。Loop 001では実接続せず、mig
 - `customers` は `line_user_id` がある場合だけ `tenant_id + line_user_id` をpartial unique indexで一意にする。
 - `messages` は `line_message_id` がある場合だけ `tenant_id + line_message_id` をpartial unique indexで一意にする。
 
+## RLS方針
+
+Loop 025ではRLS policy planのみを追加しています。RLS SQL、migration変更、Supabase接続、API差し替えはまだ行っていません。
+
+基本方針:
+
+- tenant-owned tableは `tenant_id` でDB levelでも分離する。
+- `SUPABASE_SERVICE_ROLE_KEY` はserver-side API / repository層だけで使う。
+- browser、LIFF、Next.js client componentからSupabase DBへ直接アクセスする設計は当面採用しない。
+- Admin UIとLIFF予定機能はAPI経由でDBへアクセスする。
+- 開発用 `x-tenant-id` は本番認証では使わず、将来は認証済みadmin user / staff contextからtenantを決定する。
+- RLS SQLとlocal検証は後続Loopで扱う。
+
+詳細は [docs/11_codex_tasks/025_supabase_rls_policy_plan.md](11_codex_tasks/025_supabase_rls_policy_plan.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。
