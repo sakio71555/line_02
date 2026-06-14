@@ -124,6 +124,12 @@ Loop 036では、`staff_users.auth_user_id` と `staff_tenant_memberships.staff_
 
 詳細は [docs/11_codex_tasks/036_staff_auth_lookup_repository.md](11_codex_tasks/036_staff_auth_lookup_repository.md) を参照してください。
 
+## authenticated staff tenant guard
+
+Loop 037では、`AuthUserIdentity` と `StaffAuthLookup` から `AdminTenantContext(source: authenticated_staff)` を作るAPI境界を追加しました。`staff_users.auth_user_id` と `staff_tenant_memberships` を使う想定は固まりましたが、Admin API runtime、JWT/session検証、Supabase Auth、RLS SQLにはまだ接続していません。
+
+詳細は [docs/11_codex_tasks/037_authenticated_staff_tenant_guard.md](11_codex_tasks/037_authenticated_staff_tenant_guard.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。

@@ -150,6 +150,8 @@ Loop 035ではSupabase Auth client boundaryを追加しました。`SUPABASE_URL
 
 Loop 036ではstaff auth lookup repositoryを追加しました。`auth_user_id` からstaff identityとtenant membershipを取得するSupabase repository境界を追加しましたが、Supabase Auth/JWT/Admin API guard接続はまだ未実装です。詳細は [docs/11_codex_tasks/036_staff_auth_lookup_repository.md](docs/11_codex_tasks/036_staff_auth_lookup_repository.md) を参照してください。
 
+Loop 037ではauthenticated staff tenant guard境界を追加しました。`AuthUserIdentity + StaffAuthLookup` から `AdminTenantContext(source: authenticated_staff)` を作る境界を追加しましたが、JWT/session検証やAdmin API route接続はまだ未実装です。詳細は [docs/11_codex_tasks/037_authenticated_staff_tenant_guard.md](docs/11_codex_tasks/037_authenticated_staff_tenant_guard.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
