@@ -35,6 +35,31 @@ export default function AdminHomePage() {
           </li>
         </ul>
       </section>
+
+      <section className="section">
+        <h2>Auth placeholder</h2>
+        <div className="notice">
+          <p>認証UIはまだplaceholderです。Supabase Auth、JWT/session、Admin API authenticated_staff guardには接続していません。</p>
+          <p className="meta">
+            既存のdev-only MVP確認導線は引き続き <span className="mono">x-tenant-id</span>{" "}
+            を使います。
+          </p>
+        </div>
+        <ul className="nav-links">
+          <li>
+            <Link href="/login">ログイン画面placeholder</Link>
+          </li>
+          <li>
+            <Link href="/select-tenant">テナント選択placeholder</Link>
+          </li>
+          <li>
+            <Link href="/permission-denied">権限不足placeholder</Link>
+          </li>
+          <li>
+            <Link href="/session-expired">セッション期限切れplaceholder</Link>
+          </li>
+        </ul>
+      </section>
     </main>
   );
 }
