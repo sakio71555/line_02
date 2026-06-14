@@ -136,6 +136,12 @@ Loop 049では、現在の `dev_header` runtimeから `authenticated_staff` runt
 
 詳細は [docs/11_codex_tasks/049_authenticated_runtime_connection_plan.md](11_codex_tasks/049_authenticated_runtime_connection_plan.md) を参照してください。
 
+## dev header production rejection plan
+
+Loop 050では、productionでtenant境界を `x-tenant-id` / `dev_header` に依存させず、認証済みstaff membership由来の `authenticated_staff` tenant contextを前提にする計画を追加しました。RLS SQL、Admin API runtime差し替え、Supabase Auth/JWT接続はまだ未実装です。
+
+詳細は [docs/11_codex_tasks/050_dev_header_production_rejection_plan.md](11_codex_tasks/050_dev_header_production_rejection_plan.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。
