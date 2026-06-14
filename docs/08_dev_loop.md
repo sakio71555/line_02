@@ -65,6 +65,8 @@ authenticated staff guard loopでは、`AuthUserIdentity + StaffAuthLookup` を 
 
 tenant selection UIも `placeholder -> disabled selection -> membership API/session integration -> authenticated_staff guard connection` の順に分けて進めます。placeholder段階では静的tenant cardとdisabled buttonだけを表示し、tenant一覧取得、selectedTenantId保存、cookie/session/localStorage保存は実装しません。
 
+role-based admin action guardは `plan -> API guard boundary -> UI visibility/disabled control -> authenticated runtime connection` の順に分けて進めます。権限の本丸はAPI側guardに置き、UIのbutton非表示やdisabled表示は補助として扱います。dev-only `x-tenant-id` runtimeの間は本番role guardとして扱いません。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

@@ -156,6 +156,8 @@ Loop 038ではAdmin login UIを将来のAuth接続に向けて整理しました
 
 Loop 039ではtenant selection UIを整理しました。`/select-tenant` に `tenant_amamihome` の静的placeholder cardとdisabled選択導線を追加しましたが、tenant取得API、選択保存、Supabase Auth/JWT連携はまだ未実装です。詳細は [docs/11_codex_tasks/039_tenant_selection_ui.md](docs/11_codex_tasks/039_tenant_selection_ui.md) を参照してください。
 
+Loop 040ではrole-based admin action guard planを追加しました。`owner` / `manager` / `staff` の操作許可matrixとAPI/UI制御方針を整理しましたが、role guard実装、UI制御、API接続はまだ未実装です。詳細は [docs/11_codex_tasks/040_role_based_admin_action_guard_plan.md](docs/11_codex_tasks/040_role_based_admin_action_guard_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
