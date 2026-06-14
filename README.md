@@ -140,6 +140,8 @@ Loop 030ではauth context boundaryを追加しました。`auth_user_id` から
 
 Loop 031ではAdmin API tenant context guardを追加しました。既存のdev-only `x-tenant-id` 解決をguard境界へ集約し、将来のauthenticated staff contextへ差し替えやすくしました。ただしSupabase Auth、JWT検証、Admin login、RLS SQLはまだ未実装です。詳細は [docs/11_codex_tasks/031_admin_api_tenant_context_guard.md](docs/11_codex_tasks/031_admin_api_tenant_context_guard.md) を参照してください。
 
+Loop 032ではAdmin auth placeholder UI planを追加しました。将来のlogin / tenant selection / permission denied / session expired導線を設計しましたが、UI実装、Supabase Auth、JWT検証、API差し替えはまだ未実装です。詳細は [docs/11_codex_tasks/032_admin_auth_placeholder_ui_plan.md](docs/11_codex_tasks/032_admin_auth_placeholder_ui_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。

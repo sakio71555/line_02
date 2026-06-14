@@ -106,6 +106,12 @@ Loop 031では、Admin API request境界でtenant contextを作るguardを `apps
 
 詳細は [docs/11_codex_tasks/031_admin_api_tenant_context_guard.md](11_codex_tasks/031_admin_api_tenant_context_guard.md) を参照してください。
 
+## Admin auth placeholder UI plan
+
+Loop 032では、Admin login、tenant selection、permission denied、session expiredなどの管理画面認証UIをdocs-onlyで設計しました。`staff_users.auth_user_id` と `staff_tenant_memberships` は存在しますが、Admin UIのlogin/session、Supabase Auth、JWT検証、authenticated staff guardとはまだ接続していません。
+
+詳細は [docs/11_codex_tasks/032_admin_auth_placeholder_ui_plan.md](11_codex_tasks/032_admin_auth_placeholder_ui_plan.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。
