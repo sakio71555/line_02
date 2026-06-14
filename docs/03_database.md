@@ -51,6 +51,19 @@ Loop 027では、開発用 `x-tenant-id` から本番向けの認証済みstaff/
 
 詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
+## staff tenant schema計画
+
+Loop 028では、本番認証に必要なstaff/admin tenant schemaをdocs-onlyで設計しました。現時点のmigration SQLはまだ変更していません。
+
+方針:
+
+- 現在の `staff_users` は `tenant_id` を持つtenant-scoped tableで、`role` と `is_active` はありますが、`auth_user_id`、membership table、招待状態、disabled/archived timestampは未実装です。
+- 本番向けにはstaff identityとtenant membershipを分け、`staff_users.auth_user_id` と `staff_tenant_memberships` で認証済みstaffからtenant accessを決定する案を優先します。
+- `x-tenant-id` はdev-onlyのselectorであり、本番tenant contextではありません。
+- RLS SQLを実装する前に、staff identity / membership schemaを決める必要があります。
+
+詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。
