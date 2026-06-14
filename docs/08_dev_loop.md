@@ -61,6 +61,8 @@ staff auth lookup repository loopでは、JWT/sessionから得た `auth_user_id`
 
 authenticated staff guard loopでは、`AuthUserIdentity + StaffAuthLookup` を `AdminTenantContext(source: authenticated_staff)` へ変換するAPI境界だけを追加します。Hono route差し替え、JWT/session検証、dev-header廃止、本番runtime接続は後続Loopに分けます。
 
+認証UIは `placeholder -> disabled form -> Auth client接続 -> session/JWT guard -> runtime switch` の順に分けて進めます。login UI integration loopではemail/password入力欄を表示しても、Supabase Auth呼び出し、session保存、Admin API guard接続は実装しません。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

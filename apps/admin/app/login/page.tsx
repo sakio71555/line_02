@@ -1,25 +1,89 @@
 import React from "react";
 
-import { AuthPlaceholderPage } from "../auth-placeholder-page";
-
 export default function LoginPlaceholderPage() {
   return (
-    <AuthPlaceholderPage
-      eyebrow="Auth placeholder"
-      title="管理画面ログイン"
-      description="将来の管理画面ログイン導線です。現時点では認証未接続のplaceholderで、ログイン送信処理はありません。"
-      notes={[
-        "email/password、magic link、Google OAuthなどの実ログイン処理は未実装です。",
-        "Supabase Auth未接続のため、auth.users.id と staff_users.auth_user_id の照合は行いません。",
-        "cookie、session、localStorage、sessionStorageへの保存は行いません。",
-        "dev modeでは既存のtenant_amamihome導線でMVP確認を継続します。"
-      ]}
-      links={[
-        { href: "/customers", label: "dev顧客一覧へ進む" },
-        { href: "/alerts", label: "devアラートへ進む" },
-        { href: "/select-tenant", label: "テナント選択placeholder" },
-        { href: "/session-expired", label: "セッション期限切れplaceholder" }
-      ]}
-    />
+    <main>
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Auth placeholder</p>
+          <h1>管理画面ログイン</h1>
+        </div>
+        <a href="/">トップへ戻る</a>
+      </div>
+
+      <div className="notice">
+        <p>
+          将来の管理画面ログイン導線です。現在はSupabase Auth未接続のため、
+          ログイン送信処理はありません。
+        </p>
+        <p className="meta">
+          入力内容は送信・保存されません。session、cookie、localStorage、
+          sessionStorageも使用しません。
+        </p>
+      </div>
+
+      <section className="section">
+        <h2>ログインフォーム準備中</h2>
+        <form className="login-form" aria-label="管理画面ログイン準備中フォーム">
+          <fieldset disabled>
+            <label htmlFor="admin-login-email">メールアドレス</label>
+            <input
+              id="admin-login-email"
+              type="email"
+              autoComplete="email"
+              placeholder="staff@example.com"
+            />
+
+            <label htmlFor="admin-login-password">パスワード</label>
+            <input
+              id="admin-login-password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="未接続"
+            />
+
+            <button type="submit" disabled>
+              Supabase Auth未接続
+            </button>
+          </fieldset>
+        </form>
+        <p className="meta">
+          本物の認証処理、email/password sign-in、magic link、OAuth、JWT/session検証は
+          まだ実装していません。
+        </p>
+      </section>
+
+      <section className="section">
+        <h2>未接続の内容</h2>
+        <ul>
+          <li>Supabase Auth APIは呼びません。</li>
+          <li>auth.users.id と staff_users.auth_user_id の照合はまだ行いません。</li>
+          <li>Admin API authenticated_staff guardにはまだ接続していません。</li>
+          <li>dev modeでは既存のtenant_amamihome導線でMVP確認を継続します。</li>
+        </ul>
+      </section>
+
+      <section className="section">
+        <h2>開発用導線</h2>
+        <p className="meta">
+          既存のdev-only MVP確認は引き続き <span className="mono">x-tenant-id</span>{" "}
+          経由で動作します。
+        </p>
+        <ul className="nav-links">
+          <li>
+            <a href="/customers">dev顧客一覧へ進む</a>
+          </li>
+          <li>
+            <a href="/alerts">devアラートへ進む</a>
+          </li>
+          <li>
+            <a href="/select-tenant">テナント選択placeholder</a>
+          </li>
+          <li>
+            <a href="/session-expired">セッション期限切れplaceholder</a>
+          </li>
+        </ul>
+      </section>
+    </main>
   );
 }

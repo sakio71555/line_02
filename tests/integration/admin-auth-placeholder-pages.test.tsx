@@ -12,9 +12,15 @@ describe("admin auth placeholder pages", () => {
     const html = renderToStaticMarkup(<LoginPlaceholderPage />);
 
     expect(html).toContain("管理画面ログイン");
-    expect(html).toContain("認証未接続");
     expect(html).toContain("Supabase Auth未接続");
+    expect(html).toContain("type=\"email\"");
+    expect(html).toContain("type=\"password\"");
+    expect(html).toContain("<fieldset disabled=\"\"");
+    expect(html).toContain("<button type=\"submit\" disabled=\"\"");
+    expect(html).toContain("入力内容は送信・保存されません");
+    expect(html).not.toContain("action=");
     expect(html).toContain("dev顧客一覧へ進む");
+    expect(html).toContain("devアラートへ進む");
   });
 
   it("renders the tenant selection placeholder without saving tenant state", () => {

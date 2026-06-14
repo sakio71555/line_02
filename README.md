@@ -152,6 +152,8 @@ Loop 036ではstaff auth lookup repositoryを追加しました。`auth_user_id`
 
 Loop 037ではauthenticated staff tenant guard境界を追加しました。`AuthUserIdentity + StaffAuthLookup` から `AdminTenantContext(source: authenticated_staff)` を作る境界を追加しましたが、JWT/session検証やAdmin API route接続はまだ未実装です。詳細は [docs/11_codex_tasks/037_authenticated_staff_tenant_guard.md](docs/11_codex_tasks/037_authenticated_staff_tenant_guard.md) を参照してください。
 
+Loop 038ではAdmin login UIを将来のAuth接続に向けて整理しました。email/password入力欄とdisabled submitを追加しましたが、Supabase Auth呼び出し、session保存、JWT/API guard連携はまだ未実装です。詳細は [docs/11_codex_tasks/038_admin_login_ui_integration.md](docs/11_codex_tasks/038_admin_login_ui_integration.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。

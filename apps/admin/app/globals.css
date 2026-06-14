@@ -71,6 +71,7 @@ label {
   font-weight: 700;
 }
 
+input,
 textarea {
   border: 1px solid #c7d0db;
   box-sizing: border-box;
@@ -79,6 +80,11 @@ textarea {
   padding: 10px;
   resize: vertical;
   width: 100%;
+}
+
+input:disabled {
+  background: #edf1f5;
+  color: #607080;
 }
 
 .section {
@@ -186,6 +192,15 @@ dl.detail-grid {
 .action-form {
   display: grid;
   gap: 10px;
+}
+
+.login-form fieldset {
+  background: #fff;
+  border: 1px solid #d8dee6;
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
 }
 
 .action-result {
