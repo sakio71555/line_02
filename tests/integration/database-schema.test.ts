@@ -80,10 +80,27 @@ describe("Loop 001 database migration", () => {
   });
 
   it("has tenant-scoped uniqueness and indexes for common access paths", () => {
+    expect(tableDefinition("tenant_line_settings")).toMatch(/\btenant_id text primary key\b/i);
+    expect(tableDefinition("tenant_ai_settings")).toMatch(/\btenant_id text primary key\b/i);
     expect(tableDefinition("staff_users")).toMatch(/unique \(tenant_id, email\)/i);
+    expect(migrationSql).toMatch(/customers_tenant_id_idx/i);
+    expect(migrationSql).toMatch(/customers_tenant_response_mode_idx/i);
+    expect(migrationSql).toMatch(/messages_tenant_customer_created_at_idx/i);
+    expect(migrationSql).toMatch(/messages_tenant_consultation_created_at_idx/i);
     expect(migrationSql).toMatch(/knowledge_pages_tenant_id_idx/i);
+    expect(migrationSql).toMatch(/knowledge_pages_tenant_allowed_for_ai_idx/i);
     expect(migrationSql).toMatch(/construction_cases_tenant_id_idx/i);
+    expect(migrationSql).toMatch(/construction_cases_tenant_recommendation_idx/i);
     expect(migrationSql).toMatch(/alerts_tenant_status_severity_idx/i);
+    expect(migrationSql).toMatch(/reservations_tenant_customer_idx/i);
+    expect(migrationSql).toMatch(/reservations_tenant_status_idx/i);
+  });
+
+  it("keeps RLS SQL out of the initial migration until the dedicated RLS loop", () => {
+    expect(migrationSql).toMatch(/RLS policy definitions are intentionally deferred/i);
+    expect(migrationSql).not.toMatch(
+      /alter table\s+[\w.]+\s+enable row level security|alter table\s+[\w.]+\s+force row level security|create policy/i
+    );
   });
 
   it("keeps customers aligned with domain timestamp fields", () => {

@@ -35,6 +35,14 @@ Loop 025ではRLS policy planのみを追加しています。RLS SQL、migratio
 
 詳細は [docs/11_codex_tasks/025_supabase_rls_policy_plan.md](11_codex_tasks/025_supabase_rls_policy_plan.md) を参照してください。
 
+## ローカルmigration検証
+
+Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。
+
+代替として `tests/integration/database-schema.test.ts` のSQL validationを強化し、主要table、tenant-owned table、主要index、RLS SQL未混入を確認しています。
+
+詳細は [docs/11_codex_tasks/026_supabase_local_migration_test.md](11_codex_tasks/026_supabase_local_migration_test.md) と [docs/15_runbooks/supabase_local_migration_test.md](15_runbooks/supabase_local_migration_test.md) を参照してください。
+
 ## enum/check制約
 
 PostgreSQL enumではなくcheck制約で初期表現しています。

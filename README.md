@@ -128,6 +128,8 @@ Loop 024では `KnowledgePageRepository` に対応できるSupabase版repository
 
 Loop 025ではSupabase RLS policy planを追加しました。ただし、まだRLS SQL実装、migration変更、Supabase接続、API差し替えは行っていません。詳細は [docs/11_codex_tasks/025_supabase_rls_policy_plan.md](docs/11_codex_tasks/025_supabase_rls_policy_plan.md) を参照してください。
 
+Loop 026ではSupabase local migration testの手順を整理しました。現在の環境ではDocker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行で、SQL validation testを強化しています。詳細は [docs/11_codex_tasks/026_supabase_local_migration_test.md](docs/11_codex_tasks/026_supabase_local_migration_test.md) と [docs/15_runbooks/supabase_local_migration_test.md](docs/15_runbooks/supabase_local_migration_test.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
