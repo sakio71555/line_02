@@ -32,3 +32,5 @@ export const tableDefinitions: TableDefinition[] = [
   { name: "construction_cases", has_tenant_id: true, purpose: "施工事例レコメンド候補" },
   { name: "reservations", has_tenant_id: true, purpose: "モデルホーム・相談予約" }
 ];
+
+export * from "./supabase";
