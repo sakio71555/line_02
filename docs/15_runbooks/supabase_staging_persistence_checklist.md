@@ -58,6 +58,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 
 ## Before Runtime Switch
 
+- Loop 067でcustomers/messages runtime switch boundaryは追加済み。ただしdefaultはin-memoryで、Supabase実接続やAPI runtime差し替えはまだ行っていない。
 - customers/messagesのrepository wiringを小さいLoopに分ける。
 - default local runtimeを壊さない。
 - tenant_id filter testを追加する。
@@ -83,4 +84,5 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 026: Supabase Local Migration Test](../11_codex_tasks/026_supabase_local_migration_test.md)
 - [Loop 065: Supabase Persistence Staging Plan](../11_codex_tasks/065_supabase_persistence_staging_plan.md)
 - [Loop 066: Supabase Staging Env Readiness Checklist](../11_codex_tasks/066_supabase_staging_env_readiness_checklist.md)
+- [Loop 067: Supabase Runtime Switch Boundary for Customers/Messages](../11_codex_tasks/067_supabase_runtime_switch_boundary_customers_messages.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)

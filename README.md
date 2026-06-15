@@ -160,6 +160,8 @@ Loop 065ではSupabase persistence staging planを追加しました。社内確
 
 Loop 066ではSupabase staging env readiness checklistを追加しました。staging Supabaseへ接続する前に、必要env名、key管理、staging/production分離、migration apply前チェック、dummy seed方針、runtime switch前条件を整理しました。Supabase接続、`.env` 作成、migration applyは未実施です。詳細は [docs/11_codex_tasks/066_supabase_staging_env_readiness_checklist.md](docs/11_codex_tasks/066_supabase_staging_env_readiness_checklist.md) と [docs/15_runbooks/supabase_staging_env_readiness_checklist.md](docs/15_runbooks/supabase_staging_env_readiness_checklist.md) を参照してください。
 
+Loop 067ではcustomers/messagesのSupabase runtime switch boundaryを追加しました。default in-memoryを維持したまま、将来Supabase repositoryへ切り替えるためのruntime mode、bundle、factory、env不足時error境界を追加しました。Supabase実接続、`.env` 作成、migration apply、API runtime差し替えは未実施です。詳細は [docs/11_codex_tasks/067_supabase_runtime_switch_boundary_customers_messages.md](docs/11_codex_tasks/067_supabase_runtime_switch_boundary_customers_messages.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

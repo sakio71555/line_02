@@ -12,6 +12,10 @@ const envReadinessTaskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/066_supabase_staging_env_readiness_checklist.md"
 );
+const runtimeSwitchTaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/067_supabase_runtime_switch_boundary_customers_messages.md"
+);
 const stagingRunbookPath = join(
   repoRoot,
   "docs/15_runbooks/supabase_staging_persistence_checklist.md"
@@ -30,6 +34,7 @@ const devLoopPath = join(repoRoot, "docs/08_dev_loop.md");
 describe("Loop 065 Supabase staging persistence plan docs", () => {
   const taskDoc = readFileSync(taskDocPath, "utf8");
   const envReadinessTaskDoc = readFileSync(envReadinessTaskDocPath, "utf8");
+  const runtimeSwitchTaskDoc = readFileSync(runtimeSwitchTaskDocPath, "utf8");
   const stagingRunbook = readFileSync(stagingRunbookPath, "utf8");
   const envReadinessRunbook = readFileSync(envReadinessRunbookPath, "utf8");
   const internalReviewRunbook = readFileSync(internalReviewRunbookPath, "utf8");
@@ -148,5 +153,29 @@ describe("Loop 065 Supabase staging persistence plan docs", () => {
     expect(devLoop).toContain("Supabase staging接続へ進む前");
     expect(devLoop).toContain("env/key/project/migration/dummy data");
     expect(devLoop).toContain("readiness checklist");
+  });
+
+  it("documents the Loop 067 customer/message runtime switch boundary", () => {
+    expect(runtimeSwitchTaskDoc).toContain(
+      "Loop 067: Supabase Runtime Switch Boundary for Customers/Messages"
+    );
+    expect(runtimeSwitchTaskDoc).toContain("RepositoryRuntimeMode");
+    expect(runtimeSwitchTaskDoc).toContain("CustomerMessageRepositoryBundle");
+    expect(runtimeSwitchTaskDoc).toContain("createInMemoryCustomerMessageRepositories");
+    expect(runtimeSwitchTaskDoc).toContain("createSupabaseCustomerMessageRepositories");
+    expect(runtimeSwitchTaskDoc).toContain("SupabaseRuntimeNotConfiguredError");
+    expect(runtimeSwitchTaskDoc).toContain("default runtimeはin-memory");
+    expect(runtimeSwitchTaskDoc).toContain("API runtimeへSupabase repositoryを接続していない");
+  });
+
+  it("keeps README and runbooks linked to the Loop 067 runtime boundary", () => {
+    expect(readme).toContain("067_supabase_runtime_switch_boundary_customers_messages.md");
+    expect(readme).toContain("default in-memoryを維持");
+    expect(readme).toContain("API runtime差し替えは未実施");
+    expect(devLoop).toContain("runtime mode / repository bundle / factory");
+    expect(stagingRunbook).toContain("Loop 067でcustomers/messages runtime switch boundary");
+    expect(envReadinessRunbook).toContain(
+      "Loop 067でcustomers/messagesのruntime mode / bundle / factory境界"
+    );
   });
 });

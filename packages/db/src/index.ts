@@ -40,3 +40,4 @@ export const tableDefinitions: TableDefinition[] = [
 ];
 
 export * from "./supabase";
+export * from "./runtime";
