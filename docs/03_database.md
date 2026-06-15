@@ -136,6 +136,12 @@ Loop 049では、現在の `dev_header` runtimeから `authenticated_staff` runt
 
 詳細は [docs/11_codex_tasks/049_authenticated_runtime_connection_plan.md](11_codex_tasks/049_authenticated_runtime_connection_plan.md) を参照してください。
 
+## selectedTenantId transport plan
+
+Loop 055では、複数tenant所属staffが操作対象tenantを選ぶための `selectedTenantId` transport方針をdocs-onlyで整理しました。`selectedTenantId` は権限ではなくselectorであり、必ず `StaffAuthLookup` / `staff_tenant_memberships` のactive membershipで再検証してから `AdminTenantContext.tenantId` として採用します。transport実装、cookie/session保存、Admin API route変更、Supabase Auth本接続はまだ行っていません。
+
+詳細は [docs/11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md](11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md) を参照してください。
+
 ## dev header production rejection plan
 
 Loop 050では、productionでtenant境界を `x-tenant-id` / `dev_header` に依存させず、認証済みstaff membership由来の `authenticated_staff` tenant contextを前提にする計画を追加しました。RLS SQL、Admin API runtime差し替え、Supabase Auth/JWT接続はまだ未実装です。

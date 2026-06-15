@@ -95,6 +95,8 @@ representative Admin API route wiringでは、まず `GET /api/admin/customers` 
 
 Admin API authenticated runtimeの全route rolloutは、代表route接続後にdocs-only planを挟み、read-only route、AI/RAG draft route、side-effect routeの順で分けて進めます。selectedTenantId transport、real Supabase Auth verifier、Admin UI token forwarding、production `dev_header` rejectionはそれぞれ別Loopに分け、1回で全認証切替を行いません。
 
+selectedTenantId transportは、`transport plan -> transport boundary -> read-only route rollout` の順に進めます。`selectedTenantId` は権限ではなくselectorとして扱い、active membershipで再検証してから `AdminTenantContext.tenantId` を確定します。cookie/session/localStorage保存や `/select-tenant` の保存処理は、transport boundaryとroute rolloutとは別Loopに分けます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

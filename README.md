@@ -186,6 +186,8 @@ Loop 053では代表Admin API routeにfake authenticated_staff runtime wiringを
 
 Loop 054では代表routeで確認した authenticated runtime を全Admin API routeへ広げるためのrollout planを追加しました。ただし、まだroute実装、Supabase Auth本接続、Admin UI token forwarding、production `dev_header` rejectionは行っていません。詳細は [docs/11_codex_tasks/054_admin_api_authenticated_runtime_full_route_rollout_plan.md](docs/11_codex_tasks/054_admin_api_authenticated_runtime_full_route_rollout_plan.md) を参照してください。
 
+Loop 055ではauthenticated runtimeの `selectedTenantId` transport planを追加しました。複数tenant所属staff向けにAdmin UIからAdmin APIへ選択tenantを渡す候補を比較し、短期はtest-only injection、中期は `x-selected-tenant-id` header候補、本番ではactive membership再検証必須と整理しました。ただし、transport実装、保存処理、Admin API接続はまだ未実装です。詳細は [docs/11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md](docs/11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` に置く想定ですが、`.env` は `.gitignore` で除外しています。共有するのは `.env.example` だけです。
