@@ -156,6 +156,15 @@ This is development-only demo data. It is not production data.
 - `担当者として返信する` に短い文を入れて、timelineにスタッフ返信が増えることを確認する。
 - 今はMockLineClientなので、本物のLINEには送信されないことを説明する。
 
+### 7.1 Staff Reply Safety Before Real LINE Send
+
+- 現在は本物LINEには送信されない。
+- AI返信下書きは送信ではない。
+- 担当者返信は現在デモ保存で、timelineにstaff messageとして残る。
+- 本物LINE送信へ進む前に、送信前確認UIと安全設計が必要。
+- 本番送信時は、送信先、送信本文、送信者、利用先、デモ送信/本番送信の違いを確認するステップを入れる予定。
+- 安全設計は [staff_reply_safety_confirmation.md](../16_design/staff_reply_safety_confirmation.md) を参照する。
+
 ### 8. Alerts
 
 - `対応が必要な相談を確認する` 画面として理解できるか。

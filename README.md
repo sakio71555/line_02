@@ -103,6 +103,8 @@ Loop 061.1ではinternal review feedback triageを追加しました。アマミ
 
 Loop 062ではAmami Home internal review final readiness hardeningを実施しました。主要画面/API/RAG source付き確認、mock/未接続表記、feedback導線を確認し、社内確認版としての最終確認記録を追加しました。詳細は [docs/15_runbooks/amami_home_internal_review_final_verification.md](docs/15_runbooks/amami_home_internal_review_final_verification.md) と [docs/11_codex_tasks/062_amami_home_internal_review_final_readiness_hardening.md](docs/11_codex_tasks/062_amami_home_internal_review_final_readiness_hardening.md) を参照してください。
 
+Loop 063ではstaff reply safety confirmation planを追加しました。担当者返信を将来本物LINE送信へ接続する前に、AI下書きと送信の分離、送信前確認、デモ送信/本番送信の表示、誤送信・二重送信・送信失敗時の方針をdocs化しました。LINE API実送信は未実装です。詳細は [docs/16_design/staff_reply_safety_confirmation.md](docs/16_design/staff_reply_safety_confirmation.md) と [docs/11_codex_tasks/063_staff_reply_safety_confirmation_plan.md](docs/11_codex_tasks/063_staff_reply_safety_confirmation_plan.md) を参照してください。
+
 ## Codex開発ループ
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。

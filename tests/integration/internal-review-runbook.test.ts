@@ -33,6 +33,14 @@ const finalReadinessTaskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/062_amami_home_internal_review_final_readiness_hardening.md"
 );
+const staffReplySafetyDesignPath = join(
+  repoRoot,
+  "docs/16_design/staff_reply_safety_confirmation.md"
+);
+const staffReplySafetyTaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/063_staff_reply_safety_confirmation_plan.md"
+);
 
 describe("Amami Home internal review edition docs", () => {
   const runbook = readFileSync(runbookPath, "utf8");
@@ -43,6 +51,8 @@ describe("Amami Home internal review edition docs", () => {
   const triageTaskDoc = readFileSync(triageTaskDocPath, "utf8");
   const finalVerification = readFileSync(finalVerificationPath, "utf8");
   const finalReadinessTaskDoc = readFileSync(finalReadinessTaskDocPath, "utf8");
+  const staffReplySafetyDesign = readFileSync(staffReplySafetyDesignPath, "utf8");
+  const staffReplySafetyTaskDoc = readFileSync(staffReplySafetyTaskDocPath, "utf8");
 
   it("keeps the internal review runbook reachable from README", () => {
     expect(readme).toContain("Amami Home internal review edition readiness");
@@ -141,5 +151,25 @@ describe("Amami Home internal review edition docs", () => {
     expect(finalVerification).toContain("internal_review_feedback_log.md");
     expect(finalVerification).toContain("アマミホーム社内確認版として確認可能");
     expect(finalVerification).toContain("本番運用版ではない");
+  });
+
+  it("keeps staff reply real-send safety design reachable and explicit", () => {
+    expect(readme).toContain("docs/16_design/staff_reply_safety_confirmation.md");
+    expect(readme).toContain("063_staff_reply_safety_confirmation_plan.md");
+    expect(runbook).toContain("staff_reply_safety_confirmation.md");
+    expect(runbook).toContain("現在は本物LINEには送信されない");
+    expect(runbook).toContain("AI返信下書きは送信ではない");
+    expect(staffReplySafetyTaskDoc).toContain("Loop 063");
+    expect(staffReplySafetyTaskDoc).toContain("本物LINE送信は実装しない");
+    expect(staffReplySafetyDesign).toContain("AI下書きから直接本送信しない");
+    expect(staffReplySafetyDesign).toContain("送信前確認");
+    expect(staffReplySafetyDesign).toContain("デモ送信");
+    expect(staffReplySafetyDesign).toContain("本番送信");
+    expect(staffReplySafetyDesign).toContain("誤送信防止");
+    expect(staffReplySafetyDesign).toContain("二重送信防止");
+    expect(staffReplySafetyDesign).toContain("送信失敗");
+    expect(staffReplySafetyDesign).toContain("send_staff_reply");
+    expect(staffReplySafetyDesign).toContain("tenant / customer / line user");
+    expect(staffReplySafetyDesign).toContain("audit log");
   });
 });
