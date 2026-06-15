@@ -21,6 +21,14 @@
 - Adminは基本 `http://localhost:3000`。
 - `.env`、APIキー、本番ログ、実顧客情報、LINE userIdは使いません。
 
+## アマミホーム社内確認版
+
+社内スタッフや関係者に画面の流れを確認してもらう場合は、以下のrunbookを使います。
+
+- [Amami Home Internal Review Checklist](amami_home_internal_review_checklist.md)
+
+この社内確認版runbookには、確認順、できること/まだできないこと、説明台本、フィードバック項目、本番化前に必要な項目をまとめています。
+
 ## 起動手順
 
 ### ターミナル1: API

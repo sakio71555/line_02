@@ -12,11 +12,12 @@ const roleVisibilityNotes: Record<
   }
 > = {
   general: {
-    title: "Role visibility placeholder",
+    title: "権限ごとの表示制御は準備中です",
     bullets: [
-      "現在はdev_header runtimeのため、UI role制御は未接続です。",
-      "将来 authenticated_staff runtime で owner / manager / staff に応じて操作表示を制御します。",
-      "この表示は説明のみです。ボタンはまだ非表示/disabledにしません。"
+      "将来はログインしたスタッフの権限に合わせて、表示される操作が変わります。",
+      "管理者、チーム管理者、担当者ごとに、使えるボタンや確認できる情報を整理する予定です。",
+      "今は社内確認版のため、操作ボタンは従来通り使えます。",
+      "本番ログイン、JWT/session、実際の権限判定はまだ接続していません。"
     ]
   },
   "customer-actions": {
@@ -55,8 +56,8 @@ export function RoleVisibilityNote({
         ))}
       </ul>
       <p className="meta">
-        権限不足時のsafe stateは <a href="/permission-denied">/permission-denied</a>{" "}
-        placeholderで確認できます。実際のredirectやrole判定はまだ行いません。
+        権限が足りない場合の準備画面は <a href="/permission-denied">/permission-denied</a>{" "}
+        で確認できます。実際の自動移動や本物の権限判定はまだ行いません。
       </p>
     </aside>
   );

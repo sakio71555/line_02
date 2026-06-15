@@ -8,11 +8,12 @@ describe("admin role visibility placeholder", () => {
   it("renders the general role visibility placeholder without real role control", () => {
     const html = renderToStaticMarkup(<RoleVisibilityNote />);
 
-    expect(html).toContain("Role visibility placeholder");
-    expect(html).toContain("dev_header runtime");
-    expect(html).toContain("authenticated_staff runtime");
-    expect(html).toContain("owner / manager / staff");
-    expect(html).toContain("ボタンはまだ非表示/disabledにしません");
+    expect(html).toContain("権限ごとの表示制御は準備中です");
+    expect(html).toContain("ログインしたスタッフの権限");
+    expect(html).toContain("管理者、チーム管理者、担当者");
+    expect(html).toContain("今は社内確認版のため、操作ボタンは従来通り使えます");
+    expect(html).toContain("本番ログイン、JWT/session、実際の権限判定はまだ接続していません");
+    expect(html).toContain("権限が足りない場合の準備画面");
     expect(html).toContain("/permission-denied");
     expect(html).not.toContain("<button");
   });

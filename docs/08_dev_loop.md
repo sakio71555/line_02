@@ -99,6 +99,8 @@ selectedTenantId transportは、`transport plan -> transport boundary -> read-on
 
 本番化Loopとは別に、ローカルデモMVPの完成度を上げるhardening Loopを挟みます。デモ確認ではmock/in-memory/未接続を画面とrunbookで明示し、Supabase Auth、LINE実送信、OpenAI実API、Supabase実DBが接続済みであるように見せないことを優先します。
 
+ローカルデモMVPから社内確認版へ移行する場合は、実装だけでなく、確認順、未接続範囲、できること/まだできないこと、フィードバック項目をrunbook化します。社内確認版は本番運用版ではないため、本物LINE送信、OpenAI API、Supabase本番DB、本番ログイン、本番通知、schedulerが未接続であることを画面と手順書の両方で明示します。
+
 ローカルデモMVPの手動確認Loopでは、curlで確認した項目、HTTP routeだけ確認した項目、ブラウザ目視が必要な項目、bugまたは注意点を分けて記録します。未確認のものを確認済みとして扱わず、source付きRAGなどデモに必要な見え方が未確認の場合は、次Loopの候補として残します。
 
 初心者向けAdmin UI改善では、実装前に [docs/16_design/beginner_friendly_pop_admin_ui.md](16_design/beginner_friendly_pop_admin_ui.md) を確認します。UI LoopはPOPで分かりやすい表示を目指しつつ、AIが自動送信しないこと、本番LINE送信/本番AI/本番Supabaseが未接続であること、tenant/権限境界を曖昧にしないことを優先します。文言変更、カード化、バッジ化、危険操作の確認表示は画面別の小さいLoopに分けます。
