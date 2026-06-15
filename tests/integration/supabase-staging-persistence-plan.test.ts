@@ -16,6 +16,10 @@ const runtimeSwitchTaskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/067_supabase_runtime_switch_boundary_customers_messages.md"
 );
+const fakeClientRepositoryTaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/068_supabase_repository_integration_tests_fake_client.md"
+);
 const stagingRunbookPath = join(
   repoRoot,
   "docs/15_runbooks/supabase_staging_persistence_checklist.md"
@@ -35,6 +39,7 @@ describe("Loop 065 Supabase staging persistence plan docs", () => {
   const taskDoc = readFileSync(taskDocPath, "utf8");
   const envReadinessTaskDoc = readFileSync(envReadinessTaskDocPath, "utf8");
   const runtimeSwitchTaskDoc = readFileSync(runtimeSwitchTaskDocPath, "utf8");
+  const fakeClientRepositoryTaskDoc = readFileSync(fakeClientRepositoryTaskDocPath, "utf8");
   const stagingRunbook = readFileSync(stagingRunbookPath, "utf8");
   const envReadinessRunbook = readFileSync(envReadinessRunbookPath, "utf8");
   const internalReviewRunbook = readFileSync(internalReviewRunbookPath, "utf8");
@@ -176,6 +181,29 @@ describe("Loop 065 Supabase staging persistence plan docs", () => {
     expect(stagingRunbook).toContain("Loop 067でcustomers/messages runtime switch boundary");
     expect(envReadinessRunbook).toContain(
       "Loop 067でcustomers/messagesのruntime mode / bundle / factory境界"
+    );
+  });
+
+  it("documents the Loop 068 fake client repository integration tests", () => {
+    expect(fakeClientRepositoryTaskDoc).toContain(
+      "Loop 068: Supabase Repository Integration Tests with Fake Client"
+    );
+    expect(fakeClientRepositoryTaskDoc).toContain("SupabaseCustomerRepository");
+    expect(fakeClientRepositoryTaskDoc).toContain("SupabaseMessageRepository");
+    expect(fakeClientRepositoryTaskDoc).toContain("`tenant_id` filter");
+    expect(fakeClientRepositoryTaskDoc).toContain("customer write payload mapping");
+    expect(fakeClientRepositoryTaskDoc).toContain("message write payload mapping");
+    expect(fakeClientRepositoryTaskDoc).toContain("secret値やURL値");
+    expect(fakeClientRepositoryTaskDoc).toContain("Supabase実DBでのintegration testは未実施");
+  });
+
+  it("keeps README and runbooks linked to the Loop 068 fake client checks", () => {
+    expect(readme).toContain("068_supabase_repository_integration_tests_fake_client.md");
+    expect(readme).toContain("timeline order");
+    expect(readme).toContain("API runtime switchは未実施");
+    expect(devLoop).toContain("fake clientでrepository mapping");
+    expect(stagingRunbook).toContain(
+      "Loop 068でcustomers/messagesのfake client repository tests"
     );
   });
 });

@@ -51,6 +51,8 @@ Supabase staging接続へ進む前に、env/key/project/migration/dummy dataのr
 
 永続化runtime switchは、まず `customers` / `messages` から小さく始めます。default in-memoryを維持したまま、runtime mode / repository bundle / factory / env不足時errorの境界とtestを先に追加し、API route差し替えやSupabase実接続は後続Loopに分けます。
 
+Supabase runtime switch前に、fake clientでrepository mapping、tenant_id filter、timeline order、error handlingを固定します。実DB/staging接続は、fake client testでcustomers/messagesの境界を確認してから別Loopで進めます。
+
 本番認証、JWT検証、staff/admin tenant context、staff tenant schema、RLSのようなセキュリティ境界は、実装Loopの前に必ずplanning Loopを挟みます。開発用 `x-tenant-id` は本番認証ではないため、認証済みuser/sessionとactive membershipからtenant contextを決定する設計を先に固めてからAPI差し替えへ進みます。
 
 セキュリティ境界のschema migration Loopでは、DB schemaとstatic validation testだけを整え、Auth/JWT/API guard/RLS SQL/runtime切替は別Loopに分けます。
