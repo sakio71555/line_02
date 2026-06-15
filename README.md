@@ -99,6 +99,8 @@ Loop 060ではalerts page beginner-friendly polishを実施しました。未返
 
 Loop 061ではAmami Home internal review edition readinessを追加しました。社内確認版として、確認順、できること/まだできないこと、mock/未接続範囲、フィードバック項目をrunbook化しました。実API接続や本番認証は未実装です。詳細は [docs/15_runbooks/amami_home_internal_review_checklist.md](docs/15_runbooks/amami_home_internal_review_checklist.md) と [docs/11_codex_tasks/061_amami_home_internal_review_edition_readiness.md](docs/11_codex_tasks/061_amami_home_internal_review_edition_readiness.md) を参照してください。
 
+Loop 061.1ではinternal review feedback triageを追加しました。アマミホーム社内確認で出た意見を、UI/業務/AI/RAG/LINE/通知/認証/永続化などに分類し、priority/severity/effortを付けて次Loopへ落とす運用をdocs化しました。詳細は [docs/15_runbooks/internal_review_feedback_triage.md](docs/15_runbooks/internal_review_feedback_triage.md)、[docs/15_runbooks/internal_review_feedback_log.md](docs/15_runbooks/internal_review_feedback_log.md)、[docs/11_codex_tasks/061_1_internal_review_feedback_triage.md](docs/11_codex_tasks/061_1_internal_review_feedback_triage.md) を参照してください。
+
 ## Codex開発ループ
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。
