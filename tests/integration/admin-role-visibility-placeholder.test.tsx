@@ -33,12 +33,12 @@ describe("admin role visibility placeholder", () => {
   it("renders alert action role guidance while leaving controls untouched", () => {
     const html = renderToStaticMarkup(<RoleVisibilityNote variant="alerts" />);
 
-    expect(html).toContain("Role visibility placeholder: アラート");
-    expect(html).toContain("owner / manager");
-    expect(html).toContain("alerts一覧");
-    expect(html).toContain("staff");
-    expect(html).toContain("未返信チェック / open alert通知mockはmanager以上");
-    expect(html).toContain("dev_header runtime");
+    expect(html).toContain("権限ごとの表示制御は準備中です");
+    expect(html).toContain("管理者、チーム管理者、担当者");
+    expect(html).toContain("アラート操作の表示が変わります");
+    expect(html).toContain("未返信チェックとデモ通知");
+    expect(html).toContain("担当者は対応が必要な相談の確認から始められる想定");
+    expect(html).toContain("今はデモ確認のため、操作ボタンは従来通り使えます");
     expect(html).not.toContain("<button");
   });
 });

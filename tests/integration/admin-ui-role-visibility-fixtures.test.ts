@@ -155,7 +155,8 @@ describe("admin UI role visibility fixtures", () => {
     expect(customerActionsHtml).toContain("返信文の下書き");
     expect(customerActionsHtml).toContain("ホームページ情報からの回答案");
     expect(customerActionsHtml).toContain("本物の権限判定やボタン非表示はまだ行いません");
-    expect(alertsHtml).toContain("未返信チェック / open alert通知mockはmanager以上");
-    expect(alertsHtml).toContain("操作ボタンはまだ非表示/disabledにしません");
+    expect(alertsHtml).toContain("未返信チェックとデモ通知");
+    expect(alertsHtml).toContain("担当者は対応が必要な相談の確認から始められる想定");
+    expect(alertsHtml).toContain("今はデモ確認のため、操作ボタンは従来通り使えます");
   });
 });

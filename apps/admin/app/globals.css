@@ -309,6 +309,11 @@ dl.detail-grid {
   margin: 20px 0 16px;
 }
 
+.action-panel .status-pill-list,
+.home-hero .status-pill-list {
+  margin: 10px 0;
+}
+
 .button-link,
 .home-link-card {
   border: 1px solid #b9c7d6;

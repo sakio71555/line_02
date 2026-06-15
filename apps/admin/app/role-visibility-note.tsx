@@ -29,12 +29,12 @@ const roleVisibilityNotes: Record<
     ]
   },
   alerts: {
-    title: "Role visibility placeholder: アラート",
+    title: "権限ごとの表示制御は準備中です",
     bullets: [
-      "owner / manager: alerts一覧、未返信チェック、open alert通知mockを許可予定です。",
-      "staff: alerts一覧は閲覧可候補です。",
-      "staff: 未返信チェック / open alert通知mockはmanager以上の操作候補です。",
-      "現在はdev_header runtimeのため、操作ボタンはまだ非表示/disabledにしません。"
+      "将来は管理者、チーム管理者、担当者によってアラート操作の表示が変わります。",
+      "未返信チェックとデモ通知は、管理者またはチーム管理者向けの操作にする予定です。",
+      "担当者は対応が必要な相談の確認から始められる想定です。",
+      "今はデモ確認のため、操作ボタンは従来通り使えます。"
     ]
   }
 };
