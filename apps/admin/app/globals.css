@@ -275,3 +275,139 @@ dl.detail-grid {
   color: #607080;
   font-weight: 700;
 }
+
+.home-hero {
+  background: #fffdf7;
+  border: 1px solid #ead9b8;
+  border-radius: 8px;
+  margin-bottom: 22px;
+  padding: 24px;
+}
+
+.lead-text {
+  color: #334155;
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 760px;
+}
+
+.home-actions,
+.status-pill-list,
+.home-link-grid,
+.home-note-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.home-actions {
+  margin: 20px 0 16px;
+}
+
+.button-link,
+.home-link-card {
+  border: 1px solid #b9c7d6;
+  border-radius: 8px;
+  color: #1f2933;
+  text-decoration: none;
+}
+
+.button-link {
+  background: #fff;
+  display: inline-block;
+  font-weight: 700;
+  padding: 11px 16px;
+}
+
+.button-link-primary,
+.home-link-card-primary {
+  background: #245a7a;
+  border-color: #1f4f6e;
+  color: #fff;
+}
+
+.status-pill {
+  background: #edf7ef;
+  border: 1px solid #b9d8c0;
+  border-radius: 999px;
+  color: #2f6f54;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 10px;
+}
+
+.home-note-grid {
+  margin: 18px 0;
+}
+
+.home-note,
+.home-link-card {
+  background: #fff;
+  border-radius: 8px;
+  flex: 1 1 240px;
+  padding: 16px;
+}
+
+.home-note {
+  border: 1px solid #d8dee6;
+}
+
+.home-note h2 {
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.home-note p {
+  color: #465665;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.home-step-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-step-list li {
+  align-items: center;
+  background: #fff;
+  border: 1px solid #d8dee6;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.step-number {
+  align-items: center;
+  background: #f1d98a;
+  border-radius: 999px;
+  color: #463700;
+  display: inline-flex;
+  flex: 0 0 28px;
+  font-weight: 700;
+  height: 28px;
+  justify-content: center;
+}
+
+.home-link-grid {
+  align-items: stretch;
+}
+
+.home-link-card {
+  display: grid;
+  gap: 8px;
+}
+
+.home-link-card span {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.home-link-card small {
+  color: inherit;
+  line-height: 1.5;
+}
