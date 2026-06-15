@@ -8,9 +8,17 @@ const taskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/065_supabase_persistence_staging_plan.md"
 );
+const envReadinessTaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/066_supabase_staging_env_readiness_checklist.md"
+);
 const stagingRunbookPath = join(
   repoRoot,
   "docs/15_runbooks/supabase_staging_persistence_checklist.md"
+);
+const envReadinessRunbookPath = join(
+  repoRoot,
+  "docs/15_runbooks/supabase_staging_env_readiness_checklist.md"
 );
 const internalReviewRunbookPath = join(
   repoRoot,
@@ -21,7 +29,9 @@ const devLoopPath = join(repoRoot, "docs/08_dev_loop.md");
 
 describe("Loop 065 Supabase staging persistence plan docs", () => {
   const taskDoc = readFileSync(taskDocPath, "utf8");
+  const envReadinessTaskDoc = readFileSync(envReadinessTaskDocPath, "utf8");
   const stagingRunbook = readFileSync(stagingRunbookPath, "utf8");
+  const envReadinessRunbook = readFileSync(envReadinessRunbookPath, "utf8");
   const internalReviewRunbook = readFileSync(internalReviewRunbookPath, "utf8");
   const readme = readFileSync(readmePath, "utf8");
   const devLoop = readFileSync(devLoopPath, "utf8");
@@ -91,5 +101,52 @@ describe("Loop 065 Supabase staging persistence plan docs", () => {
     expect(devLoop).toContain("env/key管理");
     expect(devLoop).toContain("migration apply前チェック");
     expect(devLoop).toContain("runtime switch");
+  });
+
+  it("keeps the Loop 066 env readiness checklist reachable", () => {
+    expect(readme).toContain("066_supabase_staging_env_readiness_checklist.md");
+    expect(readme).toContain("supabase_staging_env_readiness_checklist.md");
+    expect(readme).toContain("Supabase接続、`.env` 作成、migration applyは未実施");
+    expect(stagingRunbook).toContain("supabase_staging_env_readiness_checklist.md");
+    expect(internalReviewRunbook).toContain("Supabase staging env readiness checklist");
+  });
+
+  it("documents required Supabase env names without real values", () => {
+    expect(envReadinessTaskDoc).toContain(
+      "Loop 066: Supabase Staging Env Readiness Checklist"
+    );
+    expect(envReadinessTaskDoc).toContain("Required Env Names");
+    expect(envReadinessTaskDoc).toContain("SUPABASE_URL");
+    expect(envReadinessTaskDoc).toContain("SUPABASE_ANON_KEY");
+    expect(envReadinessTaskDoc).toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(envReadinessTaskDoc).toContain("SUPABASE_DB_URL");
+    expect(envReadinessTaskDoc).toContain("実値は書かない");
+    expect(envReadinessTaskDoc).toContain("browser / LIFF / client componentへ絶対に出さない");
+  });
+
+  it("documents staging production separation and migration readiness", () => {
+    expect(envReadinessTaskDoc).toContain("Staging / Production Project Separation");
+    expect(envReadinessTaskDoc).toContain("staging検証でproduction projectを使わない");
+    expect(envReadinessTaskDoc).toContain("Migration Apply Pre-checklist");
+    expect(envReadinessTaskDoc).toContain("project refを声出し確認する");
+    expect(envReadinessTaskDoc).toContain("RLSなしでproductionへ進まない");
+    expect(envReadinessTaskDoc).toContain("apply前に `git status --short` がclean");
+  });
+
+  it("keeps the env readiness runbook explicit about secrets and dummy data", () => {
+    expect(envReadinessRunbook).toContain("Supabase Staging Env Readiness Checklist");
+    expect(envReadinessRunbook).toContain("実keyを書かない");
+    expect(envReadinessRunbook).toContain("実keyをCodexに貼らない");
+    expect(envReadinessRunbook).toContain("実顧客情報を使わない");
+    expect(envReadinessRunbook).toContain("LINE userIdを使わない");
+    expect(envReadinessRunbook).toContain("Supabaseへ接続しない");
+    expect(envReadinessRunbook).toContain("`.env` を作らない");
+    expect(envReadinessRunbook).toContain("Tool Readiness");
+  });
+
+  it("keeps dev loop guidance for the env readiness gate", () => {
+    expect(devLoop).toContain("Supabase staging接続へ進む前");
+    expect(devLoop).toContain("env/key/project/migration/dummy data");
+    expect(devLoop).toContain("readiness checklist");
   });
 });

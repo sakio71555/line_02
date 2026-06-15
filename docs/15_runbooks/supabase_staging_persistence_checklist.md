@@ -41,6 +41,8 @@
 - staging keyとproduction keyを混ぜない。
 - Codexに秘密情報を貼らない。
 
+Env / key / project readinessの詳細は [supabase_staging_env_readiness_checklist.md](supabase_staging_env_readiness_checklist.md) を参照する。
+
 ## Before Migration Apply
 
 - Supabase projectがstagingであることを確認する。
@@ -80,3 +82,5 @@
 - [Loop 025: Supabase RLS Policy Plan](../11_codex_tasks/025_supabase_rls_policy_plan.md)
 - [Loop 026: Supabase Local Migration Test](../11_codex_tasks/026_supabase_local_migration_test.md)
 - [Loop 065: Supabase Persistence Staging Plan](../11_codex_tasks/065_supabase_persistence_staging_plan.md)
+- [Loop 066: Supabase Staging Env Readiness Checklist](../11_codex_tasks/066_supabase_staging_env_readiness_checklist.md)
+- [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)

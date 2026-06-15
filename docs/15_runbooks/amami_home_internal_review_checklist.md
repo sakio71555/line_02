@@ -27,6 +27,7 @@
 - 最終確認記録は [amami_home_internal_review_final_verification.md](amami_home_internal_review_final_verification.md) を参照してください。
 - 現在の社内確認版は一時保存です。API再起動後はdemo seed再投入が必要です。
 - 永続化はLoop 065以降のSupabase staging planで扱います。詳細は [supabase_staging_persistence_checklist.md](supabase_staging_persistence_checklist.md) を参照してください。
+- 永続化へ進む前に、Supabase staging env readiness checklistで実keyを書かないこと、実顧客情報を使わないこと、staging/productionを混ぜないことを確認します。詳細は [supabase_staging_env_readiness_checklist.md](supabase_staging_env_readiness_checklist.md) を参照してください。
 
 ## Final Verification
 
