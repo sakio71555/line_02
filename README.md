@@ -85,6 +85,8 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 
 詳しいローカル手動確認は [docs/15_runbooks/local_manual_test_checklist.md](docs/15_runbooks/local_manual_test_checklist.md) を参照してください。demo seedはin-memoryであり、API process再起動で消えます。本物のLINE API、OpenAI API、Supabaseはまだ呼びません。
 
+Loop 056.1ではlocal demo manual verification recordを追加しました。API/Admin起動、demo seed、主要Admin API、Admin UI route、mock/未接続範囲の確認結果を記録しています。詳細は [docs/11_codex_tasks/056_1_local_demo_manual_verification_record.md](docs/11_codex_tasks/056_1_local_demo_manual_verification_record.md) を参照してください。
+
 ## Codex開発ループ
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。

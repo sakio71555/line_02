@@ -1,5 +1,13 @@
 # Local Manual Test Checklist
 
+## 最終確認記録
+
+- Latest Codex verification record: [Loop 056.1 local demo manual verification record](../11_codex_tasks/056_1_local_demo_manual_verification_record.md)
+- 確認日時: `2026-06-15 13:39:23 JST`
+- 確認方法: API/Admin dev server起動、主要API curl、Admin route HTTP 200確認。
+- UI目視: Codex環境では未実施。人間がブラウザで最終確認する。
+- 注意点: `POST /api/admin/rag/search` と `POST /api/admin/rag/answer-draft` はdefault local runtimeで200を返すが、`オンライン相談` のsourceは0件だった。source付きRAGデモが必要な場合は、次Loopでdefault local knowledge seedを確認・補強する。
+
 ## 前提
 
 - 作業フォルダーは `/Users/sakio/Desktop/PROJECT/amami-line-crm`。
@@ -96,7 +104,7 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 3. 顧客詳細で、顧客情報とLINE風の相談timelineを見せる。
 4. AI要約を実行し、summary messageがtimelineへ保存されることを見せる。
 5. AI返信下書きを実行し、担当者確認用の下書きだけが返ることを見せる。
-6. RAG回答案で `オンライン相談` や `メンテナンス` を試し、source付き回答案を見せる。
+6. RAG回答案で `オンライン相談` や `メンテナンス` を試し、source付き回答案またはsourceなしfallbackの挙動を見せる。
 7. 担当者返信フォームで短い返信を入力し、MockLineClient送信とstaff message保存を見せる。
 8. アラート画面で未返信チェックを実行し、open alertが出ることを見せる。
 9. open alert通知mockを実行し、statusが `notified` になることを見せる。
@@ -136,6 +144,7 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 - demo knowledge seedが入っているか確認する。
 - queryを `オンライン相談`、`施工事例`、`資料請求`、`メンテナンス`、`SoToNo MA` で試す。
 - 該当sourceがないqueryではfallbackが表示されます。
+- Loop 056.1時点のdefault local runtimeでは、`オンライン相談` でsource 0件とfallbackを確認しています。source付きRAGをデモで見せる場合は、API runtimeにAmami Home knowledge seedが入っているか事前確認してください。
 
 ### alertが出ない場合
 
@@ -144,6 +153,18 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 - 返信済みcustomerは未返信alert対象外です。
 - open/notified alertが既にあるcustomerは重複作成されません。
 - demo seed直後は未返信っぽい `customer_demo_yamada_taro` で確認してください。
+
+## 人間目視チェック
+
+Codex確認ではHTTP routeと主要文言のみ確認しています。デモ前に人間がブラウザで以下を目視確認します。
+
+- トップ画面のDemo flow、mock/in-memory/未接続説明が読みやすい。
+- `/customers` でdemo顧客2件が見える。
+- `/customers/customer_demo_yamada_taro` で顧客情報、timeline、AI/RAG/担当者返信actionが見える。
+- AI要約、AI返信下書き、RAG回答案、担当者返信の結果表示が理解しやすい。
+- `/alerts` で未返信チェック、alert一覧、notify-open mockの結果が分かる。
+- `/login`、`/select-tenant`、`/permission-denied`、`/session-expired` が未接続placeholderとして誤解なく見える。
+- RoleVisibilityNoteが将来のowner / manager / staff制御予定として分かる。
 
 ## まだ本番ではないもの
 
