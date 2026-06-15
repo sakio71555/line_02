@@ -46,7 +46,7 @@ describe("admin alerts page", () => {
     expect(html).toContain("手動チェック");
     expect(html).toContain("本物通知なし");
     expect(html).toContain("scheduler未接続");
-    expect(html).toContain("MockStaffNotifier");
+    expect(html).toContain("デモ用通知");
     expect(html).toContain("状態の見方");
     expect(html).toContain("対応待ち");
     expect(html).toContain("デモ通知済み");
@@ -91,7 +91,7 @@ describe("admin alerts page", () => {
     expect(html).toContain("scheduler未接続");
     expect(html).toContain("開いているアラートをデモ通知する");
     expect(html).toContain("本物のLINE、Slack、メールには通知されません");
-    expect(html).toContain("MockStaffNotifier");
+    expect(html).toContain("デモ用通知");
     expect(html).toContain("権限ごとの表示制御は準備中です");
     expect(html).toContain("今はデモ確認のため、操作ボタンは従来通り使えます");
   });

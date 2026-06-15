@@ -157,7 +157,7 @@ export function CustomerActionPanelView({
           </p>
           <form action={runReplyDraft} className="action-form">
             <button type="submit" disabled={replyDraftPending}>
-              {replyDraftPending ? "作成中..." : "返信下書きを作成"}
+              {replyDraftPending ? "作成中..." : "返信文の下書きを作る"}
             </button>
           </form>
           <AiReplyDraftResult state={replyDraftState} />
@@ -206,7 +206,7 @@ export function CustomerActionPanelView({
             <span className="status-pill">タイムラインに保存</span>
           </div>
           <p className="meta">
-            入力した内容をスタッフ返信としてタイムラインに保存します。今はMockLineClientなので、
+            入力した内容をスタッフ返信としてタイムラインに保存します。今はデモ用送信なので、
             本物のLINEには送信されません。
           </p>
           <form action={runStaffReply} className="action-form">
@@ -248,10 +248,10 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
     <div className="action-result">
       <p className="result-label">送信結果</p>
       <p>担当者返信をデモ用送信として確認し、タイムラインへ保存しました。</p>
-      <ResultField label="message_id" value={result.message.id} />
-      <ResultField label="response_mode" value={result.customer.response_mode} />
+      <ResultField label="保存したメッセージID" value={result.message.id} />
+      <ResultField label="対応モード" value={formatResponseMode(result.customer.response_mode)} />
       <ResultField
-        label="last_staff_reply_at"
+        label="最後の担当者返信日時"
         value={result.customer.last_staff_reply_at ?? "-"}
       />
     </div>
@@ -279,9 +279,12 @@ function AiSummaryResult({ state }: { state: AiSummaryActionState }) {
       <p>{result.summary.summary}</p>
       <ResultList label="次に確認すること" items={result.summary.next_actions} />
       <ResultList label="注意点" items={result.summary.risk_flags} />
-      <ResultField label="おすすめ対応モード" value={result.summary.recommended_response_mode} />
-      <ResultField label="AI種別" value={result.summary.provider} />
-      <ResultField label="saved_message_id" value={result.message.id} />
+      <ResultField
+        label="おすすめ対応モード"
+        value={formatResponseMode(result.summary.recommended_response_mode)}
+      />
+      <ResultField label="AIの種類" value={formatProvider(result.summary.provider)} />
+      <ResultField label="保存したメッセージID" value={result.message.id} />
     </div>
   );
 }
@@ -307,9 +310,12 @@ function AiReplyDraftResult({ state }: { state: AiReplyDraftActionState }) {
       <p className="message-body">{result.draft_body}</p>
       <ResultList label="次に確認すること" items={result.next_questions} />
       <ResultList label="注意点" items={result.risk_flags} />
-      <ResultField label="おすすめ対応モード" value={result.recommended_response_mode} />
-      <ResultField label="担当者確認が必要か" value={String(result.should_handoff)} />
-      <ResultField label="AI種別" value={result.provider} />
+      <ResultField
+        label="おすすめ対応モード"
+        value={formatResponseMode(result.recommended_response_mode)}
+      />
+      <ResultField label="担当者確認が必要か" value={formatBoolean(result.should_handoff)} />
+      <ResultField label="AIの種類" value={formatProvider(result.provider)} />
     </div>
   );
 }
@@ -332,13 +338,16 @@ function RagAnswerDraftResult({ state }: { state: RagAnswerDraftActionState }) {
   return (
     <div className="action-result">
       <ResultField label="質問" value={result.query} />
-      <ResultField label="回答できるか" value={String(result.can_answer)} />
+      <ResultField label="回答できるか" value={result.can_answer ? "回答案あり" : "担当者確認"} />
       <p className="result-label">回答案</p>
       <p className="message-body">{result.answer_body}</p>
       <ResultList label="注意点" items={result.risk_flags} />
-      <ResultField label="担当者確認が必要か" value={String(result.handoff_required)} />
-      <ResultField label="おすすめ対応モード" value={result.recommended_response_mode} />
-      <ResultField label="AI種別" value={result.provider ?? "-"} />
+      <ResultField label="担当者確認が必要か" value={formatBoolean(result.handoff_required)} />
+      <ResultField
+        label="おすすめ対応モード"
+        value={formatResponseMode(result.recommended_response_mode)}
+      />
+      <ResultField label="AIの種類" value={formatProvider(result.provider)} />
       <div className="source-list">
         <p className="result-label">参考にした情報</p>
         {result.sources.length === 0 ? (
@@ -400,4 +409,32 @@ function ResultList({ label, items }: { label: string; items: string[] }) {
       )}
     </div>
   );
+}
+
+function formatBoolean(value: boolean): string {
+  return value ? "必要" : "不要";
+}
+
+function formatProvider(provider: string | undefined): string {
+  if (provider === "mock") {
+    return "デモ用AI";
+  }
+
+  if (provider === "openai") {
+    return "OpenAI API";
+  }
+
+  return "-";
+}
+
+function formatResponseMode(mode: string): string {
+  const labels: Record<string, string> = {
+    bot_auto: "自動対応中",
+    human_required: "担当者の確認が必要",
+    human_active: "担当者が対応中",
+    emergency: "至急対応",
+    closed: "対応完了"
+  };
+
+  return labels[mode] ?? mode;
 }

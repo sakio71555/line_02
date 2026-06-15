@@ -25,6 +25,14 @@ const triageTaskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/061_1_internal_review_feedback_triage.md"
 );
+const finalVerificationPath = join(
+  repoRoot,
+  "docs/15_runbooks/amami_home_internal_review_final_verification.md"
+);
+const finalReadinessTaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/062_amami_home_internal_review_final_readiness_hardening.md"
+);
 
 describe("Amami Home internal review edition docs", () => {
   const runbook = readFileSync(runbookPath, "utf8");
@@ -33,6 +41,8 @@ describe("Amami Home internal review edition docs", () => {
   const triageGuide = readFileSync(triageGuidePath, "utf8");
   const feedbackLog = readFileSync(feedbackLogPath, "utf8");
   const triageTaskDoc = readFileSync(triageTaskDocPath, "utf8");
+  const finalVerification = readFileSync(finalVerificationPath, "utf8");
+  const finalReadinessTaskDoc = readFileSync(finalReadinessTaskDocPath, "utf8");
 
   it("keeps the internal review runbook reachable from README", () => {
     expect(readme).toContain("Amami Home internal review edition readiness");
@@ -115,5 +125,21 @@ describe("Amami Home internal review edition docs", () => {
     expect(feedbackLog).toContain("APIキー");
     expect(feedbackLog).toContain("本番ログ");
     expect(triageGuide).toContain("以下は記入例です。実フィードバックではありません。");
+  });
+
+  it("keeps final verification reachable and clear about non-production scope", () => {
+    expect(readme).toContain("amami_home_internal_review_final_verification.md");
+    expect(readme).toContain("062_amami_home_internal_review_final_readiness_hardening.md");
+    expect(runbook).toContain("amami_home_internal_review_final_verification.md");
+    expect(finalReadinessTaskDoc).toContain("Loop 062");
+    expect(finalReadinessTaskDoc).toContain("Internal Review 100% Criteria");
+    expect(finalVerification).toContain("Browser Verification");
+    expect(finalVerification).toContain("RAG Source Verification");
+    expect(finalVerification).toContain("本物LINEには送信されない");
+    expect(finalVerification).toContain("OpenAI APIには接続していない");
+    expect(finalVerification).toContain("demo seed");
+    expect(finalVerification).toContain("internal_review_feedback_log.md");
+    expect(finalVerification).toContain("アマミホーム社内確認版として確認可能");
+    expect(finalVerification).toContain("本番運用版ではない");
   });
 });

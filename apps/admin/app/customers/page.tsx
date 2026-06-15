@@ -12,10 +12,10 @@ export default async function CustomersPage() {
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">Local demo customer list</p>
+          <p className="eyebrow">ローカルデモ顧客一覧</p>
           <h1>顧客一覧</h1>
           <p className="meta">
-            tenant: <span className="mono">{config.tenantId}</span>
+            利用先ID: <span className="mono">{config.tenantId}</span>
           </p>
         </div>
         <Link href="/">トップへ戻る</Link>
@@ -26,8 +26,11 @@ export default async function CustomersPage() {
           demo seed投入後に、未返信確認用の顧客と返信済み確認用の顧客が表示されます。
         </p>
         <p className="meta">
-          顧客データはin-memoryです。API processを再起動すると消えるため、空の場合は
-          `POST /api/dev/seed-demo-data` を再実行してください。
+          顧客データは一時保存です。APIを再起動すると消えるため、空の場合はdemo seedを
+          もう一度投入してください。
+        </p>
+        <p className="meta">
+          本物のLINE送信、OpenAI API、Supabase本番DBにはまだ接続していません。
         </p>
       </div>
 
@@ -48,12 +51,12 @@ export default async function CustomersPage() {
                 <th>顧客ID</th>
                 <th>LINE表示名</th>
                 <th>顧客名</th>
-                <th>status</th>
-                <th>response_mode</th>
-                <th>last_customer_message_at</th>
-                <th>last_staff_reply_at</th>
-                <th>latest message body</th>
-                <th>latest message at</th>
+                <th>顧客状態</th>
+                <th>対応モード</th>
+                <th>最後のお客様メッセージ</th>
+                <th>最後の担当者返信</th>
+                <th>最新メッセージ</th>
+                <th>最新日時</th>
                 <th>詳細</th>
               </tr>
             </thead>
@@ -63,8 +66,8 @@ export default async function CustomersPage() {
                   <td className="mono">{customer.id}</td>
                   <td>{formatValue(customer.display_name)}</td>
                   <td>{formatValue(customer.name)}</td>
-                  <td>{customer.status}</td>
-                  <td>{customer.response_mode}</td>
+                  <td>{formatCustomerStatus(customer.status)}</td>
+                  <td>{formatResponseMode(customer.response_mode)}</td>
                   <td>{formatValue(customer.last_customer_message_at)}</td>
                   <td>{formatValue(customer.last_staff_reply_at)}</td>
                   <td className="message-body">{formatValue(customer.last_message_body)}</td>
@@ -103,4 +106,25 @@ function formatValue(value: string | number | boolean | null | undefined): strin
   }
 
   return String(value);
+}
+
+function formatCustomerStatus(status: string): string {
+  const labels: Record<string, string> = {
+    active: "対応中",
+    closed: "対応完了"
+  };
+
+  return labels[status] ?? status;
+}
+
+function formatResponseMode(mode: string): string {
+  const labels: Record<string, string> = {
+    bot_auto: "自動対応中",
+    human_required: "担当者の確認が必要",
+    human_active: "担当者が対応中",
+    emergency: "至急対応",
+    closed: "対応完了"
+  };
+
+  return labels[mode] ?? mode;
 }

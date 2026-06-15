@@ -24,6 +24,23 @@
 - Supabase本番DBには保存しません。
 - 本番ログイン、JWT/session、権限判定はまだ準備中です。
 - 本番通知、scheduler、LIFF、画像相談、本番deployはまだ未実装です。
+- 最終確認記録は [amami_home_internal_review_final_verification.md](amami_home_internal_review_final_verification.md) を参照してください。
+
+## Final Verification
+
+社内確認会に出す前の最終確認記録:
+
+- [Amami Home Internal Review Final Verification](amami_home_internal_review_final_verification.md)
+
+社内確認当日の注意:
+
+- 本物LINEには送信されない。
+- OpenAI APIには接続していない。
+- データは一時保存。
+- API再起動後はdemo seedを再投入する。
+- 実顧客情報を入力しない。
+- feedbackは [internal_review_feedback_log.md](internal_review_feedback_log.md) へ記録する。
+- P0/P1は次Loopで優先対応する。
 
 ## Startup
 

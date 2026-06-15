@@ -5,7 +5,7 @@ export default function LoginPlaceholderPage() {
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">Auth placeholder</p>
+          <p className="eyebrow">ログイン準備中</p>
           <h1>管理画面ログイン</h1>
         </div>
         <a href="/">トップへ戻る</a>
@@ -58,29 +58,29 @@ export default function LoginPlaceholderPage() {
         <ul>
           <li>Supabase Auth APIは呼びません。</li>
           <li>auth.users.id と staff_users.auth_user_id の照合はまだ行いません。</li>
-          <li>Admin API authenticated_staff guardにはまだ接続していません。</li>
-          <li>dev modeでは既存のtenant_amamihome導線でMVP確認を継続します。</li>
+          <li>Admin APIのログイン済みスタッフ確認にはまだ接続していません。</li>
+          <li>開発確認用では既存のtenant_amamihome導線でMVP確認を継続します。</li>
         </ul>
       </section>
 
       <section className="section">
-        <h2>開発用導線</h2>
+        <h2>開発確認用の導線</h2>
         <p className="meta">
-          既存のdev-only MVP確認は引き続き <span className="mono">x-tenant-id</span>{" "}
+          既存の開発確認用MVPは引き続き <span className="mono">x-tenant-id</span>{" "}
           経由で動作します。
         </p>
         <ul className="nav-links">
           <li>
-            <a href="/customers">dev顧客一覧へ進む</a>
+            <a href="/customers">顧客一覧へ進む</a>
           </li>
           <li>
-            <a href="/alerts">devアラートへ進む</a>
+            <a href="/alerts">未返信アラートへ進む</a>
           </li>
           <li>
-            <a href="/select-tenant">テナント選択placeholder</a>
+            <a href="/select-tenant">利用先を選ぶ準備画面</a>
           </li>
           <li>
-            <a href="/session-expired">セッション期限切れplaceholder</a>
+            <a href="/session-expired">ログイン期限切れ準備画面</a>
           </li>
         </ul>
       </section>

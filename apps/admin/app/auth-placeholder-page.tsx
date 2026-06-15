@@ -33,8 +33,8 @@ export function AuthPlaceholderPage({
       <div className="notice">
         <p>{description}</p>
         <p className="meta">
-          現在はplaceholderです。Supabase Auth未接続、JWT/session未接続、Admin API
-          authenticated_staff guard未接続です。
+          現在は準備中の画面です。Supabase Auth、JWT/session、Admin APIのログイン済みスタッフ確認は
+          まだ本番未接続です。
         </p>
       </div>
 
@@ -48,9 +48,9 @@ export function AuthPlaceholderPage({
       </section>
 
       <section className="section">
-        <h2>開発用導線</h2>
+        <h2>開発確認用の導線</h2>
         <p className="meta">
-          既存のdev-only MVP確認は引き続き <span className="mono">x-tenant-id</span>{" "}
+          既存の開発確認用MVPは引き続き <span className="mono">x-tenant-id</span>{" "}
           経由で動作します。本物の認証処理、cookie保存、session保存は行いません。
         </p>
         <ul className="nav-links">

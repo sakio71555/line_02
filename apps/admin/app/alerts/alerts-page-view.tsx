@@ -42,7 +42,7 @@ export function AlertsPageView({
           <span className="status-pill">手動チェック</span>
           <span className="status-pill">本物通知なし</span>
           <span className="status-pill">scheduler未接続</span>
-          <span className="status-pill">MockStaffNotifier</span>
+          <span className="status-pill">デモ用通知</span>
         </div>
         <p className="meta">
           本物のLINE、Slack、メールには通知されません。Supabase永続化もまだ未接続です。
@@ -63,7 +63,7 @@ export function AlertsPageView({
           <div className="home-note">
             <h2>デモ通知済み</h2>
             <p>
-              MockStaffNotifierで通知処理を通した状態です。本物の通知は送っていません。
+              デモ用の通知処理を通した状態です。本物の通知は送っていません。
             </p>
           </div>
           <div className="home-note">

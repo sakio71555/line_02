@@ -19,44 +19,45 @@ describe("admin auth placeholder pages", () => {
     expect(html).toContain("<button type=\"submit\" disabled=\"\"");
     expect(html).toContain("入力内容は送信・保存されません");
     expect(html).not.toContain("action=");
-    expect(html).toContain("dev顧客一覧へ進む");
-    expect(html).toContain("devアラートへ進む");
+    expect(html).toContain("ログイン準備中");
+    expect(html).toContain("顧客一覧へ進む");
+    expect(html).toContain("未返信アラートへ進む");
   });
 
   it("renders the tenant selection placeholder without saving tenant state", () => {
     const html = renderToStaticMarkup(<SelectTenantPlaceholderPage />);
 
-    expect(html).toContain("テナント選択");
+    expect(html).toContain("利用先を選ぶ");
     expect(html).toContain("アマミホーム");
     expect(html).toContain("tenant_amamihome");
     expect(html).toContain("amamihome");
     expect(html).toContain("amamihome.net");
-    expect(html).toContain("dev placeholder / 未接続");
+    expect(html).toContain("開発確認用 / 未接続");
     expect(html).toContain("<button type=\"button\" disabled=\"\"");
     expect(html).toContain("選択機能は未接続");
-    expect(html).toContain("tenant一覧取得requestは行いません");
-    expect(html).toContain("tenant選択結果は保存しない");
+    expect(html).toContain("利用先一覧取得requestは行いません");
+    expect(html).toContain("利用先選択結果は保存しない");
     expect(html).toContain("API取得は行いません");
     expect(html).toContain("Supabase Auth未接続");
-    expect(html).toContain("ログインplaceholder");
-    expect(html).toContain("dev顧客一覧へ進む");
-    expect(html).toContain("devアラートへ進む");
+    expect(html).toContain("ログイン準備画面");
+    expect(html).toContain("顧客一覧へ進む");
+    expect(html).toContain("未返信アラートへ進む");
     expect(html).not.toContain("action=");
   });
 
   it("renders the permission denied placeholder without role guard wiring", () => {
     const html = renderToStaticMarkup(<PermissionDeniedPlaceholderPage />);
 
-    expect(html).toContain("権限不足");
-    expect(html).toContain("role判定は行いません");
+    expect(html).toContain("権限がありません");
+    expect(html).toContain("権限判定は行いません");
     expect(html).toContain("Admin API側");
-    expect(html).toContain("Supabase Auth未接続");
+    expect(html).toContain("まだ本番未接続です");
   });
 
   it("renders the session expired placeholder without session handling", () => {
     const html = renderToStaticMarkup(<SessionExpiredPlaceholderPage />);
 
-    expect(html).toContain("セッション期限切れ");
+    expect(html).toContain("ログインの有効期限が切れました");
     expect(html).toContain("session検証");
     expect(html).toContain("logout処理は行いません");
     expect(html).toContain("Supabase Auth未接続");

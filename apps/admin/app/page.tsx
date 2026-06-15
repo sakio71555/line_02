@@ -104,10 +104,10 @@ export default function AdminHomePage() {
             ログイン・利用先選択・権限表示は、今後の本番化に向けた準備画面です。
             現在のローカルデモでは開発用の確認モードで動きます。
           </p>
-          <p className="meta">
-            Supabase Auth、JWT/session、Admin API authenticated_staff guardはまだ本番未接続です。
-          </p>
-        </div>
+        <p className="meta">
+            Supabase Auth、JWT/session、Admin APIのログイン済みスタッフ確認はまだ本番未接続です。
+        </p>
+      </div>
         <ul className="nav-links">
           <li>
             <a href="/login">ログイン準備中</a>

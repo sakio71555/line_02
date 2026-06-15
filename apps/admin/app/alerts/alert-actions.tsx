@@ -99,7 +99,7 @@ export function AlertActionPanelView({
           <div className="status-pill-list">
             <span className="status-pill">デモ通知</span>
             <span className="status-pill">本物通知なし</span>
-            <span className="status-pill">MockStaffNotifier</span>
+            <span className="status-pill">デモ用通知</span>
           </div>
           <p className="meta">
             開いている未返信アラートを、デモ用の通知処理に流します。
