@@ -41,6 +41,10 @@ const staffReplySafetyTaskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/063_staff_reply_safety_confirmation_plan.md"
 );
+const staffReplyConfirmationUiTaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/064_staff_reply_confirmation_ui_placeholder.md"
+);
 
 describe("Amami Home internal review edition docs", () => {
   const runbook = readFileSync(runbookPath, "utf8");
@@ -53,6 +57,10 @@ describe("Amami Home internal review edition docs", () => {
   const finalReadinessTaskDoc = readFileSync(finalReadinessTaskDocPath, "utf8");
   const staffReplySafetyDesign = readFileSync(staffReplySafetyDesignPath, "utf8");
   const staffReplySafetyTaskDoc = readFileSync(staffReplySafetyTaskDocPath, "utf8");
+  const staffReplyConfirmationUiTaskDoc = readFileSync(
+    staffReplyConfirmationUiTaskDocPath,
+    "utf8"
+  );
 
   it("keeps the internal review runbook reachable from README", () => {
     expect(readme).toContain("Amami Home internal review edition readiness");
@@ -156,11 +164,18 @@ describe("Amami Home internal review edition docs", () => {
   it("keeps staff reply real-send safety design reachable and explicit", () => {
     expect(readme).toContain("docs/16_design/staff_reply_safety_confirmation.md");
     expect(readme).toContain("063_staff_reply_safety_confirmation_plan.md");
+    expect(readme).toContain("064_staff_reply_confirmation_ui_placeholder.md");
     expect(runbook).toContain("staff_reply_safety_confirmation.md");
     expect(runbook).toContain("現在は本物LINEには送信されない");
     expect(runbook).toContain("AI返信下書きは送信ではない");
+    expect(runbook).toContain("送信前に確認する");
+    expect(runbook).toContain("この内容でデモ保存する");
     expect(staffReplySafetyTaskDoc).toContain("Loop 063");
     expect(staffReplySafetyTaskDoc).toContain("本物LINE送信は実装しない");
+    expect(staffReplyConfirmationUiTaskDoc).toContain("Loop 064");
+    expect(staffReplyConfirmationUiTaskDoc).toContain("送信前確認UI");
+    expect(staffReplyConfirmationUiTaskDoc).toContain("確認checkbox");
+    expect(staffReplyConfirmationUiTaskDoc).toContain("MockLineClient");
     expect(staffReplySafetyDesign).toContain("AI下書きから直接本送信しない");
     expect(staffReplySafetyDesign).toContain("送信前確認");
     expect(staffReplySafetyDesign).toContain("デモ送信");

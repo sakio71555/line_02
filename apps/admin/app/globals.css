@@ -281,6 +281,53 @@ dl.detail-grid {
   font-weight: 700;
 }
 
+.confirmation-card {
+  background: #fffdf7;
+  border: 1px solid #ead9b8;
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.confirmation-card h4 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.confirmation-detail {
+  background: #fff;
+  border: 1px solid #ead9b8;
+  padding: 0 12px 8px;
+}
+
+.confirmation-check {
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid #d8dee6;
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+}
+
+.confirmation-check input {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  width: auto;
+}
+
+.confirmation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.confirmation-actions button[type="button"] {
+  background: #fff;
+  border-color: #b9c7d6;
+  color: #1f2933;
+}
+
 .home-hero {
   background: #fffdf7;
   border: 1px solid #ead9b8;

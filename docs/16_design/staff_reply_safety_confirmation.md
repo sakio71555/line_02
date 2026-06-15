@@ -41,6 +41,26 @@
 
 社内確認版ではこの状態でよい。本番運用前には、このdocの安全確認を実装Loopへ分割して進める。
 
+## Loop 064 Placeholder UI Status
+
+Loop 064で、顧客詳細の担当者返信カードに送信前確認UI placeholderを追加した。
+
+Implemented:
+
+- 返信文入力後に `送信前に確認する` を押す流れ。
+- 確認カードで宛先、利用先、送信内容、送信種別、注意を表示。
+- `本物のLINEには送信されません` と `デモ用` を表示。
+- checkbox確認後だけ `この内容でデモ保存する` を押せる。
+- 最終submitは既存のstaff reply actionを使い、`MockLineClient` のまま。
+
+Still not implemented:
+
+- 本物LINE送信。
+- LINE Messaging API接続。
+- idempotency key。
+- audit log schema。
+- Supabase Auth/JWTと `send_staff_reply` permissionの本番接続。
+
 ## Responsibility Split
 
 ### AI Reply Draft

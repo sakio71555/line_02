@@ -161,6 +161,8 @@ This is development-only demo data. It is not production data.
 - 現在は本物LINEには送信されない。
 - AI返信下書きは送信ではない。
 - 担当者返信は現在デモ保存で、timelineにstaff messageとして残る。
+- 担当者返信では `送信前に確認する` -> `この内容でデモ保存する` の2段階で確認する。
+- 確認checkboxで、デモ保存前に宛先、利用先、本文、本物LINE未送信を確認する。
 - 本物LINE送信へ進む前に、送信前確認UIと安全設計が必要。
 - 本番送信時は、送信先、送信本文、送信者、利用先、デモ送信/本番送信の違いを確認するステップを入れる予定。
 - 安全設計は [staff_reply_safety_confirmation.md](../16_design/staff_reply_safety_confirmation.md) を参照する。

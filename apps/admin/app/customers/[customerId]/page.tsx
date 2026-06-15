@@ -59,7 +59,13 @@ export default async function CustomerDetailPage({
         )}
       </section>
 
-      {detail.status === "error" ? null : <CustomerActionPanel customerId={customerId} />}
+      {detail.status === "error" ? null : (
+        <CustomerActionPanel
+          customerId={customerId}
+          recipientLabel={getCustomerRecipientLabel(detail.customer)}
+          tenantId={config.tenantId}
+        />
+      )}
 
       <section className="section">
         <h2>相談の流れ / タイムライン</h2>
@@ -169,6 +175,12 @@ function customerDetailEntries(customer: Awaited<ReturnType<typeof getAdminCusto
     ["作成日時", customer.created_at],
     ["更新日時", customer.updated_at]
   ] as const;
+}
+
+function getCustomerRecipientLabel(
+  customer: Awaited<ReturnType<typeof getAdminCustomerDetail>>["customer"]
+): string {
+  return customer.line_display_name || customer.name || customer.id;
 }
 
 function formatDetailValue(value: string | number | boolean | string[] | null | undefined): string {
