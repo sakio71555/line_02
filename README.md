@@ -89,6 +89,8 @@ Loop 056.1ではlocal demo manual verification recordを追加しました。API
 
 Loop 056.2ではlocal demo RAG knowledge seed verification patchを実施しました。demo seed後にRAG search / answer draftでsource付き確認ができるようにし、runbookへ確認keywordと期待結果を追記しました。ただしWeb crawl、embedding、pgvector、OpenAI実接続は未実装です。詳細は [docs/11_codex_tasks/056_2_local_demo_rag_knowledge_seed_verification_patch.md](docs/11_codex_tasks/056_2_local_demo_rag_knowledge_seed_verification_patch.md) を参照してください。
 
+Loop 056.3では、初心者でも分かりやすいPOPなAdmin UIへ進めるためのdocs-only方針を追加しました。まだUI実装は変更していません。今後の画面改善では [docs/16_design/beginner_friendly_pop_admin_ui.md](docs/16_design/beginner_friendly_pop_admin_ui.md) と [docs/11_codex_tasks/056_3_beginner_friendly_pop_admin_ui_direction.md](docs/11_codex_tasks/056_3_beginner_friendly_pop_admin_ui_direction.md) を参照します。
+
 ## Codex開発ループ
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。

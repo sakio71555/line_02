@@ -101,6 +101,8 @@ selectedTenantId transportは、`transport plan -> transport boundary -> read-on
 
 ローカルデモMVPの手動確認Loopでは、curlで確認した項目、HTTP routeだけ確認した項目、ブラウザ目視が必要な項目、bugまたは注意点を分けて記録します。未確認のものを確認済みとして扱わず、source付きRAGなどデモに必要な見え方が未確認の場合は、次Loopの候補として残します。
 
+初心者向けAdmin UI改善では、実装前に [docs/16_design/beginner_friendly_pop_admin_ui.md](16_design/beginner_friendly_pop_admin_ui.md) を確認します。UI LoopはPOPで分かりやすい表示を目指しつつ、AIが自動送信しないこと、本番LINE送信/本番AI/本番Supabaseが未接続であること、tenant/権限境界を曖昧にしないことを優先します。文言変更、カード化、バッジ化、危険操作の確認表示は画面別の小さいLoopに分けます。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く
