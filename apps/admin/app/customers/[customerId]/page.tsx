@@ -23,10 +23,10 @@ export default async function CustomerDetailPage({
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">Local demo customer detail</p>
+          <p className="eyebrow">ローカルデモ顧客詳細</p>
           <h1>顧客詳細</h1>
           <p className="meta">
-            tenant: <span className="mono">{config.tenantId}</span> / customer:{" "}
+            利用先ID: <span className="mono">{config.tenantId}</span> / customer:{" "}
             <span className="mono">{customerId}</span>
           </p>
         </div>
@@ -35,16 +35,16 @@ export default async function CustomerDetailPage({
 
       <div className="notice">
         <p>
-          この画面では顧客カルテ、timeline、AI/RAG mock、担当者返信mockをまとめて確認します。
+          この画面では、お客様情報、相談の流れ、AIの下書き、担当者返信をまとめて確認します。
         </p>
         <p className="meta">
-          AI要約はsummary messageとしてtimelineへ保存されます。AI返信下書きとRAG回答案は
-          確認用レスポンスのみで、LINE送信もmessage保存もしません。
+          AIでまとめた内容はタイムラインへ保存されます。返信文の下書きとホームページ情報からの回答案は
+          確認用で、LINE送信もmessage保存もしません。
         </p>
       </div>
 
       <section className="section">
-        <h2>顧客情報</h2>
+        <h2>お客様情報</h2>
         {detail.status === "error" ? (
           <div className="error">
             <strong>APIエラー</strong>
@@ -62,7 +62,7 @@ export default async function CustomerDetailPage({
       {detail.status === "error" ? null : <CustomerActionPanel customerId={customerId} />}
 
       <section className="section">
-        <h2>タイムライン</h2>
+        <h2>相談の流れ / タイムライン</h2>
         {timeline.status === "error" ? (
           <div className="error">
             <strong>APIエラー</strong>

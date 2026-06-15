@@ -149,9 +149,12 @@ describe("admin UI role visibility fixtures", () => {
       React.createElement(RoleVisibilityNote, { variant: "alerts" })
     );
 
-    expect(customerActionsHtml).toContain("AI要約保存は将来制限候補");
-    expect(customerActionsHtml).toContain("担当者返信、AI返信下書き、RAG回答案は許可候補");
-    expect(customerActionsHtml).toContain("操作ボタンはまだ非表示/disabledにしません");
+    expect(customerActionsHtml).toContain("権限ごとの表示制御は準備中です");
+    expect(customerActionsHtml).toContain("管理者、チーム管理者、担当者");
+    expect(customerActionsHtml).toContain("相談内容のまとめ");
+    expect(customerActionsHtml).toContain("返信文の下書き");
+    expect(customerActionsHtml).toContain("ホームページ情報からの回答案");
+    expect(customerActionsHtml).toContain("本物の権限判定やボタン非表示はまだ行いません");
     expect(alertsHtml).toContain("未返信チェック / open alert通知mockはmanager以上");
     expect(alertsHtml).toContain("操作ボタンはまだ非表示/disabledにしません");
   });

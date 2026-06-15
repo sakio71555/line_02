@@ -205,6 +205,11 @@ dl.detail-grid {
   grid-column: 1 / -1;
 }
 
+.action-card-header {
+  display: grid;
+  gap: 2px;
+}
+
 .action-form {
   display: grid;
   gap: 10px;

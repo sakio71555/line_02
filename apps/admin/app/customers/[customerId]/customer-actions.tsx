@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import React, { useActionState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -32,6 +32,10 @@ const initialRagAnswerDraftState: RagAnswerDraftActionState = {
 const initialStaffReplyState: StaffReplyActionState = {
   status: "idle"
 };
+
+const ragExampleKeywords = ["オンライン相談", "メンテナンス", "新築", "リフォーム"] as const;
+
+type FormAction = (formData: FormData) => void;
 
 export function CustomerActionPanel({ customerId }: { customerId: string }) {
   const router = useRouter();
@@ -65,15 +69,145 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
   ]);
 
   return (
+    <CustomerActionPanelView
+      replyDraftPending={replyDraftPending}
+      replyDraftState={replyDraftState}
+      ragAnswerPending={ragAnswerPending}
+      ragAnswerState={ragAnswerState}
+      runRagAnswer={runRagAnswer}
+      runReplyDraft={runReplyDraft}
+      runStaffReply={runStaffReply}
+      runSummary={runSummary}
+      staffReplyPending={staffReplyPending}
+      staffReplyState={staffReplyState}
+      summaryPending={summaryPending}
+      summaryState={summaryState}
+    />
+  );
+}
+
+export function CustomerActionPanelView({
+  replyDraftPending,
+  replyDraftState,
+  ragAnswerPending,
+  ragAnswerState,
+  runRagAnswer,
+  runReplyDraft,
+  runStaffReply,
+  runSummary,
+  staffReplyPending,
+  staffReplyState,
+  summaryPending,
+  summaryState
+}: {
+  replyDraftPending: boolean;
+  replyDraftState: AiReplyDraftActionState;
+  ragAnswerPending: boolean;
+  ragAnswerState: RagAnswerDraftActionState;
+  runRagAnswer: FormAction;
+  runReplyDraft: FormAction;
+  runStaffReply: FormAction;
+  runSummary: FormAction;
+  staffReplyPending: boolean;
+  staffReplyState: StaffReplyActionState;
+  summaryPending: boolean;
+  summaryState: AiSummaryActionState;
+}) {
+  return (
     <section className="section">
-      <h2>管理アクション</h2>
+      <h2>次にできること</h2>
+      <p className="meta">
+        上から順に試すと、相談内容の確認、返信文の準備、参考情報の確認、担当者返信までの流れが分かります。
+      </p>
       <RoleVisibilityNote variant="customer-actions" />
       <div className="action-grid">
-        <article className="action-panel action-panel-wide">
-          <h3>担当者返信</h3>
+        <article className="action-panel">
+          <div className="action-card-header">
+            <p className="result-label">Step 1</p>
+            <h3>相談内容をまとめる</h3>
+          </div>
+          <div className="status-pill-list">
+            <span className="status-pill">デモ用AI</span>
+            <span className="status-pill">タイムラインに保存</span>
+          </div>
           <p className="meta">
-            現在はMockLineClientによる開発用Mock送信です。本物のLINE送信は行わず、
-            成功時だけstaff messageとしてtimelineへ保存します。
+            デモ用AIが、これまでの相談内容を短くまとめます。今はOpenAI APIには接続していません。
+            結果はタイムラインにAI要約として保存されます。
+          </p>
+          <form action={runSummary} className="action-form">
+            <button type="submit" disabled={summaryPending}>
+              {summaryPending ? "まとめています..." : "相談内容をまとめる"}
+            </button>
+          </form>
+          <AiSummaryResult state={summaryState} />
+        </article>
+
+        <article className="action-panel">
+          <div className="action-card-header">
+            <p className="result-label">Step 2</p>
+            <h3>返信文の下書きを作る</h3>
+          </div>
+          <div className="status-pill-list">
+            <span className="status-pill">下書き確認用</span>
+            <span className="status-pill">LINEには送信されません</span>
+          </div>
+          <p className="meta">
+            お客様への返信文をデモ用AIで作ります。この下書きはまだLINEに送信されません。
+            内容を確認してから担当者が返信する想定です。
+          </p>
+          <form action={runReplyDraft} className="action-form">
+            <button type="submit" disabled={replyDraftPending}>
+              {replyDraftPending ? "作成中..." : "返信下書きを作成"}
+            </button>
+          </form>
+          <AiReplyDraftResult state={replyDraftState} />
+        </article>
+
+        <article className="action-panel action-panel-wide">
+          <div className="action-card-header">
+            <p className="result-label">Step 3</p>
+            <h3>ホームページ情報から回答案を作る</h3>
+          </div>
+          <div className="status-pill-list">
+            <span className="status-pill">参考情報つき回答案</span>
+            <span className="status-pill">Webクロール未接続</span>
+            <span className="status-pill">OpenAI API未接続</span>
+          </div>
+          <p className="meta">
+            デモ用に登録したアマミホームの参考情報から、回答案を作ります。
+            今はWebクロール、embedding、pgvectorは未接続です。
+          </p>
+          <p className="meta">
+            試しやすいキーワード: {ragExampleKeywords.join(" / ")}
+          </p>
+          <form action={runRagAnswer} className="action-form">
+            <label htmlFor="rag-query">質問</label>
+            <textarea
+              id="rag-query"
+              name="query"
+              placeholder="例: オンライン相談はできますか？"
+              rows={3}
+            />
+            <button type="submit" disabled={ragAnswerPending}>
+              {ragAnswerPending ? "作成中..." : "ホームページ情報から回答案を作る"}
+            </button>
+          </form>
+          <RagAnswerDraftResult state={ragAnswerState} />
+        </article>
+
+        <article className="action-panel action-panel-wide">
+          <div className="action-card-header">
+            <p className="result-label">Step 4</p>
+            <h3>担当者として返信する</h3>
+          </div>
+          <div className="status-pill-list">
+            <span className="status-pill">デモ用送信</span>
+            <span className="status-pill">本物のLINEには送信されません</span>
+            <span className="status-pill">タイムラインに保存</span>
+          </div>
+          <p className="meta">
+            入力した内容をスタッフ返信としてタイムラインに保存します。今はMockLineClientなので、
+            本物のLINEには送信されません。
           </p>
           <form action={runStaffReply} className="action-form">
             <label htmlFor="staff-reply-body">返信文</label>
@@ -85,59 +219,10 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
               required
             />
             <button type="submit" disabled={staffReplyPending}>
-              {staffReplyPending ? "送信中..." : "担当者返信を送信"}
+              {staffReplyPending ? "保存中..." : "担当者として返信する"}
             </button>
           </form>
           <StaffReplyResult state={staffReplyState} />
-        </article>
-
-        <article className="action-panel">
-          <h3>AI要約</h3>
-          <p className="meta">
-            現在はMockAiProviderです。OpenAI APIは呼ばず、生成したsummaryはdemo確認用に
-            timelineへAI summary messageとして保存します。
-          </p>
-          <form action={runSummary} className="action-form">
-            <button type="submit" disabled={summaryPending}>
-              {summaryPending ? "要約中..." : "AI要約を作成"}
-            </button>
-          </form>
-          <AiSummaryResult state={summaryState} />
-        </article>
-
-        <article className="action-panel">
-          <h3>AI返信下書き</h3>
-          <p className="meta">
-            現在はMockAiProviderです。下書き確認用のレスポンスだけを表示し、LINE送信も
-            message保存も行いません。
-          </p>
-          <form action={runReplyDraft} className="action-form">
-            <button type="submit" disabled={replyDraftPending}>
-              {replyDraftPending ? "作成中..." : "返信下書きを作成"}
-            </button>
-          </form>
-          <AiReplyDraftResult state={replyDraftState} />
-        </article>
-
-        <article className="action-panel action-panel-wide">
-          <h3>RAG回答案</h3>
-          <p className="meta">
-            現在は静的seed/fixture由来の簡易検索とMockAiProviderです。公式HP crawl、
-            embedding、pgvector、本物のOpenAI APIは未接続です。
-          </p>
-          <form action={runRagAnswer} className="action-form">
-            <label htmlFor="rag-query">質問</label>
-            <textarea
-              id="rag-query"
-              name="query"
-              placeholder="例: オンライン相談はできますか？"
-              rows={3}
-            />
-            <button type="submit" disabled={ragAnswerPending}>
-              {ragAnswerPending ? "作成中..." : "RAG回答案を作成"}
-            </button>
-          </form>
-          <RagAnswerDraftResult state={ragAnswerState} />
         </article>
       </div>
     </section>
@@ -162,7 +247,7 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
   return (
     <div className="action-result">
       <p className="result-label">送信結果</p>
-      <p>担当者返信をMock送信し、timelineへ保存しました。</p>
+      <p>担当者返信をデモ用送信として確認し、タイムラインへ保存しました。</p>
       <ResultField label="message_id" value={result.message.id} />
       <ResultField label="response_mode" value={result.customer.response_mode} />
       <ResultField
@@ -190,12 +275,12 @@ function AiSummaryResult({ state }: { state: AiSummaryActionState }) {
 
   return (
     <div className="action-result">
-      <p className="result-label">summary</p>
+      <p className="result-label">相談まとめ</p>
       <p>{result.summary.summary}</p>
-      <ResultList label="next_actions" items={result.summary.next_actions} />
-      <ResultList label="risk_flags" items={result.summary.risk_flags} />
-      <ResultField label="recommended_response_mode" value={result.summary.recommended_response_mode} />
-      <ResultField label="provider" value={result.summary.provider} />
+      <ResultList label="次に確認すること" items={result.summary.next_actions} />
+      <ResultList label="注意点" items={result.summary.risk_flags} />
+      <ResultField label="おすすめ対応モード" value={result.summary.recommended_response_mode} />
+      <ResultField label="AI種別" value={result.summary.provider} />
       <ResultField label="saved_message_id" value={result.message.id} />
     </div>
   );
@@ -218,13 +303,13 @@ function AiReplyDraftResult({ state }: { state: AiReplyDraftActionState }) {
 
   return (
     <div className="action-result">
-      <p className="result-label">draft_body</p>
+      <p className="result-label">返信文の下書き</p>
       <p className="message-body">{result.draft_body}</p>
-      <ResultList label="next_questions" items={result.next_questions} />
-      <ResultList label="risk_flags" items={result.risk_flags} />
-      <ResultField label="recommended_response_mode" value={result.recommended_response_mode} />
-      <ResultField label="should_handoff" value={String(result.should_handoff)} />
-      <ResultField label="provider" value={result.provider} />
+      <ResultList label="次に確認すること" items={result.next_questions} />
+      <ResultList label="注意点" items={result.risk_flags} />
+      <ResultField label="おすすめ対応モード" value={result.recommended_response_mode} />
+      <ResultField label="担当者確認が必要か" value={String(result.should_handoff)} />
+      <ResultField label="AI種別" value={result.provider} />
     </div>
   );
 }
@@ -246,31 +331,31 @@ function RagAnswerDraftResult({ state }: { state: RagAnswerDraftActionState }) {
 
   return (
     <div className="action-result">
-      <ResultField label="query" value={result.query} />
-      <ResultField label="can_answer" value={String(result.can_answer)} />
-      <p className="result-label">answer_body</p>
+      <ResultField label="質問" value={result.query} />
+      <ResultField label="回答できるか" value={String(result.can_answer)} />
+      <p className="result-label">回答案</p>
       <p className="message-body">{result.answer_body}</p>
-      <ResultList label="risk_flags" items={result.risk_flags} />
-      <ResultField label="handoff_required" value={String(result.handoff_required)} />
-      <ResultField label="recommended_response_mode" value={result.recommended_response_mode} />
-      <ResultField label="provider" value={result.provider ?? "-"} />
+      <ResultList label="注意点" items={result.risk_flags} />
+      <ResultField label="担当者確認が必要か" value={String(result.handoff_required)} />
+      <ResultField label="おすすめ対応モード" value={result.recommended_response_mode} />
+      <ResultField label="AI種別" value={result.provider ?? "-"} />
       <div className="source-list">
-        <p className="result-label">sources</p>
+        <p className="result-label">参考にした情報</p>
         {result.sources.length === 0 ? (
-          <p className="meta">該当sourceはありません。</p>
+          <p className="meta">参考情報が見つかりませんでした。担当者確認が必要です。</p>
         ) : (
           <ul>
             {result.sources.map((source) => (
               <li key={source.id}>
                 <a href={source.url}>{source.title}</a>
                 <dl className="compact-detail">
-                  <dt>category</dt>
+                  <dt>カテゴリ</dt>
                   <dd>{source.category}</dd>
-                  <dt>source_type</dt>
+                  <dt>情報の種類</dt>
                   <dd>{source.source_type}</dd>
-                  <dt>score</dt>
+                  <dt>スコア</dt>
                   <dd>{source.score}</dd>
-                  <dt>excerpt</dt>
+                  <dt>抜粋</dt>
                   <dd>{source.excerpt}</dd>
                 </dl>
               </li>

@@ -20,13 +20,13 @@ describe("admin role visibility placeholder", () => {
   it("renders customer action role guidance while leaving controls untouched", () => {
     const html = renderToStaticMarkup(<RoleVisibilityNote variant="customer-actions" />);
 
-    expect(html).toContain("Role visibility placeholder: 顧客アクション");
-    expect(html).toContain("owner / manager");
-    expect(html).toContain("AI要約");
-    expect(html).toContain("staff");
-    expect(html).toContain("AI要約保存は将来制限候補");
-    expect(html).toContain("担当者返信、AI返信下書き、RAG回答案は許可候補");
-    expect(html).toContain("dev_header runtime");
+    expect(html).toContain("権限ごとの表示制御は準備中です");
+    expect(html).toContain("管理者、チーム管理者、担当者");
+    expect(html).toContain("相談内容のまとめ");
+    expect(html).toContain("返信文の下書き");
+    expect(html).toContain("ホームページ情報からの回答案");
+    expect(html).toContain("今はデモ確認のため、操作ボタンは従来通り使えます");
+    expect(html).toContain("本物の権限判定やボタン非表示はまだ行いません");
     expect(html).not.toContain("<button");
   });
 

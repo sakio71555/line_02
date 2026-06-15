@@ -20,12 +20,12 @@ const roleVisibilityNotes: Record<
     ]
   },
   "customer-actions": {
-    title: "Role visibility placeholder: 顧客アクション",
+    title: "権限ごとの表示制御は準備中です",
     bullets: [
-      "owner / manager: 担当者返信、AI要約、AI返信下書き、RAG回答案を許可予定です。",
-      "staff: 担当者返信、AI返信下書き、RAG回答案は許可候補です。",
-      "staff: AI要約保存は将来制限候補です。",
-      "現在はdev_header runtimeのため、操作ボタンはまだ非表示/disabledにしません。"
+      "将来は管理者、チーム管理者、担当者によって表示される操作が変わります。",
+      "担当者返信、相談内容のまとめ、返信文の下書き、ホームページ情報からの回答案を権限ごとに整理する予定です。",
+      "今はデモ確認のため、操作ボタンは従来通り使えます。",
+      "本物の権限判定やボタン非表示はまだ行いません。"
     ]
   },
   alerts: {
