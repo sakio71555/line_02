@@ -12,20 +12,38 @@ export default function AdminHomePage() {
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">Read-only development UI</p>
+          <p className="eyebrow">Local demo development UI</p>
           <h1>Amami LINE CRM Admin</h1>
         </div>
       </div>
 
       <div className="notice">
-        <p>この管理画面は開発用の読み取り専用UIです。</p>
+        <p>
+          この管理画面はローカルデモ用UIです。顧客確認、AI/RAG mock、担当者返信mock、
+          alert mock通知までを開発環境で確認できます。
+        </p>
         <p className="meta">
           tenant: <span className="mono">{config.tenantId}</span> / API:{" "}
           <span className="mono">{config.apiBaseUrl}</span>
         </p>
+        <p className="meta">
+          現在はin-memory / mock中心です。Supabase実DB、Supabase Auth、LINE実送信、
+          OpenAI実API、Web crawlは未接続です。
+        </p>
       </div>
 
       <RoleVisibilityNote />
+
+      <section className="section">
+        <h2>Demo flow</h2>
+        <ol className="result-list">
+          <li>APIとAdminを起動し、開発用demo seedを投入します。</li>
+          <li>顧客一覧からデモ顧客を開き、timelineと顧客情報を確認します。</li>
+          <li>顧客詳細でAI要約、AI返信下書き、RAG回答案、担当者返信mockを試します。</li>
+          <li>アラート画面で未返信チェックとopen alert通知mockを確認します。</li>
+          <li>Auth placeholderで未接続のlogin / tenant selection / safe stateを確認します。</li>
+        </ol>
+      </section>
 
       <section className="section">
         <h2>Navigation</h2>

@@ -72,7 +72,8 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
         <article className="action-panel action-panel-wide">
           <h3>担当者返信</h3>
           <p className="meta">
-            現在は開発用Mock送信です。本番LINE送信は後続Loopで接続します。
+            現在はMockLineClientによる開発用Mock送信です。本物のLINE送信は行わず、
+            成功時だけstaff messageとしてtimelineへ保存します。
           </p>
           <form action={runStaffReply} className="action-form">
             <label htmlFor="staff-reply-body">返信文</label>
@@ -92,6 +93,10 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
 
         <article className="action-panel">
           <h3>AI要約</h3>
+          <p className="meta">
+            現在はMockAiProviderです。OpenAI APIは呼ばず、生成したsummaryはdemo確認用に
+            timelineへAI summary messageとして保存します。
+          </p>
           <form action={runSummary} className="action-form">
             <button type="submit" disabled={summaryPending}>
               {summaryPending ? "要約中..." : "AI要約を作成"}
@@ -102,6 +107,10 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
 
         <article className="action-panel">
           <h3>AI返信下書き</h3>
+          <p className="meta">
+            現在はMockAiProviderです。下書き確認用のレスポンスだけを表示し、LINE送信も
+            message保存も行いません。
+          </p>
           <form action={runReplyDraft} className="action-form">
             <button type="submit" disabled={replyDraftPending}>
               {replyDraftPending ? "作成中..." : "返信下書きを作成"}
@@ -112,6 +121,10 @@ export function CustomerActionPanel({ customerId }: { customerId: string }) {
 
         <article className="action-panel action-panel-wide">
           <h3>RAG回答案</h3>
+          <p className="meta">
+            現在は静的seed/fixture由来の簡易検索とMockAiProviderです。公式HP crawl、
+            embedding、pgvector、本物のOpenAI APIは未接続です。
+          </p>
           <form action={runRagAnswer} className="action-form">
             <label htmlFor="rag-query">質問</label>
             <textarea

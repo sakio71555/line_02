@@ -50,7 +50,7 @@ npx pnpm@10.12.1 test
 
 ## ローカル管理画面確認
 
-Loop 015時点の管理画面はread-onlyです。ローカル確認ではAPIを先に起動し、開発専用のin-memory demo seedを投入してからadmin画面を開きます。
+ローカル確認ではAPIを先に起動し、開発専用のin-memory demo seedを投入してからadmin画面を開きます。現在のローカルデモMVPでは、顧客一覧、顧客詳細/timeline、AI/RAG mock、担当者返信mock、alerts操作mock、Auth placeholderを確認できます。
 
 API server:
 
@@ -73,9 +73,13 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 
 その後、以下を確認します。
 
+- `http://localhost:3000`: Demo flow、主要導線、mock/未接続範囲
 - `http://localhost:3000/customers`: デモ顧客一覧
 - `http://localhost:3000/customers/customer_demo_yamada_taro`: 未返信っぽいデモ顧客の詳細・タイムライン
 - `http://localhost:3000/customers/customer_demo_sato_hanako`: 返信済みっぽいデモ顧客の詳細・タイムライン
+- `http://localhost:3000/alerts`: 未返信チェック、alert一覧、open alert通知mock
+- `http://localhost:3000/login`: 認証placeholder
+- `http://localhost:3000/select-tenant`: テナント選択placeholder
 
 `API_BASE_URL` はadminが参照するAPIのURL、`TENANT_ID` はadmin APIへ送る開発用tenantです。demo seedはin-memoryの開発確認専用で、API processを再起動すると消えます。`APP_ENV=production` または `NODE_ENV=production` では使えません。
 
@@ -187,6 +191,8 @@ Loop 053では代表Admin API routeにfake authenticated_staff runtime wiringを
 Loop 054では代表routeで確認した authenticated runtime を全Admin API routeへ広げるためのrollout planを追加しました。ただし、まだroute実装、Supabase Auth本接続、Admin UI token forwarding、production `dev_header` rejectionは行っていません。詳細は [docs/11_codex_tasks/054_admin_api_authenticated_runtime_full_route_rollout_plan.md](docs/11_codex_tasks/054_admin_api_authenticated_runtime_full_route_rollout_plan.md) を参照してください。
 
 Loop 055ではauthenticated runtimeの `selectedTenantId` transport planを追加しました。複数tenant所属staff向けにAdmin UIからAdmin APIへ選択tenantを渡す候補を比較し、短期はtest-only injection、中期は `x-selected-tenant-id` header候補、本番ではactive membership再検証必須と整理しました。ただし、transport実装、保存処理、Admin API接続はまだ未実装です。詳細は [docs/11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md](docs/11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md) を参照してください。
+
+Loop 056ではlocal demo MVP completion hardeningを実施しました。ローカルで見せるデモMVP向けにAdmin UI導線、mock/未接続表示、manual checklist/runbookを補強しました。ただし、Supabase Auth/JWT、LINE/OpenAI実API、Supabase実DB runtime、本番deployは未実装です。詳細は [docs/11_codex_tasks/056_local_demo_mvp_completion_hardening.md](docs/11_codex_tasks/056_local_demo_mvp_completion_hardening.md) を参照してください。
 
 ## Secrets
 

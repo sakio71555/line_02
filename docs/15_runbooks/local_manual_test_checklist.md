@@ -56,32 +56,53 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 ## 管理画面確認
 
 1. `http://localhost:3000` を開く。
-2. `/customers` を開く。
-3. demo顧客が表示される。
-4. `customer_demo_yamada_taro` などの顧客詳細を開く。
-5. タイムラインが表示される。
-6. AI要約を実行する。
-7. AI返信下書きを実行する。
-8. RAG回答案で `オンライン相談`、`施工事例`、`メンテナンス` などを試す。
-9. 担当者返信フォームで返信する。
-10. タイムラインにstaff messageが増えることを確認する。
-11. `/alerts` を開く。
-12. 未返信チェックを実行する。
-13. alert一覧に表示されることを確認する。
-14. open alert通知mockを実行する。
-15. alert statusが `notified` になることを確認する。
+2. トップの `Demo flow` を確認し、mock/in-memory/未接続の注意書きを説明する。
+3. トップから `/login`、`/select-tenant`、`/permission-denied`、`/session-expired` へ移動し、Auth placeholderが未接続であることを確認する。
+4. トップへ戻り、`/customers` を開く。
+5. demo顧客が表示される。
+6. `customer_demo_yamada_taro` などの顧客詳細を開く。
+7. 顧客情報とタイムラインが表示される。
+8. RoleVisibilityNoteで、owner / manager / staff の将来制御予定と現在はdev_header runtimeで未接続であることを確認する。
+9. AI要約を実行する。
+10. AI返信下書きを実行する。
+11. RAG回答案で `オンライン相談`、`施工事例`、`メンテナンス` などを試す。
+12. 担当者返信フォームで返信する。
+13. タイムラインにstaff messageが増えることを確認する。
+14. `/alerts` を開く。
+15. 未返信チェックを実行する。
+16. alert一覧に表示されることを確認する。
+17. open alert通知mockを実行する。
+18. alert statusが `notified` になることを確認する。
 
 ## 期待結果
 
 - 管理画面トップ: `顧客一覧` と `アラート` へのリンクが表示される。
+- 管理画面トップ: `Demo flow` とAuth placeholderリンクが表示され、mock/in-memory/未接続の範囲が分かる。
 - 顧客一覧: demo顧客2件が表示される。
 - 顧客詳細: customer情報とtimelineが表示される。
-- AI要約: MockAiProviderのsummaryが表示され、AI summary messageがtimelineに追加される。
-- AI返信下書き: `draft_body`、`next_questions`、`risk_flags`、`recommended_response_mode`、`should_handoff` が表示される。
-- RAG回答案: `answer_body` とsourcesが表示される。該当sourceがない場合はfallbackが表示される。
+- AI要約: MockAiProviderのsummaryが表示され、AI summary messageがtimelineに追加される。OpenAI APIは呼ばない。
+- AI返信下書き: `draft_body`、`next_questions`、`risk_flags`、`recommended_response_mode`、`should_handoff` が表示される。下書きは保存せず、LINE送信しない。
+- RAG回答案: `answer_body` とsourcesが表示される。該当sourceがない場合はfallbackが表示される。公式HP crawl、embedding、pgvectorは使わない。
 - 担当者返信: 開発用Mock送信として成功表示され、timelineに `role = staff` のmessageが増える。
 - 未返信チェック: 条件に合うcustomerに `unreplied_customer_message` alertが作成される。
 - open alert通知mock: open alertがmock通知され、成功したalertのstatusが `notified` になる。
+- Auth placeholder: login / tenant selection / permission denied / session expired は未接続状態として表示される。
+- RoleVisibilityNote: 将来のrole別表示制御予定が見えるが、現在はbutton非表示/disabled制御は行わない。
+
+## デモ当日の説明順
+
+1. トップ画面で、このMVPがローカルデモ用であり、in-memory / mock中心であることを説明する。
+2. 顧客一覧で、demo seedにより未返信顧客と返信済み顧客が用意されていることを説明する。
+3. 顧客詳細で、顧客情報とLINE風の相談timelineを見せる。
+4. AI要約を実行し、summary messageがtimelineへ保存されることを見せる。
+5. AI返信下書きを実行し、担当者確認用の下書きだけが返ることを見せる。
+6. RAG回答案で `オンライン相談` や `メンテナンス` を試し、source付き回答案を見せる。
+7. 担当者返信フォームで短い返信を入力し、MockLineClient送信とstaff message保存を見せる。
+8. アラート画面で未返信チェックを実行し、open alertが出ることを見せる。
+9. open alert通知mockを実行し、statusが `notified` になることを見せる。
+10. `/login` と `/select-tenant` を開き、本番認証・tenant選択はplaceholderであることを説明する。
+11. RoleVisibilityNoteを見せ、将来はowner / manager / staffで操作表示を制御するが、今は未接続であることを説明する。
+12. 最後に、Supabase実DB、Supabase Auth、LINE実送信、OpenAI実API、Web crawl、LIFFは未接続であることを明示する。
 
 ## トラブルシュート
 

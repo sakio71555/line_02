@@ -12,7 +12,7 @@ export default async function CustomersPage() {
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">Read-only customer list</p>
+          <p className="eyebrow">Local demo customer list</p>
           <h1>顧客一覧</h1>
           <p className="meta">
             tenant: <span className="mono">{config.tenantId}</span>
@@ -21,13 +21,25 @@ export default async function CustomersPage() {
         <Link href="/">トップへ戻る</Link>
       </div>
 
+      <div className="notice">
+        <p>
+          demo seed投入後に、未返信確認用の顧客と返信済み確認用の顧客が表示されます。
+        </p>
+        <p className="meta">
+          顧客データはin-memoryです。API processを再起動すると消えるため、空の場合は
+          `POST /api/dev/seed-demo-data` を再実行してください。
+        </p>
+      </div>
+
       {result.status === "error" ? (
         <div className="error">
           <strong>APIエラー</strong>
           <pre>{result.message}</pre>
         </div>
       ) : result.customers.length === 0 ? (
-        <p className="empty">表示できる顧客はまだありません。</p>
+        <p className="empty">
+          表示できる顧客はまだありません。ローカルデモではdemo seedを投入してから確認します。
+        </p>
       ) : (
         <div className="table-wrap">
           <table>

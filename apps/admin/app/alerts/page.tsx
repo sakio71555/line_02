@@ -28,7 +28,10 @@ export default async function AlertsPage() {
       </div>
 
       <div className="notice">
-        <p>現在は開発用Mock通知です。本番LINEグループ通知は後続Loopで接続します。</p>
+        <p>
+          現在は未返信チェックとMockStaffNotifier通知をローカルで確認する画面です。
+          本番LINEグループ通知、Slack通知、scheduler、Supabase永続化は未接続です。
+        </p>
       </div>
 
       <AlertActionPanel />

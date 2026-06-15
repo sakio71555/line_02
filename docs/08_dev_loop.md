@@ -97,6 +97,8 @@ Admin API authenticated runtimeの全route rolloutは、代表route接続後にd
 
 selectedTenantId transportは、`transport plan -> transport boundary -> read-only route rollout` の順に進めます。`selectedTenantId` は権限ではなくselectorとして扱い、active membershipで再検証してから `AdminTenantContext.tenantId` を確定します。cookie/session/localStorage保存や `/select-tenant` の保存処理は、transport boundaryとroute rolloutとは別Loopに分けます。
 
+本番化Loopとは別に、ローカルデモMVPの完成度を上げるhardening Loopを挟みます。デモ確認ではmock/in-memory/未接続を画面とrunbookで明示し、Supabase Auth、LINE実送信、OpenAI実API、Supabase実DBが接続済みであるように見せないことを優先します。
+
 Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記します。Obsidianでは `docs/14_dev_logs/` を作業履歴として見ますが、Obsidianはプロダクト機能ではなく記録用です。実装の正本はGitであり、作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書きません。
 
 ## 1. 仕様を書く

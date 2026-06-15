@@ -36,7 +36,8 @@ export function AlertActionPanel() {
     <section className="section">
       <h2>アラート操作</h2>
       <p className="meta">
-        現在は開発用Mock通知です。本番LINEグループ通知は後続Loopで接続します。
+        未返信チェックでopen alertを作成し、open alert通知でMockStaffNotifierを呼びます。
+        本物のLINE/Slack通知は行いません。
       </p>
       <RoleVisibilityNote variant="alerts" />
       <div className="action-grid">

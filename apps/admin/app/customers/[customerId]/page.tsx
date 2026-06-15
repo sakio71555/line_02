@@ -23,7 +23,7 @@ export default async function CustomerDetailPage({
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">Read-only customer detail</p>
+          <p className="eyebrow">Local demo customer detail</p>
           <h1>顧客詳細</h1>
           <p className="meta">
             tenant: <span className="mono">{config.tenantId}</span> / customer:{" "}
@@ -31,6 +31,16 @@ export default async function CustomerDetailPage({
           </p>
         </div>
         <Link href="/customers">一覧へ戻る</Link>
+      </div>
+
+      <div className="notice">
+        <p>
+          この画面では顧客カルテ、timeline、AI/RAG mock、担当者返信mockをまとめて確認します。
+        </p>
+        <p className="meta">
+          AI要約はsummary messageとしてtimelineへ保存されます。AI返信下書きとRAG回答案は
+          確認用レスポンスのみで、LINE送信もmessage保存もしません。
+        </p>
       </div>
 
       <section className="section">
