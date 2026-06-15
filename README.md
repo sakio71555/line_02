@@ -87,6 +87,8 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 
 Loop 056.1ではlocal demo manual verification recordを追加しました。API/Admin起動、demo seed、主要Admin API、Admin UI route、mock/未接続範囲の確認結果を記録しています。詳細は [docs/11_codex_tasks/056_1_local_demo_manual_verification_record.md](docs/11_codex_tasks/056_1_local_demo_manual_verification_record.md) を参照してください。
 
+Loop 056.2ではlocal demo RAG knowledge seed verification patchを実施しました。demo seed後にRAG search / answer draftでsource付き確認ができるようにし、runbookへ確認keywordと期待結果を追記しました。ただしWeb crawl、embedding、pgvector、OpenAI実接続は未実装です。詳細は [docs/11_codex_tasks/056_2_local_demo_rag_knowledge_seed_verification_patch.md](docs/11_codex_tasks/056_2_local_demo_rag_knowledge_seed_verification_patch.md) を参照してください。
+
 ## Codex開発ループ
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。

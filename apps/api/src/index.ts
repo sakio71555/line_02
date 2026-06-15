@@ -36,8 +36,11 @@ import {
   type LineClient
 } from "@amami-line-crm/line";
 import {
+  AMAMI_HOME_TENANT_ID,
+  createAmamiHomeKnowledgePages,
   InMemoryKnowledgePageRepository,
   searchTenantKnowledge,
+  type KnowledgePage,
   type KnowledgePageRepository
 } from "@amami-line-crm/rag";
 
@@ -118,7 +121,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const seeded = await seedDemoData({
       tenant_id: tenant.tenantId,
       customerRepository,
-      messageRepository
+      messageRepository,
+      knowledgePageRepository
     });
 
     return c.json({
@@ -134,7 +138,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         last_customer_message_at: customer.last_customer_message_at,
         last_staff_reply_at: customer.last_staff_reply_at
       })),
-      message_count: seeded.messages.length
+      message_count: seeded.messages.length,
+      knowledge_page_count: seeded.knowledge_pages_seeded
     });
   });
 
@@ -762,15 +767,22 @@ interface ResolvedWebhookTenant {
 interface DemoSeedResult {
   customers: Customer[];
   messages: Message[];
+  knowledge_pages_seeded: number;
+}
+
+interface SeedableKnowledgePageRepository extends KnowledgePageRepository {
+  upsertMany(pages: KnowledgePage[]): void;
 }
 
 async function seedDemoData(input: {
   tenant_id: string;
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
+  knowledgePageRepository: KnowledgePageRepository;
 }): Promise<DemoSeedResult> {
   const customers = createDemoCustomers(input.tenant_id);
   const messages = createDemoMessages(input.tenant_id);
+  let knowledgePages: KnowledgePage[] = [];
 
   for (const customer of customers) {
     await input.customerRepository.save(customer);
@@ -780,10 +792,27 @@ async function seedDemoData(input: {
     await input.messageRepository.insert(message);
   }
 
+  if (
+    input.tenant_id === AMAMI_HOME_TENANT_ID &&
+    isSeedableKnowledgePageRepository(input.knowledgePageRepository)
+  ) {
+    knowledgePages = createAmamiHomeKnowledgePages();
+    input.knowledgePageRepository.upsertMany(knowledgePages);
+  }
+
   return {
     customers,
-    messages
+    messages,
+    knowledge_pages_seeded: knowledgePages.length
   };
+}
+
+function isSeedableKnowledgePageRepository(
+  repository: KnowledgePageRepository
+): repository is SeedableKnowledgePageRepository {
+  const maybeSeedable = repository as { upsertMany?: unknown };
+
+  return typeof maybeSeedable.upsertMany === "function";
 }
 
 function createDemoCustomers(tenantId: string): Customer[] {

@@ -2,11 +2,12 @@
 
 ## 最終確認記録
 
-- Latest Codex verification record: [Loop 056.1 local demo manual verification record](../11_codex_tasks/056_1_local_demo_manual_verification_record.md)
-- 確認日時: `2026-06-15 13:39:23 JST`
-- 確認方法: API/Admin dev server起動、主要API curl、Admin route HTTP 200確認。
+- Latest Codex verification record: [Loop 056.2 local demo RAG knowledge seed verification patch](../11_codex_tasks/056_2_local_demo_rag_knowledge_seed_verification_patch.md)
+- 前回確認記録: [Loop 056.1 local demo manual verification record](../11_codex_tasks/056_1_local_demo_manual_verification_record.md)
+- 確認日時: `2026-06-15`
+- 確認方法: demo seed後のRAG search / RAG answer draft source付き確認、API/Admin route確認。
 - UI目視: Codex環境では未実施。人間がブラウザで最終確認する。
-- 注意点: `POST /api/admin/rag/search` と `POST /api/admin/rag/answer-draft` はdefault local runtimeで200を返すが、`オンライン相談` のsourceは0件だった。source付きRAGデモが必要な場合は、次Loopでdefault local knowledge seedを確認・補強する。
+- 注意点: source付きRAGはdemo seed後のin-memory knowledge fixtureで確認する。API processを再起動した場合はdemo seedを再投入する。
 
 ## 前提
 
@@ -59,6 +60,7 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 
 - `ok: true` が返る。
 - `customer_demo_yamada_taro` と `customer_demo_sato_hanako` が返る。
+- `knowledge_page_count: 10` が返る。
 - このseedは開発専用です。productionでは使いません。
 
 ## 管理画面確認
@@ -73,7 +75,7 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 8. RoleVisibilityNoteで、owner / manager / staff の将来制御予定と現在はdev_header runtimeで未接続であることを確認する。
 9. AI要約を実行する。
 10. AI返信下書きを実行する。
-11. RAG回答案で `オンライン相談`、`施工事例`、`メンテナンス` などを試す。
+11. RAG回答案で `オンライン相談`、`施工事例`、`資料請求`、`メンテナンス`、`SoToNo MA` などを試す。
 12. 担当者返信フォームで返信する。
 13. タイムラインにstaff messageが増えることを確認する。
 14. `/alerts` を開く。
@@ -90,7 +92,7 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 - 顧客詳細: customer情報とtimelineが表示される。
 - AI要約: MockAiProviderのsummaryが表示され、AI summary messageがtimelineに追加される。OpenAI APIは呼ばない。
 - AI返信下書き: `draft_body`、`next_questions`、`risk_flags`、`recommended_response_mode`、`should_handoff` が表示される。下書きは保存せず、LINE送信しない。
-- RAG回答案: `answer_body` とsourcesが表示される。該当sourceがない場合はfallbackが表示される。公式HP crawl、embedding、pgvectorは使わない。
+- RAG回答案: demo seed後は `オンライン相談` などでsource付き回答案が表示される。該当sourceがない場合はfallbackが表示される。公式HP crawl、embedding、pgvectorは使わない。
 - 担当者返信: 開発用Mock送信として成功表示され、timelineに `role = staff` のmessageが増える。
 - 未返信チェック: 条件に合うcustomerに `unreplied_customer_message` alertが作成される。
 - open alert通知mock: open alertがmock通知され、成功したalertのstatusが `notified` になる。
@@ -104,7 +106,7 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 3. 顧客詳細で、顧客情報とLINE風の相談timelineを見せる。
 4. AI要約を実行し、summary messageがtimelineへ保存されることを見せる。
 5. AI返信下書きを実行し、担当者確認用の下書きだけが返ることを見せる。
-6. RAG回答案で `オンライン相談` や `メンテナンス` を試し、source付き回答案またはsourceなしfallbackの挙動を見せる。
+6. RAG回答案で `オンライン相談` や `メンテナンス` を試し、source付き回答案を見せる。sourceなしqueryではfallbackになることも説明する。
 7. 担当者返信フォームで短い返信を入力し、MockLineClient送信とstaff message保存を見せる。
 8. アラート画面で未返信チェックを実行し、open alertが出ることを見せる。
 9. open alert通知mockを実行し、statusが `notified` になることを見せる。
@@ -141,10 +143,12 @@ curl -X POST http://localhost:4000/api/dev/seed-demo-data \
 
 ### RAGでsourceが出ない場合
 
-- demo knowledge seedが入っているか確認する。
+- demo seedを投入したか確認する。
+- API processを再起動してin-memory knowledgeが消えていないか確認する。
+- seed responseに `knowledge_page_count: 10` が返っているか確認する。
 - queryを `オンライン相談`、`施工事例`、`資料請求`、`メンテナンス`、`SoToNo MA` で試す。
 - 該当sourceがないqueryではfallbackが表示されます。
-- Loop 056.1時点のdefault local runtimeでは、`オンライン相談` でsource 0件とfallbackを確認しています。source付きRAGをデモで見せる場合は、API runtimeにAmami Home knowledge seedが入っているか事前確認してください。
+- `オンライン相談` では `knowledge_amamihome_online_consultation` がsourceとして返る想定です。
 
 ### alertが出ない場合
 

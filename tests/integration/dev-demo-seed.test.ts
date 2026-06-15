@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { createApiApp } from "../../apps/api/src/index";
 import { InMemoryCustomerRepository, InMemoryMessageRepository } from "@amami-line-crm/domain";
 import type { LineClient, LineReplyMessage } from "@amami-line-crm/line";
+import { InMemoryKnowledgePageRepository } from "@amami-line-crm/rag";
 
 class FailingLineClient implements LineClient {
   async replyMessage(_replyToken: string, _messages: LineReplyMessage[]): Promise<never> {
@@ -17,13 +18,17 @@ class FailingLineClient implements LineClient {
 function createTestApp(input: {
   customerRepository?: InMemoryCustomerRepository;
   messageRepository?: InMemoryMessageRepository;
+  knowledgePageRepository?: InMemoryKnowledgePageRepository;
   env?: NodeJS.ProcessEnv;
 } = {}) {
   const customerRepository = input.customerRepository ?? new InMemoryCustomerRepository();
   const messageRepository = input.messageRepository ?? new InMemoryMessageRepository();
+  const knowledgePageRepository =
+    input.knowledgePageRepository ?? new InMemoryKnowledgePageRepository([]);
   const app = createApiApp({
     customerRepository,
     messageRepository,
+    knowledgePageRepository,
     lineClient: new FailingLineClient(),
     env: {
       TENANT_ID: "tenant_amamihome",
@@ -35,7 +40,8 @@ function createTestApp(input: {
   return {
     app,
     customerRepository,
-    messageRepository
+    messageRepository,
+    knowledgePageRepository
   };
 }
 
@@ -54,7 +60,7 @@ function seedRequest(tenantId?: string): Request {
 
 describe("development demo seed API", () => {
   it("is disabled in production-like runtime", async () => {
-    const { app, customerRepository, messageRepository } = createTestApp({
+    const { app, customerRepository, messageRepository, knowledgePageRepository } = createTestApp({
       env: { APP_ENV: "production" }
     });
 
@@ -64,6 +70,7 @@ describe("development demo seed API", () => {
     expect(await response.json()).toEqual({ ok: false, error: "dev_seed_disabled" });
     expect(customerRepository.list()).toHaveLength(0);
     expect(messageRepository.list()).toHaveLength(0);
+    expect(await knowledgePageRepository.listByTenant("tenant_amamihome")).toHaveLength(0);
   });
 
   it("requires a known tenant header", async () => {
@@ -84,7 +91,7 @@ describe("development demo seed API", () => {
     });
   });
 
-  it("creates tenant-scoped demo customers and messages for the admin read-only UI", async () => {
+  it("creates tenant-scoped demo customers messages and knowledge for the local UI", async () => {
     const { app, customerRepository, messageRepository } = createTestApp();
 
     const seedResponse = await app.fetch(seedRequest("tenant_amamihome"));
@@ -95,7 +102,8 @@ describe("development demo seed API", () => {
       ok: true,
       tenant_id: "tenant_amamihome",
       customer_ids: ["customer_demo_yamada_taro", "customer_demo_sato_hanako"],
-      message_count: 4
+      message_count: 4,
+      knowledge_page_count: 10
     });
     expect(customerRepository.list()).toHaveLength(2);
     expect(messageRepository.list()).toHaveLength(4);
@@ -144,5 +152,55 @@ describe("development demo seed API", () => {
           message.customer_id === "customer_demo_yamada_taro"
       )
     ).toBe(true);
+
+    const ragSearchResponse = await app.fetch(
+      new Request("http://localhost/api/admin/rag/search", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-tenant-id": "tenant_amamihome"
+        },
+        body: JSON.stringify({ query: "オンライン相談", limit: 5 })
+      })
+    );
+    const ragSearchBody = await ragSearchResponse.json();
+
+    expect(ragSearchResponse.status).toBe(200);
+    expect(ragSearchBody.results).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "knowledge_amamihome_online_consultation",
+          tenant_id: "tenant_amamihome"
+        })
+      ])
+    );
+
+    const ragAnswerResponse = await app.fetch(
+      new Request("http://localhost/api/admin/rag/answer-draft", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-tenant-id": "tenant_amamihome"
+        },
+        body: JSON.stringify({ query: "オンライン相談", limit: 5 })
+      })
+    );
+    const ragAnswerBody = await ragAnswerResponse.json();
+
+    expect(ragAnswerResponse.status).toBe(200);
+    expect(ragAnswerBody).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      query: "オンライン相談",
+      can_answer: true,
+      provider: "mock"
+    });
+    expect(ragAnswerBody.sources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "knowledge_amamihome_online_consultation"
+        })
+      ])
+    );
   });
 });
