@@ -36,7 +36,8 @@ No-Go理由:
 - selectedTenantId transport boundaryはLoop 087で実装済み。
 - Loop 088で全Admin route rollout planを整理済み。
 - Loop 089でcustomer read routesへauthenticated_staff runtimeを展開済み。
-- selectedTenantId membership再検証はcustomer read routesまで確認済みだが、customer write/AI、alerts、RAG、UI保存、production runtime hardeningは未完了。
+- Loop 090でcustomer write / AI routesへauthenticated_staff runtimeを展開済み。
+- selectedTenantId membership再検証はcustomer routesまで確認済みだが、alerts、RAG、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -129,7 +130,8 @@ Rules:
 - It is only a requested tenant selector.
 - Loop 087 uses `x-selected-tenant-id` as the authenticated_staff transport boundary.
 - Loop 088 maps how that boundary should be rolled out to customer, alerts, and RAG Admin routes.
-- Loop 089 applies that boundary to customer read routes only.
+- Loop 089 applies that boundary to customer read routes.
+- Loop 090 applies that boundary to customer write / AI routes while keeping LINE real push and OpenAI real API disconnected.
 - `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
 - If selected tenant is outside active memberships, return `tenant_membership_denied`.

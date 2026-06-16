@@ -17,7 +17,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | default runtime | `in_memory` |
 | RLS | RLS未実装 |
 | Auth/JWT | Auth/JWT未接続 |
-| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。write/AI/alerts/RAG / UI保存 / production runtime hardeningは未完了 |
+| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。alerts/RAG / UI保存 / production runtime hardeningは未完了 |
 | production dev_header rejection | 未実装 |
 | LINE real push | disabled/mock |
 | OpenAI real API | mock |
@@ -27,7 +27,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 
 - RLS未実装。
 - Auth/JWT未接続。
-- selectedTenantId transport boundaryは実装済みだが、全Admin route rollout、UI保存、production runtime hardeningは未完了。
+- selectedTenantId transport boundaryは実装済みだが、alerts/RAG rollout、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection未実装。
 - `service_role` はserver-side onlyであり、RLS bypass権限のためproduction authorizationそのものにはしない。
 - LINE real push gate未実装。
@@ -39,13 +39,15 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 Loop 087 selectedTenantId transport boundary
 Loop 088 authenticated runtime full route rollout plan
 Loop 089 authenticated runtime read-only routes
-Loop 090 authenticated runtime side-effect routes
-Loop 091 production dev_header rejection
-Loop 092 RLS SQL draft review
-Loop 093 RLS local/staging apply test
-Loop 094 production readiness gate
-Loop 095 LINE real push gate
-Loop 096 OpenAI real API gate
+Loop 090 authenticated runtime customer write / AI routes
+Loop 091 authenticated runtime alerts routes
+Loop 092 authenticated runtime RAG routes
+Loop 093 production dev_header rejection
+Loop 094 RLS SQL draft review
+Loop 095 RLS local/staging apply test
+Loop 096 production readiness gate
+Loop 097 LINE real push gate
+Loop 098 OpenAI real API gate
 ```
 
 ## selectedTenantId Rules
@@ -79,7 +81,14 @@ Loop 089 implementation note:
 - customer read routesへauthenticated_staff runtimeを展開済み。
 - 対象は `GET /api/admin/customers`、`GET /api/admin/customers/:customerId`、`GET /api/admin/customers/:customerId/timeline` のみ。
 - `x-selected-tenant-id` はactive membershipで再検証し、customer read repository/serviceへは検証済み `AdminTenantContext.tenantId` のみ渡す。
-- customer write/AI、alerts、RAG、production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
+
+Loop 090 implementation note:
+
+- customer write / AI routesへauthenticated_staff runtimeを展開済み。
+- 対象は `POST /api/admin/customers/:customerId/reply`、`POST /api/admin/customers/:customerId/ai-summary`、`POST /api/admin/customers/:customerId/ai-reply-draft` のみ。
+- `x-selected-tenant-id` はactive membershipで再検証し、write / AI処理へは検証済み `AdminTenantContext.tenantId` のみ渡す。
+- LINE real pushとOpenAI real APIは未接続のまま。
+- alerts、RAG、production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
 
 ## Auth/JWT Rules
 

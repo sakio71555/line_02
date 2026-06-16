@@ -206,6 +206,8 @@ Loop 088ではauthenticated staff runtime full route rollout planを追加しま
 
 Loop 089ではauthenticated_staff runtimeをcustomer read routesへ展開しました。`GET /api/admin/customers`、顧客詳細、timelineで `x-selected-tenant-id` をactive membership再検証し、検証済み `AdminTenantContext.tenantId` のみをrepositoryへ渡すことをtestで固定しました。customer write/AI、alerts、RAG、production dev_header rejection、Auth/JWT、RLSは未実装です。詳細は [docs/11_codex_tasks/089_authenticated_staff_customer_read_routes.md](docs/11_codex_tasks/089_authenticated_staff_customer_read_routes.md) を参照してください。
 
+Loop 090ではauthenticated_staff runtimeをcustomer write / AI routesへ展開しました。staff reply、AI summary、AI reply draftで `x-selected-tenant-id` をactive membership再検証し、検証済み `AdminTenantContext.tenantId` のみをwrite / AI処理へ渡すことをtestで固定しました。本物LINE送信とOpenAI API呼び出しは行わず、dev_header pathとdefault `in_memory` は維持しています。alerts/RAG、production dev_header rejection、Auth/JWT、RLSは未実装です。詳細は [docs/11_codex_tasks/090_authenticated_staff_customer_write_ai_routes.md](docs/11_codex_tasks/090_authenticated_staff_customer_write_ai_routes.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

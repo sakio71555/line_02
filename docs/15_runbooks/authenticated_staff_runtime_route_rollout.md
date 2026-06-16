@@ -18,7 +18,7 @@ Loop 087で追加した `x-selected-tenant-id` boundaryを、全Admin routeへ�
 | --- | --- |
 | default runtime | `in_memory` |
 | Admin local selector | `x-tenant-id` / `dev_header` |
-| authenticated_staff route | Loop 089でcustomer read routesへ展開済み |
+| authenticated_staff route | Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み |
 | selectedTenantId transport | `x-selected-tenant-id` implemented in Loop 087 |
 | selectedTenantId validation | tenant id format validation + active membership revalidation |
 | role guard | AdminAction mapping exists; enforced only for authenticated_staff compatibility path |
@@ -50,9 +50,9 @@ Rules:
 | `GET /api/admin/customers` | customer read | Loop 089 done | revalidate if provided | `view_customers` | dev_header fallback remains until production rejection |
 | `GET /api/admin/customers/:customerId` | customer read | Loop 089 done | revalidate | `view_customer_detail` | other-tenant customer remains 404 |
 | `GET /api/admin/customers/:customerId/timeline` | customer read | Loop 089 done | revalidate | `view_timeline` | tenant + customer scoped messages |
-| `POST /api/admin/customers/:customerId/reply` | customer write | Loop 090 | revalidate | `send_staff_reply` | real LINE push remains gated |
-| `POST /api/admin/customers/:customerId/ai-summary` | AI write | Loop 090 | revalidate | `create_ai_summary` | saves summary message; OpenAI real API remains gated |
-| `POST /api/admin/customers/:customerId/ai-reply-draft` | AI draft | Loop 090 | revalidate | `create_ai_reply_draft` | response-only draft |
+| `POST /api/admin/customers/:customerId/reply` | customer write | Loop 090 done | revalidate | `send_staff_reply` | real LINE push remains gated |
+| `POST /api/admin/customers/:customerId/ai-summary` | AI write | Loop 090 done | revalidate | `create_ai_summary` | saves summary message; OpenAI real API remains gated |
+| `POST /api/admin/customers/:customerId/ai-reply-draft` | AI draft | Loop 090 done | revalidate | `create_ai_reply_draft` | response-only draft |
 | `GET /api/admin/alerts` | alert read | Loop 091 | revalidate | `view_alerts` | tenant-scoped list |
 | `POST /api/admin/alerts/check-unreplied` | alert checker | Loop 091 | revalidate | `check_unreplied_alerts` | creates open alerts |
 | `POST /api/admin/alerts/notify-open` | notification boundary | Loop 091 | revalidate | `notify_open_alerts` | MockStaffNotifier until real LINE gate |
@@ -78,7 +78,14 @@ Loop 089 completion note:
 - `GET /api/admin/customers`, `GET /api/admin/customers/:customerId`, and `GET /api/admin/customers/:customerId/timeline` support authenticated_staff runtime.
 - customer read routes accept `x-selected-tenant-id`, revalidate it through active membership, and use only verified `AdminTenantContext.tenantId` for repository/service calls.
 - `dev_header` / `x-tenant-id` compatibility remains.
-- customer write / AI routes remain for Loop 090.
+
+Loop 090 completion note:
+
+- `POST /api/admin/customers/:customerId/reply`, `POST /api/admin/customers/:customerId/ai-summary`, and `POST /api/admin/customers/:customerId/ai-reply-draft` support authenticated_staff runtime.
+- customer write / AI routes accept `x-selected-tenant-id`, revalidate it through active membership, and use only verified `AdminTenantContext.tenantId` for customer lookup, message write, LINE mock boundary, and AI mock provider input.
+- other-tenant customers stay hidden behind `customer_not_found`.
+- `dev_header` / `x-tenant-id` compatibility and default `in_memory` remain.
+- real LINE push and OpenAI real API remain disconnected.
 
 ### Alerts Routes
 
@@ -158,7 +165,7 @@ Rules:
 
 ```text
 Loop 089: authenticated_staff runtime rollout for customer read routes (done)
-Loop 090: authenticated_staff runtime rollout for customer write/AI draft routes
+Loop 090: authenticated_staff runtime rollout for customer write/AI draft routes (done)
 Loop 091: authenticated_staff runtime rollout for alerts routes
 Loop 092: authenticated_staff runtime rollout for RAG routes
 Loop 093: production dev_header rejection
@@ -199,16 +206,18 @@ Each rollout Loop must keep scope small, preserve current response contracts, an
 
 ## Next Conditions
 
-Proceed to Loop 089 only when:
+Proceed to Loop 091 only when:
 
-- Loop 088 docs/tests pass.
+- Loop 090 docs/tests/build pass.
 - git status is clean after commit.
-- route matrix has no unknown Admin route.
-- implementation scope is limited to customer read routes.
+- customer read and customer write / AI route rollout remains limited to customer routes.
+- alerts rollout scope is limited to `GET /api/admin/alerts`, `POST /api/admin/alerts/check-unreplied`, and `POST /api/admin/alerts/notify-open`.
 
 ## Related Docs
 
 - [Loop 087: selectedTenantId transport boundary](../11_codex_tasks/087_selected_tenant_transport_boundary.md)
 - [Loop 088: authenticated staff runtime full route rollout plan](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md)
+- [Loop 089: authenticated_staff customer read routes](../11_codex_tasks/089_authenticated_staff_customer_read_routes.md)
+- [Loop 090: authenticated_staff customer write / AI routes](../11_codex_tasks/090_authenticated_staff_customer_write_ai_routes.md)
 - [Production Hardening Split Plan](production_hardening_split_plan.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
