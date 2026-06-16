@@ -165,6 +165,12 @@ Loop 085 records staging拡張検証版100%相当. Customers/messages, alerts, k
 
 See [Loop 085 task doc](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md) and [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md).
 
+## Loop 086 Production Hardening Split Plan
+
+Loop 086 keeps staging拡張検証版100%相当 as the staging milestone and records production No-Go. The next work is split into selectedTenantId transport, authenticated runtime rollout, production dev_header rejection, RLS SQL review/test, LINE real push gate, and OpenAI real API gate. Loop 086 does not change migration SQL, API/runtime/UI files, or connect Supabase/LINE/OpenAI.
+
+See [Loop 086 task doc](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md) and [Production Hardening Split Plan](production_hardening_split_plan.md).
+
 ## Loop 081 Alerts/Knowledge Runtime Plan
 
 Loop 081 keeps production readiness as No-Go and adds the staging runtime plan for alerts and knowledge/RAG. It records that `SupabaseAlertRepository` and `SupabaseKnowledgePageRepository` already exist, but API/RAG runtime is not switched. The next work should start with fake client hardening, then explicit staging smoke with dummy data only. See [Loop 081 task doc](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md) and [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md).
@@ -193,5 +199,6 @@ Loop 082: Supabase alert repository fake-client hardening
 Loop 083: Supabase knowledge repository fake-client hardening
 Loop 084: Supabase alerts runtime boundary + staging smoke
 Loop 085: Supabase knowledge/RAG runtime boundary
-Loop 086: RLS/Auth/JWT implementation planning or production hardening split
+Loop 086: RLS/Auth/JWT production hardening split plan
+Loop 087: selectedTenantId transport boundary
 ```

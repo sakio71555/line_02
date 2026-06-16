@@ -79,6 +79,8 @@ customers/messagesのSupabase staging smokeが通った後でも、alerts/knowle
 
 Loop 084/085でalertsとknowledge_pages/RAGの明示Supabase runtime smokeが揃いました。これによりstaging拡張検証版は100%相当として記録しますが、default runtimeは引き続き `in_memory` のまま維持し、RLS/Auth/JWT、production dev_header rejection、LINE/OpenAI本接続は別Loopに分けます。
 
+staging拡張検証版100%相当に到達しても、production hardeningへ一気に進みません。RLS/Auth/JWT/selectedTenantId/production dev_header rejection/LINE real push/OpenAI real APIは [docs/11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md](11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md) と [docs/15_runbooks/production_hardening_split_plan.md](15_runbooks/production_hardening_split_plan.md) の分割に従い、migration SQL unchanged / no RLS SQLのdocs-only計画Loopを挟んでから小さい実装Loopへ進みます。
+
 alerts runtime switch前に、fake clientで `SupabaseAlertRepository` の `tenant_id` filter、create payload、open alert listing、active alert lookup、status transition mapping、error sanitizerを固定します。この段階ではAPI runtime wiring、staging DB接続、migration、RLSはまだ行いません。
 
 alerts runtime boundaryでは、customers/messages/alertsを同じ明示Supabase bundleで扱い、split-brainを避けます。staging smokeは `MockStaffNotifier` を使い、default runtimeと `.env.staging` の `REPOSITORY_RUNTIME=in_memory` は維持します。RLS/Auth/JWT、production dev_header rejection、LINE実送信、OpenAI実接続は別Loopに分けます。

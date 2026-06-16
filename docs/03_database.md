@@ -49,6 +49,12 @@ productionへ進む前に必要な条件:
 
 詳細は [docs/11_codex_tasks/080_rls_auth_production_readiness_plan.md](11_codex_tasks/080_rls_auth_production_readiness_plan.md) と [docs/15_runbooks/rls_auth_production_readiness.md](15_runbooks/rls_auth_production_readiness.md) を参照してください。
 
+## Production hardening split plan
+
+Loop 086では、Loop 085でstaging拡張検証版100%相当に到達した後のproduction hardeningを分割しました。productionは引き続きNo-Goで、RLS未実装、Auth/JWT未接続、selectedTenantId transport未接続、production dev_header rejection未実装、LINE/OpenAI real provider未接続を明確に残しています。
+
+Loop 086ではmigration SQL unchanged / no RLS SQLを守り、RLS SQL、Auth/JWT、API runtime、UI、Supabase接続は変更していません。詳細は [docs/11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md](11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md) と [docs/15_runbooks/production_hardening_split_plan.md](15_runbooks/production_hardening_split_plan.md) を参照してください。
+
 ## ローカルmigration検証
 
 Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。

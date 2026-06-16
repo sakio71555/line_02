@@ -82,6 +82,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - Loop 081では、alerts/knowledge_pages/RAGをstaging runtimeへ進める前の計画を追加した。alertsはcustomer/message runtimeと分けすぎると未返信判定でsplit-brainになるため、fake client test後に明示注入で小さくsmokeする。
 - Loop 084では、customers/messages/alertsを同じ明示Supabase bundleで扱い、未返信チェック、alert一覧、notify-open mock、notified永続化をstagingで確認した。default runtimeは引き続きin-memory。
 - Loop 085では、同じ明示Supabase bundleにknowledge repository境界を追加し、RAG search / answer-draftが `tenant_id + allowed_for_ai=true` のsourceだけを使うことをstagingで確認した。default runtimeは引き続きin-memory。
+- Loop 086では、staging拡張検証版100%相当からproduction hardeningへ進む前に、RLS/Auth/JWT/selectedTenantId/production dev_header rejection/LINE/OpenAI gateを分割した。migration SQL unchanged / no RLS SQLを維持し、productionは引き続きNo-Go。
 - default local runtimeを壊さない。
 - tenant_id filter testを追加する。
 - stagingではdummy tenantだけで検証する。
@@ -115,6 +116,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 080: RLS/Auth Production Readiness Plan](../11_codex_tasks/080_rls_auth_production_readiness_plan.md)
 - [Loop 081: Supabase Alerts/Knowledge Staging Runtime Plan](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md)
 - [Loop 085: Supabase Knowledge/RAG Runtime Boundary](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md)
+- [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
@@ -122,6 +124,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
+- [Production Hardening Split Plan](production_hardening_split_plan.md)
 - [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
 - [psql Availability Setup](psql_availability_setup.md)

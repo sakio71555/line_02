@@ -198,6 +198,8 @@ Loop 084ではSupabase alerts runtime boundaryとstaging smokeを追加しまし
 
 Loop 085ではSupabase knowledge/RAG runtime boundaryとstaging smokeを追加しました。`REPOSITORY_RUNTIME=supabase` の明示時にknowledge_pagesをSupabase-backed bundleで扱い、RAG searchとRAG answer-draftが `tenant_id + allowed_for_ai=true` のsourceを使うことをstagingで確認しました。customers/messages/alerts/knowledge/RAGのstaging smokeが揃ったため、staging拡張検証版は100%相当に到達しました。default runtimeは `in_memory` のまま維持し、LINE/OpenAI/RLS/Auth/JWTは未接続です。詳細は [docs/11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md](docs/11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md) を参照してください。
 
+Loop 086ではstaging拡張検証版100%相当からproduction hardeningへ進む前に、RLS/Auth/JWT/selectedTenantId/production dev_header rejection/LINE/OpenAI gateを分割するdocs-only planを追加しました。productionは引き続きNo-Goで、RLS SQL実装、Auth/JWT接続、API/UI/runtime変更、Supabase接続は行っていません。詳細は [docs/11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md](docs/11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md) と [docs/15_runbooks/production_hardening_split_plan.md](docs/15_runbooks/production_hardening_split_plan.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

@@ -15,9 +15,11 @@ Supabase stagingでcustomers/messagesの永続化smokeが通った後、producti
 - `0001_initial_schema.sql` はstagingへ適用済み。
 - `0002_service_role_postgrest_grants.sql` はstaging PostgREST/Data API smokeのために `service_role` 限定で適用済み。
 - customers/messagesは、明示注入したSupabase runtime bundleでstaging smoke済み。
+- alertsは、明示注入したSupabase runtime bundleでstaging smoke済み。
+- knowledge_pages/RAGは、明示注入したSupabase runtime bundleでstaging smoke済み。
+- staging拡張検証版100%相当。
 - default runtimeは `in_memory` のまま。
-- alerts、knowledge、staff/auth runtimeはSupabaseへ切り替えていない。
-- Loop 081でalerts/knowledge_pagesのstaging runtime planを追加したが、実装やruntime switchはまだ行っていない。
+- staff/auth runtimeはSupabase Auth/JWTへ未接続。
 - RLS enabled tablesは `0/12`。
 - LINE real pushはdisabled/mock。
 - OpenAI APIはmock。
@@ -37,7 +39,13 @@ No-Go理由:
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
 - OpenAI mock。
-- Supabase runtime switch対象がcustomers/messagesに限定され、alerts/knowledge/staff/authが未完了。
+- staff/auth runtimeは未完了。
+
+## Production Hardening Split Plan
+
+Loop 086では、staging拡張検証版100%相当の次に進む前にproduction hardeningを分割しました。RLS/Auth/JWT、selectedTenantId、production dev_header rejection、LINE real push、OpenAI real APIは一度に実装せず、小さいLoopへ分けます。
+
+詳細は [Loop 086 task doc](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md) と [Production Hardening Split Plan](production_hardening_split_plan.md) を参照してください。
 
 ## RLS/Auth/JWT Checklist
 
