@@ -77,6 +77,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - Loop 079でAPI factoryがcustomer/message repository bundleを受け取れる境界を追加した。
 - Loop 079.1でPostgREST/Data API向けの `service_role` 限定GRANTを追加した。
 - staging smokeではSupabase customer/message bundleを注入し、list/detail/timeline/staff reply/AI summaryを確認する。
+- Loop 081では、alerts/knowledge_pages/RAGをstaging runtimeへ進める前の計画を追加した。alertsはcustomer/message runtimeと分けすぎると未返信判定でsplit-brainになるため、fake client test後に明示注入で小さくsmokeする。
 - default local runtimeを壊さない。
 - tenant_id filter testを追加する。
 - stagingではdummy tenantだけで検証する。
@@ -108,6 +109,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 073: Supabase Staging Migration Apply Execution Gate](../11_codex_tasks/073_supabase_staging_migration_apply_execution_gate.md)
 - [Loop 079: Staging Verification Edition Completion Milestone](../11_codex_tasks/079_staging_verification_edition_completion_milestone.md)
 - [Loop 080: RLS/Auth Production Readiness Plan](../11_codex_tasks/080_rls_auth_production_readiness_plan.md)
+- [Loop 081: Supabase Alerts/Knowledge Staging Runtime Plan](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
@@ -115,5 +117,6 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
+- [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
 - [psql Availability Setup](psql_availability_setup.md)

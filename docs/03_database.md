@@ -447,3 +447,15 @@ LINE token、OpenAI API key、Supabase service role keyなどのsecretはseedし
 - `customerCreateSchema`
 - `messageCreateSchema`
 - `alertCreateSchema`
+
+## Supabase alerts/knowledge staging runtime plan
+
+Loop 081では、stagingでcustomers/messagesのSupabase runtime smokeが通った後に、`alerts` と `knowledge_pages` をどうSupabase staging runtimeへ進めるかをdocs-onlyで整理しました。
+
+- `alerts`: Supabase repositoryは存在するが、API runtimeにはまだ接続していない。
+- `knowledge_pages`: Supabase repositoryは存在するが、RAG runtimeにはまだ接続していない。
+- `knowledge_pages.allowed_for_ai` はRAG検索対象を絞るflagとして維持する。
+- 次段階ではfake client testで `tenant_id` filter、`allowed_for_ai` filter、alert status update、error handlingを確認してからstaging smokeへ進む。
+- RLS SQL、migration変更、Supabase接続、API runtime変更はLoop 081では未実装。
+
+詳細は [docs/11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md](11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md) と [docs/15_runbooks/supabase_alerts_knowledge_staging_runtime_plan.md](15_runbooks/supabase_alerts_knowledge_staging_runtime_plan.md) を参照する。

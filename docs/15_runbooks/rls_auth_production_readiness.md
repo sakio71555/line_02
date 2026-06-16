@@ -17,6 +17,7 @@ Supabase stagingでcustomers/messagesの永続化smokeが通った後、producti
 - customers/messagesは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - default runtimeは `in_memory` のまま。
 - alerts、knowledge、staff/auth runtimeはSupabaseへ切り替えていない。
+- Loop 081でalerts/knowledge_pagesのstaging runtime planを追加したが、実装やruntime switchはまだ行っていない。
 - RLS enabled tablesは `0/12`。
 - LINE real pushはdisabled/mock。
 - OpenAI APIはmock。
@@ -186,7 +187,9 @@ Proceed only when:
 ## Related Docs
 
 - [Loop 080: RLS/Auth Production Readiness Plan](../11_codex_tasks/080_rls_auth_production_readiness_plan.md)
+- [Loop 081: Supabase Alerts/Knowledge Staging Runtime Plan](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
+- [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md)
 - [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md)
 - [Supabase RLS Policy Plan](../11_codex_tasks/025_supabase_rls_policy_plan.md)
 - [Authenticated Runtime Selected Tenant Transport Plan](../11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md)

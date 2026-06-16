@@ -119,6 +119,10 @@ Smoke result:
 - alerts/knowledge/staff/auth runtime switch remains future work.
 - staging uses dummy data only.
 
+## Loop 081 Alerts/Knowledge Runtime Plan
+
+Loop 081 keeps production readiness as No-Go and adds the staging runtime plan for alerts and knowledge/RAG. It records that `SupabaseAlertRepository` and `SupabaseKnowledgePageRepository` already exist, but API/RAG runtime is not switched. The next work should start with fake client hardening, then explicit staging smoke with dummy data only. See [Loop 081 task doc](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md) and [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md).
+
 ## Loop 080 Production Readiness Plan
 
 Loop 080 records production readiness as No-Go even after staging customers/messages smoke passed. The production gate requires RLS SQL, Supabase Auth/JWT, selectedTenantId membership revalidation, production dev_header rejection, and separate LINE/OpenAI provider gates. See [Loop 080 task doc](../11_codex_tasks/080_rls_auth_production_readiness_plan.md) and [RLS/Auth Production Readiness](rls_auth_production_readiness.md).
@@ -138,7 +142,9 @@ Before production:
 ## Next Loop Candidates
 
 ```text
-Loop 080: RLS/Auth production readiness plan
 Loop 081: Supabase alerts/knowledge staging runtime plan
-Loop 082: staging manual verification checklist update
+Loop 082: Supabase alert repository fake-client hardening
+Loop 083: Supabase knowledge repository fake-client hardening
+Loop 084: Supabase alerts runtime boundary
+Loop 085: Supabase alerts staging smoke
 ```
