@@ -168,6 +168,8 @@ Loop 068ではSupabase repository integration tests with fake clientを追加し
 
 Loop 070ではSupabase staging migration apply前の静的dry-run記録を追加しました。`packages/db/migrations/0001_initial_schema.sql` のschema inventory、tenant_id index、customers/messages repository期待値、RLS SQL未実装状態を確認しましたが、Supabase接続、`.env` 作成、migration apply、API runtime switch、git pushは行っていません。詳細は [docs/11_codex_tasks/070_staging_migration_dry_run_record.md](docs/11_codex_tasks/070_staging_migration_dry_run_record.md) と [docs/15_runbooks/supabase_staging_migration_dry_run.md](docs/15_runbooks/supabase_staging_migration_dry_run.md) を参照してください。
 
+Loop 071ではSupabase staging migration apply planを追加しました。staging apply前の承認条件、禁止コマンド、rollback / recovery方針、apply後確認、Go / No-Go判断、結果記録テンプレートを整理しました。Supabase接続、migration apply、`.env` 作成、pushは未実施です。詳細は [docs/11_codex_tasks/071_supabase_staging_migration_apply_plan.md](docs/11_codex_tasks/071_supabase_staging_migration_apply_plan.md)、[docs/15_runbooks/supabase_staging_migration_apply_plan.md](docs/15_runbooks/supabase_staging_migration_apply_plan.md)、[docs/15_runbooks/supabase_staging_migration_apply_result_template.md](docs/15_runbooks/supabase_staging_migration_apply_result_template.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

@@ -76,6 +76,7 @@ This is acceptable only for staging dry-run planning. RLS SQL and local/staging 
 
 Do not apply the migration until these are true:
 
+- The [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md) is reviewed.
 - Staging Supabase project is confirmed by a human.
 - Production project is not selected.
 - No real customer data, LINE userId, API key, `.env`, or production log is present in seed or docs.
@@ -99,3 +100,6 @@ Loop 070 records a static dry-run only. Applying migration, linking a project, c
 - [Loop 067: Supabase Runtime Switch Boundary for Customers/Messages](../11_codex_tasks/067_supabase_runtime_switch_boundary_customers_messages.md)
 - [Loop 068: Supabase Repository Integration Tests with Fake Client](../11_codex_tasks/068_supabase_repository_integration_tests_fake_client.md)
 - [Loop 070: Staging Migration Dry-run Record](../11_codex_tasks/070_staging_migration_dry_run_record.md)
+- [Loop 071: Supabase Staging Migration Apply Plan](../11_codex_tasks/071_supabase_staging_migration_apply_plan.md)
+- [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
+- [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)

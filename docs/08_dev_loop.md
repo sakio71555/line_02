@@ -55,6 +55,8 @@ Supabase runtime switch前に、fake clientでrepository mapping、tenant_id fil
 
 Supabase staging migration applyへ進む前に、staging migration dry-run記録を残します。dry-runではmigration SQLの場所、schema inventory、tenant_id index/unique/FK、customers/messages repository期待値、RLS SQL未実装状態、apply前stop条件を静的に確認し、Supabase接続、`.env` 作成、migration apply、API runtime switch、git pushは別Loopに分けます。
 
+Supabase staging migration applyの実行前には、apply plan Loopを挟みます。apply planでは、人間の承認条件、project確認、禁止コマンド、rollback / recovery方針、apply後確認、Go / No-Go判断、結果記録テンプレートをdocs化し、まだ `supabase link`、`supabase db push`、`.env` 作成、migration apply、git pushは行いません。
+
 本番認証、JWT検証、staff/admin tenant context、staff tenant schema、RLSのようなセキュリティ境界は、実装Loopの前に必ずplanning Loopを挟みます。開発用 `x-tenant-id` は本番認証ではないため、認証済みuser/sessionとactive membershipからtenant contextを決定する設計を先に固めてからAPI差し替えへ進みます。
 
 セキュリティ境界のschema migration Loopでは、DB schemaとstatic validation testだけを整え、Auth/JWT/API guard/RLS SQL/runtime切替は別Loopに分けます。
