@@ -68,6 +68,8 @@ Target routes:
 - [ ] Confirm RAG answer draft remains response-only.
 - [ ] Do not add crawling, embedding, pgvector, OpenAI, or LINE send.
 
+Loop 083 completed the fake-client hardening step for `SupabaseKnowledgePageRepository`. Tests now cover `tenant_id`, `allowed_for_ai = true`, defensive row filtering, `url`/`title`/`content` mapping, RAG search compatibility, sanitized errors, and no network/env access. The next knowledge/RAG work should still keep default `in_memory` and move through a separate runtime boundary/staging smoke Loop before any API/RAG runtime switch.
+
 ## Staging Smoke Checklist
 
 Alerts smoke:

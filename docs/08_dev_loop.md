@@ -79,6 +79,8 @@ customers/messagesのSupabase staging smokeが通った後でも、alerts/knowle
 
 alerts runtime switch前に、fake clientで `SupabaseAlertRepository` の `tenant_id` filter、create payload、open alert listing、active alert lookup、status transition mapping、error sanitizerを固定します。この段階ではAPI runtime wiring、staging DB接続、migration、RLSはまだ行いません。
 
+knowledge/RAG runtime switch前に、fake clientで `SupabaseKnowledgePageRepository` の `tenant_id` filter、`allowed_for_ai = true` filter、wrong-tenant/disallowed row防御、`url`/`title`/`content` mapping、RAG search互換性、error sanitizerを固定します。この段階ではAPI/RAG runtime wiring、staging DB接続、migration、RLS、crawl/import/upsert実装はまだ行いません。
+
 GPTとCodexの往復は、repo context収集とCodex prompt生成だけを自動化し、実行、commit、push、外部接続は人間ゲートを残します。生成promptは `tmp/dev-loop/` 配下の作業用下書きであり、人間がScope / Out of Scope / push方針を確認してからCodexへ貼ります。
 
 本番認証、JWT検証、staff/admin tenant context、staff tenant schema、RLSのようなセキュリティ境界は、実装Loopの前に必ずplanning Loopを挟みます。開発用 `x-tenant-id` は本番認証ではないため、認証済みuser/sessionとactive membershipからtenant contextを決定する設計を先に固めてからAPI差し替えへ進みます。
