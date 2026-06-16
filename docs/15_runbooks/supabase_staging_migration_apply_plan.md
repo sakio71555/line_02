@@ -39,6 +39,8 @@ Applyへ進むには、以下をすべて満たす必要があります。
 - RLS未実装を理解し、staging限定として扱う。
 - productionへはRLSなしで進まない。
 
+Apply実行を検討する直前には、[Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md) でGo / No-Goを再確認する。明示許可、staging project/env readiness、dummy data、rollback / recoveryの条件が揃わない場合はNo-Goとして停止する。
+
 ## Pre-apply Checklist
 
 ```text
@@ -197,4 +199,6 @@ Apply後の記録には以下を使います。
 - [Supabase Staging Persistence Checklist](supabase_staging_persistence_checklist.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
+- [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
 - [Loop 071: Supabase Staging Migration Apply Plan](../11_codex_tasks/071_supabase_staging_migration_apply_plan.md)
+- [Loop 073: Supabase Staging Migration Apply Execution Gate](../11_codex_tasks/073_supabase_staging_migration_apply_execution_gate.md)

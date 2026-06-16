@@ -49,6 +49,8 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - dry-runでmigration source、schema inventory、tenant_id indexes、repository expectations、RLS SQL未実装状態が記録済みである。
 - Loop 071の [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md) を確認する。
 - apply承認条件、禁止コマンド、rollback / recovery、Go / No-Go、結果記録テンプレートが確認済みである。
+- Loop 073の [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md) を確認する。
+- 明示許可、staging project/env readiness、dummy data、rollback / recoveryの条件が揃わなければNo-Goにする。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。
@@ -93,7 +95,9 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 068: Supabase Repository Integration Tests with Fake Client](../11_codex_tasks/068_supabase_repository_integration_tests_fake_client.md)
 - [Loop 070: Staging Migration Dry-run Record](../11_codex_tasks/070_staging_migration_dry_run_record.md)
 - [Loop 071: Supabase Staging Migration Apply Plan](../11_codex_tasks/071_supabase_staging_migration_apply_plan.md)
+- [Loop 073: Supabase Staging Migration Apply Execution Gate](../11_codex_tasks/073_supabase_staging_migration_apply_execution_gate.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
+- [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
 - [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
