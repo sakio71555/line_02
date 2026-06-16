@@ -50,6 +50,8 @@ Target routes:
 - [ ] Keep default runtime `in_memory`.
 - [ ] Keep `MockStaffNotifier`; do not connect real LINE notification.
 
+Loop 082 completed the fake-client hardening step for `SupabaseAlertRepository`. The next alerts work should still keep default `in_memory` and move through a separate runtime boundary/staging smoke Loop before any API runtime switch.
+
 ## knowledge_pages / RAG Runtime Checklist
 
 Target routes:

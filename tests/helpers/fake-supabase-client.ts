@@ -20,6 +20,7 @@ export interface FakeSupabaseOperation {
   options?: unknown;
   columns?: string;
   ascending?: boolean;
+  count?: number;
 }
 
 export class FakeSupabaseClient {
@@ -76,6 +77,11 @@ export class FakeSupabaseQueryBuilder implements PromiseLike<FakeSupabaseResult>
       column,
       ascending: options.ascending
     });
+    return this;
+  }
+
+  limit(count: number): this {
+    this.client.push({ table: this.table, action: "limit", count });
     return this;
   }
 
