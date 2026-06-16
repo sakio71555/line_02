@@ -52,6 +52,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - Loop 073の [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md) を確認する。
 - 明示許可、staging project/env readiness、dummy data、rollback / recoveryの条件が揃わなければNo-Goにする。
 - Loop 076の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、`psql` が使えないためNo-Goとして記録した。migration applyは未実行。
+- Loop 077の [psql Availability Setup](psql_availability_setup.md) で、作業者が手動で `psql` を用意する手順と、CodexがinstallやSupabase接続を行わない方針を確認する。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。
@@ -102,3 +103,4 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
 - [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
+- [psql Availability Setup](psql_availability_setup.md)

@@ -129,10 +129,13 @@ No-Goの場合、このテンプレートへ実行結果を捏造しない。
 
 Loop 076 result: No-Go because `psql` is not available. Supabase connection and migration apply were not executed.
 
+Loop 077 adds [psql Availability Setup](psql_availability_setup.md) for manual `psql` preparation before any apply retry. Codex does not install PostgreSQL tools, change PATH, connect to Supabase, or run migration apply in that preflight Loop.
+
 ## Related Docs
 
 - [Supabase Staging Persistence Checklist](supabase_staging_persistence_checklist.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
+- [psql Availability Setup](psql_availability_setup.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)

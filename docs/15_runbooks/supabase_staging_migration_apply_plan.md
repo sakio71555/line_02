@@ -43,6 +43,8 @@ Apply実行を検討する直前には、[Supabase Staging Migration Apply Execu
 
 Loop 076では明示許可のもとで実行可否を確認したが、`psql` が使えないためNo-Goとして停止した。結果は [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) にsecretなしで記録する。
 
+Loop 077では [psql Availability Setup](psql_availability_setup.md) を追加し、作業者が手動で `psql` を用意してから次のapply retryへ進む条件を整理した。Codexはinstall、PATH変更、Supabase接続、migration applyを行わない。
+
 ## Pre-apply Checklist
 
 ```text
@@ -200,6 +202,7 @@ Apply後の記録には以下を使います。
 
 - [Supabase Staging Persistence Checklist](supabase_staging_persistence_checklist.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
+- [psql Availability Setup](psql_availability_setup.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
 - [Loop 071: Supabase Staging Migration Apply Plan](../11_codex_tasks/071_supabase_staging_migration_apply_plan.md)

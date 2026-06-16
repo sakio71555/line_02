@@ -107,6 +107,8 @@ Expected columns to verify in a future apply-capable Loop:
 - Can proceed to migration apply with current environment: no.
 - Next requirement: install or otherwise provide `psql`, then repeat a dedicated apply execution Loop with the same secret-safe rules.
 
+Loop 077 follow-up: [psql Availability Setup](psql_availability_setup.md) documents manual setup options and confirms that Codex does not install tools, connect to Supabase, or run migration apply during preflight.
+
 ## Secret Safety Confirmation
 
 - `.env.staging` raw content was not printed.
