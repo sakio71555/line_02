@@ -74,6 +74,8 @@ scripts/dev-loop/verify-staging-postgrest-grants.mjs
 
 RLSは未実装のため、service role grants recovery後もproduction readinessはNo-Goのままにする。
 
+Loop 080の [RLS/Auth Production Readiness](rls_auth_production_readiness.md) で、production No-Go理由をRLS未実装、Supabase Auth/JWT未接続、selectedTenantId再検証未接続、production dev_header rejection未実装として整理している。rollback/recovery中にこれらをまとめて実装しない。
+
 ## DBを作り直す判断
 
 staging DBを作り直す判断は別Loopで行う。
@@ -100,3 +102,4 @@ staging DBを作り直す判断は別Loopで行う。
 - [Supabase Staging Persistence Checklist](supabase_staging_persistence_checklist.md)
 - [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
+- [RLS/Auth Production Readiness](rls_auth_production_readiness.md)

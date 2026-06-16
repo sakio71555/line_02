@@ -35,6 +35,20 @@ Loop 025ではRLS policy planのみを追加しています。RLS SQL、migratio
 
 詳細は [docs/11_codex_tasks/025_supabase_rls_policy_plan.md](11_codex_tasks/025_supabase_rls_policy_plan.md) を参照してください。
 
+## RLS/Auth production readiness
+
+Loop 080では、stagingでcustomers/messagesのSupabase smokeが通った現在地を前提に、production readinessはNo-Goであることを明文化しました。RLS SQL、Supabase Auth/JWT、selectedTenantId transport、production dev_header rejectionはまだ未実装です。
+
+productionへ進む前に必要な条件:
+
+- RLS SQLを専用Loopで実装し、local/staging test DBでtenant Aからtenant Bのrowを読めない・書けないことを確認する。
+- Supabase Auth/JWTから `staff_users.auth_user_id` を解決し、active `staff_tenant_memberships` でtenantとroleを確定する。
+- `selectedTenantId` は権限ではなくselectorとして扱い、membershipで再検証してから `AdminTenantContext.tenantId` をrepositoryへ渡す。
+- productionでは `x-tenant-id` / `dev_header` を拒否し、`Authorization: Bearer` + authenticated staff contextを必須にする。
+- service_roleはserver-side onlyで扱い、browser / LIFF / Next client componentへ出さない。
+
+詳細は [docs/11_codex_tasks/080_rls_auth_production_readiness_plan.md](11_codex_tasks/080_rls_auth_production_readiness_plan.md) と [docs/15_runbooks/rls_auth_production_readiness.md](15_runbooks/rls_auth_production_readiness.md) を参照してください。
+
 ## ローカルmigration検証
 
 Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。

@@ -115,8 +115,13 @@ Smoke result:
 - RLS SQL is still not implemented.
 - Supabase Auth/JWT is still not connected.
 - production dev header rejection is still not implemented.
+- selectedTenantId transport and production membership revalidation are still not connected.
 - alerts/knowledge/staff/auth runtime switch remains future work.
 - staging uses dummy data only.
+
+## Loop 080 Production Readiness Plan
+
+Loop 080 records production readiness as No-Go even after staging customers/messages smoke passed. The production gate requires RLS SQL, Supabase Auth/JWT, selectedTenantId membership revalidation, production dev_header rejection, and separate LINE/OpenAI provider gates. See [Loop 080 task doc](../11_codex_tasks/080_rls_auth_production_readiness_plan.md) and [RLS/Auth Production Readiness](rls_auth_production_readiness.md).
 
 ## Next Conditions
 
@@ -125,6 +130,8 @@ Before production:
 - plan and implement RLS policies.
 - add RLS tests against local/staging test DB.
 - connect Supabase Auth/JWT and staff tenant context.
+- implement selectedTenantId transport and membership revalidation.
+- reject dev_header in production.
 - keep service role key server-side only.
 - confirm rollback/backup policy.
 

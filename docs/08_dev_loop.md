@@ -73,6 +73,8 @@ Supabase staging verification edition Loopでは、migration適用済みstaging 
 
 Supabase REST / PostgRESTで `42501 permission denied` が出た場合は、RLSやAuthを急いで追加せず、まずdirect `psql` 成功範囲とREST権限不足を切り分けます。staging recovery Loopでは `service_role` 限定GRANTだけをmigration化し、`anon` / `authenticated` へ広いDML権限を付与しません。RLS未実装のままproductionへ進みません。
 
+stagingでservice_role前提のcustomers/messages smokeが通っても、production readinessは別Loopで判定します。productionへ進む前に、RLS未実装、Supabase Auth/JWT未接続、selectedTenantId再検証未接続、production dev_header rejection未実装、LINE/OpenAI未接続をNo-Go理由として整理し、RLS/Auth production readiness runbookへ残します。RLS SQL、Auth/JWT、selectedTenantId transport、production dev_header rejectionは1つのLoopでまとめて実装しません。
+
 GPTとCodexの往復は、repo context収集とCodex prompt生成だけを自動化し、実行、commit、push、外部接続は人間ゲートを残します。生成promptは `tmp/dev-loop/` 配下の作業用下書きであり、人間がScope / Out of Scope / push方針を確認してからCodexへ貼ります。
 
 本番認証、JWT検証、staff/admin tenant context、staff tenant schema、RLSのようなセキュリティ境界は、実装Loopの前に必ずplanning Loopを挟みます。開発用 `x-tenant-id` は本番認証ではないため、認証済みuser/sessionとactive membershipからtenant contextを決定する設計を先に固めてからAPI差し替えへ進みます。
