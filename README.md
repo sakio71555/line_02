@@ -178,6 +178,8 @@ Loop 074ではstaging env template and provider flagsを追加しました。Sup
 
 Loop 075ではstaging env local fill verificationを追加しました。ローカル `.env.staging` の必須項目と安全フラグを、値を表示せずに確認するscriptとrunbookを追加しました。Supabase接続、migration apply、LINE/OpenAI接続、runtime/API/UI/DB変更は未実施です。詳細は [docs/11_codex_tasks/075_staging_env_local_fill_verification.md](docs/11_codex_tasks/075_staging_env_local_fill_verification.md) と [docs/15_runbooks/staging_env_local_fill_verification.md](docs/15_runbooks/staging_env_local_fill_verification.md) を参照してください。
 
+Loop 076では既存未push commitをGitHubへpushし、staging migration applyの実行可否を確認しました。`.env.staging` は値非表示で検証passしましたが、`psql` が使えないためmigration applyはNo-Goとして停止し、Supabase接続やmigration applyは行っていません。詳細は [docs/11_codex_tasks/076_supabase_staging_migration_apply_execution.md](docs/11_codex_tasks/076_supabase_staging_migration_apply_execution.md) と [docs/15_runbooks/supabase_staging_migration_apply_result.md](docs/15_runbooks/supabase_staging_migration_apply_result.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

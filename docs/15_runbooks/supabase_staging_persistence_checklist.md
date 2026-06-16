@@ -51,6 +51,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - apply承認条件、禁止コマンド、rollback / recovery、Go / No-Go、結果記録テンプレートが確認済みである。
 - Loop 073の [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md) を確認する。
 - 明示許可、staging project/env readiness、dummy data、rollback / recoveryの条件が揃わなければNo-Goにする。
+- Loop 076の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、`psql` が使えないためNo-Goとして記録した。migration applyは未実行。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。

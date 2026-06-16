@@ -41,6 +41,8 @@ Applyへ進むには、以下をすべて満たす必要があります。
 
 Apply実行を検討する直前には、[Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md) でGo / No-Goを再確認する。明示許可、staging project/env readiness、dummy data、rollback / recoveryの条件が揃わない場合はNo-Goとして停止する。
 
+Loop 076では明示許可のもとで実行可否を確認したが、`psql` が使えないためNo-Goとして停止した。結果は [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) にsecretなしで記録する。
+
 ## Pre-apply Checklist
 
 ```text
