@@ -17,7 +17,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | default runtime | `in_memory` |
 | RLS | RLS未実装 |
 | Auth/JWT | Auth/JWT未接続 |
-| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。route実装 / UI保存 / production runtime hardeningは未完了 |
+| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。write/AI/alerts/RAG / UI保存 / production runtime hardeningは未完了 |
 | production dev_header rejection | 未実装 |
 | LINE real push | disabled/mock |
 | OpenAI real API | mock |
@@ -73,6 +73,13 @@ Loop 088 planning note:
 - selectedTenantIdは各routeでactive membership再検証を前提にし、repositoryへは検証済み `AdminTenantContext.tenantId` のみ渡す。
 - dev seed、LINE webhook、health/check routesはauthenticated_staff Admin route rollout対象外。
 - 詳細は [Loop 088 task doc](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md) と [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md) を参照する。
+
+Loop 089 implementation note:
+
+- customer read routesへauthenticated_staff runtimeを展開済み。
+- 対象は `GET /api/admin/customers`、`GET /api/admin/customers/:customerId`、`GET /api/admin/customers/:customerId/timeline` のみ。
+- `x-selected-tenant-id` はactive membershipで再検証し、customer read repository/serviceへは検証済み `AdminTenantContext.tenantId` のみ渡す。
+- customer write/AI、alerts、RAG、production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
 
 ## Auth/JWT Rules
 

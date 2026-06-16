@@ -21,6 +21,7 @@ import {
   notifyOpenAlerts,
   recordAiSummaryMessage,
   recordStaffTextReply,
+  type AdminAction,
   type Alert,
   type AlertRepository,
   type Customer,
@@ -48,7 +49,10 @@ import {
   mapAdminTenantGuardErrorToHttp,
   resolveAdminTenantContext
 } from "./admin/tenant-context";
-import { mapAdminAuthErrorToHttp } from "./admin/auth-error-response";
+import {
+  mapAdminAuthErrorToHttp,
+  type AdminAuthErrorHttpResponse
+} from "./admin/auth-error-response";
 import {
   resolveAuthenticatedAdminRuntimeContext,
   type AuthenticatedAdminRuntimeDependencies,
@@ -167,64 +171,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/customers", async (c) => {
-    const authorizationHeader = c.req.header("authorization");
-
-    if (hasAuthorizationHeader(authorizationHeader)) {
-      if (!adminAuthRuntime) {
-        const response = mapAdminAuthErrorToHttp({ code: "authenticated_staff_required" });
-        return c.json(response.body, response.status);
-      }
-
-      const selectedTenant = resolveSelectedTenantIdTransport({
-        selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
-        fallbackSelectedTenantId: authenticatedSelectedTenantId
-      });
-
-      if (!selectedTenant.ok) {
-        const response = mapAdminAuthErrorToHttp(selectedTenant.error);
-        return c.json(response.body, response.status);
-      }
-
-      const runtime = await resolveAuthenticatedAdminRuntimeContext(
-        createListCustomersAuthenticatedRuntimeInput(
-          authorizationHeader,
-          selectedTenant.selectedTenantId
-        ),
-        adminAuthRuntime
-      );
-
-      if (!runtime.ok) {
-        const response = mapAdminAuthErrorToHttp(runtime.error);
-        return c.json(response.body, response.status);
-      }
-
-      const customers = await listCustomerListItems({
-        tenant_id: runtime.tenantId,
-        customerRepository,
-        messageRepository
-      });
-
-      return c.json({
-        ok: true,
-        tenant_id: runtime.tenantId,
-        customers
-      });
-    }
-
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.listCustomers
+    const tenant = await resolveCustomerReadRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listCustomers,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const customers = await listCustomerListItems({
@@ -241,20 +199,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/customers/:customerId", async (c) => {
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.getCustomerDetail
+    const tenant = await resolveCustomerReadRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.getCustomerDetail,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const customer = await getCustomerDetail({
@@ -275,20 +231,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/customers/:customerId/timeline", async (c) => {
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.getCustomerTimeline
+    const tenant = await resolveCustomerReadRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.getCustomerTimeline,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const customerId = c.req.param("customerId");
@@ -775,20 +729,110 @@ function hasAuthorizationHeader(authorizationHeader: string | undefined): author
   return Boolean(authorizationHeader?.trim());
 }
 
-function createListCustomersAuthenticatedRuntimeInput(
-  authorizationHeader: string,
-  selectedTenantId: string | null | undefined
-): AuthenticatedAdminRuntimeInput {
-  const input: AuthenticatedAdminRuntimeInput = {
-    authorizationHeader,
-    action: adminRouteActions.listCustomers
-  };
+type CustomerReadRouteTenantResolution =
+  | { ok: true; tenantId: string }
+  | {
+      ok: false;
+      body: AdminAuthErrorHttpResponse["body"];
+      status: AdminAuthErrorHttpResponse["status"];
+    };
 
-  if (selectedTenantId !== undefined) {
-    input.selectedTenantId = selectedTenantId;
+async function resolveCustomerReadRouteTenant(input: {
+  authorizationHeader: string | undefined;
+  selectedTenantIdHeader: string | undefined;
+  tenantIdHeader: string | undefined;
+  action: AdminAction;
+  adminAuthRuntime: AuthenticatedAdminRuntimeDependencies | undefined;
+  authenticatedSelectedTenantId: string | null | undefined;
+  env: NodeJS.ProcessEnv;
+}): Promise<CustomerReadRouteTenantResolution> {
+  if (hasAuthorizationHeader(input.authorizationHeader)) {
+    if (!input.adminAuthRuntime) {
+      const response = mapAdminAuthErrorToHttp({ code: "authenticated_staff_required" });
+      return {
+        ok: false,
+        body: response.body,
+        status: response.status
+      };
+    }
+
+    const selectedTenant = resolveSelectedTenantIdTransport({
+      selectedTenantIdHeader: input.selectedTenantIdHeader,
+      fallbackSelectedTenantId: input.authenticatedSelectedTenantId
+    });
+
+    if (!selectedTenant.ok) {
+      const response = mapAdminAuthErrorToHttp(selectedTenant.error);
+      return {
+        ok: false,
+        body: response.body,
+        status: response.status
+      };
+    }
+
+    const runtime = await resolveAuthenticatedAdminRuntimeContext(
+      createAuthenticatedAdminRuntimeInput({
+        authorizationHeader: input.authorizationHeader,
+        selectedTenantId: selectedTenant.selectedTenantId,
+        action: input.action
+      }),
+      input.adminAuthRuntime
+    );
+
+    if (!runtime.ok) {
+      const response = mapAdminAuthErrorToHttp(runtime.error);
+      return {
+        ok: false,
+        body: response.body,
+        status: response.status
+      };
+    }
+
+    return {
+      ok: true,
+      tenantId: runtime.tenantId
+    };
   }
 
-  return input;
+  const tenant = resolveAdminTenant(input.tenantIdHeader, input.env);
+
+  if (tenant.status !== "ok") {
+    return {
+      ok: false,
+      body: tenant.httpResponse.body,
+      status: tenant.httpResponse.status
+    };
+  }
+
+  const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
+    context: tenant.context,
+    action: input.action
+  });
+
+  if (!roleGuard.ok) {
+    return {
+      ok: false,
+      body: roleGuard.body,
+      status: roleGuard.status
+    };
+  }
+
+  return {
+    ok: true,
+    tenantId: tenant.tenantId
+  };
+}
+
+function createAuthenticatedAdminRuntimeInput(input: {
+  authorizationHeader: string;
+  selectedTenantId: string | null;
+  action: AdminAction;
+}): AuthenticatedAdminRuntimeInput {
+  return {
+    authorizationHeader: input.authorizationHeader,
+    selectedTenantId: input.selectedTenantId,
+    action: input.action
+  };
 }
 
 interface ResolvedWebhookTenant {
