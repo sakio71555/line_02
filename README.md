@@ -196,6 +196,8 @@ Loop 083ではSupabase knowledge repository fake-client hardeningを追加しま
 
 Loop 084ではSupabase alerts runtime boundaryとstaging smokeを追加しました。`REPOSITORY_RUNTIME=supabase` の明示時にcustomers/messages/alertsを同じSupabase-backed bundleで扱い、未返信チェック、alert一覧、notify-open mock、alert状態永続化をstagingで確認しました。default runtimeは `in_memory` のまま維持し、LINE/OpenAI/RLS/Auth/JWTは未接続です。詳細は [docs/11_codex_tasks/084_supabase_alerts_runtime_boundary.md](docs/11_codex_tasks/084_supabase_alerts_runtime_boundary.md) を参照してください。
 
+Loop 085ではSupabase knowledge/RAG runtime boundaryとstaging smokeを追加しました。`REPOSITORY_RUNTIME=supabase` の明示時にknowledge_pagesをSupabase-backed bundleで扱い、RAG searchとRAG answer-draftが `tenant_id + allowed_for_ai=true` のsourceを使うことをstagingで確認しました。customers/messages/alerts/knowledge/RAGのstaging smokeが揃ったため、staging拡張検証版は100%相当に到達しました。default runtimeは `in_memory` のまま維持し、LINE/OpenAI/RLS/Auth/JWTは未接続です。詳細は [docs/11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md](docs/11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

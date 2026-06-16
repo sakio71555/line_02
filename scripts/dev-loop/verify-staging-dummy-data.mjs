@@ -58,6 +58,22 @@ try {
     )
   });
   assertCount({
+    label: "disallowed knowledge marker",
+    expected: 1,
+    actual: queryNumber(
+      config,
+      "select count(*) from knowledge_pages where tenant_id = 'tenant_amamihome' and id = 'knowledge_staging_hidden_online' and allowed_for_ai = false;"
+    )
+  });
+  assertCount({
+    label: "wrong tenant knowledge marker",
+    expected: 1,
+    actual: queryNumber(
+      config,
+      "select count(*) from knowledge_pages where tenant_id = 'tenant_staging_other' and id = 'knowledge_staging_other_online' and allowed_for_ai = true;"
+    )
+  });
+  assertCount({
     label: "customer tenant filter violations",
     expected: 0,
     actual: queryNumber(

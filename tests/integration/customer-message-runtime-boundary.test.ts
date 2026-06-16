@@ -13,6 +13,7 @@ import {
   createSupabaseCustomerMessageRepositoriesFromEnv,
   SupabaseCustomerRepository,
   SupabaseAlertRepository,
+  SupabaseKnowledgePageRepository,
   SupabaseMessageRepository,
   SupabaseRuntimeNotConfiguredError,
   type SupabaseEnv,
@@ -55,6 +56,7 @@ describe("customer/message repository runtime boundary", () => {
     expect(bundle.alertRepository).toBeInstanceOf(InMemoryAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(InMemoryCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(InMemoryMessageRepository);
+    await expect(bundle.knowledgePageRepository.listByTenant(tenantId)).resolves.toEqual([]);
 
     await bundle.customerRepository.save(createCustomer());
     await bundle.messageRepository.insert(createMessage());
@@ -65,13 +67,14 @@ describe("customer/message repository runtime boundary", () => {
     );
   });
 
-  it("creates an explicit in-memory bundle", () => {
+  it("creates an explicit in-memory bundle", async () => {
     const bundle = createInMemoryCustomerMessageRepositories();
 
     expect(bundle.runtime_mode).toBe("in_memory");
     expect(bundle.alertRepository).toBeInstanceOf(InMemoryAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(InMemoryCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(InMemoryMessageRepository);
+    await expect(bundle.knowledgePageRepository.listByTenant(tenantId)).resolves.toEqual([]);
   });
 
   it("creates Supabase repositories from an injected fake client without real env", () => {
@@ -81,6 +84,7 @@ describe("customer/message repository runtime boundary", () => {
     expect(bundle.alertRepository).toBeInstanceOf(SupabaseAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(SupabaseCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(SupabaseMessageRepository);
+    expect(bundle.knowledgePageRepository).toBeInstanceOf(SupabaseKnowledgePageRepository);
   });
 
   it("creates Supabase repositories through runtime mode when a fake client is injected", () => {
@@ -93,6 +97,7 @@ describe("customer/message repository runtime boundary", () => {
     expect(bundle.alertRepository).toBeInstanceOf(SupabaseAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(SupabaseCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(SupabaseMessageRepository);
+    expect(bundle.knowledgePageRepository).toBeInstanceOf(SupabaseKnowledgePageRepository);
   });
 
   it("can create the Supabase boundary from fake env without network access", () => {
@@ -105,6 +110,7 @@ describe("customer/message repository runtime boundary", () => {
     expect(bundle.alertRepository).toBeInstanceOf(SupabaseAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(SupabaseCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(SupabaseMessageRepository);
+    expect(bundle.knowledgePageRepository).toBeInstanceOf(SupabaseKnowledgePageRepository);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

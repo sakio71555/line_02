@@ -77,6 +77,8 @@ stagingでservice_role前提のcustomers/messages smokeが通っても、product
 
 customers/messagesのSupabase staging smokeが通った後でも、alerts/knowledge_pages/RAGをまとめてruntime switchしません。先に [docs/11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md](11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md) と [docs/15_runbooks/supabase_alerts_knowledge_staging_runtime_plan.md](15_runbooks/supabase_alerts_knowledge_staging_runtime_plan.md) で、alerts runtime方針、knowledge_pages runtime方針、fake client test方針、staging smoke方針、service_role/RLSの関係を整理してから、小さいLoopで実装へ進みます。
 
+Loop 084/085でalertsとknowledge_pages/RAGの明示Supabase runtime smokeが揃いました。これによりstaging拡張検証版は100%相当として記録しますが、default runtimeは引き続き `in_memory` のまま維持し、RLS/Auth/JWT、production dev_header rejection、LINE/OpenAI本接続は別Loopに分けます。
+
 alerts runtime switch前に、fake clientで `SupabaseAlertRepository` の `tenant_id` filter、create payload、open alert listing、active alert lookup、status transition mapping、error sanitizerを固定します。この段階ではAPI runtime wiring、staging DB接続、migration、RLSはまだ行いません。
 
 alerts runtime boundaryでは、customers/messages/alertsを同じ明示Supabase bundleで扱い、split-brainを避けます。staging smokeは `MockStaffNotifier` を使い、default runtimeと `.env.staging` の `REPOSITORY_RUNTIME=in_memory` は維持します。RLS/Auth/JWT、production dev_header rejection、LINE実送信、OpenAI実接続は別Loopに分けます。

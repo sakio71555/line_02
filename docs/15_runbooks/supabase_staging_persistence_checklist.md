@@ -16,9 +16,10 @@
 - staging dummy seed exists for `tenant_amamihome`.
 - customers/messages can be verified through an injected Supabase runtime bundle.
 - alerts can be verified through the same injected Supabase runtime bundle.
+- knowledge_pages and RAG search/answer-draft can be verified through the same injected Supabase runtime bundle.
 - standalone API default runtime remains `in_memory`.
 - RLS SQL is not implemented.
-- knowledge/staff/auth runtime switch is not implemented.
+- staff/auth runtime switch is not implemented.
 
 ## Data Priority
 
@@ -80,6 +81,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - staging smokeではSupabase customer/message bundleを注入し、list/detail/timeline/staff reply/AI summaryを確認する。
 - Loop 081では、alerts/knowledge_pages/RAGをstaging runtimeへ進める前の計画を追加した。alertsはcustomer/message runtimeと分けすぎると未返信判定でsplit-brainになるため、fake client test後に明示注入で小さくsmokeする。
 - Loop 084では、customers/messages/alertsを同じ明示Supabase bundleで扱い、未返信チェック、alert一覧、notify-open mock、notified永続化をstagingで確認した。default runtimeは引き続きin-memory。
+- Loop 085では、同じ明示Supabase bundleにknowledge repository境界を追加し、RAG search / answer-draftが `tenant_id + allowed_for_ai=true` のsourceだけを使うことをstagingで確認した。default runtimeは引き続きin-memory。
 - default local runtimeを壊さない。
 - tenant_id filter testを追加する。
 - stagingではdummy tenantだけで検証する。
@@ -112,6 +114,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 079: Staging Verification Edition Completion Milestone](../11_codex_tasks/079_staging_verification_edition_completion_milestone.md)
 - [Loop 080: RLS/Auth Production Readiness Plan](../11_codex_tasks/080_rls_auth_production_readiness_plan.md)
 - [Loop 081: Supabase Alerts/Knowledge Staging Runtime Plan](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md)
+- [Loop 085: Supabase Knowledge/RAG Runtime Boundary](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)

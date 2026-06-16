@@ -4,6 +4,7 @@ import {
   InMemoryMessageRepository,
   type AlertRepository,
   type CustomerRepository,
+  type KnowledgePage,
   type MessageRepository
 } from "@amami-line-crm/domain";
 
@@ -17,6 +18,7 @@ import {
 import {
   SupabaseAlertRepository,
   SupabaseCustomerRepository,
+  SupabaseKnowledgePageRepository,
   SupabaseMessageRepository,
   type SupabaseRepositoryClient
 } from "../supabase/repositories";
@@ -30,10 +32,20 @@ export interface CustomerMessageRepositoryBundle {
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
   alertRepository?: AlertRepository;
+  knowledgePageRepository?: KnowledgePageRepositoryRuntime;
 }
 
 export interface CustomerMessageAlertRepositoryBundle extends CustomerMessageRepositoryBundle {
   alertRepository: AlertRepository;
+}
+
+export interface CustomerMessageAlertKnowledgeRepositoryBundle
+  extends CustomerMessageAlertRepositoryBundle {
+  knowledgePageRepository: KnowledgePageRepositoryRuntime;
+}
+
+export interface KnowledgePageRepositoryRuntime {
+  listByTenant(tenantId: string): Promise<KnowledgePage[]>;
 }
 
 export interface CreateCustomerMessageRepositoriesForRuntimeInput {
@@ -67,29 +79,31 @@ export class SupabaseRuntimeNotConfiguredError extends Error {
   }
 }
 
-export function createInMemoryCustomerMessageRepositories(): CustomerMessageAlertRepositoryBundle {
+export function createInMemoryCustomerMessageRepositories(): CustomerMessageAlertKnowledgeRepositoryBundle {
   return {
     runtime_mode: "in_memory",
     customerRepository: new InMemoryCustomerRepository(),
     messageRepository: new InMemoryMessageRepository(),
-    alertRepository: new InMemoryAlertRepository()
+    alertRepository: new InMemoryAlertRepository(),
+    knowledgePageRepository: new EmptyInMemoryKnowledgePageRepository()
   };
 }
 
 export function createSupabaseCustomerMessageRepositories(input: {
   client: SupabaseRepositoryClient;
-}): CustomerMessageAlertRepositoryBundle {
+}): CustomerMessageAlertKnowledgeRepositoryBundle {
   return {
     runtime_mode: "supabase",
     customerRepository: new SupabaseCustomerRepository(input.client),
     messageRepository: new SupabaseMessageRepository(input.client),
-    alertRepository: new SupabaseAlertRepository(input.client)
+    alertRepository: new SupabaseAlertRepository(input.client),
+    knowledgePageRepository: new SupabaseKnowledgePageRepository(input.client)
   };
 }
 
 export function createSupabaseCustomerMessageRepositoriesFromEnv(
   env: SupabaseEnv = process.env
-): CustomerMessageAlertRepositoryBundle {
+): CustomerMessageAlertKnowledgeRepositoryBundle {
   try {
     const config = readSupabaseConfigFromEnv(env);
     const client = createSupabaseServiceRoleServerClient(config);
@@ -109,7 +123,7 @@ export function createSupabaseCustomerMessageRepositoriesFromEnv(
 
 export function createCustomerMessageRepositoriesForRuntime(
   input: CreateCustomerMessageRepositoriesForRuntimeInput = {}
-): CustomerMessageAlertRepositoryBundle {
+): CustomerMessageAlertKnowledgeRepositoryBundle {
   const mode = input.mode ?? "in_memory";
 
   if (mode === "in_memory") {
@@ -121,4 +135,10 @@ export function createCustomerMessageRepositoriesForRuntime(
   }
 
   return createSupabaseCustomerMessageRepositoriesFromEnv(input.env);
+}
+
+class EmptyInMemoryKnowledgePageRepository implements KnowledgePageRepositoryRuntime {
+  async listByTenant(_tenantId: string): Promise<KnowledgePage[]> {
+    return [];
+  }
 }

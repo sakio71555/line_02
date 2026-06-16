@@ -39,10 +39,10 @@ try {
   }
 
   console.log("[ok] staging dummy seed completed");
-  console.log("[ok] tenant upserted: 1");
+  console.log("[ok] tenants upserted: 2");
   console.log("[ok] customers upserted: 2");
   console.log("[ok] messages upserted: 5");
-  console.log("[ok] knowledge pages upserted: 10");
+  console.log("[ok] knowledge pages upserted: 12");
   console.log("[ok] real LINE/OpenAI disabled for dummy seed");
 } catch (error) {
   if (error instanceof SafeConfigError) {
@@ -82,6 +82,15 @@ begin;
 
 insert into tenants (id, slug, name, official_domain, status)
 values ('tenant_amamihome', 'amamihome', 'アマミホーム', 'amamihome.net', 'active')
+on conflict (id) do update set
+  slug = excluded.slug,
+  name = excluded.name,
+  official_domain = excluded.official_domain,
+  status = excluded.status,
+  updated_at = now();
+
+insert into tenants (id, slug, name, official_domain, status)
+values ('tenant_staging_other', 'staging-other', 'ステージング別tenant', 'example.invalid', 'active')
 on conflict (id) do update set
   slug = excluded.slug,
   name = excluded.name,
@@ -353,7 +362,9 @@ values
   ('knowledge_staging_land', 'tenant_amamihome', 'https://amamihome.net/land/', 'land', 'official_site', '分譲地・建売', '分譲地や建売情報は最新状況を担当者が確認します。', 'dummy-007', true, '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z'),
   ('knowledge_staging_interview', 'tenant_amamihome', 'https://amamihome.net/interview/', 'interview', 'official_site', 'オーナーズインタビュー', 'オーナーズインタビューで住まい手の声を確認できます。', 'dummy-008', true, '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z'),
   ('knowledge_staging_contact', 'tenant_amamihome', 'https://amamihome.net/contact/', 'contact', 'official_site', '問い合わせ', '問い合わせは担当者が内容を確認して返答します。', 'dummy-009', true, '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z'),
-  ('knowledge_staging_faq', 'tenant_amamihome', 'https://amamihome.net/faq/', 'faq', 'faq', 'よくある質問', '費用や補助金は断定せず担当者確認へつなぎます。', 'dummy-010', true, '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z')
+  ('knowledge_staging_faq', 'tenant_amamihome', 'https://amamihome.net/faq/', 'faq', 'faq', 'よくある質問', '費用や補助金は断定せず担当者確認へつなぎます。', 'dummy-010', true, '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z'),
+  ('knowledge_staging_hidden_online', 'tenant_amamihome', 'https://example.invalid/amamihome/private-online', 'internal', 'manual', '非公開 オンライン相談', 'allowed_for_ai=false の除外確認用dummy knowledgeです。', 'dummy-hidden-001', false, '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z'),
+  ('knowledge_staging_other_online', 'tenant_staging_other', 'https://example.invalid/other/online', 'consultation', 'official_site', '他tenant オンライン相談', 'wrong tenant除外確認用dummy knowledgeです。', 'dummy-other-001', true, '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z', '2026-06-16T09:00:00Z')
 on conflict (id) do update set
   tenant_id = excluded.tenant_id,
   url = excluded.url,

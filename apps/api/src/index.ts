@@ -81,6 +81,7 @@ export interface CustomerMessageRepositoryRuntimeBundle {
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
   alertRepository?: AlertRepository;
+  knowledgePageRepository?: KnowledgePageRepository;
 }
 
 const defaultAlertRepository = new InMemoryAlertRepository();
@@ -109,7 +110,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const staffNotifier = dependencies.staffNotifier ?? defaultStaffNotifier;
   const aiProvider = dependencies.aiProvider ?? defaultAiProvider;
   const knowledgePageRepository =
-    dependencies.knowledgePageRepository ?? defaultKnowledgePageRepository;
+    dependencies.knowledgePageRepository ??
+    dependencies.customerMessageRepositories?.knowledgePageRepository ??
+    defaultKnowledgePageRepository;
   const adminAuthRuntime = dependencies.adminAuthRuntime;
   const authenticatedSelectedTenantId = dependencies.authenticatedSelectedTenantId;
   const now = dependencies.now;

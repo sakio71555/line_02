@@ -6,7 +6,7 @@
 
 - Date: 2026-06-16
 - Target environment: staging only
-- Result: **Success after Loop 079.1 grants recovery**
+- Result: **Staging extension verification 100%相当 after Loop 085**
 - Production readiness: **No-Go**
 
 ## Schema Apply Status
@@ -22,10 +22,11 @@
 - Seed script: `scripts/dev-loop/seed-staging-dummy-data.mjs`
 - Verification script: `scripts/dev-loop/verify-staging-dummy-data.mjs`
 - Seed result:
-  - tenant upserted: 1
+  - tenants upserted: 2
   - customers upserted: 2
   - messages upserted: 5
-  - knowledge pages upserted: 10
+  - knowledge pages upserted: 12
+- Loop 085 adds one `allowed_for_ai=false` dummy knowledge row and one wrong-tenant dummy knowledge row for exclusion checks.
 - Dummy data only. No real customer data, real LINE userId, phone, email, production logs, or secrets are recorded.
 
 ## PostgREST Grants Recovery
@@ -69,7 +70,8 @@ Grant verification result:
 - Staging smoke uses explicit injected Supabase runtime bundles.
 - Customers/messages smoke passed in Loop 079.1.
 - Alerts runtime boundary/staging smoke passed in Loop 084.
-- Knowledge, staff/auth, Auth/JWT, RLS, LINE, and OpenAI are not switched in this record.
+- Knowledge/RAG runtime boundary/staging smoke passed in Loop 085.
+- Staff/auth, Auth/JWT, RLS, LINE, and OpenAI are not switched in this record.
 
 ## API Smoke
 
@@ -106,6 +108,24 @@ Alerts smoke result:
 - `POST /api/admin/alerts/notify-open`: success with `MockStaffNotifier`.
 - restart-equivalent app instance can read the persisted `notified` alert.
 
+Knowledge/RAG smoke command:
+
+```text
+node scripts/dev-loop/smoke-staging-knowledge-rag-api.mjs --env .env.staging --psql /usr/local/opt/libpq/bin/psql
+```
+
+Knowledge/RAG smoke result:
+
+- staging env verification passed.
+- schema verification passed.
+- service_role grants verification passed.
+- dummy data verification passed.
+- `POST /api/admin/rag/search`: returned tenant-scoped `allowed_for_ai=true` dummy knowledge.
+- `allowed_for_ai=false` dummy knowledge was excluded.
+- wrong-tenant dummy knowledge was excluded.
+- `POST /api/admin/rag/answer-draft`: returned source付き mock answer draft.
+- restart-equivalent app instance can read the persisted knowledge source.
+
 ## Persistence Confirmation
 
 - dummy customers/messages are present in staging DB.
@@ -113,6 +133,7 @@ Alerts smoke result:
 - AI summary is saved as an `ai` `summary` message.
 - restart-equivalent API app instance can read the persisted timeline from Supabase.
 - dummy unreplied alert can be saved as `open`, updated to `notified`, and reread from Supabase.
+- dummy knowledge_pages can be searched from Supabase-backed RAG runtime and reread by a restart-equivalent app instance.
 
 ## LINE / OpenAI State
 
@@ -135,10 +156,14 @@ Alerts smoke result:
 - Supabase Auth/JWT is still not connected.
 - production dev header rejection is still not implemented.
 - selectedTenantId transport and production membership revalidation are still not connected.
-- alerts/knowledge/staff/auth runtime switch remains future work.
-- alerts runtime boundary has staging smoke coverage, but production still needs RLS/Auth/JWT before real use.
-- knowledge/staff/auth runtime switch remains future work.
+- staff/auth runtime switch remains future work.
 - staging uses dummy data only.
+
+## Loop 085 Knowledge/RAG Runtime Smoke
+
+Loop 085 records staging拡張検証版100%相当. Customers/messages, alerts, knowledge_pages, RAG search, and RAG answer-draft all have explicit Supabase staging smoke coverage with dummy data. Default runtime remains `in_memory`; LINE real push remains disabled; OpenAI remains mock. Production readiness remains No-Go until RLS/Auth/JWT and production tenant/auth hardening are implemented.
+
+See [Loop 085 task doc](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md) and [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md).
 
 ## Loop 081 Alerts/Knowledge Runtime Plan
 
@@ -168,4 +193,5 @@ Loop 082: Supabase alert repository fake-client hardening
 Loop 083: Supabase knowledge repository fake-client hardening
 Loop 084: Supabase alerts runtime boundary + staging smoke
 Loop 085: Supabase knowledge/RAG runtime boundary
+Loop 086: RLS/Auth/JWT implementation planning or production hardening split
 ```

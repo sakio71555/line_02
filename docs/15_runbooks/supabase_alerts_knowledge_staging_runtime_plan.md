@@ -15,8 +15,9 @@ customers/messagesのSupabase staging smokeが通った後、次に `alerts` と
 - dummy customers/messages/knowledge pages are seeded in staging.
 - customers/messages Supabase runtime smoke passed through explicit injection.
 - alerts Supabase runtime boundary/staging smoke passed through explicit injection.
+- knowledge_pages/RAG Supabase runtime boundary/staging smoke passed through explicit injection.
 - default runtime remains `in_memory`.
-- knowledge/RAG runtime is not switched.
+- staging拡張検証版 is 100%相当 for customers/messages/alerts/knowledge/RAG.
 - RLS is not implemented.
 - production readiness remains No-Go.
 
@@ -72,6 +73,8 @@ Target routes:
 
 Loop 083 completed the fake-client hardening step for `SupabaseKnowledgePageRepository`. Tests now cover `tenant_id`, `allowed_for_ai = true`, defensive row filtering, `url`/`title`/`content` mapping, RAG search compatibility, sanitized errors, and no network/env access. The next knowledge/RAG work should still keep default `in_memory` and move through a separate runtime boundary/staging smoke Loop before any API/RAG runtime switch.
 
+Loop 085 completed the knowledge/RAG runtime boundary and staging smoke. In explicit Supabase runtime, RAG search and RAG answer-draft use the bundle `SupabaseKnowledgePageRepository`, `tenant_id + allowed_for_ai=true` sources, and `MockAiProvider`. Default runtime remains `in_memory`; real LINE/OpenAI, RLS/Auth/JWT, and production readiness remain out of scope.
+
 ## Staging Smoke Checklist
 
 Alerts smoke:
@@ -86,14 +89,16 @@ Alerts smoke:
 
 Knowledge/RAG smoke:
 
-- [ ] Use seeded dummy `knowledge_pages`.
-- [ ] Search `オンライン相談`.
-- [ ] Search `施工事例`.
-- [ ] Search `メンテナンス`.
-- [ ] Search `SoToNo MA`.
-- [ ] Confirm sources are tenant scoped.
-- [ ] Confirm `allowed_for_ai=false` rows are excluded.
-- [ ] Confirm RAG answer draft includes sources and remains response-only.
+- [x] Use seeded dummy `knowledge_pages`.
+- [x] Search `オンライン相談`.
+- [x] Search `施工事例`.
+- [x] Search `メンテナンス`.
+- [x] Search `SoToNo MA`.
+- [x] Confirm sources are tenant scoped.
+- [x] Confirm `allowed_for_ai=false` rows are excluded.
+- [x] Confirm wrong tenant rows are excluded.
+- [x] Confirm RAG answer draft includes sources and remains response-only.
+- [x] Confirm restart-equivalent app instance can reread Supabase knowledge sources.
 
 ## service_role / RLS Rules
 
@@ -126,8 +131,7 @@ Stop and split into a new Loop if any of these are needed:
 Loop 082: Supabase alert repository fake-client hardening
 Loop 083: Supabase knowledge repository fake-client hardening
 Loop 084: Supabase alerts runtime boundary + staging smoke
-Loop 085: Supabase knowledge/RAG runtime boundary
-Loop 086: Supabase knowledge/RAG staging smoke
+Loop 085: Supabase knowledge/RAG runtime boundary + staging smoke
 Loop 088: RLS policy SQL draft for customers/messages/alerts/knowledge
 ```
 
@@ -139,3 +143,4 @@ Loop 088: RLS policy SQL draft for customers/messages/alerts/knowledge
 - [Supabase Staging Persistence Checklist](supabase_staging_persistence_checklist.md)
 - [Loop 023: Supabase Alert Repository](../11_codex_tasks/023_supabase_alert_repository.md)
 - [Loop 024: Supabase Knowledge Repository](../11_codex_tasks/024_supabase_knowledge_repository.md)
+- [Loop 085: Supabase Knowledge/RAG Runtime Boundary](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md)
