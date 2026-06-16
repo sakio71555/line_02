@@ -45,6 +45,8 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 
 ## Before Migration Apply
 
+- Loop 070の [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md) を確認する。
+- dry-runでmigration source、schema inventory、tenant_id indexes、repository expectations、RLS SQL未実装状態が記録済みである。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。
@@ -87,4 +89,6 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 066: Supabase Staging Env Readiness Checklist](../11_codex_tasks/066_supabase_staging_env_readiness_checklist.md)
 - [Loop 067: Supabase Runtime Switch Boundary for Customers/Messages](../11_codex_tasks/067_supabase_runtime_switch_boundary_customers_messages.md)
 - [Loop 068: Supabase Repository Integration Tests with Fake Client](../11_codex_tasks/068_supabase_repository_integration_tests_fake_client.md)
+- [Loop 070: Staging Migration Dry-run Record](../11_codex_tasks/070_staging_migration_dry_run_record.md)
+- [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
