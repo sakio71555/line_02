@@ -53,6 +53,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - 明示許可、staging project/env readiness、dummy data、rollback / recoveryの条件が揃わなければNo-Goにする。
 - Loop 076の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、`psql` が使えないためNo-Goとして記録した。migration applyは未実行。
 - Loop 077の [psql Availability Setup](psql_availability_setup.md) で、作業者が手動で `psql` を用意する手順と、CodexがinstallやSupabase接続を行わない方針を確認する。
+- Loop 078の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、safe helper経由でstaging migration applyに成功し、主要table/column/indexを確認した。RLSは未実装のためproductionへ進まない。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。

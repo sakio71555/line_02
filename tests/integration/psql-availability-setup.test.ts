@@ -11,6 +11,7 @@ const taskDocPath = join(
   "docs/11_codex_tasks/077_psql_availability_setup_apply_preflight.md"
 );
 const scriptPath = join(repoRoot, "scripts/dev-loop/check-psql-readiness.mjs");
+const psqlLibPath = join(repoRoot, "scripts/dev-loop/lib/staging-psql.mjs");
 const readmePath = join(repoRoot, "README.md");
 const devLoopPath = join(repoRoot, "docs/08_dev_loop.md");
 
@@ -57,9 +58,10 @@ describe("Loop 077 psql availability setup preflight", () => {
 
   it("keeps the readiness script free of env and Supabase apply commands", () => {
     const script = readText(scriptPath);
+    const psqlLib = readText(psqlLibPath);
 
     expect(script).toContain("psql");
-    expect(script).toContain("--version");
+    expect(psqlLib).toContain("--version");
     expect(script).not.toContain("SUPABASE_DB_URL");
     expect(script).not.toContain(".env.staging");
     expect(script).not.toContain("supabase db push");

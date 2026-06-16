@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
 
+import { checkPsqlVersion, resolvePsqlPath } from "./lib/staging-psql.mjs";
+
 function main() {
   const result = checkPsqlReadiness();
 
@@ -12,30 +14,38 @@ function main() {
 }
 
 export function checkPsqlReadiness(spawnImpl = spawnSync) {
-  const result = spawnImpl("psql", ["--version"], {
-    encoding: "utf8"
-  });
+  const psqlPath = resolvePsqlPath(spawnImpl);
 
-  if (result.error || result.status !== 0) {
+  if (!psqlPath) {
     return {
       ok: false,
       lines: [
         "[no-go] psql is not available",
+        "[no-go] checked command path and known libpq absolute paths",
         "[no-go] migration apply must not be executed in this state"
       ]
     };
   }
 
-  const versionLine = `${result.stdout ?? result.stderr ?? ""}`
-    .trim()
-    .split(/\r?\n/)
-    .find((line) => line.trim().length > 0);
+  const version = checkPsqlVersion(psqlPath, spawnImpl);
+
+  if (!version.ok) {
+    return {
+      ok: false,
+      lines: [
+        "[no-go] psql is not available",
+        "[no-go] psql version check failed",
+        "[no-go] migration apply must not be executed in this state"
+      ]
+    };
+  }
 
   return {
     ok: true,
     lines: [
       "[ok] psql is available",
-      `[ok] ${versionLine ?? "psql version detected"}`,
+      `[ok] psql path: ${psqlPath}`,
+      `[ok] ${version.version}`,
       "[info] migration apply is not executed by this readiness check"
     ]
   };

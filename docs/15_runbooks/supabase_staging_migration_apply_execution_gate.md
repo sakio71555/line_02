@@ -131,6 +131,8 @@ Loop 076 result: No-Go because `psql` is not available. Supabase connection and 
 
 Loop 077 adds [psql Availability Setup](psql_availability_setup.md) for manual `psql` preparation before any apply retry. Codex does not install PostgreSQL tools, change PATH, connect to Supabase, or run migration apply in that preflight Loop.
 
+Loop 078 result: staging migration apply succeeded through the safe `psql` helper. Expected tables, columns, and indexes were confirmed. RLS remains disabled with zero policies, so production readiness remains No-Go.
+
 ## Related Docs
 
 - [Supabase Staging Persistence Checklist](supabase_staging_persistence_checklist.md)
