@@ -33,8 +33,8 @@ No-Go理由:
 
 - RLS 未実装。
 - Supabase Auth/JWT 未接続。
-- selectedTenantId transport 未実装。
-- selectedTenantId 再検証がproduction HTTP runtimeへ未接続。
+- selectedTenantId transport boundaryはLoop 087で実装済み。
+- selectedTenantId membership再検証はboundaryで確認済みだが、全route rollout、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -125,8 +125,11 @@ Rules:
 
 - `selectedTenantId` is not permission.
 - It is only a requested tenant selector.
+- Loop 087 uses `x-selected-tenant-id` as the authenticated_staff transport boundary.
+- `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
 - If selected tenant is outside active memberships, return `tenant_membership_denied`.
+- Invalid selector format returns `invalid_selected_tenant_id`.
 - Repositories receive only `AdminTenantContext.tenantId`.
 - Raw selectedTenantId is never used as a data filter.
 

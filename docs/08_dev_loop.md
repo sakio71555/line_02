@@ -143,6 +143,8 @@ Admin API authenticated runtimeの全route rolloutは、代表route接続後にd
 
 selectedTenantId transportは、`transport plan -> transport boundary -> read-only route rollout` の順に進めます。`selectedTenantId` は権限ではなくselectorとして扱い、active membershipで再検証してから `AdminTenantContext.tenantId` を確定します。cookie/session/localStorage保存や `/select-tenant` の保存処理は、transport boundaryとroute rolloutとは別Loopに分けます。
 
+Loop 087ではtransport boundaryとして `x-selected-tenant-id` をauthenticated_staff runtimeに追加しました。これは `x-tenant-id` / `dev_header` とは別で、membership再検証後の `AdminTenantContext.tenantId` だけをrepositoryへ渡すための境界です。dev_header path、default `in_memory`、production dev_header rejection未実装の状態は維持し、全route rolloutは後続Loopで扱います。
+
 本番化Loopとは別に、ローカルデモMVPの完成度を上げるhardening Loopを挟みます。デモ確認ではmock/in-memory/未接続を画面とrunbookで明示し、Supabase Auth、LINE実送信、OpenAI実API、Supabase実DBが接続済みであるように見せないことを優先します。
 
 ローカルデモMVPから社内確認版へ移行する場合は、実装だけでなく、確認順、未接続範囲、できること/まだできないこと、フィードバック項目をrunbook化します。社内確認版は本番運用版ではないため、本物LINE送信、OpenAI API、Supabase本番DB、本番ログイン、本番通知、schedulerが未接続であることを画面と手順書の両方で明示します。

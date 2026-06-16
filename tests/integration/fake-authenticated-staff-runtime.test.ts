@@ -171,6 +171,25 @@ describe("fake authenticated staff runtime connection", () => {
     });
   });
 
+  it("rejects invalid selectedTenantId before staff membership lookup", async () => {
+    const { resolveAuthenticatedAdminRuntimeContext } = await loadAuthenticatedRuntimeModule();
+    const dependencies = createFakeRuntimeDependencies();
+
+    await expect(
+      resolveAuthenticatedAdminRuntimeContext(
+        {
+          authorizationHeader: "Bearer fake-valid-multi",
+          selectedTenantId: "tenant invalid",
+          action: "view_customers"
+        },
+        dependencies
+      )
+    ).resolves.toEqual({
+      ok: false,
+      error: { code: "invalid_selected_tenant_id" }
+    });
+  });
+
   it("maps missing Authorization header to authenticated_staff_required", async () => {
     const { resolveAuthenticatedAdminRuntimeContext } = await loadAuthenticatedRuntimeModule();
     const dependencies = createFakeRuntimeDependencies();

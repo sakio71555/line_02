@@ -187,6 +187,28 @@ describe("representative Admin API authenticated runtime route", () => {
     });
   });
 
+  it("rejects invalid x-selected-tenant-id before resolving authenticated staff context", async () => {
+    const { app, sessionVerifier } = createRepresentativeRouteApp({
+      includeAuthRuntime: true
+    });
+
+    const response = await app.fetch(
+      new Request("http://localhost/api/admin/customers", {
+        headers: {
+          authorization: "Bearer fake-valid-multi",
+          "x-selected-tenant-id": "tenant invalid"
+        }
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "invalid_selected_tenant_id"
+    });
+    expect(sessionVerifier.tokens).toEqual([]);
+  });
+
   it("uses selectedTenantId inside fake staff memberships to scope customers", async () => {
     const { app, customerRepository } = createRepresentativeRouteApp({
       includeAuthRuntime: true,
@@ -210,6 +232,60 @@ describe("representative Admin API authenticated runtime route", () => {
     expect(body.customers[0]).toMatchObject({
       id: "customer_other",
       tenant_id: "tenant_other"
+    });
+  });
+
+  it("uses x-selected-tenant-id header as the authenticated_staff transport", async () => {
+    const { app, customerRepository } = createRepresentativeRouteApp({
+      includeAuthRuntime: true
+    });
+    await seedRepresentativeCustomers(customerRepository);
+
+    const response = await app.fetch(
+      new Request("http://localhost/api/admin/customers", {
+        headers: {
+          authorization: "Bearer fake-valid-multi",
+          "x-selected-tenant-id": "tenant_other"
+        }
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_other"
+    });
+    expect(body.customers).toHaveLength(1);
+    expect(body.customers[0]).toMatchObject({
+      id: "customer_other",
+      tenant_id: "tenant_other"
+    });
+  });
+
+  it("ignores x-selected-tenant-id on the dev_header path", async () => {
+    const { app, customerRepository } = createRepresentativeRouteApp();
+    await seedRepresentativeCustomers(customerRepository);
+
+    const response = await app.fetch(
+      new Request("http://localhost/api/admin/customers", {
+        headers: {
+          "x-tenant-id": "tenant_amamihome",
+          "x-selected-tenant-id": "tenant invalid"
+        }
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome"
+    });
+    expect(body.customers).toHaveLength(1);
+    expect(body.customers[0]).toMatchObject({
+      id: "customer_amami",
+      tenant_id: "tenant_amamihome"
     });
   });
 });

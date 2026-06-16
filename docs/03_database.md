@@ -160,6 +160,8 @@ Loop 049では、現在の `dev_header` runtimeから `authenticated_staff` runt
 
 Loop 055では、複数tenant所属staffが操作対象tenantを選ぶための `selectedTenantId` transport方針をdocs-onlyで整理しました。`selectedTenantId` は権限ではなくselectorであり、必ず `StaffAuthLookup` / `staff_tenant_memberships` のactive membershipで再検証してから `AdminTenantContext.tenantId` として採用します。transport実装、cookie/session保存、Admin API route変更、Supabase Auth本接続はまだ行っていません。
 
+Loop 087では、authenticated runtime用の初期transportとして `x-selected-tenant-id` header境界を追加しました。`x-selected-tenant-id` は `x-tenant-id` / `dev_header` と別物で、active membership再検証後の `AdminTenantContext.tenantId` だけがrepositoryへ渡されます。全Admin route rollout、Supabase Auth/JWT本接続、production dev_header rejection、RLS SQLはまだ未実装です。
+
 詳細は [docs/11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md](11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md) を参照してください。
 
 ## dev header production rejection plan

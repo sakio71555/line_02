@@ -15,6 +15,7 @@ import {
   mapAdminRoleGuardFailureToAuthError,
   type AdminRoleGuardFailure
 } from "./role-guard";
+import { normalizeSelectedTenantId } from "./selected-tenant-transport";
 
 export interface AuthenticatedAdminRuntimeInput {
   authorizationHeader?: string | null;
@@ -56,8 +57,17 @@ export async function resolveAuthenticatedAdminRuntimeContext(
     };
   }
 
+  const selectedTenant = normalizeSelectedTenantId(input.selectedTenantId);
+
+  if (!selectedTenant.ok) {
+    return {
+      ok: false,
+      error: selectedTenant.error
+    };
+  }
+
   const tenantContext = await resolveAuthenticatedStaffAdminTenantContext(
-    createAuthenticatedStaffTenantContextInput(session.authUser, input.selectedTenantId),
+    createAuthenticatedStaffTenantContextInput(session.authUser, selectedTenant.selectedTenantId),
     dependencies.staffAuthLookup
   );
 

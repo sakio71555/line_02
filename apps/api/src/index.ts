@@ -58,6 +58,7 @@ import {
   adminRouteActions,
   evaluateAdminRouteRoleGuardCompatibility
 } from "./admin/role-guarded-handler";
+import { resolveSelectedTenantIdTransport } from "./admin/selected-tenant-transport";
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
@@ -174,10 +175,20 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         return c.json(response.body, response.status);
       }
 
+      const selectedTenant = resolveSelectedTenantIdTransport({
+        selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+        fallbackSelectedTenantId: authenticatedSelectedTenantId
+      });
+
+      if (!selectedTenant.ok) {
+        const response = mapAdminAuthErrorToHttp(selectedTenant.error);
+        return c.json(response.body, response.status);
+      }
+
       const runtime = await resolveAuthenticatedAdminRuntimeContext(
         createListCustomersAuthenticatedRuntimeInput(
           authorizationHeader,
-          authenticatedSelectedTenantId
+          selectedTenant.selectedTenantId
         ),
         adminAuthRuntime
       );

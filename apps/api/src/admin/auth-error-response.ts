@@ -9,6 +9,7 @@ export type AdminAuthErrorCode =
   | "membership_not_found"
   | "tenant_membership_denied"
   | "tenant_selection_required"
+  | "invalid_selected_tenant_id"
   | "session_expired"
   | "permission_denied";
 
@@ -19,6 +20,7 @@ export type AdminAuthResponseErrorCode =
   | "authenticated_staff_required"
   | "tenant_membership_denied"
   | "tenant_selection_required"
+  | "invalid_selected_tenant_id"
   | "session_expired"
   | "permission_denied";
 
@@ -33,7 +35,7 @@ export interface AdminAuthError {
 }
 
 export interface AdminAuthErrorHttpResponse {
-  status: 401 | 403 | 409;
+  status: 400 | 401 | 403 | 409;
   body: {
     ok: false;
     error: AdminAuthResponseErrorCode;
@@ -63,6 +65,8 @@ export function mapAdminAuthErrorToHttp(error: AdminAuthError): AdminAuthErrorHt
       return adminAuthResponse(403, "permission_denied", "/permission-denied");
     case "tenant_selection_required":
       return adminAuthResponse(409, "tenant_selection_required", "/select-tenant");
+    case "invalid_selected_tenant_id":
+      return adminAuthResponse(400, "invalid_selected_tenant_id", "/select-tenant");
   }
 }
 

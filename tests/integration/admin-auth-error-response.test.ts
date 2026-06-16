@@ -49,6 +49,11 @@ describe("admin auth error response mapping", () => {
       body: { ok: false, error: "tenant_membership_denied" },
       placeholderRoute: "/permission-denied"
     });
+    expect(mapAdminAuthErrorToHttp({ code: "invalid_selected_tenant_id" })).toMatchObject({
+      status: 400,
+      body: { ok: false, error: "invalid_selected_tenant_id" },
+      placeholderRoute: "/select-tenant"
+    });
     expect(mapAdminAuthErrorToHttp({ code: "permission_denied" })).toMatchObject({
       status: 403,
       body: { ok: false, error: "permission_denied" },
