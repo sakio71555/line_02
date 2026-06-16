@@ -61,6 +61,7 @@ import {
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
+  customerMessageRepositories?: CustomerMessageRepositoryRuntimeBundle;
   customerRepository?: CustomerRepository;
   messageRepository?: MessageRepository;
   lineClient?: LineClient;
@@ -71,6 +72,14 @@ export interface ApiAppDependencies {
   authenticatedSelectedTenantId?: string | null;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
+}
+
+export type CustomerMessageRepositoryRuntimeMode = "in_memory" | "supabase";
+
+export interface CustomerMessageRepositoryRuntimeBundle {
+  runtime_mode?: CustomerMessageRepositoryRuntimeMode;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
 }
 
 const defaultAlertRepository = new InMemoryAlertRepository();
@@ -84,8 +93,14 @@ const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository([]);
 export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const api = new Hono();
   const alertRepository = dependencies.alertRepository ?? defaultAlertRepository;
-  const customerRepository = dependencies.customerRepository ?? defaultCustomerRepository;
-  const messageRepository = dependencies.messageRepository ?? defaultMessageRepository;
+  const customerRepository =
+    dependencies.customerRepository ??
+    dependencies.customerMessageRepositories?.customerRepository ??
+    defaultCustomerRepository;
+  const messageRepository =
+    dependencies.messageRepository ??
+    dependencies.customerMessageRepositories?.messageRepository ??
+    defaultMessageRepository;
   const lineClient = dependencies.lineClient ?? defaultLineClient;
   const staffNotifier = dependencies.staffNotifier ?? defaultStaffNotifier;
   const aiProvider = dependencies.aiProvider ?? defaultAiProvider;

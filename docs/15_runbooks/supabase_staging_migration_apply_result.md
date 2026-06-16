@@ -116,10 +116,25 @@ All expected indexes were confirmed:
 
 ## Go / No-Go After This Loop
 
-- Can proceed to runtime switch: not yet.
+- Can proceed to runtime switch: customers/messages only, staging dummy verification only.
 - Can proceed to runtime switch planning/preflight: yes.
 - Can proceed to production: no.
-- Next requirement: plan staging runtime switch or dummy seed separately while RLS/Auth/JWT remain explicit future work.
+- Next requirement: keep runtime switch scoped, then plan RLS/Auth/JWT before any production data.
+
+## Loop 079 Follow-up
+
+- Staging dummy seed was applied with fake customer/message/knowledge data only.
+- Dummy data verification passed without printing secret values.
+- Initial customers/messages API smoke failed with PostgREST `42501` on `customers.listByTenant`.
+- Loop 079.1 applied `packages/db/migrations/0002_service_role_postgrest_grants.sql`.
+- The grants are limited to `service_role` for public schema/core tables/sequences.
+- Broad `anon` / `authenticated` table DML grants were not added.
+- Grant verification passed with `scripts/dev-loop/verify-staging-postgrest-grants.mjs`.
+- Customers/messages were then verified through an injected Supabase runtime bundle for Admin API list/detail/timeline, staff reply, and AI summary.
+- A restart-equivalent app instance could read the persisted timeline.
+- Default runtime remains `in_memory`.
+- LINE/OpenAI remain mock/disabled.
+- RLS remains disabled with zero policies, so production readiness remains No-Go.
 
 ## Secret Safety Confirmation
 

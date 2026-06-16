@@ -4,16 +4,20 @@
 
 このrunbookは、社内確認版の一時保存をSupabase staging persistenceへ進める前に見るチェックリストです。
 
-本番接続手順ではありません。今回の段階ではSupabase接続、migration apply、`.env` 作成、runtime switchは行いません。
+本番接続手順ではありません。Loop 079時点ではstaging DBに限ってmigration apply、dummy seed、customers/messages API smokeを行いましたが、production接続、RLS SQL、Auth/JWT、本物LINE/OpenAI接続は行いません。
 
 ## Current State
 
-- local demo runtime is still in-memory.
-- API process restart clears demo seed data.
+- local demo runtime is still in-memory by default.
+- API process restart clears local in-memory demo seed data.
 - Supabase client boundary and repositories exist.
-- Supabase repositories are not wired into Admin API runtime yet.
+- staging DB schema is applied.
+- staging PostgREST `service_role` grants are applied for core tables.
+- staging dummy seed exists for `tenant_amamihome`.
+- customers/messages can be verified through an injected Supabase runtime bundle.
+- standalone API default runtime remains `in_memory`.
 - RLS SQL is not implemented.
-- local migration apply has not been executed in this repo.
+- alerts/knowledge/staff/auth runtime switch is not implemented.
 
 ## Data Priority
 
@@ -54,6 +58,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - Loop 076の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、`psql` が使えないためNo-Goとして記録した。migration applyは未実行。
 - Loop 077の [psql Availability Setup](psql_availability_setup.md) で、作業者が手動で `psql` を用意する手順と、CodexがinstallやSupabase接続を行わない方針を確認する。
 - Loop 078の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、safe helper経由でstaging migration applyに成功し、主要table/column/indexを確認した。RLSは未実装のためproductionへ進まない。
+- Loop 079 / 079.1の [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md) では、staging dummy seed、dummy verification、PostgREST service_role grants recovery、customers/messages API smoke、restart相当のpersistence確認を記録した。RLSは未実装のためproductionへ進まない。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。
@@ -69,7 +74,9 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 
 - Loop 067でcustomers/messages runtime switch boundaryは追加済み。ただしdefaultはin-memoryで、Supabase実接続やAPI runtime差し替えはまだ行っていない。
 - Loop 068でcustomers/messagesのfake client repository testsは追加済み。実DB接続前にmapping、tenant_id filter、timeline order、error handlingを確認する。
-- customers/messagesのrepository wiringを小さいLoopに分ける。
+- Loop 079でAPI factoryがcustomer/message repository bundleを受け取れる境界を追加した。
+- Loop 079.1でPostgREST/Data API向けの `service_role` 限定GRANTを追加した。
+- staging smokeではSupabase customer/message bundleを注入し、list/detail/timeline/staff reply/AI summaryを確認する。
 - default local runtimeを壊さない。
 - tenant_id filter testを追加する。
 - stagingではdummy tenantだけで検証する。
@@ -99,9 +106,12 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 070: Staging Migration Dry-run Record](../11_codex_tasks/070_staging_migration_dry_run_record.md)
 - [Loop 071: Supabase Staging Migration Apply Plan](../11_codex_tasks/071_supabase_staging_migration_apply_plan.md)
 - [Loop 073: Supabase Staging Migration Apply Execution Gate](../11_codex_tasks/073_supabase_staging_migration_apply_execution_gate.md)
+- [Loop 079: Staging Verification Edition Completion Milestone](../11_codex_tasks/079_staging_verification_edition_completion_milestone.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
 - [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)
+- [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md)
+- [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
 - [Supabase Staging Env Readiness Checklist](supabase_staging_env_readiness_checklist.md)
 - [psql Availability Setup](psql_availability_setup.md)

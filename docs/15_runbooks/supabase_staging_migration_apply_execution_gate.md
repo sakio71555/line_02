@@ -133,6 +133,8 @@ Loop 077 adds [psql Availability Setup](psql_availability_setup.md) for manual `
 
 Loop 078 result: staging migration apply succeeded through the safe `psql` helper. Expected tables, columns, and indexes were confirmed. RLS remains disabled with zero policies, so production readiness remains No-Go.
 
+Loop 079 result: staging dummy seed was applied and the first customers/messages API smoke exposed a PostgREST `42501` grants issue. Loop 079.1 recovered it with a `service_role`-only grants migration and then customers/messages API smoke passed with a Supabase runtime bundle. Default runtime remains `in_memory`, LINE/OpenAI remain mock/disabled, and RLS/Auth/JWT are still not implemented. Use [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md) before any repair/reset/manual SQL decision.
+
 ## Related Docs
 
 - [Supabase Staging Persistence Checklist](supabase_staging_persistence_checklist.md)
@@ -142,6 +144,8 @@ Loop 078 result: staging migration apply succeeded through the safe `psql` helpe
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)
 - [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md)
+- [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md)
+- [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
 - [Staging Env Template Setup](staging_env_template_setup.md)
 - [Staging Env Local Fill Verification](staging_env_local_fill_verification.md)
 - [Loop 070: Staging Migration Dry-run Record](../11_codex_tasks/070_staging_migration_dry_run_record.md)

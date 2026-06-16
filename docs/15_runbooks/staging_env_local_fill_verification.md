@@ -96,11 +96,15 @@ Proceed to the next staging connection Loop only when:
 
 ## Still Not Allowed
 
+通常Loopでは以下を行わない。Loop 078/079のように、明示許可、値非表示helper、staging限定、dummy data限定が揃った場合だけ個別に扱う。
+
 - Supabase connection.
 - `supabase link`.
 - `supabase db push`.
 - migration apply / reset / repair.
 - LINE API real send.
 - OpenAI API call.
-- API runtime switch.
+- default API runtime switch.
 - git push without a separate explicit instruction.
+
+Loop 079では、`.env.staging` の値を表示せず、customers/messagesだけをSupabase runtime bundleでstaging検証する。`.env.staging` 自体の `REPOSITORY_RUNTIME` は引き続き `in_memory` を安全な初期値として維持する。
