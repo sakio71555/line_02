@@ -35,6 +35,20 @@ This project must be built by loop engineering. Never implement broad features i
 
 将来的に `corepack enable` などでpnpmが直接使える環境になった場合は、同じscriptを `pnpm lint` のようなdirect `pnpm` コマンドへ置き換えて構いません。
 
+## Repository Guardrails
+
+- 作業フォルダーは原則 `/Users/sakio/Desktop/PROJECT/amami-line-crm` とし、明示されたLoopで許可されない限りリポジトリ外の作成・編集・削除をしない。
+- `/tmp` は使わない。必要な一時領域がある場合は、必ずproject配下の明示された場所を使う。
+- 小さいLoop単位で進め、Scope外の機能、runtime変更、API変更、UI変更、DB変更を混ぜない。
+- default runtimeはin-memoryのまま維持する。Supabase runtime switchは明示されたLoop以外で有効化しない。
+- Supabase接続、migration apply、RLS SQL、Auth/JWT接続は明示されたLoop以外では行わない。
+- LINE API、OpenAI API、Supabase本番・staging環境、外部Web APIへ勝手に接続しない。
+- 秘密情報、API key、LINE userId、`.env` の値、本番ログをREADME、docs、dev log、Codex prompt、commit messageに書かない。
+- 変更後はScopeに応じて `git diff --check`、`npx pnpm@10.12.1 lint`、`npx pnpm@10.12.1 typecheck`、`npx pnpm@10.12.1 test`、`npx pnpm@10.12.1 test:integration`、`npx pnpm@10.12.1 build` を確認する。
+- Loop完了時は `docs/11_codex_tasks/` に作業記録を残し、必要に応じて `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記する。
+- commit前の報告では、変更ファイル、実行コマンド、test/build結果、tenant_id分離、外部API未接続、残リスク、次Loopを確認する。
+- git push は明示指示があるLoop以外では禁止。
+
 ## Project Rules
 
 - 初期tenantは `tenant_amamihome`、tenant slugは `amamihome`、公式ドメインは `amamihome.net`。

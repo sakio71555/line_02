@@ -111,6 +111,8 @@ Loop 064ではstaff reply confirmation UI placeholderを追加しました。担
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。
 
+- Codex運用ルール: [docs/15_runbooks/codex_development_kit.md](docs/15_runbooks/codex_development_kit.md)
+
 1. `docs/11_codex_tasks/` の対象タスクを読む。
 2. Scopeに書かれた範囲だけ実装する。
 3. Out of scopeに書かれたものは実装しない。
