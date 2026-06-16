@@ -61,6 +61,8 @@ Supabase staging migration applyを実際に検討する直前には、execution
 
 Supabase staging接続へ進む準備では、`.env.staging.example` を先に用意し、実値は作業者がローカルで `.env.staging` に入力します。repo、README、docs、dev log、Codex promptには実key、project ref、DB URL、LINE token、OpenAI API keyを書きません。LINEは `LINE_REAL_PUSH_ENABLED=false`、OpenAIは `AI_PROVIDER=mock`、repositoryは `REPOSITORY_RUNTIME=in_memory` を初期状態として維持し、接続・送信・runtime switchは別Loopで明示的に扱います。
 
+実envを入力した後は、値を表示しない `scripts/dev-loop/verify-staging-env.mjs` でpresenceとsafety flagsだけを確認してから接続Loopへ進みます。`.env.staging` のraw contentやsecret値をterminal、docs、README、dev log、Codex prompt、commitに出しません。
+
 GPTとCodexの往復は、repo context収集とCodex prompt生成だけを自動化し、実行、commit、push、外部接続は人間ゲートを残します。生成promptは `tmp/dev-loop/` 配下の作業用下書きであり、人間がScope / Out of Scope / push方針を確認してからCodexへ貼ります。
 
 本番認証、JWT検証、staff/admin tenant context、staff tenant schema、RLSのようなセキュリティ境界は、実装Loopの前に必ずplanning Loopを挟みます。開発用 `x-tenant-id` は本番認証ではないため、認証済みuser/sessionとactive membershipからtenant contextを決定する設計を先に固めてからAPI差し替えへ進みます。

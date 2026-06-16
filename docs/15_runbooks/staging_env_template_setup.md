@@ -135,12 +135,16 @@ Rules:
 Before any Supabase connection or migration apply:
 
 - Human has filled `.env.staging` locally.
+- Human has run `node scripts/dev-loop/verify-staging-env.mjs --file .env.staging`.
+- Verification output is OK and does not display secret values.
 - Target project is confirmed as staging.
 - Production project is not used.
 - No real key or project ref is written to docs / README / dev log / Codex.
 - `git status --short` is clean.
 - lint / typecheck / test / test:integration pass.
 - A separate Loop explicitly authorizes connection or apply.
+
+See [Staging Env Local Fill Verification](staging_env_local_fill_verification.md) for the no-secret verification command and output interpretation.
 
 ## Do Not Do In This Runbook
 

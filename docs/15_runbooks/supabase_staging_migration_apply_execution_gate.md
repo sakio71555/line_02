@@ -27,6 +27,7 @@ Supabase staging migration applyを実行できる状態かどうかを、明示
 - production projectでないことが確認済み。
 - project refはローカルで確認済みだがdocsには書かない。
 - 必要envがローカルに設定済み。
+- `node scripts/dev-loop/verify-staging-env.mjs --file .env.staging` が成功している。
 - 実keyをdocsやlogに書かない運用が確認済み。
 - `git status --short` がclean。
 - Loop 070 static migration tests成功。
@@ -133,7 +134,9 @@ No-Goの場合、このテンプレートへ実行結果を捏造しない。
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)
 - [Staging Env Template Setup](staging_env_template_setup.md)
+- [Staging Env Local Fill Verification](staging_env_local_fill_verification.md)
 - [Loop 070: Staging Migration Dry-run Record](../11_codex_tasks/070_staging_migration_dry_run_record.md)
 - [Loop 071: Supabase Staging Migration Apply Plan](../11_codex_tasks/071_supabase_staging_migration_apply_plan.md)
 - [Loop 073: Supabase Staging Migration Apply Execution Gate](../11_codex_tasks/073_supabase_staging_migration_apply_execution_gate.md)
 - [Loop 074: Staging Env Template And Provider Flags](../11_codex_tasks/074_staging_env_template_and_provider_flags.md)
+- [Loop 075: Staging Env Local Fill Verification](../11_codex_tasks/075_staging_env_local_fill_verification.md)
