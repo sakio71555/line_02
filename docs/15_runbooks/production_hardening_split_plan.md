@@ -17,7 +17,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | default runtime | `in_memory` |
 | RLS | RLS未実装 |
 | Auth/JWT | Auth/JWT未接続 |
-| selectedTenantId | Loop 087でtransport boundary実装。全route rollout / UI保存 / production runtime hardeningは未完了 |
+| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。route実装 / UI保存 / production runtime hardeningは未完了 |
 | production dev_header rejection | 未実装 |
 | LINE real push | disabled/mock |
 | OpenAI real API | mock |
@@ -65,6 +65,14 @@ Loop 087 implementation note:
 - invalid formatは `invalid_selected_tenant_id`。
 - dev_header pathでは `x-selected-tenant-id` を無視し、既存 `x-tenant-id` 互換を維持する。
 - production dev_header rejectionは後続Loopで扱う。
+
+Loop 088 planning note:
+
+- 全Admin route rolloutへ進む前に、customer read、customer write/AI、alerts、RAG、production dev_header rejectionを分割した。
+- route matrixでは `GET /api/admin/customers` だけがrepresentative authenticated routeで、他のAdmin routeはまだ `dev_header` 互換であることを明記した。
+- selectedTenantIdは各routeでactive membership再検証を前提にし、repositoryへは検証済み `AdminTenantContext.tenantId` のみ渡す。
+- dev seed、LINE webhook、health/check routesはauthenticated_staff Admin route rollout対象外。
+- 詳細は [Loop 088 task doc](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md) と [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md) を参照する。
 
 ## Auth/JWT Rules
 

@@ -164,6 +164,10 @@ Loop 087では、authenticated runtime用の初期transportとして `x-selected
 
 詳細は [docs/11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md](11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md) を参照してください。
 
+Loop 088では、selectedTenantId boundaryを全Admin routeへ展開するためのroute rollout planを追加しました。customer、alerts、RAG、dev seed、LINE webhook、health/check routesを分類し、route matrix、AdminAction/role guard、dev_header互換、Go/No-Go gateを整理しています。DB schema、RLS SQL、Supabase Auth/JWT、API route実装、production dev_header rejectionは変更していません。
+
+詳細は [docs/11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md](11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md) と [docs/15_runbooks/authenticated_staff_runtime_route_rollout.md](15_runbooks/authenticated_staff_runtime_route_rollout.md) を参照してください。
+
 ## dev header production rejection plan
 
 Loop 050では、productionでtenant境界を `x-tenant-id` / `dev_header` に依存させず、認証済みstaff membership由来の `authenticated_staff` tenant contextを前提にする計画を追加しました。RLS SQL、Admin API runtime差し替え、Supabase Auth/JWT接続はまだ未実装です。

@@ -34,7 +34,8 @@ No-Go理由:
 - RLS 未実装。
 - Supabase Auth/JWT 未接続。
 - selectedTenantId transport boundaryはLoop 087で実装済み。
-- selectedTenantId membership再検証はboundaryで確認済みだが、全route rollout、UI保存、production runtime hardeningは未完了。
+- Loop 088で全Admin route rollout planを整理済み。
+- selectedTenantId membership再検証はboundaryで確認済みだが、route実装、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -126,6 +127,7 @@ Rules:
 - `selectedTenantId` is not permission.
 - It is only a requested tenant selector.
 - Loop 087 uses `x-selected-tenant-id` as the authenticated_staff transport boundary.
+- Loop 088 maps how that boundary should be rolled out to customer, alerts, and RAG Admin routes.
 - `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
 - If selected tenant is outside active memberships, return `tenant_membership_denied`.
@@ -204,3 +206,5 @@ Proceed only when:
 - [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md)
 - [Supabase RLS Policy Plan](../11_codex_tasks/025_supabase_rls_policy_plan.md)
 - [Authenticated Runtime Selected Tenant Transport Plan](../11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md)
+- [Loop 088: Authenticated Staff Runtime Full Route Rollout Plan](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md)
+- [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)

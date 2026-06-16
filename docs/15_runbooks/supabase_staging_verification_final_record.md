@@ -171,6 +171,12 @@ Loop 086 keeps staging拡張検証版100%相当 as the staging milestone and rec
 
 See [Loop 086 task doc](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md) and [Production Hardening Split Plan](production_hardening_split_plan.md).
 
+## Loop 088 Authenticated Staff Runtime Route Rollout Plan
+
+Loop 088 keeps production readiness as No-Go and adds the route rollout plan for expanding the Loop 087 selectedTenantId boundary. It records that only `GET /api/admin/customers` has representative authenticated_staff route coverage today, and splits customer read, customer write/AI, alerts, RAG, and production dev_header rejection into separate follow-up Loops.
+
+Loop 088 does not change API runtime, UI, migration SQL, RLS SQL, Supabase Auth/JWT, LINE, or OpenAI connections. See [Loop 088 task doc](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md) and [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md).
+
 ## Loop 081 Alerts/Knowledge Runtime Plan
 
 Loop 081 keeps production readiness as No-Go and adds the staging runtime plan for alerts and knowledge/RAG. It records that `SupabaseAlertRepository` and `SupabaseKnowledgePageRepository` already exist, but API/RAG runtime is not switched. The next work should start with fake client hardening, then explicit staging smoke with dummy data only. See [Loop 081 task doc](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md) and [Supabase Alerts/Knowledge Staging Runtime Plan](supabase_alerts_knowledge_staging_runtime_plan.md).
@@ -201,4 +207,6 @@ Loop 084: Supabase alerts runtime boundary + staging smoke
 Loop 085: Supabase knowledge/RAG runtime boundary
 Loop 086: RLS/Auth/JWT production hardening split plan
 Loop 087: selectedTenantId transport boundary
+Loop 088: authenticated staff runtime full route rollout plan
+Loop 089: authenticated_staff runtime rollout for customer read routes
 ```
