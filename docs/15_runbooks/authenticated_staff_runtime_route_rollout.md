@@ -18,7 +18,7 @@ Loop 087で追加した `x-selected-tenant-id` boundaryを、全Admin routeへ�
 | --- | --- |
 | default runtime | `in_memory` |
 | Admin local selector | `x-tenant-id` / `dev_header` |
-| authenticated_staff route | Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み |
+| authenticated_staff route | Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み |
 | selectedTenantId transport | `x-selected-tenant-id` implemented in Loop 087 |
 | selectedTenantId validation | tenant id format validation + active membership revalidation |
 | role guard | AdminAction mapping exists; enforced only for authenticated_staff compatibility path |
@@ -53,9 +53,9 @@ Rules:
 | `POST /api/admin/customers/:customerId/reply` | customer write | Loop 090 done | revalidate | `send_staff_reply` | real LINE push remains gated |
 | `POST /api/admin/customers/:customerId/ai-summary` | AI write | Loop 090 done | revalidate | `create_ai_summary` | saves summary message; OpenAI real API remains gated |
 | `POST /api/admin/customers/:customerId/ai-reply-draft` | AI draft | Loop 090 done | revalidate | `create_ai_reply_draft` | response-only draft |
-| `GET /api/admin/alerts` | alert read | Loop 091 | revalidate | `view_alerts` | tenant-scoped list |
-| `POST /api/admin/alerts/check-unreplied` | alert checker | Loop 091 | revalidate | `check_unreplied_alerts` | creates open alerts |
-| `POST /api/admin/alerts/notify-open` | notification boundary | Loop 091 | revalidate | `notify_open_alerts` | MockStaffNotifier until real LINE gate |
+| `GET /api/admin/alerts` | alert read | Loop 091 done | revalidate | `view_alerts` | tenant-scoped list |
+| `POST /api/admin/alerts/check-unreplied` | alert checker | Loop 091 done | revalidate | `check_unreplied_alerts` | creates open alerts |
+| `POST /api/admin/alerts/notify-open` | notification boundary | Loop 091 done | revalidate | `notify_open_alerts` | MockStaffNotifier until real LINE gate |
 | `POST /api/admin/rag/search` | RAG search | Loop 092 | revalidate | `search_rag` | tenant knowledge + `allowed_for_ai=true` |
 | `POST /api/admin/rag/answer-draft` | RAG draft | Loop 092 | revalidate | `create_rag_answer_draft` | source-grounded draft only |
 | `POST /api/dev/seed-demo-data` | dev-only | excluded | no | none | production disabled/dev hardening only |
@@ -94,6 +94,15 @@ Loop 090 completion note:
 - role guard actions: `view_alerts`, `check_unreplied_alerts`, `notify_open_alerts`.
 - `notify-open` stays on MockStaffNotifier until a real LINE notification gate.
 - open/notified status changes must be tenant scoped.
+
+Loop 091 completion note:
+
+- `GET /api/admin/alerts`, `POST /api/admin/alerts/check-unreplied`, and `POST /api/admin/alerts/notify-open` support authenticated_staff runtime.
+- alerts routes accept `x-selected-tenant-id`, revalidate it through active membership, and use only verified `AdminTenantContext.tenantId` for alert list, unreplied check, and MockStaffNotifier processing.
+- unreplied check uses the same verified tenant id for customer and alert repositories, avoiding split-brain checks.
+- notify-open uses the same verified tenant id for alert repository reads, status updates, and MockStaffNotifier payloads.
+- `dev_header` / `x-tenant-id` compatibility and default `in_memory` remain.
+- real LINE notification remains disconnected.
 
 ### RAG Routes
 
@@ -166,7 +175,7 @@ Rules:
 ```text
 Loop 089: authenticated_staff runtime rollout for customer read routes (done)
 Loop 090: authenticated_staff runtime rollout for customer write/AI draft routes (done)
-Loop 091: authenticated_staff runtime rollout for alerts routes
+Loop 091: authenticated_staff runtime rollout for alerts routes (done)
 Loop 092: authenticated_staff runtime rollout for RAG routes
 Loop 093: production dev_header rejection
 Loop 094: Supabase Auth/JWT runtime connection
@@ -206,12 +215,12 @@ Each rollout Loop must keep scope small, preserve current response contracts, an
 
 ## Next Conditions
 
-Proceed to Loop 091 only when:
+Proceed to Loop 092 only when:
 
-- Loop 090 docs/tests/build pass.
+- Loop 091 docs/tests/build pass.
 - git status is clean after commit.
-- customer read and customer write / AI route rollout remains limited to customer routes.
-- alerts rollout scope is limited to `GET /api/admin/alerts`, `POST /api/admin/alerts/check-unreplied`, and `POST /api/admin/alerts/notify-open`.
+- customer and alerts route rollout remains limited to those routes.
+- RAG rollout scope is limited to `POST /api/admin/rag/search` and `POST /api/admin/rag/answer-draft`.
 
 ## Related Docs
 
@@ -219,5 +228,6 @@ Proceed to Loop 091 only when:
 - [Loop 088: authenticated staff runtime full route rollout plan](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md)
 - [Loop 089: authenticated_staff customer read routes](../11_codex_tasks/089_authenticated_staff_customer_read_routes.md)
 - [Loop 090: authenticated_staff customer write / AI routes](../11_codex_tasks/090_authenticated_staff_customer_write_ai_routes.md)
+- [Loop 091: authenticated_staff alert routes](../11_codex_tasks/091_authenticated_staff_alert_routes.md)
 - [Production Hardening Split Plan](production_hardening_split_plan.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)

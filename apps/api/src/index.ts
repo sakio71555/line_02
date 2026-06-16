@@ -171,7 +171,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/customers", async (c) => {
-    const tenant = await resolveCustomerAdminRouteTenant({
+    const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
       selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
       tenantIdHeader: c.req.header("x-tenant-id"),
@@ -199,7 +199,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/customers/:customerId", async (c) => {
-    const tenant = await resolveCustomerAdminRouteTenant({
+    const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
       selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
       tenantIdHeader: c.req.header("x-tenant-id"),
@@ -231,7 +231,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/customers/:customerId/timeline", async (c) => {
-    const tenant = await resolveCustomerAdminRouteTenant({
+    const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
       selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
       tenantIdHeader: c.req.header("x-tenant-id"),
@@ -271,7 +271,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.post("/api/admin/customers/:customerId/ai-summary", async (c) => {
-    const tenant = await resolveCustomerAdminRouteTenant({
+    const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
       selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
       tenantIdHeader: c.req.header("x-tenant-id"),
@@ -330,7 +330,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.post("/api/admin/customers/:customerId/ai-reply-draft", async (c) => {
-    const tenant = await resolveCustomerAdminRouteTenant({
+    const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
       selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
       tenantIdHeader: c.req.header("x-tenant-id"),
@@ -494,7 +494,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.post("/api/admin/customers/:customerId/reply", async (c) => {
-    const tenant = await resolveCustomerAdminRouteTenant({
+    const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
       selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
       tenantIdHeader: c.req.header("x-tenant-id"),
@@ -567,20 +567,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.get("/api/admin/alerts", async (c) => {
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.listAlerts
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listAlerts,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const status = c.req.query("status");
@@ -597,20 +595,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.post("/api/admin/alerts/check-unreplied", async (c) => {
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.checkUnrepliedAlerts
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.checkUnrepliedAlerts,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const result = await checkUnrepliedAlerts({
@@ -633,20 +629,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.post("/api/admin/alerts/notify-open", async (c) => {
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.notifyOpenAlerts
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.notifyOpenAlerts,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const result = await notifyOpenAlerts({
@@ -723,7 +717,7 @@ function hasAuthorizationHeader(authorizationHeader: string | undefined): author
   return Boolean(authorizationHeader?.trim());
 }
 
-type CustomerAdminRouteTenantResolution =
+type TenantScopedAdminRouteTenantResolution =
   | { ok: true; tenantId: string }
   | {
       ok: false;
@@ -731,7 +725,7 @@ type CustomerAdminRouteTenantResolution =
       status: AdminAuthErrorHttpResponse["status"];
     };
 
-async function resolveCustomerAdminRouteTenant(input: {
+async function resolveTenantScopedAdminRouteTenant(input: {
   authorizationHeader: string | undefined;
   selectedTenantIdHeader: string | undefined;
   tenantIdHeader: string | undefined;
@@ -739,7 +733,7 @@ async function resolveCustomerAdminRouteTenant(input: {
   adminAuthRuntime: AuthenticatedAdminRuntimeDependencies | undefined;
   authenticatedSelectedTenantId: string | null | undefined;
   env: NodeJS.ProcessEnv;
-}): Promise<CustomerAdminRouteTenantResolution> {
+}): Promise<TenantScopedAdminRouteTenantResolution> {
   if (hasAuthorizationHeader(input.authorizationHeader)) {
     if (!input.adminAuthRuntime) {
       const response = mapAdminAuthErrorToHttp({ code: "authenticated_staff_required" });

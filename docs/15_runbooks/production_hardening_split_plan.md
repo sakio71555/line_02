@@ -17,7 +17,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | default runtime | `in_memory` |
 | RLS | RLS未実装 |
 | Auth/JWT | Auth/JWT未接続 |
-| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。alerts/RAG / UI保存 / production runtime hardeningは未完了 |
+| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。RAG / UI保存 / production runtime hardeningは未完了 |
 | production dev_header rejection | 未実装 |
 | LINE real push | disabled/mock |
 | OpenAI real API | mock |
@@ -27,7 +27,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 
 - RLS未実装。
 - Auth/JWT未接続。
-- selectedTenantId transport boundaryは実装済みだが、alerts/RAG rollout、UI保存、production runtime hardeningは未完了。
+- selectedTenantId transport boundaryは実装済みだが、RAG rollout、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection未実装。
 - `service_role` はserver-side onlyであり、RLS bypass権限のためproduction authorizationそのものにはしない。
 - LINE real push gate未実装。
@@ -89,6 +89,14 @@ Loop 090 implementation note:
 - `x-selected-tenant-id` はactive membershipで再検証し、write / AI処理へは検証済み `AdminTenantContext.tenantId` のみ渡す。
 - LINE real pushとOpenAI real APIは未接続のまま。
 - alerts、RAG、production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
+
+Loop 091 implementation note:
+
+- alerts routesへauthenticated_staff runtimeを展開済み。
+- 対象は `GET /api/admin/alerts`、`POST /api/admin/alerts/check-unreplied`、`POST /api/admin/alerts/notify-open` のみ。
+- `x-selected-tenant-id` はactive membershipで再検証し、alert list / unreplied check / notify-open処理へは検証済み `AdminTenantContext.tenantId` のみ渡す。
+- notify-openは引き続きMockStaffNotifierで、本物LINE通知は未接続のまま。
+- RAG、production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
 
 ## Auth/JWT Rules
 

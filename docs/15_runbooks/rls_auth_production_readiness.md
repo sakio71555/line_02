@@ -37,7 +37,8 @@ No-Go理由:
 - Loop 088で全Admin route rollout planを整理済み。
 - Loop 089でcustomer read routesへauthenticated_staff runtimeを展開済み。
 - Loop 090でcustomer write / AI routesへauthenticated_staff runtimeを展開済み。
-- selectedTenantId membership再検証はcustomer routesまで確認済みだが、alerts、RAG、UI保存、production runtime hardeningは未完了。
+- Loop 091でalerts routesへauthenticated_staff runtimeを展開済み。
+- selectedTenantId membership再検証はcustomer routesとalerts routesまで確認済みだが、RAG、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -76,7 +77,7 @@ Before production:
 | `tenant_ai_settings` | Yes | server/admin settings only | RLS needed |
 | `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; RLS/Auth missing |
 | `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; RLS/Auth missing |
-| `alerts` | Yes | active staff membership via API/checker/notifier | runtime switch incomplete |
+| `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; RLS/Auth missing |
 | `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | runtime switch incomplete |
 | `staff_users` | Yes | maps Supabase Auth user to staff identity | Auth/RLS missing |
 | `staff_tenant_memberships` | Yes | active membership decides tenant and role | critical before production |
@@ -132,6 +133,7 @@ Rules:
 - Loop 088 maps how that boundary should be rolled out to customer, alerts, and RAG Admin routes.
 - Loop 089 applies that boundary to customer read routes.
 - Loop 090 applies that boundary to customer write / AI routes while keeping LINE real push and OpenAI real API disconnected.
+- Loop 091 applies that boundary to alerts routes while keeping MockStaffNotifier and real LINE notification disconnected.
 - `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
 - If selected tenant is outside active memberships, return `tenant_membership_denied`.
