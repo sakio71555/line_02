@@ -74,6 +74,7 @@ No-GoからGoへ進むために、人間が用意するもの:
 - staging Supabase projectが準備済みであることの確認。
 - production projectではないことの確認。
 - 必要envがローカルに設定済みであること。
+- `.env.staging.example` をコピーした `.env.staging` に、作業者がローカルで必要値を入力済みであること。
 - dummy dataだけで進める確認。
 - rollback / recovery方針の最終確認。
 - push可否の判断。
@@ -106,6 +107,8 @@ No-GoからGoへ進むために、人間が用意するもの:
 - secretをdocsへ書かない。
 - project refをdocsへ書かない。
 - `.env` 値をdocsへ書かない。
+- `.env.staging` 値をdocsへ書かない。
+- 実値入力は `.env.staging.example` をコピーした `.env.staging` にローカルで行う。
 - Codex promptへ実keyを貼らない。
 - terminal outputにkeyが出るコマンドを避ける。
 - service role keyをbrowser / LIFF / Next.js client componentへ出さない。
@@ -129,6 +132,8 @@ No-Goの場合、このテンプレートへ実行結果を捏造しない。
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Result Template](supabase_staging_migration_apply_result_template.md)
+- [Staging Env Template Setup](staging_env_template_setup.md)
 - [Loop 070: Staging Migration Dry-run Record](../11_codex_tasks/070_staging_migration_dry_run_record.md)
 - [Loop 071: Supabase Staging Migration Apply Plan](../11_codex_tasks/071_supabase_staging_migration_apply_plan.md)
 - [Loop 073: Supabase Staging Migration Apply Execution Gate](../11_codex_tasks/073_supabase_staging_migration_apply_execution_gate.md)
+- [Loop 074: Staging Env Template And Provider Flags](../11_codex_tasks/074_staging_env_template_and_provider_flags.md)

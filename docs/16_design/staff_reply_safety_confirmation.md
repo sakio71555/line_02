@@ -118,6 +118,12 @@ Still not implemented:
 
 ## Demo Send And Production Send
 
+### Provider Flags
+
+Loop 074で `.env.staging.example` に `LINE_REAL_PUSH_ENABLED=false` と `LINE_MESSAGING_ENABLED=false` を追加した。これは安全flagのplaceholderであり、まだruntimeには接続していない。
+
+本物LINE送信へ進むLoopでは、実装前にこの値を明示的に確認し、staging/test channelだけを使う。production channel access tokenやchannel secretをdocs、README、dev log、Codex promptへ書かない。
+
 ### Demo Send
 
 - 本物LINEには送信されません。
