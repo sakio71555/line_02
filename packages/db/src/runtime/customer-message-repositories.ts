@@ -1,6 +1,8 @@
 import {
+  InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  type AlertRepository,
   type CustomerRepository,
   type MessageRepository
 } from "@amami-line-crm/domain";
@@ -13,6 +15,7 @@ import {
   type SupabaseEnvName
 } from "../supabase";
 import {
+  SupabaseAlertRepository,
   SupabaseCustomerRepository,
   SupabaseMessageRepository,
   type SupabaseRepositoryClient
@@ -26,6 +29,11 @@ export interface CustomerMessageRepositoryBundle {
   runtime_mode: RepositoryRuntimeMode;
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
+  alertRepository?: AlertRepository;
+}
+
+export interface CustomerMessageAlertRepositoryBundle extends CustomerMessageRepositoryBundle {
+  alertRepository: AlertRepository;
 }
 
 export interface CreateCustomerMessageRepositoriesForRuntimeInput {
@@ -59,27 +67,29 @@ export class SupabaseRuntimeNotConfiguredError extends Error {
   }
 }
 
-export function createInMemoryCustomerMessageRepositories(): CustomerMessageRepositoryBundle {
+export function createInMemoryCustomerMessageRepositories(): CustomerMessageAlertRepositoryBundle {
   return {
     runtime_mode: "in_memory",
     customerRepository: new InMemoryCustomerRepository(),
-    messageRepository: new InMemoryMessageRepository()
+    messageRepository: new InMemoryMessageRepository(),
+    alertRepository: new InMemoryAlertRepository()
   };
 }
 
 export function createSupabaseCustomerMessageRepositories(input: {
   client: SupabaseRepositoryClient;
-}): CustomerMessageRepositoryBundle {
+}): CustomerMessageAlertRepositoryBundle {
   return {
     runtime_mode: "supabase",
     customerRepository: new SupabaseCustomerRepository(input.client),
-    messageRepository: new SupabaseMessageRepository(input.client)
+    messageRepository: new SupabaseMessageRepository(input.client),
+    alertRepository: new SupabaseAlertRepository(input.client)
   };
 }
 
 export function createSupabaseCustomerMessageRepositoriesFromEnv(
   env: SupabaseEnv = process.env
-): CustomerMessageRepositoryBundle {
+): CustomerMessageAlertRepositoryBundle {
   try {
     const config = readSupabaseConfigFromEnv(env);
     const client = createSupabaseServiceRoleServerClient(config);
@@ -99,7 +109,7 @@ export function createSupabaseCustomerMessageRepositoriesFromEnv(
 
 export function createCustomerMessageRepositoriesForRuntime(
   input: CreateCustomerMessageRepositoriesForRuntimeInput = {}
-): CustomerMessageRepositoryBundle {
+): CustomerMessageAlertRepositoryBundle {
   const mode = input.mode ?? "in_memory";
 
   if (mode === "in_memory") {

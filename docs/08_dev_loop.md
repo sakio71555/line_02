@@ -79,6 +79,8 @@ customers/messagesのSupabase staging smokeが通った後でも、alerts/knowle
 
 alerts runtime switch前に、fake clientで `SupabaseAlertRepository` の `tenant_id` filter、create payload、open alert listing、active alert lookup、status transition mapping、error sanitizerを固定します。この段階ではAPI runtime wiring、staging DB接続、migration、RLSはまだ行いません。
 
+alerts runtime boundaryでは、customers/messages/alertsを同じ明示Supabase bundleで扱い、split-brainを避けます。staging smokeは `MockStaffNotifier` を使い、default runtimeと `.env.staging` の `REPOSITORY_RUNTIME=in_memory` は維持します。RLS/Auth/JWT、production dev_header rejection、LINE実送信、OpenAI実接続は別Loopに分けます。
+
 knowledge/RAG runtime switch前に、fake clientで `SupabaseKnowledgePageRepository` の `tenant_id` filter、`allowed_for_ai = true` filter、wrong-tenant/disallowed row防御、`url`/`title`/`content` mapping、RAG search互換性、error sanitizerを固定します。この段階ではAPI/RAG runtime wiring、staging DB接続、migration、RLS、crawl/import/upsert実装はまだ行いません。
 
 GPTとCodexの往復は、repo context収集とCodex prompt生成だけを自動化し、実行、commit、push、外部接続は人間ゲートを残します。生成promptは `tmp/dev-loop/` 配下の作業用下書きであり、人間がScope / Out of Scope / push方針を確認してからCodexへ貼ります。

@@ -66,9 +66,10 @@ Grant verification result:
 
 - Default runtime remains `in_memory`.
 - `.env.staging` remains `REPOSITORY_RUNTIME=in_memory` as the safe default.
-- Staging smoke uses an explicit injected Supabase customer/message runtime bundle.
-- Runtime switch is scoped to customers/messages only.
-- Alerts, knowledge, staff/auth, Auth/JWT, RLS, LINE, and OpenAI are not switched in this record.
+- Staging smoke uses explicit injected Supabase runtime bundles.
+- Customers/messages smoke passed in Loop 079.1.
+- Alerts runtime boundary/staging smoke passed in Loop 084.
+- Knowledge, staff/auth, Auth/JWT, RLS, LINE, and OpenAI are not switched in this record.
 
 ## API Smoke
 
@@ -88,12 +89,30 @@ Smoke result:
 - `POST /api/admin/customers/customer_demo_yamada_taro/ai-summary`: success.
 - restart-equivalent app instance can read the persisted timeline.
 
+Alerts smoke command:
+
+```text
+node scripts/dev-loop/smoke-staging-alerts-api.mjs --env .env.staging --psql /usr/local/opt/libpq/bin/psql
+```
+
+Alerts smoke result:
+
+- staging env verification passed.
+- schema verification passed.
+- service_role grants verification passed.
+- dummy data verification passed.
+- `POST /api/admin/alerts/check-unreplied`: success for dummy unreplied customer.
+- `GET /api/admin/alerts?status=open`: success.
+- `POST /api/admin/alerts/notify-open`: success with `MockStaffNotifier`.
+- restart-equivalent app instance can read the persisted `notified` alert.
+
 ## Persistence Confirmation
 
 - dummy customers/messages are present in staging DB.
 - staff reply is saved as a `staff` message.
 - AI summary is saved as an `ai` `summary` message.
 - restart-equivalent API app instance can read the persisted timeline from Supabase.
+- dummy unreplied alert can be saved as `open`, updated to `notified`, and reread from Supabase.
 
 ## LINE / OpenAI State
 
@@ -117,6 +136,8 @@ Smoke result:
 - production dev header rejection is still not implemented.
 - selectedTenantId transport and production membership revalidation are still not connected.
 - alerts/knowledge/staff/auth runtime switch remains future work.
+- alerts runtime boundary has staging smoke coverage, but production still needs RLS/Auth/JWT before real use.
+- knowledge/staff/auth runtime switch remains future work.
 - staging uses dummy data only.
 
 ## Loop 081 Alerts/Knowledge Runtime Plan
@@ -145,6 +166,6 @@ Before production:
 Loop 081: Supabase alerts/knowledge staging runtime plan
 Loop 082: Supabase alert repository fake-client hardening
 Loop 083: Supabase knowledge repository fake-client hardening
-Loop 084: Supabase alerts runtime boundary
-Loop 085: Supabase alerts staging smoke
+Loop 084: Supabase alerts runtime boundary + staging smoke
+Loop 085: Supabase knowledge/RAG runtime boundary
 ```

@@ -80,6 +80,7 @@ export interface CustomerMessageRepositoryRuntimeBundle {
   runtime_mode?: CustomerMessageRepositoryRuntimeMode;
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
+  alertRepository?: AlertRepository;
 }
 
 const defaultAlertRepository = new InMemoryAlertRepository();
@@ -92,7 +93,10 @@ const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository([]);
 
 export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const api = new Hono();
-  const alertRepository = dependencies.alertRepository ?? defaultAlertRepository;
+  const alertRepository =
+    dependencies.alertRepository ??
+    dependencies.customerMessageRepositories?.alertRepository ??
+    defaultAlertRepository;
   const customerRepository =
     dependencies.customerRepository ??
     dependencies.customerMessageRepositories?.customerRepository ??

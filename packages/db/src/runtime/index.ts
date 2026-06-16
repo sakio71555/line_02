@@ -6,6 +6,7 @@ export {
   repositoryRuntimeModes,
   SupabaseRuntimeNotConfiguredError,
   type CreateCustomerMessageRepositoriesForRuntimeInput,
+  type CustomerMessageAlertRepositoryBundle,
   type CustomerMessageRepositoryBundle,
   type RepositoryRuntimeMode
 } from "./customer-message-repositories";

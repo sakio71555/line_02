@@ -15,9 +15,10 @@
 - staging PostgREST `service_role` grants are applied for core tables.
 - staging dummy seed exists for `tenant_amamihome`.
 - customers/messages can be verified through an injected Supabase runtime bundle.
+- alerts can be verified through the same injected Supabase runtime bundle.
 - standalone API default runtime remains `in_memory`.
 - RLS SQL is not implemented.
-- alerts/knowledge/staff/auth runtime switch is not implemented.
+- knowledge/staff/auth runtime switch is not implemented.
 
 ## Data Priority
 
@@ -78,6 +79,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - Loop 079.1でPostgREST/Data API向けの `service_role` 限定GRANTを追加した。
 - staging smokeではSupabase customer/message bundleを注入し、list/detail/timeline/staff reply/AI summaryを確認する。
 - Loop 081では、alerts/knowledge_pages/RAGをstaging runtimeへ進める前の計画を追加した。alertsはcustomer/message runtimeと分けすぎると未返信判定でsplit-brainになるため、fake client test後に明示注入で小さくsmokeする。
+- Loop 084では、customers/messages/alertsを同じ明示Supabase bundleで扱い、未返信チェック、alert一覧、notify-open mock、notified永続化をstagingで確認した。default runtimeは引き続きin-memory。
 - default local runtimeを壊さない。
 - tenant_id filter testを追加する。
 - stagingではdummy tenantだけで検証する。

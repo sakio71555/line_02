@@ -14,8 +14,8 @@ customers/messagesのSupabase staging smokeが通った後、次に `alerts` と
 - staging PostgREST/Data API `service_role` grants are applied.
 - dummy customers/messages/knowledge pages are seeded in staging.
 - customers/messages Supabase runtime smoke passed through explicit injection.
+- alerts Supabase runtime boundary/staging smoke passed through explicit injection.
 - default runtime remains `in_memory`.
-- alerts runtime is not switched.
 - knowledge/RAG runtime is not switched.
 - RLS is not implemented.
 - production readiness remains No-Go.
@@ -51,6 +51,8 @@ Target routes:
 - [ ] Keep `MockStaffNotifier`; do not connect real LINE notification.
 
 Loop 082 completed the fake-client hardening step for `SupabaseAlertRepository`. The next alerts work should still keep default `in_memory` and move through a separate runtime boundary/staging smoke Loop before any API runtime switch.
+
+Loop 084 completed the alerts runtime boundary and staging smoke. In explicit Supabase runtime, customers/messages/alerts use the same Supabase-backed bundle and `MockStaffNotifier` handles notify-open. Default runtime remains `in_memory`; real LINE/OpenAI, RLS/Auth/JWT, and production readiness remain out of scope.
 
 ## knowledge_pages / RAG Runtime Checklist
 
@@ -123,10 +125,9 @@ Stop and split into a new Loop if any of these are needed:
 ```text
 Loop 082: Supabase alert repository fake-client hardening
 Loop 083: Supabase knowledge repository fake-client hardening
-Loop 084: Supabase alerts runtime boundary
-Loop 085: Supabase alerts staging smoke
-Loop 086: Supabase knowledge/RAG runtime boundary
-Loop 087: Supabase knowledge/RAG staging smoke
+Loop 084: Supabase alerts runtime boundary + staging smoke
+Loop 085: Supabase knowledge/RAG runtime boundary
+Loop 086: Supabase knowledge/RAG staging smoke
 Loop 088: RLS policy SQL draft for customers/messages/alerts/knowledge
 ```
 

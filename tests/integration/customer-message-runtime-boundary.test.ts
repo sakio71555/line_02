@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Customer, Message } from "@amami-line-crm/domain";
 import {
+  InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository
 } from "@amami-line-crm/domain";
@@ -11,6 +12,7 @@ import {
   createSupabaseCustomerMessageRepositories,
   createSupabaseCustomerMessageRepositoriesFromEnv,
   SupabaseCustomerRepository,
+  SupabaseAlertRepository,
   SupabaseMessageRepository,
   SupabaseRuntimeNotConfiguredError,
   type SupabaseEnv,
@@ -50,6 +52,7 @@ describe("customer/message repository runtime boundary", () => {
     });
 
     expect(bundle.runtime_mode).toBe("in_memory");
+    expect(bundle.alertRepository).toBeInstanceOf(InMemoryAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(InMemoryCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(InMemoryMessageRepository);
 
@@ -66,6 +69,7 @@ describe("customer/message repository runtime boundary", () => {
     const bundle = createInMemoryCustomerMessageRepositories();
 
     expect(bundle.runtime_mode).toBe("in_memory");
+    expect(bundle.alertRepository).toBeInstanceOf(InMemoryAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(InMemoryCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(InMemoryMessageRepository);
   });
@@ -74,6 +78,7 @@ describe("customer/message repository runtime boundary", () => {
     const bundle = createSupabaseCustomerMessageRepositories({ client: createFakeClient() });
 
     expect(bundle.runtime_mode).toBe("supabase");
+    expect(bundle.alertRepository).toBeInstanceOf(SupabaseAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(SupabaseCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(SupabaseMessageRepository);
   });
@@ -85,6 +90,7 @@ describe("customer/message repository runtime boundary", () => {
     });
 
     expect(bundle.runtime_mode).toBe("supabase");
+    expect(bundle.alertRepository).toBeInstanceOf(SupabaseAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(SupabaseCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(SupabaseMessageRepository);
   });
@@ -96,6 +102,7 @@ describe("customer/message repository runtime boundary", () => {
     const bundle = createSupabaseCustomerMessageRepositoriesFromEnv(fakeEnv);
 
     expect(bundle.runtime_mode).toBe("supabase");
+    expect(bundle.alertRepository).toBeInstanceOf(SupabaseAlertRepository);
     expect(bundle.customerRepository).toBeInstanceOf(SupabaseCustomerRepository);
     expect(bundle.messageRepository).toBeInstanceOf(SupabaseMessageRepository);
     expect(fetchMock).not.toHaveBeenCalled();
