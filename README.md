@@ -113,6 +113,8 @@ Loop 064ではstaff reply confirmation UI placeholderを追加しました。担
 
 - Codex運用ルール: [docs/15_runbooks/codex_development_kit.md](docs/15_runbooks/codex_development_kit.md)
 
+Loop 072ではGPT-Codex handoff automation scaffoldを追加しました。repo状態・最新Loop・dev logを収集し、Codexへ貼るprompt下書きをproject `tmp/` 配下へ生成するscriptsとrunbookを追加しました。Codex自動実行、OpenAI API呼び出し、commit/push自動化は未実装です。詳細は [docs/15_runbooks/gpt_codex_handoff_automation.md](docs/15_runbooks/gpt_codex_handoff_automation.md) と [docs/11_codex_tasks/072_gpt_codex_handoff_automation_scaffold.md](docs/11_codex_tasks/072_gpt_codex_handoff_automation_scaffold.md) を参照してください。
+
 1. `docs/11_codex_tasks/` の対象タスクを読む。
 2. Scopeに書かれた範囲だけ実装する。
 3. Out of scopeに書かれたものは実装しない。
