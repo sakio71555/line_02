@@ -296,6 +296,33 @@ Still not done:
 - Admin login/session UI本実装。
 - RLS SQL変更やmigration変更。
 
+## Loop 105 Admin Login Session Minimal Integration
+
+Loop 105でAdmin UIがSupabase Auth sessionを扱うための最小境界を追加した。
+
+Implemented:
+
+- Admin session controller境界。
+- fake Supabase auth clientによるsign-in / session read / refresh / logout検証。
+- access tokenをsafe session resultへ含めない変換。
+- Admin API helper向けtoken provider。
+- selectedTenantIdとAuthorization tokenの分離。
+- login/logout placeholder UIで本物Auth未接続とtoken非保存を明示。
+
+Still not done:
+
+- 実Supabase Auth client注入。
+- real login/session/token取得。
+- refresh timer。
+- production/staging connection smoke。
+- password reset / OAuth。
+
+Security notes:
+
+- access tokenはUI、localStorage、cookie、docs、dev log、error resultへ出さない。
+- fake auth client testだけで検証し、本物Supabase Auth APIは呼ばない。
+- selectedTenantIdは権限ではなくselectorであり、API側active membership再検証を前提にする。
+
 Loop 100 note:
 
 - Admin UI selectedTenantId persistenceは完了。
@@ -354,5 +381,6 @@ No-Go:
 - [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Loop 099: Staging Real Auth User Smoke](../11_codex_tasks/099_staging_real_auth_user_smoke.md)
 - [Loop 104: Production Auth Runtime Auto Wiring](../11_codex_tasks/104_production_auth_runtime_auto_wiring.md)
+- [Loop 105: Admin Login Session Minimal Integration](../11_codex_tasks/105_admin_login_session_minimal_integration.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Production Hardening Split Plan](production_hardening_split_plan.md)

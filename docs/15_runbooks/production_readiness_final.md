@@ -15,6 +15,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | production dev header rejection | 実装済み |
 | selectedTenantId | Admin UI保存と `x-selected-tenant-id` forwarding済み |
 | Admin token forwarding | Bearer token provider境界済み、token保存/表示なし |
+| Admin login/session boundary | fake auth clientでsign-in / refresh / logout / token provider連携を検証済み |
 | production Auth runtime gate | `AUTH_SESSION_VERIFIER=supabase` でSupabase Auth client境界とStaffAuthLookup境界を自動構成できる |
 | LINE real push gate | 複数gate、confirmation、idempotency、fake transport検証済み |
 | OpenAI real API gate | 複数gate、draft-only、fake transport検証済み |
@@ -40,7 +41,7 @@ controlled production enablementへ進むには、少なくとも以下が必要
 
 以下が残る場合はproduction No-Goです。
 
-- Admin UIの実login/session/token取得が未完了。
+- Admin UIの実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - real LINE送信UI、実transport、安全な送信先smoke、永続audit/idempotency storeが未完了。
 - OpenAI real HTTP transport、本番接続、cost/rate limit運用、prompt logging policyが未完了。
 - production接続やsecret表示が必要になる。
@@ -56,10 +57,14 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - `AUTH_SESSION_VERIFIER=supabase` と明示注入されたclient/lookupでruntimeを作るgate。
 - production runtimeでSupabase Auth client境界とStaffAuthLookup境界を自動構成するfactory。
 - required env不足やruntime例外をsecret/token/URLなしでsafe failureすること。
+- Admin UI session controller境界。
+- fake auth clientによるsign-in / session read / refresh / logout検証。
+- Admin API helperへsession token providerを渡す境界。
 
 未完了:
 
-- Admin UIで実login/session/token取得、refresh、logoutを行うこと。
+- 実Supabase Auth clientをAdmin UIへ注入すること。
+- staging/production相当でreal login/session/token取得、refresh、logoutをsmokeすること。
 
 ## selectedTenantId
 
@@ -86,6 +91,8 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - Admin API helperはaccess token providerから受け取ったtokenを `Authorization: Bearer` headerへだけ載せる。
 - tokenはlocalStorage、cookie、UI、docs、dev log、error messageへ保存・表示しない。
 - production-style configでは開発用 `x-tenant-id` を送らない。
+- Loop 105ではfake auth clientからsessionを読み、token provider経由でAdmin API helperへ渡す境界を追加した。
+- 実Supabase Auth client注入とreal login smokeは後続Loopで扱う。
 
 ## LINE Real Push Gate
 
@@ -149,6 +156,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 
 - production env valuesは値非表示でpresence/safetyだけ確認する。
 - Admin loginで実Bearer tokenを取得し、表示しない。
+- Loop 105時点ではfake auth client境界のみのため、real login smokeは未実施として扱う。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。
@@ -160,9 +168,9 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 
 理由:
 
-- Admin UIの実login/session/token取得が未完了。
+- Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
 - production deploy / production smokeは未実施。
 
-この判定は、Loop 104時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。
+この判定は、Loop 105時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。

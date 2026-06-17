@@ -5,7 +5,7 @@ export default function LoginPlaceholderPage() {
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">ログイン準備中</p>
+          <p className="eyebrow">ログイン境界</p>
           <h1>管理画面ログイン</h1>
         </div>
         <a href="/">トップへ戻る</a>
@@ -13,19 +13,19 @@ export default function LoginPlaceholderPage() {
 
       <div className="notice">
         <p>
-          将来の管理画面ログイン導線です。現在はSupabase Auth未接続のため、
-          ログイン送信処理はありません。
+          Supabase Auth sessionを扱うための最小境界を追加済みです。実際のAuth client注入と
+          本番ログイン接続は後続Loopで行います。
         </p>
         <p className="meta">
-          入力内容は送信・保存されません。session、cookie、localStorage、
-          sessionStorageも使用しません。
+          access tokenは画面に表示せず、localStorageやcookieへ独自保存しません。Admin APIへは
+          token providerから都度渡します。
         </p>
       </div>
 
       <section className="section">
-        <h2>ログインフォーム準備中</h2>
-        <form className="login-form" aria-label="管理画面ログイン準備中フォーム">
-          <fieldset disabled>
+        <h2>ログインフォーム</h2>
+        <form className="login-form" aria-label="管理画面ログインフォーム">
+          <fieldset>
             <label htmlFor="admin-login-email">メールアドレス</label>
             <input
               id="admin-login-email"
@@ -42,24 +42,33 @@ export default function LoginPlaceholderPage() {
               placeholder="未接続"
             />
 
-            <button type="submit" disabled>
-              Supabase Auth未接続
+            <button type="button" disabled>
+              Auth client接続待ち
             </button>
           </fieldset>
         </form>
         <p className="meta">
-          本物の認証処理、email/password sign-in、magic link、OAuth、JWT/session検証は
-          まだ実装していません。
+          この画面ではまだ本物のSupabase Authへ接続しません。email/password
+          sign-in、refresh、logoutの境界はfake clientで検証済みです。
         </p>
+      </section>
+
+      <section className="section">
+        <h2>session境界</h2>
+        <ul>
+          <li>sign-in後のaccess tokenはAuth client側のsessionから都度取得します。</li>
+          <li>Admin API helperのAuthorization headerへだけ渡します。</li>
+          <li>selectedTenantIdは利用先selectorとして分離し、tokenとは別に扱います。</li>
+          <li>logout時はAuth clientのsessionをclearし、独自token保存は残しません。</li>
+        </ul>
       </section>
 
       <section className="section">
         <h2>未接続の内容</h2>
         <ul>
-          <li>Supabase Auth APIは呼びません。</li>
-          <li>auth.users.id と staff_users.auth_user_id の照合はまだ行いません。</li>
-          <li>Admin APIのログイン済みスタッフ確認にはまだ接続していません。</li>
-          <li>開発確認用では既存のtenant_amamihome導線でMVP確認を継続します。</li>
+          <li>この画面から本物のSupabase Auth APIはまだ呼びません。</li>
+          <li>実Auth client注入、refresh timer、password reset、OAuthは後続Loopです。</li>
+          <li>本番deploy、production smoke、実Bearer token取得はまだ行いません。</li>
         </ul>
       </section>
 
@@ -78,6 +87,9 @@ export default function LoginPlaceholderPage() {
           </li>
           <li>
             <a href="/select-tenant">利用先を選ぶ準備画面</a>
+          </li>
+          <li>
+            <a href="/logout">ログアウト境界</a>
           </li>
           <li>
             <a href="/session-expired">ログイン期限切れ準備画面</a>

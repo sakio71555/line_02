@@ -300,6 +300,10 @@ Loop 100では、Admin UIで選択した `selectedTenantId` をlocalStorageとco
 
 Loop 101では、Admin UIが将来のSupabase Auth access tokenをAdmin APIへ渡すための境界だけを追加しました。tokenはproviderからrequest時に読み、`Authorization: Bearer` headerへ載せるだけで、localStorage、cookie、UI、docs、dev logへ保存・表示しません。production向けhelperでは開発用 `x-tenant-id` を送らない設定を使い、`x-selected-tenant-id` は引き続きselectorとしてactive membership再検証を受けます。Supabase Auth login/session本実装、production接続、LINE/OpenAI本接続は別Loopに分けます。
 
+## Admin Login Session Boundary
+
+Loop 105では、Admin UIがSupabase Auth sessionを扱うための最小境界だけを追加しました。fake auth clientでsign-in、session read、refresh、logout、Admin API token provider連携を検証し、access tokenはlocalStorage、cookie、UI、docs、dev logへ独自保存・表示しません。実Supabase Auth client注入、real login smoke、production接続は後続Loopへ分けます。
+
 ## LINE real push gate
 
 Loop 102では、本物LINE送信そのものではなく、本物送信へ進むためのgateだけを実装しました。`LINE_MESSAGING_ENABLED` と `LINE_REAL_PUSH_ENABLED` の両方、authenticated_staff、`send_staff_reply` permission、selectedTenantId再検証、customer tenant一致、送信前確認、idempotency keyが揃うまでreal push pathは動かしません。MockLineClientは維持し、RealLineClientはfake transportで検証します。本物LINE API送信、LINE token実値利用、実LINE userId利用は別Loopで明示許可がある場合だけ扱います。

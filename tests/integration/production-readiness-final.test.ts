@@ -12,8 +12,16 @@ const loop104TaskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/104_production_auth_runtime_auto_wiring.md"
 );
+const loop105TaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/105_admin_login_session_minimal_integration.md"
+);
 const finalRunbookPath = join(repoRoot, "docs/15_runbooks/production_readiness_final.md");
 const openAiRunbookPath = join(repoRoot, "docs/15_runbooks/openai_real_api_gate.md");
+const adminSessionRunbookPath = join(
+  repoRoot,
+  "docs/15_runbooks/admin_login_session_minimal_integration.md"
+);
 const readmePath = join(repoRoot, "README.md");
 const databaseDocPath = join(repoRoot, "docs/03_database.md");
 const devLoopPath = join(repoRoot, "docs/08_dev_loop.md");
@@ -23,8 +31,10 @@ describe("Loop 103 production readiness final gate docs", () => {
   it("adds the production readiness final task and runbooks", () => {
     expect(existsSync(taskDocPath)).toBe(true);
     expect(existsSync(loop104TaskDocPath)).toBe(true);
+    expect(existsSync(loop105TaskDocPath)).toBe(true);
     expect(existsSync(finalRunbookPath)).toBe(true);
     expect(existsSync(openAiRunbookPath)).toBe(true);
+    expect(existsSync(adminSessionRunbookPath)).toBe(true);
   });
 
   it("records the final judgment as production_no_go when blockers remain", () => {
@@ -34,7 +44,8 @@ describe("Loop 103 production readiness final gate docs", () => {
     expect(runbook).toContain("production_no_go");
     expect(runbook).not.toContain("ready_for_controlled_production_enablement");
     expect(runbook).not.toContain("production runtimeのSupabase Auth client / StaffAuthLookup自動構成が未完了");
-    expect(runbook).toContain("Admin UIの実login/session/token取得が未完了");
+    expect(runbook).toContain("Admin login/session boundary");
+    expect(runbook).toContain("実Supabase Auth client注入とreal login/session/token smokeが未完了");
     expect(runbook).toContain("OpenAI real API gate");
     expect(runbook).toContain("LINE Real Push Gate");
   });
@@ -73,6 +84,7 @@ describe("Loop 103 production readiness final gate docs", () => {
     ]) {
       expect(text).toContain("Loop 103");
       expect(text).toContain("Loop 104");
+      expect(text).toContain("Loop 105");
     }
 
     expect(readText(readmePath)).toContain(
@@ -84,8 +96,10 @@ describe("Loop 103 production readiness final gate docs", () => {
     const combined = [
       readText(taskDocPath),
       readText(loop104TaskDocPath),
+      readText(loop105TaskDocPath),
       readText(finalRunbookPath),
       readText(openAiRunbookPath),
+      readText(adminSessionRunbookPath),
       readText(devLogPath)
     ].join("\n");
 

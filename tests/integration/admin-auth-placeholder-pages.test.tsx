@@ -3,25 +3,42 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import LoginPlaceholderPage from "../../apps/admin/app/login/page";
+import LogoutBoundaryPage from "../../apps/admin/app/logout/page";
 import PermissionDeniedPlaceholderPage from "../../apps/admin/app/permission-denied/page";
 import { SelectTenantPageView } from "../../apps/admin/app/select-tenant/select-tenant-page-view";
 import SessionExpiredPlaceholderPage from "../../apps/admin/app/session-expired/page";
 
 describe("admin auth placeholder pages", () => {
-  it("renders the login placeholder without real auth wiring", () => {
+  it("renders the login session boundary without exposing tokens", () => {
     const html = renderToStaticMarkup(<LoginPlaceholderPage />);
 
     expect(html).toContain("管理画面ログイン");
-    expect(html).toContain("Supabase Auth未接続");
+    expect(html).toContain("Supabase Auth sessionを扱うための最小境界");
     expect(html).toContain("type=\"email\"");
     expect(html).toContain("type=\"password\"");
-    expect(html).toContain("<fieldset disabled=\"\"");
-    expect(html).toContain("<button type=\"submit\" disabled=\"\"");
-    expect(html).toContain("入力内容は送信・保存されません");
+    expect(html).toContain("<button type=\"button\" disabled=\"\"");
+    expect(html).toContain("Auth client接続待ち");
+    expect(html).toContain("token providerから都度渡します");
+    expect(html).toContain("localStorageやcookieへ独自保存しません");
     expect(html).not.toContain("action=");
-    expect(html).toContain("ログイン準備中");
+    expect(html).not.toContain("private-admin-session-token");
+    expect(html).toContain("ログイン境界");
     expect(html).toContain("顧客一覧へ進む");
     expect(html).toContain("未返信アラートへ進む");
+    expect(html).toContain("ログアウト境界");
+  });
+
+  it("renders the logout session boundary without exposing tokens", () => {
+    const html = renderToStaticMarkup(<LogoutBoundaryPage />);
+
+    expect(html).toContain("ログアウト");
+    expect(html).toContain("Supabase Auth sessionのlogout境界");
+    expect(html).toContain("Auth client側のsessionをclear");
+    expect(html).toContain("localStorageやcookieへ独自保存しません");
+    expect(html).toContain("本物のSupabase Auth signOutはまだ呼びません");
+    expect(html).toContain("ログイン境界へ戻る");
+    expect(html).not.toContain("private-admin-session-token");
+    expect(html).not.toContain("Authorization");
   });
 
   it("renders the tenant selection page with selector-only persistence guidance", () => {

@@ -238,6 +238,8 @@ Loop 103ではproduction readiness final gateを追加しました。OpenAI real
 
 Loop 104ではproduction Auth runtime auto wiringを追加しました。production modeでfake verifierをdefault利用せず、`AUTH_SESSION_VERIFIER=supabase` の明示時にSupabase Auth client境界、`SupabaseAuthSessionVerifier`、StaffAuthLookup境界を構成できるようにしました。required env不足やruntime例外はsecret/token/URLを出さずsafe failureします。実Supabase接続、Admin login/session本実装、production deploy、LINE/OpenAI本接続は未実施です。詳細は [docs/11_codex_tasks/104_production_auth_runtime_auto_wiring.md](docs/11_codex_tasks/104_production_auth_runtime_auto_wiring.md) を参照してください。
 
+Loop 105ではAdmin login/session minimal integrationを追加しました。Admin UI側でSupabase Auth sessionを扱うための最小境界、fake auth clientによるsign-in / refresh / logout test、既存Admin API helperへtoken providerを渡す境界を追加しました。access tokenはUI、docs、dev log、localStorage、cookieへ独自保存・表示しません。実Supabase Auth接続、production deploy、LINE/OpenAI本接続は未実施です。詳細は [docs/11_codex_tasks/105_admin_login_session_minimal_integration.md](docs/11_codex_tasks/105_admin_login_session_minimal_integration.md) と [docs/15_runbooks/admin_login_session_minimal_integration.md](docs/15_runbooks/admin_login_session_minimal_integration.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。
