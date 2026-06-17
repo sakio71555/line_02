@@ -67,14 +67,19 @@ describe("Loop 097 Supabase Auth/JWT connection plan", () => {
     expect(combined).toContain("authenticated role smoke");
   });
 
-  it("documents staging real Auth smoke Go/No-Go without real Auth execution", () => {
-    const combined = readText(taskDocPath) + "\n" + readText(runbookPath);
+  it("documents staging real Auth smoke Go/No-Go and the later Loop 099 result", () => {
+    const taskDoc = readText(taskDocPath);
+    const runbook = readText(runbookPath);
+    const combined = `${taskDoc}\n${runbook}`;
 
     expect(combined).toContain("Staging Real Auth Smoke");
     expect(combined).toContain("Go / No-Go");
     expect(combined).toContain("productionには接続しない");
-    expect(combined).toContain("Supabase Auth user作成は未実施");
-    expect(combined).toContain("Supabase Auth/JWT本接続は未実施");
+    expect(taskDoc).toContain("Supabase Auth user作成");
+    expect(taskDoc).toContain("Supabase Auth/JWT本接続");
+    expect(taskDoc).toContain("未実施");
+    expect(runbook).toContain("Loop 099でstaging real Auth user smokeは成功済み");
+    expect(runbook).toContain("production Auth/JWT runtime connection");
     expect(combined).toContain("production readiness remains No-Go");
   });
 

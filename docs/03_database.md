@@ -65,6 +65,8 @@ Loop 097では、実Supabase Auth/JWT接続へ進む前に、`Authorization: Bea
 
 Loop 098では、`Authorization: Bearer` tokenをSupabase Auth `user.id` へ変換する `SupabaseAuthSessionVerifier` 境界を追加しました。fake Supabase auth clientでvalid user、missing user、Supabase error、network error、token redactionを検証し、productionではfake verifierをdefault利用しないことを固定しました。実Supabase Auth接続、Auth user作成、staging real Auth smoke、RLS SQL変更、migration変更、production接続は未実施です。詳細は [docs/11_codex_tasks/098_supabase_auth_real_verifier_boundary.md](11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照してください。
 
+Loop 099では、staging real Auth user smokeを実施しました。dummy Supabase Auth user idを `staff_users.auth_user_id` に紐づけ、active membership、selectedTenantId再検証、Admin route smoke、RLS `auth.uid()` tenant boundaryを確認しました。smoke用dummy rowsはcleanupし、RLS SQL、migration、GRANT変更は行っていません。詳細は [docs/11_codex_tasks/099_staging_real_auth_user_smoke.md](11_codex_tasks/099_staging_real_auth_user_smoke.md) を参照してください。
+
 ## ローカルmigration検証
 
 Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。

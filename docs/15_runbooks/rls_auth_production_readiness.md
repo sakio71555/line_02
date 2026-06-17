@@ -20,12 +20,13 @@ Supabase stagingでcustomers/messagesの永続化smokeが通った後、producti
 - Loop 096でauthenticated role / JWT claim相当のRLS smokeを実施済み。
 - Loop 097でSupabase Auth/JWT connection planとstaging real Auth smoke方針を追加済み。
 - Loop 098でSupabase Auth real verifier boundaryを追加済み。
+- Loop 099でstaging real Auth user smokeを実施し、実Bearer token、`staff_users.auth_user_id`、selectedTenantId、RLS `auth.uid()` の接続をdummy dataで確認済み。
 - customers/messagesは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - alertsは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - knowledge_pages/RAGは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - staging拡張検証版100%相当。
 - default runtimeは `in_memory` のまま。
-- staff/auth runtimeはSupabase Auth/JWTへ未接続。
+- staff/auth runtimeはstaging smokeで明示注入済みだが、production runtimeへは未接続。
 - RLS core target tablesはLoop 095Bでenabled/forced `9/9`。
 - authenticated role / JWT claim相当のRLS smokeはLoop 096で成功済み。
 - LINE real pushはdisabled/mock。
@@ -39,10 +40,11 @@ production readiness: No-Go
 No-Go理由:
 
 - RLS SQLはLoop 095Bでstaging apply済み。
-- authenticated role / JWT claim相当のRLS smokeはLoop 096で成功済み。ただしSupabase Auth/JWT本接続は未完了。
+- authenticated role / JWT claim相当のRLS smokeはLoop 096で成功済み。
 - Loop 097でBearer token、Supabase Auth `user.id`、`staff_users.auth_user_id`、active membership、RLS `auth.uid()` の接続計画は整理済み。
-- Loop 098でreal verifier boundaryは追加済みだが、Supabase Auth/JWT本接続とstaging real Auth smokeは未実施。
-- Supabase Auth/JWT 本接続は未実装。
+- Loop 098でreal verifier boundaryは追加済み。
+- Loop 099でstaging real Auth user smokeは成功済み。
+- Supabase Auth/JWT production本接続は未実装。
 - selectedTenantId transport boundaryはLoop 087で実装済み。
 - Loop 088で全Admin route rollout planを整理済み。
 - Loop 089でcustomer read routesへauthenticated_staff runtimeを展開済み。
@@ -51,11 +53,11 @@ No-Go理由:
 - Loop 092でRAG routesへauthenticated_staff runtimeを展開済み。
 - Loop 093でproduction dev_header rejectionとdev seed route rejectionを実装済み。
 - selectedTenantId membership再検証は現在の主要Admin routeまで確認済みだが、UI保存は未完了。
-- Supabase Auth/JWT本接続 未実装。
+- Supabase Auth/JWT production本接続 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
 - OpenAI mock。
-- staff/auth runtimeは未完了。
+- staff/auth runtimeのproduction接続は未完了。
 
 ## Production Hardening Split Plan
 
@@ -74,12 +76,13 @@ Before production:
 - [x] staging test DB verifies tenant A cannot read/write tenant B rows with dummy data.
 - [x] Supabase Auth/JWT connection plan and real Auth smoke Go/No-Go are documented.
 - [x] Supabase Auth real verifier boundary is implemented with fake auth client tests.
+- [x] staging real Auth user smoke verifies Bearer token, `staff_users.auth_user_id`, selectedTenantId, and RLS `auth.uid()` with dummy data.
 - [ ] Supabase Auth/JWT verification is connected to Admin API runtime.
-- [ ] `auth.uid()` maps to `staff_users.auth_user_id`.
-- [ ] only active `staff_users` are allowed.
-- [ ] only active `staff_tenant_memberships` grant tenant access.
-- [ ] role is read from active membership.
-- [ ] selectedTenantId is revalidated against active memberships.
+- [x] staging smoke verifies `auth.uid()` maps to `staff_users.auth_user_id`.
+- [x] staging smoke verifies only active `staff_users` are allowed.
+- [x] staging smoke verifies only active `staff_tenant_memberships` grant tenant access.
+- [x] staging smoke verifies role is read from active membership.
+- [x] staging smoke verifies selectedTenantId is revalidated against active memberships.
 - [x] production rejects `x-tenant-id` / `dev_header`.
 - [ ] service_role usage is server-side only and minimized.
 - [ ] browser / LIFF / Next client components do not receive service role keys.
@@ -88,15 +91,15 @@ Before production:
 
 | table | tenant_id | policy direction | production readiness |
 | --- | ---: | --- | --- |
-| `tenants` | No | authenticated staff reads only membership tenants; platform admin separate | staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
-| `tenant_line_settings` | Yes | server/admin settings only; secrets never exposed | staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
-| `tenant_ai_settings` | Yes | server/admin settings only | staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
-| `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
-| `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
-| `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
-| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
-| `staff_users` | Yes | maps Supabase Auth user to staff identity | staging RLS applied; Auth/JWT connection pending |
-| `staff_tenant_memberships` | Yes | active membership decides tenant and role | staging RLS applied; Auth/JWT connection pending |
+| `tenants` | No | authenticated staff reads only membership tenants; platform admin separate | staging RLS applied; dummy and real Auth smoke done; production Auth/JWT pending |
+| `tenant_line_settings` | Yes | server/admin settings only; secrets never exposed | staging RLS applied; dummy and real Auth smoke done; production Auth/JWT pending |
+| `tenant_ai_settings` | Yes | server/admin settings only | staging RLS applied; dummy and real Auth smoke done; production Auth/JWT pending |
+| `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; staging RLS applied; dummy and real Auth smoke done; production Auth/JWT pending |
+| `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; staging RLS applied; dummy and real Auth smoke done; production Auth/JWT pending |
+| `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; staging RLS applied; dummy and real Auth smoke done; production Auth/JWT pending |
+| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; staging RLS applied; dummy and real Auth smoke done; production Auth/JWT pending |
+| `staff_users` | Yes | maps Supabase Auth user to staff identity | staging RLS applied; real Auth smoke done; production Auth/JWT pending |
+| `staff_tenant_memberships` | Yes | active membership decides tenant and role | staging RLS applied; real Auth smoke done; production Auth/JWT pending |
 
 ## Loop 094A RLS Draft
 
@@ -229,6 +232,29 @@ docs/11_codex_tasks/098_supabase_auth_real_verifier_boundary.md
 
 Loop 098では実Supabase Auth接続、Supabase Auth user作成、staging real Auth smoke、RLS SQL変更、production接続を行っていない。production readiness remains No-Go.
 
+## Loop 099 Staging Real Auth User Smoke
+
+Loop 099でstaging real Auth user smokeを実施しました。
+
+```text
+scripts/dev-loop/smoke-staging-real-auth-api.mjs
+tests/integration/staging-real-auth-api-smoke.test.ts
+docs/11_codex_tasks/099_staging_real_auth_user_smoke.md
+```
+
+確認したこと:
+
+- `.env.staging`、schema、service_role grants、RLS policy、RLS static verifierは成功。
+- staging dummy Supabase Auth userを作成し、Bearer tokenを取得したが、値は表示していない。
+- `SupabaseAuthSessionVerifier` が実tokenからSupabase Auth user idを解決した。
+- `staff_users.auth_user_id`、active `staff_tenant_memberships`、selectedTenantId再検証がつながることを確認した。
+- customers、alerts、RAG、AI reply draftのAdmin route smokeでtenant A/B境界を確認した。
+- RLS smokeではreal Auth user idを `auth.uid()` と一致させ、tenant A dataは読めてtenant B dataは読めないことを確認した。
+- `knowledge_pages.allowed_for_ai=false` は同tenantでも読めないことを確認した。
+- smoke後にdummy Auth userとdummy DB rowsをcleanupした。
+
+Loop 099はstaging dummy data限定です。production Auth/JWT runtime接続、Admin UI selectedTenantId保存、LINE real push、OpenAI real API、production readiness final gateは未完了であり、production readiness remains No-Go.
+
 ## Service Role Policy
 
 service_role はserver-side onlyです。
@@ -283,6 +309,7 @@ Rules:
 - Loop 091 applies that boundary to alerts routes while keeping MockStaffNotifier and real LINE notification disconnected.
 - Loop 092 applies that boundary to RAG routes while keeping MockAiProvider and OpenAI real API disconnected.
 - Loop 093 rejects production `x-tenant-id` / `dev_header` and keeps `x-selected-tenant-id` as selector only.
+- Loop 099 verifies `x-selected-tenant-id` with a real staging Auth token and active memberships, but Admin UI persistence is still not implemented.
 - `x-selected-tenant-id` is a selector, not authentication.
 - `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
@@ -300,7 +327,7 @@ Rules:
 - production requires `Authorization: Bearer` plus authenticated staff context.
 - Expected errors include `dev_tenant_header_not_allowed`, `authenticated_staff_required`, `tenant_selection_required`, `tenant_membership_denied`, `permission_denied`, and `session_expired`.
 - production dev seed route returns `dev_route_not_allowed`.
-- Loop 093 implements this API gate, but real Supabase Auth/JWT verification remains a later Loop.
+- Loop 093 implements this API gate. Loop 099 verifies real Supabase Auth/JWT in staging smoke only; production runtime wiring remains a later Loop.
 
 ## LINE Real Send Preconditions
 
@@ -339,9 +366,9 @@ Do not connect OpenAI API before these are implemented and tested.
 Proceed only when:
 
 - RLS policy SQL has a dedicated implementation Loop.
-- Auth/JWT runtime has a dedicated implementation Loop.
-- selectedTenantId transport has a dedicated boundary Loop.
-- production dev_header rejection has a dedicated implementation plan.
+- Auth/JWT production runtime has a dedicated implementation Loop.
+- Admin UI selectedTenantId persistence has a dedicated Loop.
+- production dev_header rejection remains enforced.
 - staging/local tests verify tenant isolation.
 - no secrets, `.env` values, project refs, production logs, LINE userId, or real customer data are recorded.
 
@@ -374,6 +401,7 @@ Proceed only when:
 - [Loop 096: Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md)
 - [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
 - [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
+- [Loop 099: Staging Real Auth User Smoke](../11_codex_tasks/099_staging_real_auth_user_smoke.md)
 - [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)
