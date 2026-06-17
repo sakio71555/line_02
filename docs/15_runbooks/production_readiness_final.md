@@ -15,7 +15,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | production dev header rejection | 実装済み |
 | selectedTenantId | Admin UI保存と `x-selected-tenant-id` forwarding済み |
 | Admin token forwarding | Bearer token provider境界済み、token保存/表示なし |
-| production Auth runtime gate | `AUTH_SESSION_VERIFIER=supabase` + injected Supabase Auth client/StaffAuthLookupで動作 |
+| production Auth runtime gate | `AUTH_SESSION_VERIFIER=supabase` でSupabase Auth client境界とStaffAuthLookup境界を自動構成できる |
 | LINE real push gate | 複数gate、confirmation、idempotency、fake transport検証済み |
 | OpenAI real API gate | 複数gate、draft-only、fake transport検証済み |
 | production deploy/smoke | 未実施 |
@@ -40,7 +40,6 @@ controlled production enablementへ進むには、少なくとも以下が必要
 
 以下が残る場合はproduction No-Goです。
 
-- production runtimeのSupabase Auth client / StaffAuthLookup自動構成が未完了。
 - Admin UIの実login/session/token取得が未完了。
 - real LINE送信UI、実transport、安全な送信先smoke、永続audit/idempotency storeが未完了。
 - OpenAI real HTTP transport、本番接続、cost/rate limit運用、prompt logging policyが未完了。
@@ -55,10 +54,11 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - staging real Auth user smoke。
 - production fake verifier default禁止。
 - `AUTH_SESSION_VERIFIER=supabase` と明示注入されたclient/lookupでruntimeを作るgate。
+- production runtimeでSupabase Auth client境界とStaffAuthLookup境界を自動構成するfactory。
+- required env不足やruntime例外をsecret/token/URLなしでsafe failureすること。
 
 未完了:
 
-- production runtimeで実Supabase Auth client / StaffAuthLookup repositoryを自動構成すること。
 - Admin UIで実login/session/token取得、refresh、logoutを行うこと。
 
 ## selectedTenantId
@@ -160,10 +160,9 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 
 理由:
 
-- production runtimeのSupabase Auth client / StaffAuthLookup自動構成が未完了。
 - Admin UIの実login/session/token取得が未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
 - production deploy / production smokeは未実施。
 
-この判定は、Loop 103時点でcontrolled production enablementへ進むには追加Loopが必要であることを示す。
+この判定は、Loop 104時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。

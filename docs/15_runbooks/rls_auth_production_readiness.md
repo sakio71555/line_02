@@ -360,7 +360,7 @@ Rules:
 - production requires `Authorization: Bearer` plus authenticated staff context.
 - Expected errors include `dev_tenant_header_not_allowed`, `authenticated_staff_required`, `tenant_selection_required`, `tenant_membership_denied`, `permission_denied`, and `session_expired`.
 - production dev seed route returns `dev_route_not_allowed`.
-- Loop 093 implements this API gate. Loop 099 verifies real Supabase Auth/JWT in staging smoke only; production runtime wiring remains a later Loop.
+- Loop 093 implements this API gate. Loop 099 verifies real Supabase Auth/JWT in staging smoke only. Loop 104 adds production runtime auto wiring without production/staging connection smoke.
 
 ## LINE Real Send Preconditions
 
@@ -394,12 +394,25 @@ OpenAI接続前条件:
 
 Do not connect OpenAI API before these are implemented and tested.
 
+## Production Auth Runtime Auto Wiring
+
+Loop 104で `AUTH_SESSION_VERIFIER=supabase` のproduction runtime auto wiringを追加しました。ただしproduction/staging接続、実Auth token取得、Admin login/session UI本実装は未実施です。
+
+- productionではfake verifierをdefault利用しない。
+- `AUTH_SESSION_VERIFIER=fake` は拒否する。
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` はserver-side runtime factoryだけが読む。
+- Supabase Auth client境界、`SupabaseAuthSessionVerifier`、StaffAuthLookup境界を構成する。
+- required env不足やruntime例外はsecret/token/project ref/URLを出さずsafe failureする。
+- selectedTenantIdは引き続きactive membershipで再検証する。
+
+詳細は [Loop 104: production Auth runtime auto wiring](../11_codex_tasks/104_production_auth_runtime_auto_wiring.md) を参照する。
+
 ## Next Conditions
 
 Proceed only when:
 
 - RLS policy SQL has a dedicated implementation Loop.
-- Auth/JWT production runtime has a dedicated implementation Loop.
+- Auth/JWT production runtime auto wiring remains tested without production/staging connection.
 - Admin UI selectedTenantId persistence is implemented in Loop 100.
 - production dev_header rejection remains enforced.
 - staging/local tests verify tenant isolation.
@@ -436,6 +449,7 @@ Proceed only when:
 - [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Loop 099: Staging Real Auth User Smoke](../11_codex_tasks/099_staging_real_auth_user_smoke.md)
 - [Loop 100: Admin UI selectedTenantId persistence](../11_codex_tasks/100_admin_ui_selected_tenant_persistence.md)
+- [Loop 104: production Auth runtime auto wiring](../11_codex_tasks/104_production_auth_runtime_auto_wiring.md)
 - [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)

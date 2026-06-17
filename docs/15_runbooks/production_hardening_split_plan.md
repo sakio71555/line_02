@@ -272,6 +272,18 @@ Loop 103でOpenAI real API gateとfake transport前提のprovider boundaryを追
 
 詳細は [OpenAI Real API Gate](openai_real_api_gate.md) と [Production Readiness Final Gate](production_readiness_final.md) を参照する。
 
+## Production Auth Runtime Auto Wiring
+
+Loop 104でproduction Auth runtime auto wiringを追加しました。ただしproduction/staging接続、実Auth token取得、Admin login/session UI本実装は未実施です。
+
+- `AUTH_SESSION_VERIFIER=supabase` を明示した場合だけSupabase Auth runtimeを構成する。
+- productionでfake verifierをdefault利用しない。
+- `AUTH_SESSION_VERIFIER=fake` は拒否する。
+- Supabase Auth client境界、`SupabaseAuthSessionVerifier`、StaffAuthLookup境界をserver-sideで構成する。
+- required env不足やruntime例外はsecret/token/project ref/URLなしでsafe failureする。
+
+詳細は [Loop 104: production Auth runtime auto wiring](../11_codex_tasks/104_production_auth_runtime_auto_wiring.md) と [Production Readiness Final Gate](production_readiness_final.md) を参照する。
+
 ## Stop Conditions
 
 以下が必要になったら、このrunbookの範囲を超える。
@@ -310,6 +322,7 @@ Recommended next loop: Loop 101: LINE real push gate.
 - [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Loop 099: Staging Real Auth User Smoke](../11_codex_tasks/099_staging_real_auth_user_smoke.md)
 - [Loop 100: Admin UI selectedTenantId persistence](../11_codex_tasks/100_admin_ui_selected_tenant_persistence.md)
+- [Loop 104: production Auth runtime auto wiring](../11_codex_tasks/104_production_auth_runtime_auto_wiring.md)
 - [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

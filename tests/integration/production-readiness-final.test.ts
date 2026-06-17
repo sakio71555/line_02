@@ -8,6 +8,10 @@ const taskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/103_production_readiness_final_gate.md"
 );
+const loop104TaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/104_production_auth_runtime_auto_wiring.md"
+);
 const finalRunbookPath = join(repoRoot, "docs/15_runbooks/production_readiness_final.md");
 const openAiRunbookPath = join(repoRoot, "docs/15_runbooks/openai_real_api_gate.md");
 const readmePath = join(repoRoot, "README.md");
@@ -18,6 +22,7 @@ const devLogPath = join(repoRoot, "docs/14_dev_logs/2026-06-18.md");
 describe("Loop 103 production readiness final gate docs", () => {
   it("adds the production readiness final task and runbooks", () => {
     expect(existsSync(taskDocPath)).toBe(true);
+    expect(existsSync(loop104TaskDocPath)).toBe(true);
     expect(existsSync(finalRunbookPath)).toBe(true);
     expect(existsSync(openAiRunbookPath)).toBe(true);
   });
@@ -28,7 +33,7 @@ describe("Loop 103 production readiness final gate docs", () => {
     expect(runbook).toContain("## Final Judgment");
     expect(runbook).toContain("production_no_go");
     expect(runbook).not.toContain("ready_for_controlled_production_enablement");
-    expect(runbook).toContain("production runtimeのSupabase Auth client / StaffAuthLookup自動構成が未完了");
+    expect(runbook).not.toContain("production runtimeのSupabase Auth client / StaffAuthLookup自動構成が未完了");
     expect(runbook).toContain("Admin UIの実login/session/token取得が未完了");
     expect(runbook).toContain("OpenAI real API gate");
     expect(runbook).toContain("LINE Real Push Gate");
@@ -67,6 +72,7 @@ describe("Loop 103 production readiness final gate docs", () => {
       readText(devLogPath)
     ]) {
       expect(text).toContain("Loop 103");
+      expect(text).toContain("Loop 104");
     }
 
     expect(readText(readmePath)).toContain(
@@ -77,6 +83,7 @@ describe("Loop 103 production readiness final gate docs", () => {
   it("does not record obvious secret values or real connection strings", () => {
     const combined = [
       readText(taskDocPath),
+      readText(loop104TaskDocPath),
       readText(finalRunbookPath),
       readText(openAiRunbookPath),
       readText(devLogPath)

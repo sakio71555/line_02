@@ -73,7 +73,9 @@ import {
   type StaffReplyLinePushRequest
 } from "./admin/line-real-push-gate";
 import {
-  createProductionAdminAuthRuntimeDependencies
+  createProductionAdminAuthRuntimeDependencies,
+  type ProductionAdminAuthRuntimeFactory,
+  type ProductionAuthRuntimeFetch
 } from "./admin/production-auth-runtime-gate";
 import { resolveSelectedTenantIdTransport } from "./admin/selected-tenant-transport";
 import type { SupabaseAuthClientLike } from "./admin/supabase-auth-session-verifier";
@@ -91,6 +93,8 @@ export interface ApiAppDependencies {
   adminAuthRuntime?: AuthenticatedAdminRuntimeDependencies;
   supabaseAuthClient?: SupabaseAuthClientLike;
   staffAuthLookup?: StaffAuthLookup;
+  productionAuthRuntimeFactory?: ProductionAdminAuthRuntimeFactory;
+  productionAuthRuntimeFetch?: ProductionAuthRuntimeFetch;
   authenticatedSelectedTenantId?: string | null;
   lineClientMode?: LineClientMode;
   linePushIdempotencyStore?: LinePushIdempotencyStore;
@@ -149,7 +153,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       ? createProductionAdminAuthRuntimeDependencies({
           env,
           supabaseAuthClient: dependencies.supabaseAuthClient,
-          staffAuthLookup: dependencies.staffAuthLookup
+          staffAuthLookup: dependencies.staffAuthLookup,
+          productionAuthRuntimeFactory: dependencies.productionAuthRuntimeFactory,
+          fetch: dependencies.productionAuthRuntimeFetch
         })
       : undefined);
 
@@ -821,7 +827,7 @@ async function resolveTenantScopedAdminRouteTenant(input: {
       };
     }
 
-    const runtime = await resolveAuthenticatedAdminRuntimeContext(
+    const runtime = await resolveAuthenticatedAdminRuntimeContextSafely(
       createAuthenticatedAdminRuntimeInput({
         authorizationHeader: input.authorizationHeader,
         selectedTenantId: selectedTenant.selectedTenantId,
@@ -876,6 +882,20 @@ async function resolveTenantScopedAdminRouteTenant(input: {
     context: tenant.context,
     selectedTenantId: null
   };
+}
+
+async function resolveAuthenticatedAdminRuntimeContextSafely(
+  input: AuthenticatedAdminRuntimeInput,
+  dependencies: AuthenticatedAdminRuntimeDependencies
+): Promise<Awaited<ReturnType<typeof resolveAuthenticatedAdminRuntimeContext>>> {
+  try {
+    return await resolveAuthenticatedAdminRuntimeContext(input, dependencies);
+  } catch {
+    return {
+      ok: false,
+      error: { code: "authenticated_staff_required" }
+    };
+  }
 }
 
 function createAuthenticatedAdminRuntimeInput(input: {

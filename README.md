@@ -236,6 +236,8 @@ Loop 102ではLINE real push gateを追加しました。`LINE_MESSAGING_ENABLED
 
 Loop 103ではproduction readiness final gateを追加しました。OpenAI real API gate、fake transport前提のOpenAI provider boundary、production Auth runtime構成監査、LINE real push gate監査、production readiness final checklistを追加しました。本物LINE送信、OpenAI API呼び出し、production接続は未実施で、最終判定は `production_no_go` です。詳細は [docs/11_codex_tasks/103_production_readiness_final_gate.md](docs/11_codex_tasks/103_production_readiness_final_gate.md)、[docs/15_runbooks/openai_real_api_gate.md](docs/15_runbooks/openai_real_api_gate.md)、[docs/15_runbooks/production_readiness_final.md](docs/15_runbooks/production_readiness_final.md) を参照してください。
 
+Loop 104ではproduction Auth runtime auto wiringを追加しました。production modeでfake verifierをdefault利用せず、`AUTH_SESSION_VERIFIER=supabase` の明示時にSupabase Auth client境界、`SupabaseAuthSessionVerifier`、StaffAuthLookup境界を構成できるようにしました。required env不足やruntime例外はsecret/token/URLを出さずsafe failureします。実Supabase接続、Admin login/session本実装、production deploy、LINE/OpenAI本接続は未実施です。詳細は [docs/11_codex_tasks/104_production_auth_runtime_auto_wiring.md](docs/11_codex_tasks/104_production_auth_runtime_auto_wiring.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

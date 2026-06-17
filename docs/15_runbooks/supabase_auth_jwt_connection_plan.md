@@ -273,9 +273,28 @@ Implemented:
 Still not done:
 
 - Real Admin login/session/token acquisition。
-- Production automatic construction of Supabase Auth client and StaffAuthLookup repository。
+- Production automatic construction of Supabase Auth client and StaffAuthLookup repository is implemented in Loop 104, but production/staging connection smoke is not run in that Loop。
 - Real LINE send。
 - Real OpenAI API connection。
+
+## Loop 104 Production Auth Runtime Auto Wiring
+
+Loop 104で `AUTH_SESSION_VERIFIER=supabase` のproduction runtime auto wiringを追加した。
+
+Implemented:
+
+- productionでfake verifierをdefault利用しない。
+- `AUTH_SESSION_VERIFIER=fake` は明示拒否する。
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` のpresence/URL validationをsafe failureで扱う。
+- Supabase Auth client境界、`SupabaseAuthSessionVerifier`、StaffAuthLookup境界をserver-side factoryから構成する。
+- required env不足やStaffAuthLookup例外時にsecret/token/project ref/URLをresponseへ出さない。
+
+Still not done:
+
+- 実Supabase Auth token取得。
+- production/staging connection smoke。
+- Admin login/session UI本実装。
+- RLS SQL変更やmigration変更。
 
 Loop 100 note:
 
@@ -334,5 +353,6 @@ No-Go:
 - [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
 - [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Loop 099: Staging Real Auth User Smoke](../11_codex_tasks/099_staging_real_auth_user_smoke.md)
+- [Loop 104: Production Auth Runtime Auto Wiring](../11_codex_tasks/104_production_auth_runtime_auto_wiring.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Production Hardening Split Plan](production_hardening_split_plan.md)
