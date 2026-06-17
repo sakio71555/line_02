@@ -8,6 +8,7 @@ import {
   createRagAnswerDraft,
   sendStaffReply
 } from "../../../src/admin-api";
+import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
@@ -21,7 +22,7 @@ export async function runAiSummaryAction(
   _formData: FormData
 ): Promise<AiSummaryActionState> {
   try {
-    const result = await createAiSummary(customerId);
+    const result = await createAiSummary(customerId, await getServerAdminApiRequestOptions());
     revalidatePath(`/customers/${customerId}`);
 
     return {
@@ -44,7 +45,7 @@ export async function runAiReplyDraftAction(
   try {
     return {
       status: "success",
-      result: await createAiReplyDraft(customerId)
+      result: await createAiReplyDraft(customerId, await getServerAdminApiRequestOptions())
     };
   } catch (error) {
     return {
@@ -70,7 +71,10 @@ export async function runRagAnswerDraftAction(
   try {
     return {
       status: "success",
-      result: await createRagAnswerDraft({ query, limit: 5 })
+      result: await createRagAnswerDraft(
+        { query, limit: 5 },
+        await getServerAdminApiRequestOptions()
+      )
     };
   } catch (error) {
     return {
@@ -95,7 +99,10 @@ export async function runStaffReplyAction(
   }
 
   try {
-    const result = await sendStaffReply({ customerId, body });
+    const result = await sendStaffReply(
+      { customerId, body },
+      await getServerAdminApiRequestOptions()
+    );
     revalidatePath(`/customers/${customerId}`);
 
     return {

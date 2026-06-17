@@ -214,10 +214,18 @@ Result:
 Still not done:
 
 - production Auth/JWT runtime connection。
-- Admin UI selectedTenantId persistence。
+- Admin UI token forwarding。
 - LINE real push gate。
 - OpenAI real API gate。
 - production readiness final gate。
+
+Loop 100 note:
+
+- Admin UI selectedTenantId persistenceは完了。
+- `/select-tenant` は非secretのtenant selectorだけをlocalStorageとcookieへ保存する。
+- Admin API helperはcookie由来の値を `x-selected-tenant-id` として送れる。
+- Bearer token、API key、Supabase secret、session値は保存・表示しない。
+- `selectedTenantId` は権限ではなく、API側のactive membership再検証が必須。
 
 ## Go / No-Go
 

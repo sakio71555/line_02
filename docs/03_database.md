@@ -492,6 +492,8 @@ Loop 094Aでは `packages/db/migrations/0003_rls_core_tables.sql` をRLS SQL dra
 
 Loop 096では、RLS staging apply後のauthenticated role / JWT claim相当smokeを実施しました。service_role smokeはRLS bypass確認であり、Loop 096のauthenticated smokeはRLS policyそのものがtenant境界を守ることの確認です。
 
+Loop 100ではAdmin UI側にselectedTenantId persistenceを追加しました。Admin UIは非secretのtenant selectorだけをlocalStorageとcookieに保存し、Admin API helperから `x-selected-tenant-id` を送ります。`x-selected-tenant-id` は権限ではなく、DB/repositoryで使うtenantはAPI側でactive membership再検証後に確定した `AdminTenantContext.tenantId` だけです。Bearer token、service role key、API key、session値は保存・表示しません。Supabase Auth/JWT production runtime接続はまだ未実装です。
+
 - [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
 - [Production Hardening Split Plan](15_runbooks/production_hardening_split_plan.md)
 - [Loop 093: Production Dev Header Rejection Auth/JWT Boundary](11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)

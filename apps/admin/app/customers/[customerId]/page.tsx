@@ -3,8 +3,10 @@ import Link from "next/link";
 import {
   getAdminApiConfig,
   getAdminCustomerDetail,
-  getAdminCustomerTimeline
+  getAdminCustomerTimeline,
+  type AdminApiRequestOptions
 } from "../../../src/admin-api";
+import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import { CustomerActionPanel } from "./customer-actions";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +17,10 @@ export default async function CustomerDetailPage({
   params: Promise<{ customerId: string }>;
 }) {
   const { customerId } = await params;
-  const config = getAdminApiConfig();
-  const detail = await loadCustomerDetail(customerId);
-  const timeline = await loadCustomerTimeline(customerId);
+  const requestOptions = await getServerAdminApiRequestOptions();
+  const config = requestOptions.config ?? getAdminApiConfig();
+  const detail = await loadCustomerDetail(customerId, requestOptions);
+  const timeline = await loadCustomerTimeline(customerId, requestOptions);
 
   return (
     <main>
@@ -28,6 +31,10 @@ export default async function CustomerDetailPage({
           <p className="meta">
             利用先ID: <span className="mono">{config.tenantId}</span> / お客様ID:{" "}
             <span className="mono">{customerId}</span>
+          </p>
+          <p className="meta">
+            選択中の利用先:{" "}
+            <span className="mono">{config.selectedTenantId ?? "未選択"}</span>
           </p>
         </div>
         <Link href="/customers">一覧へ戻る</Link>
@@ -40,6 +47,11 @@ export default async function CustomerDetailPage({
         <p className="meta">
           AIでまとめた内容はタイムラインへ保存されます。返信文の下書きとホームページ情報からの回答案は
           確認用で、LINE送信も保存もしません。
+        </p>
+        <p className="meta">
+          選択中の利用先は <span className="mono">x-selected-tenant-id</span>{" "}
+          でAdmin APIへ渡します。開発用 <span className="mono">x-tenant-id</span>{" "}
+          は本番権限ではありません。
         </p>
       </div>
 
@@ -63,7 +75,7 @@ export default async function CustomerDetailPage({
         <CustomerActionPanel
           customerId={customerId}
           recipientLabel={getCustomerRecipientLabel(detail.customer)}
-          tenantId={config.tenantId}
+          tenantId={config.selectedTenantId ?? config.tenantId}
         />
       )}
 
@@ -122,9 +134,9 @@ function FragmentPair({
   );
 }
 
-async function loadCustomerDetail(customerId: string) {
+async function loadCustomerDetail(customerId: string, options: AdminApiRequestOptions) {
   try {
-    const response = await getAdminCustomerDetail(customerId);
+    const response = await getAdminCustomerDetail(customerId, options);
     return {
       status: "ok" as const,
       customer: response.customer
@@ -137,9 +149,9 @@ async function loadCustomerDetail(customerId: string) {
   }
 }
 
-async function loadCustomerTimeline(customerId: string) {
+async function loadCustomerTimeline(customerId: string, options: AdminApiRequestOptions) {
   try {
-    const response = await getAdminCustomerTimeline(customerId);
+    const response = await getAdminCustomerTimeline(customerId, options);
     return {
       status: "ok" as const,
       messages: response.messages

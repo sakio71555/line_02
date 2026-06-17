@@ -8,6 +8,8 @@ import type {
   ResponseMode
 } from "@amami-line-crm/domain";
 
+import { formatAdminApiErrorCodeForUi, validateSelectedTenantId } from "./selected-tenant";
+
 export const DEFAULT_API_BASE_URL = "http://localhost:4000";
 export const DEFAULT_TENANT_ID = "tenant_amamihome";
 export const DEFAULT_STAFF_ID = "dev_staff";
@@ -16,6 +18,7 @@ export interface AdminApiConfig {
   apiBaseUrl: string;
   tenantId: string;
   staffId?: string;
+  selectedTenantId?: string | null;
 }
 
 export interface AdminCustomerListItem extends DomainCustomerListItem {
@@ -174,8 +177,17 @@ export async function adminApiFetch<T>(
   const fetchFn = options.fetchFn ?? fetch;
   const headers = new Headers(init.headers);
   const method = init.method?.toUpperCase() ?? "GET";
+  const selectedTenantId = validateSelectedTenantId(config.selectedTenantId);
+
+  if (!selectedTenantId.ok) {
+    throw new Error(formatAdminApiKnownError("invalid_selected_tenant_id"));
+  }
 
   headers.set("x-tenant-id", config.tenantId);
+
+  if (selectedTenantId.selectedTenantId) {
+    headers.set("x-selected-tenant-id", selectedTenantId.selectedTenantId);
+  }
 
   if (!headers.has("accept")) {
     headers.set("accept", "application/json");
@@ -194,12 +206,31 @@ export async function adminApiFetch<T>(
 
   if (!response.ok) {
     const responseBody = await response.text();
+    const knownError = extractAdminApiErrorCode(responseBody);
+    const details = knownError ? formatAdminApiKnownError(knownError) : responseBody;
+
     throw new Error(
-      `Admin API request failed: ${response.status} ${response.statusText || ""} ${responseBody}`.trim()
+      `Admin API request failed: ${response.status} ${response.statusText || ""} ${details}`.trim()
     );
   }
 
   return response.json() as Promise<T>;
+}
+
+export function extractAdminApiErrorCode(responseBody: string): string | null {
+  try {
+    const parsed = JSON.parse(responseBody) as { error?: unknown };
+
+    return typeof parsed.error === "string" ? parsed.error : null;
+  } catch {
+    return null;
+  }
+}
+
+export function formatAdminApiKnownError(errorCode: string): string {
+  const message = formatAdminApiErrorCodeForUi(errorCode);
+
+  return message ? `${message} (${errorCode})` : errorCode;
 }
 
 export function adminCustomerDetailPath(customerId: string): string {
@@ -222,20 +253,32 @@ export function adminCustomerReplyPath(customerId: string): string {
   return `/api/admin/customers/${encodeURIComponent(customerId)}/reply`;
 }
 
-export async function getAdminCustomers(): Promise<AdminCustomersResponse> {
-  return adminApiFetch<AdminCustomersResponse>("/api/admin/customers");
+export async function getAdminCustomers(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminCustomersResponse> {
+  return adminApiFetch<AdminCustomersResponse>("/api/admin/customers", {}, options);
 }
 
 export async function getAdminCustomerDetail(
-  customerId: string
+  customerId: string,
+  options: AdminApiRequestOptions = {}
 ): Promise<AdminCustomerDetailResponse> {
-  return adminApiFetch<AdminCustomerDetailResponse>(adminCustomerDetailPath(customerId));
+  return adminApiFetch<AdminCustomerDetailResponse>(
+    adminCustomerDetailPath(customerId),
+    {},
+    options
+  );
 }
 
 export async function getAdminCustomerTimeline(
-  customerId: string
+  customerId: string,
+  options: AdminApiRequestOptions = {}
 ): Promise<AdminCustomerTimelineResponse> {
-  return adminApiFetch<AdminCustomerTimelineResponse>(adminCustomerTimelinePath(customerId));
+  return adminApiFetch<AdminCustomerTimelineResponse>(
+    adminCustomerTimelinePath(customerId),
+    {},
+    options
+  );
 }
 
 export async function listAlerts(

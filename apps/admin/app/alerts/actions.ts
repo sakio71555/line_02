@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { checkUnrepliedAlerts, notifyOpenAlerts } from "../../src/admin-api";
+import { getServerAdminApiRequestOptions } from "../admin-api-request-options";
 import type { CheckUnrepliedActionState, NotifyOpenActionState } from "./action-types";
 
 export async function runCheckUnrepliedAction(
@@ -10,7 +11,7 @@ export async function runCheckUnrepliedAction(
   _formData: FormData
 ): Promise<CheckUnrepliedActionState> {
   try {
-    const result = await checkUnrepliedAlerts();
+    const result = await checkUnrepliedAlerts(await getServerAdminApiRequestOptions());
     revalidatePath("/alerts");
 
     return {
@@ -30,7 +31,7 @@ export async function runNotifyOpenAction(
   _formData: FormData
 ): Promise<NotifyOpenActionState> {
   try {
-    const result = await notifyOpenAlerts();
+    const result = await notifyOpenAlerts(await getServerAdminApiRequestOptions());
     revalidatePath("/alerts");
 
     return {

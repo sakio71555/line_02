@@ -26,6 +26,10 @@ export function AlertsPageView({
             利用先ID: <span className="mono">{config.tenantId}</span> / API:{" "}
             <span className="mono">{config.apiBaseUrl}</span>
           </p>
+          <p className="meta">
+            選択中の利用先:{" "}
+            <span className="mono">{config.selectedTenantId ?? "未選択"}</span>
+          </p>
         </div>
         <a href="/">トップへ戻る</a>
       </div>
@@ -46,6 +50,10 @@ export function AlertsPageView({
         </div>
         <p className="meta">
           本物のLINE、Slack、メールには通知されません。Supabase永続化もまだ未接続です。
+        </p>
+        <p className="meta">
+          選択中の利用先は <span className="mono">x-selected-tenant-id</span>{" "}
+          として送られ、API側でmembership再検証される前提です。
         </p>
       </section>
 

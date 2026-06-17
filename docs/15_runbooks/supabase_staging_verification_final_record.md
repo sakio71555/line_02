@@ -177,7 +177,7 @@ Real Auth smoke result:
 
 - RLS SQL is applied to staging, and authenticated role / JWT claim smoke has passed with dummy data.
 - Supabase Auth/JWT production runtime is still not connected.
-- selectedTenantId UI保存 is still not completed.
+- selectedTenantId UI保存 is completed in Loop 100.
 - staff/auth production runtime switch remains future work.
 - staging uses dummy data only.
 
@@ -216,7 +216,7 @@ Before production:
 - keep Loop 097 Supabase Auth/JWT connection plan as the verifier/smoke planning baseline.
 - keep Loop 098 Supabase Auth real verifier boundary as the API verifier baseline.
 - keep Loop 099 staging real Auth user smoke as the current real Auth/RLS linkage baseline.
-- implement Admin UI selectedTenantId persistence.
+- keep Loop 100 Admin UI selectedTenantId persistence as the UI selector baseline.
 - keep production dev_header rejection enforced.
 - keep service role key server-side only.
 - confirm rollback/backup policy.
@@ -232,6 +232,8 @@ Loop 097でSupabase Auth/JWT connection planを追加した。`Authorization: Be
 Loop 098でSupabase Auth real verifier boundaryを追加した。`SupabaseAuthSessionVerifier` はfake Supabase auth clientでSupabase Auth `user.id` を `AuthUserIdentity.authUserId` へ変換し、token/secret redaction、`session_expired` mapping、production fake verifier default禁止を確認した。実Supabase Auth接続、Auth user作成、staging real Auth smoke、RLS SQL変更、production接続は未実施。詳細は [Loop 098 task doc](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照する。
 
 Loop 099でstaging real Auth user smokeを実施した。dummy Auth user、Bearer token非表示取得、`staff_users.auth_user_id` mapping、active membership、selectedTenantId再検証、Admin route smoke、RLS `auth.uid()` tenant boundaryを確認し、cleanupも完了した。production readinessはNo-Go継続。詳細は [Loop 099 task doc](../11_codex_tasks/099_staging_real_auth_user_smoke.md) を参照する。
+
+Loop 100でAdmin UI selectedTenantId persistenceを追加した。`/select-tenant` は非secretのtenant selectorだけをlocalStorageとcookieへ保存し、Admin API helperは `x-selected-tenant-id` を送れる。`x-selected-tenant-id` は権限ではなくselectorで、開発用 `x-tenant-id` とは別物。Bearer token、API key、Supabase secret、session値は保存・表示しない。production Auth/JWT runtime、LINE real push、OpenAI real APIは未接続で、production readinessはNo-Go継続。詳細は [Loop 100 task doc](../11_codex_tasks/100_admin_ui_selected_tenant_persistence.md) を参照する。
 
 ## Next Loop Candidates
 
@@ -251,7 +253,7 @@ Loop 096: authenticated role / JWT RLS smoke
 Loop 097: Supabase Auth/JWT connection plan
 Loop 098: Supabase Auth real verifier boundary
 Loop 099: staging real Auth user smoke
-Loop 100: Admin UI selectedTenantId persistence
+Loop 100: Admin UI selectedTenantId persistence (done)
 Loop 101: LINE real push gate
 Loop 102: OpenAI real API gate
 Loop 103: production readiness final gate

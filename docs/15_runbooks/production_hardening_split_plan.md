@@ -17,7 +17,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | default runtime | `in_memory` |
 | RLS | Loop 095Bでstaging apply済み。Loop 096でauthenticated role / JWT claim相当smoke成功済み |
 | Auth/JWT | Loop 098でreal verifier boundary済み。Loop 099でstaging real Auth user smoke成功済み。production本接続は未実装 |
-| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。UI保存は未完了 |
+| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。Loop 100でAdmin UI保存を追加済み |
 | production dev_header rejection | Loop 093で実装済み |
 | LINE real push | disabled/mock |
 | OpenAI real API | mock |
@@ -32,7 +32,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 - Loop 099でstaging real Auth user smokeは成功済み。
 - Auth/JWT未接続状態は継続。
 - Auth/JWT production本接続は未実装。
-- selectedTenantId transport boundaryと現在の主要Admin route rolloutは完了済みだが、UI保存は未完了。
+- selectedTenantId transport boundary、主要Admin route rollout、Admin UI保存は完了済み。
 - production dev_header rejectionはLoop 093で実装済みだが、Supabase Auth/JWT本接続は未完了。
 - `service_role` はserver-side onlyであり、RLS bypass権限のためproduction authorizationそのものにはしない。
 - LINE real push gate未実装。
@@ -55,7 +55,7 @@ Loop 096 authenticated role / JWT RLS smoke (done, staging only)
 Loop 097 Supabase Auth/JWT connection planning (done, docs/test only)
 Loop 098 Supabase Auth real verifier boundary (done, fake client only)
 Loop 099 staging real Auth user smoke (done, staging only)
-Loop 100 Admin UI selectedTenantId persistence
+Loop 100 Admin UI selectedTenantId persistence (done)
 Loop 101 LINE real push gate
 Loop 102 OpenAI real API gate
 Loop 103 production readiness final gate
@@ -127,7 +127,7 @@ Loop 093 implementation note:
 - production modeで `POST /api/dev/seed-demo-data` を `dev_route_not_allowed` として拒否する。
 - local/dev/testの `x-tenant-id` / `dev_header` 互換は維持する。
 - fake verifier / fake StaffAuthLookupによるAuth/JWT boundary testは維持する。
-- Supabase Auth/JWT本接続、RLS SQL、Admin UI selectedTenantId保存は未実装のまま。
+- Supabase Auth/JWT本接続、RLS SQLは未実装のまま。Admin UI selectedTenantId保存はLoop 100で対応済み。
 
 Loop 094A implementation note:
 
@@ -186,8 +186,19 @@ Loop 099 execution note:
 - customers、alerts、RAG search、AI reply draftのstaging Admin route smokeを実行した。
 - `knowledge_pages.allowed_for_ai=false` とtenant B dataがtenant A contextで見えないことを確認した。
 - smoke後にdummy Auth userとdummy DB rowsをcleanupした。
-- production Auth/JWT runtime接続、Admin UI selectedTenantId保存、LINE real push、OpenAI real APIは未実装のまま。
+- production Auth/JWT runtime接続、LINE real push、OpenAI real APIは未実装のまま。
 - 詳細は [Loop 099 task doc](../11_codex_tasks/099_staging_real_auth_user_smoke.md) を参照する。
+
+Loop 100 implementation note:
+
+- Admin UI selectedTenantId persistenceを追加済み。
+- `/select-tenant` で非secretのtenant selectorだけをlocalStorageとcookieへ保存する。
+- server-side Admin API helperがcookie由来の値を `x-selected-tenant-id` として送れる。
+- `x-selected-tenant-id` は権限ではなくselectorで、API側のactive membership再検証が必須。
+- 開発用 `x-tenant-id` とは別物として扱う。
+- Bearer token、API key、Supabase secret、session値は保存・表示しない。
+- Supabase Auth/JWT production runtime、LINE real push、OpenAI real APIは未接続のまま。
+- 詳細は [Loop 100 task doc](../11_codex_tasks/100_admin_ui_selected_tenant_persistence.md) を参照する。
 
 ## Auth/JWT Rules
 
@@ -265,12 +276,12 @@ OpenAI real APIはproduction hardening完了後の別Loop。
 
 ## Next Loop
 
-Recommended next loop: Loop 100: Admin UI selectedTenantId persistence.
+Recommended next loop: Loop 101: LINE real push gate.
 
 理由:
 
 - Loop 099でstaging real Auth user smokeは成功済み。
-- 次はAdmin UIから選択tenantを保持・送信する導線を小さく扱う。
+- Loop 100でAdmin UIから選択tenantを保持・送信する導線は追加済み。
 - production Auth/JWT runtime、LINE/OpenAI本接続、production readiness final gateは引き続き別Loopで扱う。
 
 ## Related Docs
@@ -287,6 +298,7 @@ Recommended next loop: Loop 100: Admin UI selectedTenantId persistence.
 - [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
 - [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Loop 099: Staging Real Auth User Smoke](../11_codex_tasks/099_staging_real_auth_user_smoke.md)
+- [Loop 100: Admin UI selectedTenantId persistence](../11_codex_tasks/100_admin_ui_selected_tenant_persistence.md)
 - [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

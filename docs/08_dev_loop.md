@@ -290,6 +290,10 @@ Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md
 16. Loop 015: local dev runbook and demo seed
 17. Loop 016: admin action UI foundation
 
+## selectedTenantId UI persistence
+
+Loop 100では、Admin UIで選択した `selectedTenantId` をlocalStorageとcookieに保存し、server-side Admin API helperから `x-selected-tenant-id` として送るところだけを扱いました。`selectedTenantId` は権限ではなくselectorで、API側のactive membership再検証を必須にします。開発用 `x-tenant-id` と混同せず、Bearer token、API key、session値は保存・表示しません。Supabase Auth/JWT production runtime、LINE real push、OpenAI real APIは別Loopに分けます。
+
 ## 完了報告フォーマット
 
 ```md

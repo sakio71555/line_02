@@ -52,7 +52,7 @@ No-Go理由:
 - Loop 091でalerts routesへauthenticated_staff runtimeを展開済み。
 - Loop 092でRAG routesへauthenticated_staff runtimeを展開済み。
 - Loop 093でproduction dev_header rejectionとdev seed route rejectionを実装済み。
-- selectedTenantId membership再検証は現在の主要Admin routeまで確認済みだが、UI保存は未完了。
+- Loop 100でAdmin UI selectedTenantId persistenceを追加済み。
 - Supabase Auth/JWT production本接続 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -83,6 +83,7 @@ Before production:
 - [x] staging smoke verifies only active `staff_tenant_memberships` grant tenant access.
 - [x] staging smoke verifies role is read from active membership.
 - [x] staging smoke verifies selectedTenantId is revalidated against active memberships.
+- [x] Admin UI can persist selectedTenantId as a selector and send `x-selected-tenant-id`.
 - [x] production rejects `x-tenant-id` / `dev_header`.
 - [ ] service_role usage is server-side only and minimized.
 - [ ] browser / LIFF / Next client components do not receive service role keys.
@@ -166,7 +167,7 @@ scripts/dev-loop/verify-staging-rls-policies.mjs
 - service_role grants: remain usable
 - customers/messages, alerts, knowledge/RAG staging smoke: passed
 
-service_roleはRLS bypass前提のため、この結果だけではproduction Goにしない。authenticated role / JWT smoke、Supabase Auth/JWT本接続、Admin UI selectedTenantId保存、LINE/OpenAI gatesは未完了。
+service_roleはRLS bypass前提のため、この結果だけではproduction Goにしない。authenticated role / JWT smoke、Supabase Auth/JWT本接続、LINE/OpenAI gatesは未完了。
 
 ## Loop 096 Authenticated Role / JWT Claim RLS Smoke
 
@@ -253,7 +254,28 @@ docs/11_codex_tasks/099_staging_real_auth_user_smoke.md
 - `knowledge_pages.allowed_for_ai=false` は同tenantでも読めないことを確認した。
 - smoke後にdummy Auth userとdummy DB rowsをcleanupした。
 
-Loop 099はstaging dummy data限定です。production Auth/JWT runtime接続、Admin UI selectedTenantId保存、LINE real push、OpenAI real API、production readiness final gateは未完了であり、production readiness remains No-Go.
+Loop 099はstaging dummy data限定です。Loop 100でAdmin UI selectedTenantId保存は追加済みですが、production Auth/JWT runtime接続、LINE real push、OpenAI real API、production readiness final gateは未完了であり、production readiness remains No-Go.
+
+## Loop 100 Admin UI selectedTenantId Persistence
+
+Loop 100でAdmin UI selectedTenantId persistenceを追加しました。
+
+```text
+apps/admin/src/selected-tenant.ts
+apps/admin/app/select-tenant/selected-tenant-form.tsx
+apps/admin/app/admin-api-request-options.ts
+docs/11_codex_tasks/100_admin_ui_selected_tenant_persistence.md
+```
+
+確認したこと:
+
+- `/select-tenant` は非secretのtenant selectorだけをlocalStorageとcookieへ保存する。
+- Admin API helperは選択値がある場合だけ `x-selected-tenant-id` を付ける。
+- 既存local/dev/test互換の `x-tenant-id` と `x-selected-tenant-id` を混同しない。
+- `tenant_selection_required`、`tenant_membership_denied`、`invalid_selected_tenant_id`、`authenticated_staff_required` をUI向けに扱う。
+- Bearer token、API key、Supabase secret、session値は保存・表示しない。
+
+Loop 100はUI persistenceのみです。Supabase Auth/JWT production runtime、LINE real push、OpenAI real API、production readiness final gateは未完了です。
 
 ## Service Role Policy
 
@@ -309,7 +331,8 @@ Rules:
 - Loop 091 applies that boundary to alerts routes while keeping MockStaffNotifier and real LINE notification disconnected.
 - Loop 092 applies that boundary to RAG routes while keeping MockAiProvider and OpenAI real API disconnected.
 - Loop 093 rejects production `x-tenant-id` / `dev_header` and keeps `x-selected-tenant-id` as selector only.
-- Loop 099 verifies `x-selected-tenant-id` with a real staging Auth token and active memberships, but Admin UI persistence is still not implemented.
+- Loop 099 verifies `x-selected-tenant-id` with a real staging Auth token and active memberships.
+- Loop 100 adds Admin UI selectedTenantId persistence without storing tokens.
 - `x-selected-tenant-id` is a selector, not authentication.
 - `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
@@ -367,7 +390,7 @@ Proceed only when:
 
 - RLS policy SQL has a dedicated implementation Loop.
 - Auth/JWT production runtime has a dedicated implementation Loop.
-- Admin UI selectedTenantId persistence has a dedicated Loop.
+- Admin UI selectedTenantId persistence is implemented in Loop 100.
 - production dev_header rejection remains enforced.
 - staging/local tests verify tenant isolation.
 - no secrets, `.env` values, project refs, production logs, LINE userId, or real customer data are recorded.
@@ -402,6 +425,7 @@ Proceed only when:
 - [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
 - [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Loop 099: Staging Real Auth User Smoke](../11_codex_tasks/099_staging_real_auth_user_smoke.md)
+- [Loop 100: Admin UI selectedTenantId persistence](../11_codex_tasks/100_admin_ui_selected_tenant_persistence.md)
 - [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)

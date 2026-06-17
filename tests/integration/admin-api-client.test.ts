@@ -11,6 +11,7 @@ import {
   DEFAULT_API_BASE_URL,
   DEFAULT_STAFF_ID,
   DEFAULT_TENANT_ID,
+  formatAdminApiKnownError,
   getAdminApiConfig,
   listAlerts,
   notifyOpenAlerts,
@@ -71,6 +72,80 @@ describe("admin read-only API client", () => {
     expect(calls[0]?.init?.cache).toBe("no-store");
   });
 
+  it("attaches selectedTenantId as x-selected-tenant-id while keeping x-tenant-id separate", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await adminApiFetch(
+      "/api/admin/customers",
+      {},
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome",
+          selectedTenantId: "tenant_other"
+        },
+        fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
+    expect(headers.get("x-selected-tenant-id")).toBe("tenant_other");
+    expect(headers.get("authorization")).toBeNull();
+  });
+
+  it("does not attach x-selected-tenant-id when the selector is absent", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await adminApiFetch(
+      "/api/admin/customers",
+      {},
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome",
+          selectedTenantId: ""
+        },
+        fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(headers.get("x-selected-tenant-id")).toBeNull();
+  });
+
+  it("rejects invalid selectedTenantId locally before fetch", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await expect(
+      adminApiFetch(
+        "/api/admin/customers",
+        {},
+        {
+          config: {
+            apiBaseUrl: "http://localhost:4000",
+            tenantId: "tenant_amamihome",
+            selectedTenantId: "tenant invalid"
+          },
+          fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+            calls.push({ input, init });
+            return jsonResponse({ ok: true });
+          }
+        }
+      )
+    ).rejects.toThrow("invalid_selected_tenant_id");
+
+    expect(calls).toHaveLength(0);
+  });
+
   it("throws a readable error when the admin API returns an error", async () => {
     await expect(
       adminApiFetch(
@@ -89,6 +164,37 @@ describe("admin read-only API client", () => {
         }
       )
     ).rejects.toThrow("Admin API request failed: 403 Forbidden");
+  });
+
+  it("maps selected tenant and auth error codes to readable UI messages", async () => {
+    await expect(
+      adminApiFetch(
+        "/api/admin/customers",
+        {},
+        {
+          config: {
+            apiBaseUrl: "http://localhost:4000",
+            tenantId: "tenant_amamihome",
+            selectedTenantId: "tenant_other"
+          },
+          fetchFn: async () =>
+            new Response(JSON.stringify({ ok: false, error: "tenant_membership_denied" }), {
+              status: 403,
+              statusText: "Forbidden"
+            })
+        }
+      )
+    ).rejects.toThrow("選択した利用先へアクセスできません");
+
+    expect(formatAdminApiKnownError("tenant_selection_required")).toContain(
+      "利用先を選ぶ必要があります"
+    );
+    expect(formatAdminApiKnownError("authenticated_staff_required")).toContain(
+      "ログイン確認が必要です"
+    );
+    expect(formatAdminApiKnownError("invalid_selected_tenant_id")).toContain(
+      "利用先IDの形式が正しくありません"
+    );
   });
 
   it("posts AI summary requests to the customer action endpoint with x-tenant-id", async () => {

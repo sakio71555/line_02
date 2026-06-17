@@ -1,12 +1,18 @@
 import Link from "next/link";
 
-import { getAdminApiConfig, getAdminCustomers } from "../../src/admin-api";
+import {
+  getAdminApiConfig,
+  getAdminCustomers,
+  type AdminApiRequestOptions
+} from "../../src/admin-api";
+import { getServerAdminApiRequestOptions } from "../admin-api-request-options";
 
 export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {
-  const config = getAdminApiConfig();
-  const result = await loadCustomers();
+  const requestOptions = await getServerAdminApiRequestOptions();
+  const config = requestOptions.config ?? getAdminApiConfig();
+  const result = await loadCustomers(requestOptions);
 
   return (
     <main>
@@ -16,6 +22,10 @@ export default async function CustomersPage() {
           <h1>顧客一覧</h1>
           <p className="meta">
             利用先ID: <span className="mono">{config.tenantId}</span>
+          </p>
+          <p className="meta">
+            選択中の利用先:{" "}
+            <span className="mono">{config.selectedTenantId ?? "未選択"}</span>
           </p>
         </div>
         <Link href="/">トップへ戻る</Link>
@@ -31,6 +41,11 @@ export default async function CustomersPage() {
         </p>
         <p className="meta">
           本物のLINE送信、OpenAI API、Supabase本番DBにはまだ接続していません。
+        </p>
+        <p className="meta">
+          選択中の利用先は <span className="mono">x-selected-tenant-id</span>{" "}
+          として送られます。開発用の <span className="mono">x-tenant-id</span>{" "}
+          とは別の値です。
         </p>
       </div>
 
@@ -85,9 +100,9 @@ export default async function CustomersPage() {
   );
 }
 
-async function loadCustomers() {
+async function loadCustomers(options: AdminApiRequestOptions) {
   try {
-    const response = await getAdminCustomers();
+    const response = await getAdminCustomers(options);
     return {
       status: "ok" as const,
       customers: response.customers
