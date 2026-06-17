@@ -15,7 +15,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | knowledge_pages/RAG | staging runtime smoke済み |
 | staging milestone | staging拡張検証版100%相当 |
 | default runtime | `in_memory` |
-| RLS | RLS未実装 |
+| RLS | RLS未実装。Loop 094AでRLS SQL draft追加済みだが、staging apply未実施 |
 | Auth/JWT | Auth/JWT未接続 |
 | selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。UI保存は未完了 |
 | production dev_header rejection | Loop 093で実装済み |
@@ -25,7 +25,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 
 ## Production No-Go Reasons
 
-- RLS未実装。
+- RLS未実装。RLS SQL draftはLoop 094Aで追加済みだが、local/staging applyとtenant isolation verificationは未完了。
 - Auth/JWT未接続。
 - selectedTenantId transport boundaryと現在の主要Admin route rolloutは完了済みだが、UI保存は未完了。
 - production dev_header rejectionはLoop 093で実装済みだが、Supabase Auth/JWT本接続は未完了。
@@ -43,8 +43,8 @@ Loop 090 authenticated runtime customer write / AI routes
 Loop 091 authenticated runtime alerts routes
 Loop 092 authenticated runtime RAG routes
 Loop 093 production dev_header rejection (done)
-Loop 094 RLS SQL draft review
-Loop 095 RLS local/staging apply test
+Loop 094A RLS SQL draft review (done, not applied)
+Loop 095 RLS local/staging apply verification
 Loop 096 production readiness gate
 Loop 097 LINE real push gate
 Loop 098 OpenAI real API gate
@@ -117,6 +117,15 @@ Loop 093 implementation note:
 - local/dev/testの `x-tenant-id` / `dev_header` 互換は維持する。
 - fake verifier / fake StaffAuthLookupによるAuth/JWT boundary testは維持する。
 - Supabase Auth/JWT本接続、RLS SQL、Admin UI selectedTenantId保存は未実装のまま。
+
+Loop 094A implementation note:
+
+- `packages/db/migrations/0003_rls_core_tables.sql` をRLS SQL draftとして追加した。
+- 対象は `tenants`、tenant settings、customers、messages、alerts、knowledge_pages、staff_users、staff_tenant_memberships。
+- policyは `auth.uid()::text`、active `staff_users`、active `staff_tenant_memberships` を前提にする。
+- `anon` / `public` へのgrant/policy、`grant all`、`using true`、`with check true` は静的検証で禁止する。
+- `service_role` 既存grantは壊さない。
+- staging apply、production apply、Supabase実DB接続は未実施。
 
 ## Auth/JWT Rules
 
@@ -194,13 +203,13 @@ OpenAI real APIはproduction hardening完了後の別Loop。
 
 ## Next Loop
 
-Recommended next loop: Loop 094: RLS SQL draft review.
+Recommended next loop: Loop 095: RLS local/staging apply verification.
 
 理由:
 
-- production dev_header rejectionは完了したが、RLS SQLとSupabase Auth/JWT本接続はまだ未完了。
-- 次はRLS SQL draftをreviewし、migration applyや実DB接続とは分ける。
-- 実Supabase Auth/JWT本接続はRLS review/testとは混ぜず、専用Loopで扱う。
+- RLS SQL draftは完了したが、DB上のRLS挙動はまだ未検証。
+- 次はlocal/staging test DBに限定してapplyし、tenant A/B境界とanon拒否を確認する。
+- production applyやSupabase Auth/JWT本接続は引き続き別Loopで扱う。
 
 ## Related Docs
 
@@ -209,6 +218,7 @@ Recommended next loop: Loop 094: RLS SQL draft review.
 - [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
 - [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
 - [Loop 093: Production Dev Header Rejection + Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
+- [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)

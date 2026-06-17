@@ -31,7 +31,7 @@ production readiness: No-Go
 
 No-Go理由:
 
-- RLS 未実装。
+- RLS 未実装。RLS SQL draftはLoop 094Aで追加済み。ただし未apply・未検証。
 - Supabase Auth/JWT 未接続。
 - selectedTenantId transport boundaryはLoop 087で実装済み。
 - Loop 088で全Admin route rollout planを整理済み。
@@ -57,8 +57,8 @@ Loop 086では、staging拡張検証版100%相当の次に進む前にproduction
 
 Before production:
 
-- [ ] RLS SQL is designed per table.
-- [ ] RLS SQL is implemented in a dedicated migration.
+- [x] RLS SQL is drafted for core tables.
+- [ ] RLS SQL is applied and verified in local/staging test DB.
 - [ ] local or staging test DB verifies tenant A cannot read/write tenant B rows.
 - [ ] Supabase Auth/JWT verification is connected to Admin API.
 - [ ] `auth.uid()` maps to `staff_users.auth_user_id`.
@@ -83,6 +83,29 @@ Before production:
 | `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; RLS/Auth missing |
 | `staff_users` | Yes | maps Supabase Auth user to staff identity | Auth/RLS missing |
 | `staff_tenant_memberships` | Yes | active membership decides tenant and role | critical before production |
+
+## Loop 094A RLS Draft
+
+Loop 094AでRLS SQL draftを追加しました。
+
+```text
+packages/db/migrations/0003_rls_core_tables.sql
+scripts/dev-loop/verify-rls-migration-static.mjs
+tests/integration/rls-core-tables-migration-static.test.ts
+```
+
+Draft方針:
+
+- `authenticated` は `auth.uid()::text` を `staff_users.auth_user_id` と照合する。
+- `staff_users.status = 'active'` と `staff_users.is_active = true` を必須にする。
+- `staff_tenant_memberships.status = 'active'` を必須にする。
+- tenant-owned tablesはactive membershipの `tenant_id` とrowの `tenant_id` を照合する。
+- `knowledge_pages` は `allowed_for_ai = true` も必須にする。
+- `anon` / `public` へのgrant/policyは作らない。
+- `service_role` 既存grantは変更しない。
+- `using true` / `with check true` / broad grantは静的検証で禁止する。
+
+Loop 094Aではstaging applyをしていない。次Loopでlocal/staging test DBに限定してapplyし、tenant A/B境界、anon拒否、service_role bypass前提のrepository filterを確認する。
 
 ## Service Role Policy
 
@@ -223,5 +246,6 @@ Proceed only when:
 - [Loop 088: Authenticated Staff Runtime Full Route Rollout Plan](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md)
 - [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
 - [Loop 093: Production Dev Header Rejection + Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
+- [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

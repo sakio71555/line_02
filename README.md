@@ -214,6 +214,8 @@ Loop 092ではauthenticated_staff runtimeをRAG routesへ展開し、主要Admin
 
 Loop 093ではproduction dev_header rejectionとAuth/JWT boundaryを追加しました。production modeではAdmin routeの `x-tenant-id` / dev_header pathとdev seed routeを拒否し、Admin routeは `Authorization: Bearer` + authenticated_staff pathを前提にします。`x-selected-tenant-id` は認証ではなくselectorとして扱い、Bearerなしでは認証扱いしません。実Supabase Auth/JWT接続、RLS SQL、LINE/OpenAI本接続は未実装です。詳細は [docs/11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md](docs/11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md) を参照してください。
 
+Loop 094AではRLS SQL draft reviewを追加しました。core tables向けに `auth.uid()::text`、`staff_users`、`staff_tenant_memberships`、active staff / active membershipを使うRLS migration draftを作成し、`anon` への広範grantや `using true` を禁止する静的検証を追加しました。staging applyはまだ実施せず、production readinessはNo-Go継続です。詳細は [docs/11_codex_tasks/094a_rls_sql_draft_review.md](docs/11_codex_tasks/094a_rls_sql_draft_review.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

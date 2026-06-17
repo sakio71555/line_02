@@ -83,6 +83,12 @@ Loop 092で確認したRAG固有条件:
 - production modeで `POST /api/dev/seed-demo-data` は `dev_route_not_allowed`。
 - local/dev/testの `x-tenant-id` / `dev_header` 互換は維持する。
 
+## Loop 094A RLS Draft
+
+- `packages/db/migrations/0003_rls_core_tables.sql` をRLS SQL draftとして追加。
+- staging applyは未実施。
+- production readinessは引き続きNo-Go。
+
 ## Production Readiness
 
 production readiness: No-Go
@@ -90,15 +96,16 @@ production readiness: No-Go
 No-Go理由:
 
 - Supabase Auth/JWT本接続未実装。
-- RLS SQL未実装。
+- RLS SQL draftは未apply・未検証。
 - Admin UI selected tenant保存未実装。
 - LINE real push gate未実装。
 - OpenAI real API gate未実装。
 
 ## Next
 
-Loop 094: RLS SQL draft review.
+Loop 095: RLS local/staging apply verification.
 
 ## Related Docs
 
 - [Loop 093: Production Dev Header Rejection Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
+- [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)

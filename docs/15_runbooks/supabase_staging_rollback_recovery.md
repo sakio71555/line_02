@@ -76,6 +76,8 @@ RLSは未実装のため、service role grants recovery後もproduction readines
 
 Loop 080の [RLS/Auth Production Readiness](rls_auth_production_readiness.md) で、production No-Go理由をRLS未実装、Supabase Auth/JWT未接続、selectedTenantId再検証未接続、production dev_header rejection未実装として整理している。rollback/recovery中にこれらをまとめて実装しない。
 
+Loop 094Aでは `packages/db/migrations/0003_rls_core_tables.sql` をRLS SQL draftとして追加したが、staging applyは未実施。rollback/recovery中にRLS draftをその場でapplyしない。RLS applyが必要な場合は、local/staging apply verification専用Loopで、dummy staff Auth context、tenant A/B境界、anon拒否、service_role bypass前提のrepository filterを確認してから進める。詳細は [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md) を参照する。
+
 ## DBを作り直す判断
 
 staging DBを作り直す判断は別Loopで行う。
