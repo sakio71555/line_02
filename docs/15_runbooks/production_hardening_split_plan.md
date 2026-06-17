@@ -17,8 +17,8 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | default runtime | `in_memory` |
 | RLS | RLS未実装 |
 | Auth/JWT | Auth/JWT未接続 |
-| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。UI保存 / production runtime hardeningは未完了 |
-| production dev_header rejection | 未実装 |
+| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。UI保存は未完了 |
+| production dev_header rejection | Loop 093で実装済み |
 | LINE real push | disabled/mock |
 | OpenAI real API | mock |
 | production readiness | production No-Go |
@@ -27,8 +27,8 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 
 - RLS未実装。
 - Auth/JWT未接続。
-- selectedTenantId transport boundaryと現在の主要Admin route rolloutは完了済みだが、UI保存、production runtime hardeningは未完了。
-- production dev_header rejection未実装。
+- selectedTenantId transport boundaryと現在の主要Admin route rolloutは完了済みだが、UI保存は未完了。
+- production dev_header rejectionはLoop 093で実装済みだが、Supabase Auth/JWT本接続は未完了。
 - `service_role` はserver-side onlyであり、RLS bypass権限のためproduction authorizationそのものにはしない。
 - LINE real push gate未実装。
 - OpenAI real API gate未実装。
@@ -42,7 +42,7 @@ Loop 089 authenticated runtime read-only routes
 Loop 090 authenticated runtime customer write / AI routes
 Loop 091 authenticated runtime alerts routes
 Loop 092 authenticated runtime RAG routes
-Loop 093 production dev_header rejection
+Loop 093 production dev_header rejection (done)
 Loop 094 RLS SQL draft review
 Loop 095 RLS local/staging apply test
 Loop 096 production readiness gate
@@ -107,6 +107,17 @@ Loop 092 implementation note:
 - customer read/write/AI、alerts、RAGのauthenticated_staff rollout完了を監査記録へ残した。
 - production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
 
+Loop 093 implementation note:
+
+- production mode判定は `APP_ENV=production` または `NODE_ENV=production` を対象にする。
+- production modeでAdmin routeの `x-tenant-id` / `dev_header` pathを拒否する。
+- production modeでAdmin routeにBearerがない場合は `authenticated_staff_required` を返す。
+- production modeで `x-selected-tenant-id` 単体を認証扱いしない。
+- production modeで `POST /api/dev/seed-demo-data` を `dev_route_not_allowed` として拒否する。
+- local/dev/testの `x-tenant-id` / `dev_header` 互換は維持する。
+- fake verifier / fake StaffAuthLookupによるAuth/JWT boundary testは維持する。
+- Supabase Auth/JWT本接続、RLS SQL、Admin UI selectedTenantId保存は未実装のまま。
+
 ## Auth/JWT Rules
 
 - production Admin APIは `Authorization: Bearer` を必須にする。
@@ -123,6 +134,9 @@ Loop 092 implementation note:
 - productionでは `x-tenant-id` / `dev_header` を拒否する。
 - productionでは `Authorization: Bearer` + authenticated staff contextを必須にする。
 - expected errorは `dev_tenant_header_not_allowed`。
+- production mode判定は `APP_ENV=production` または `NODE_ENV=production` とする。
+- production dev seed routeは `dev_route_not_allowed` として拒否する。
+- BearerなしのAdmin routeは `authenticated_staff_required` とする。
 
 ## service_role Rules
 
@@ -180,13 +194,13 @@ OpenAI real APIはproduction hardening完了後の別Loop。
 
 ## Next Loop
 
-Recommended next loop: Loop 093: production dev_header rejection + Auth/JWT boundary.
+Recommended next loop: Loop 094: RLS SQL draft review.
 
 理由:
 
-- 主要Admin routeのauthenticated_staff rolloutが完了したため、次はproductionで `x-tenant-id` / `dev_header` を信頼しない境界へ進める。
-- ただしSupabase Auth/JWT本接続やRLS SQLは別Loopに分け、production rejectionと混ぜない。
-- local/testのdev_header互換を壊さないよう、production判定とerror mappingを小さく確認する。
+- production dev_header rejectionは完了したが、RLS SQLとSupabase Auth/JWT本接続はまだ未完了。
+- 次はRLS SQL draftをreviewし、migration applyや実DB接続とは分ける。
+- 実Supabase Auth/JWT本接続はRLS review/testとは混ぜず、専用Loopで扱う。
 
 ## Related Docs
 
@@ -194,6 +208,7 @@ Recommended next loop: Loop 093: production dev_header rejection + Auth/JWT boun
 - [Loop 085: Supabase Knowledge/RAG Runtime Boundary](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md)
 - [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
 - [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
+- [Loop 093: Production Dev Header Rejection + Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)

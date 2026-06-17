@@ -66,8 +66,8 @@ describe("development demo seed API", () => {
 
     const response = await app.fetch(seedRequest("tenant_amamihome"));
 
-    expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ ok: false, error: "dev_seed_disabled" });
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({ ok: false, error: "dev_route_not_allowed" });
     expect(customerRepository.list()).toHaveLength(0);
     expect(messageRepository.list()).toHaveLength(0);
     expect(await knowledgePageRepository.listByTenant("tenant_amamihome")).toHaveLength(0);

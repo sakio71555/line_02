@@ -51,6 +51,7 @@ import {
 } from "./admin/tenant-context";
 import {
   mapAdminAuthErrorToHttp,
+  type AdminAuthErrorCode,
   type AdminAuthErrorHttpResponse
 } from "./admin/auth-error-response";
 import {
@@ -135,7 +136,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
   api.post("/api/dev/seed-demo-data", async (c) => {
     if (isProductionRuntime(env)) {
-      return c.json({ ok: false, error: "dev_seed_disabled" }, 404);
+      return c.json({ ok: false, error: "dev_route_not_allowed" }, 403);
     }
 
     const tenantId = c.req.header("x-tenant-id");
@@ -713,6 +714,10 @@ function hasAuthorizationHeader(authorizationHeader: string | undefined): author
   return Boolean(authorizationHeader?.trim());
 }
 
+function hasTenantIdHeader(tenantIdHeader: string | undefined): tenantIdHeader is string {
+  return Boolean(tenantIdHeader?.trim());
+}
+
 type TenantScopedAdminRouteTenantResolution =
   | { ok: true; tenantId: string }
   | {
@@ -730,14 +735,19 @@ async function resolveTenantScopedAdminRouteTenant(input: {
   authenticatedSelectedTenantId: string | null | undefined;
   env: NodeJS.ProcessEnv;
 }): Promise<TenantScopedAdminRouteTenantResolution> {
+  if (isProductionRuntime(input.env)) {
+    if (hasTenantIdHeader(input.tenantIdHeader)) {
+      return adminAuthFailure("dev_tenant_header_not_allowed");
+    }
+
+    if (!hasAuthorizationHeader(input.authorizationHeader)) {
+      return adminAuthFailure("authenticated_staff_required");
+    }
+  }
+
   if (hasAuthorizationHeader(input.authorizationHeader)) {
     if (!input.adminAuthRuntime) {
-      const response = mapAdminAuthErrorToHttp({ code: "authenticated_staff_required" });
-      return {
-        ok: false,
-        body: response.body,
-        status: response.status
-      };
+      return adminAuthFailure("authenticated_staff_required");
     }
 
     const selectedTenant = resolveSelectedTenantIdTransport({
@@ -816,6 +826,16 @@ function createAuthenticatedAdminRuntimeInput(input: {
     authorizationHeader: input.authorizationHeader,
     selectedTenantId: input.selectedTenantId,
     action: input.action
+  };
+}
+
+function adminAuthFailure(code: AdminAuthErrorCode): TenantScopedAdminRouteTenantResolution {
+  const response = mapAdminAuthErrorToHttp({ code });
+
+  return {
+    ok: false,
+    body: response.body,
+    status: response.status
   };
 }
 

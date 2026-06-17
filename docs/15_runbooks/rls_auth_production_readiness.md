@@ -39,8 +39,9 @@ No-Go理由:
 - Loop 090でcustomer write / AI routesへauthenticated_staff runtimeを展開済み。
 - Loop 091でalerts routesへauthenticated_staff runtimeを展開済み。
 - Loop 092でRAG routesへauthenticated_staff runtimeを展開済み。
-- selectedTenantId membership再検証は現在の主要Admin routeまで確認済みだが、UI保存、production runtime hardeningは未完了。
-- production dev_header rejection 未実装。
+- Loop 093でproduction dev_header rejectionとdev seed route rejectionを実装済み。
+- selectedTenantId membership再検証は現在の主要Admin routeまで確認済みだが、UI保存は未完了。
+- Supabase Auth/JWT本接続 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
 - OpenAI mock。
@@ -65,7 +66,7 @@ Before production:
 - [ ] only active `staff_tenant_memberships` grant tenant access.
 - [ ] role is read from active membership.
 - [ ] selectedTenantId is revalidated against active memberships.
-- [ ] production rejects `x-tenant-id` / `dev_header`.
+- [x] production rejects `x-tenant-id` / `dev_header`.
 - [ ] service_role usage is server-side only and minimized.
 - [ ] browser / LIFF / Next client components do not receive service role keys.
 
@@ -136,6 +137,8 @@ Rules:
 - Loop 090 applies that boundary to customer write / AI routes while keeping LINE real push and OpenAI real API disconnected.
 - Loop 091 applies that boundary to alerts routes while keeping MockStaffNotifier and real LINE notification disconnected.
 - Loop 092 applies that boundary to RAG routes while keeping MockAiProvider and OpenAI real API disconnected.
+- Loop 093 rejects production `x-tenant-id` / `dev_header` and keeps `x-selected-tenant-id` as selector only.
+- `x-selected-tenant-id` is a selector, not authentication.
 - `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
 - If selected tenant is outside active memberships, return `tenant_membership_denied`.
@@ -147,9 +150,12 @@ Rules:
 
 - local/dev/test can keep `dev_header` compatibility.
 - staging should limit dev_header to explicit dummy verification paths while authenticated runtime is tested.
+- production mode is `APP_ENV=production` or `NODE_ENV=production`.
 - production must reject `x-tenant-id` / `dev_header`.
 - production requires `Authorization: Bearer` plus authenticated staff context.
 - Expected errors include `dev_tenant_header_not_allowed`, `authenticated_staff_required`, `tenant_selection_required`, `tenant_membership_denied`, `permission_denied`, and `session_expired`.
+- production dev seed route returns `dev_route_not_allowed`.
+- Loop 093 implements this API gate, but real Supabase Auth/JWT verification remains a later Loop.
 
 ## LINE Real Send Preconditions
 
@@ -216,5 +222,6 @@ Proceed only when:
 - [Authenticated Runtime Selected Tenant Transport Plan](../11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md)
 - [Loop 088: Authenticated Staff Runtime Full Route Rollout Plan](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md)
 - [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
+- [Loop 093: Production Dev Header Rejection + Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

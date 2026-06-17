@@ -14,6 +14,7 @@ Loop 092で、現在の主要Admin API routeに対する authenticated_staff run
 | customer write / AI routes | done | Loop 090 |
 | alerts routes | done | Loop 091 |
 | RAG routes | done | Loop 092 |
+| production dev_header rejection | done | Loop 093 |
 
 ## Completed Admin Routes
 
@@ -48,6 +49,7 @@ Loop 092で、現在の主要Admin API routeに対する authenticated_staff run
 Rules confirmed by route rollout tests:
 
 - `selectedTenantId` は権限ではなくselector。
+- `x-selected-tenant-id` は認証ではなくselector。
 - raw `x-selected-tenant-id` をrepository、service、RAG search、AI provider、notifierへ渡さない。
 - active membershipが1つなら未指定でそのtenantを使う。
 - 複数active membershipsで未指定なら `tenant_selection_required`。
@@ -73,13 +75,20 @@ Loop 092で確認したRAG固有条件:
 - default runtimeは `in_memory`。
 - response shapeは維持。
 
+## Loop 093 Production Gate
+
+- production modeではAdmin routeの `x-tenant-id` / `dev_header` pathを拒否する。
+- production modeでBearerなしのAdmin routeは `authenticated_staff_required`。
+- production modeで `x-selected-tenant-id` 単体を認証扱いしない。
+- production modeで `POST /api/dev/seed-demo-data` は `dev_route_not_allowed`。
+- local/dev/testの `x-tenant-id` / `dev_header` 互換は維持する。
+
 ## Production Readiness
 
 production readiness: No-Go
 
 No-Go理由:
 
-- production `dev_header` rejection未実装。
 - Supabase Auth/JWT本接続未実装。
 - RLS SQL未実装。
 - Admin UI selected tenant保存未実装。
@@ -88,4 +97,8 @@ No-Go理由:
 
 ## Next
 
-Loop 093: production dev_header rejection + Auth/JWT boundary.
+Loop 094: RLS SQL draft review.
+
+## Related Docs
+
+- [Loop 093: Production Dev Header Rejection Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
