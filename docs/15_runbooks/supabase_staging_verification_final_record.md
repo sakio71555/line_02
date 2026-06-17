@@ -155,7 +155,7 @@ Knowledge/RAG smoke result:
 
 ## Remaining Risks
 
-- RLS SQL is applied to staging, but authenticated role / JWT smoke is still not completed.
+- RLS SQL is applied to staging, and authenticated role / JWT claim smoke has passed with dummy data.
 - Supabase Auth/JWT is still not connected.
 - selectedTenantId UI保存 is still not completed.
 - staff/auth runtime switch remains future work.
@@ -192,7 +192,8 @@ Loop 080 records production readiness as No-Go even after staging customers/mess
 Before production:
 
 - keep `0003_rls_core_tables.sql` staging apply result from Loop 095B as the current RLS baseline.
-- add authenticated role / JWT RLS smoke against local/staging test DB.
+- keep Loop 096 authenticated role / JWT claim smoke as the current staging RLS behavior baseline.
+- plan Supabase Auth/JWT verifier connection before real Auth users or production use.
 - connect Supabase Auth/JWT and staff tenant context.
 - implement selectedTenantId transport and membership revalidation.
 - reject dev_header in production.
@@ -202,6 +203,8 @@ Before production:
 RLS staging applyの前提と手順は [Loop 095A task doc](../11_codex_tasks/095a_rls_staging_apply_plan.md) と [RLS Staging Apply Plan](rls_staging_apply_plan.md) を参照する。
 
 Loop 095Bで `0003_rls_core_tables.sql` をstaging DBへapplyした。RLS enabled/forced `9/9`、policies `14/14`、broad anon/public grants `0`、service_role grants維持を確認し、customers/messages、alerts、knowledge/RAG smokeは成功した。service_roleはRLS bypass前提のため、authenticated role/JWT smokeは後続Loopで扱う。詳細は [Loop 095B task doc](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md) を参照する。
+
+Loop 096でauthenticated role / JWT claim相当のRLS smokeをstaging DB上で実施した。dummy `request.jwt.claim.sub` により `auth.uid()` を設定し、active staff + active membershipではtenant A/B分離が効くこと、inactive staff / inactive membershipは読めないこと、`knowledge_pages.allowed_for_ai=false` は読めないこと、write smokeはrollback-onlyで通ることを確認した。本物Supabase Auth user作成、Supabase Auth/JWT本接続、production接続は未実施。詳細は [Loop 096 task doc](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md) を参照する。
 
 ## Next Loop Candidates
 
@@ -217,4 +220,5 @@ Loop 088: authenticated staff runtime full route rollout plan
 Loop 089: authenticated_staff runtime rollout for customer read routes
 Loop 095A: RLS staging apply planning / dry-run checklist
 Loop 095B: RLS staging apply execution gate
+Loop 096: authenticated role / JWT RLS smoke
 ```

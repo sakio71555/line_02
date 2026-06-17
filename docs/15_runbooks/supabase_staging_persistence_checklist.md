@@ -62,6 +62,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - Loop 078の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、safe helper経由でstaging migration applyに成功し、主要table/column/indexを確認した。RLSは未実装のためproductionへ進まない。
 - Loop 079 / 079.1の [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md) では、staging dummy seed、dummy verification、PostgREST service_role grants recovery、customers/messages API smoke、restart相当のpersistence確認を記録した。RLSは未実装のためproductionへ進まない。
 - Loop 095Bの [RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md) では、`0003_rls_core_tables.sql` をstaging DBへapplyし、RLS enabled/forced `9/9`、policies `14/14`、service_role grants維持、customers/messages・alerts・knowledge/RAG smoke成功を記録した。service_roleはRLS bypass前提のため、authenticated role/JWT smokeが終わるまでproductionへ進まない。
+- Loop 096の [Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md) では、dummy `request.jwt.claim.sub` でauthenticated role相当のRLS smokeを実施し、tenant A/B分離、inactive staff/membership拒否、`allowed_for_ai=false` 拒否、rollback-only write smokeを確認した。本物Supabase Auth user作成、Supabase Auth/JWT本接続、production接続は未実施のためproductionへ進まない。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。
@@ -119,6 +120,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 085: Supabase Knowledge/RAG Runtime Boundary](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md)
 - [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
 - [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
+- [Loop 096: Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)

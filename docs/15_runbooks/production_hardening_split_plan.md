@@ -15,7 +15,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | knowledge_pages/RAG | staging runtime smoke済み |
 | staging milestone | staging拡張検証版100%相当 |
 | default runtime | `in_memory` |
-| RLS | Loop 095Bでstaging apply済み。RLS enabled/forced `9/9`、policies `14/14` 確認済み。ただしauthenticated role / JWT smoke未完了 |
+| RLS | Loop 095Bでstaging apply済み。Loop 096でauthenticated role / JWT claim相当smoke成功済み |
 | Auth/JWT | Auth/JWT未接続 |
 | selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。UI保存は未完了 |
 | production dev_header rejection | Loop 093で実装済み |
@@ -25,7 +25,8 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 
 ## Production No-Go Reasons
 
-- RLS SQLはLoop 095Bでstaging apply済み。ただしauthenticated role / JWT smokeとtenant A/B isolation verificationは未完了。
+- RLS SQLはLoop 095Bでstaging apply済み。
+- authenticated role / JWT claim相当のtenant A/B isolation smokeはLoop 096で成功済み。ただしSupabase Auth/JWT本接続は未完了。
 - Auth/JWT未接続。
 - selectedTenantId transport boundaryと現在の主要Admin route rolloutは完了済みだが、UI保存は未完了。
 - production dev_header rejectionはLoop 093で実装済みだが、Supabase Auth/JWT本接続は未完了。
@@ -46,9 +47,10 @@ Loop 093 production dev_header rejection (done)
 Loop 094A RLS SQL draft review (done, not applied)
 Loop 095A RLS staging apply planning / dry-run checklist (done, not applied)
 Loop 095B RLS staging apply execution gate (done, staging only)
-Loop 096 production readiness gate
-Loop 097 LINE real push gate
-Loop 098 OpenAI real API gate
+Loop 096 authenticated role / JWT RLS smoke (done, staging only)
+Loop 097 Supabase Auth/JWT connection planning
+Loop 098 LINE real push gate
+Loop 099 OpenAI real API gate
 ```
 
 ## selectedTenantId Rules
@@ -144,6 +146,15 @@ Loop 095B execution note:
 - production readinessはNo-Go継続。
 - 詳細は [Loop 095B task doc](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md) を参照する。
 
+Loop 096 execution note:
+
+- authenticated role / JWT claim相当のRLS smokeをstaging DBで実行した。
+- `SET LOCAL ROLE authenticated` と `request.jwt.claim.sub` でdummy `auth.uid()` を設定した。
+- tenant A/B read separation、inactive staff、inactive membership、`allowed_for_ai=false`、rollback-only write smokeを確認した。
+- 本物Supabase Auth user作成、Supabase Auth/JWT本接続、production接続は未実施。
+- production readinessはNo-Go継続。
+- 詳細は [Loop 096 task doc](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md) を参照する。
+
 ## Auth/JWT Rules
 
 - production Admin APIは `Authorization: Bearer` を必須にする。
@@ -220,12 +231,12 @@ OpenAI real APIはproduction hardening完了後の別Loop。
 
 ## Next Loop
 
-Recommended next loop: Loop 096: authenticated role / JWT RLS smoke plan.
+Recommended next loop: Loop 097: Supabase Auth/JWT connection planning.
 
 理由:
 
 - RLS SQLはstaging DBへapply済みだが、service_role smokeはRLS bypass前提。
-- 次はauthenticated role / JWTでtenant A/B境界とanon拒否を確認する。
+- 次は本物Supabase Auth/JWT verifier接続へ進む前のplanを作る。
 - production applyやSupabase Auth/JWT本接続は引き続き別Loopで扱う。
 
 ## Related Docs
@@ -238,6 +249,7 @@ Recommended next loop: Loop 096: authenticated role / JWT RLS smoke plan.
 - [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
 - [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md)
 - [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
+- [Loop 096: Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
