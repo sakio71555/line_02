@@ -38,7 +38,8 @@ No-Go理由:
 - Loop 089でcustomer read routesへauthenticated_staff runtimeを展開済み。
 - Loop 090でcustomer write / AI routesへauthenticated_staff runtimeを展開済み。
 - Loop 091でalerts routesへauthenticated_staff runtimeを展開済み。
-- selectedTenantId membership再検証はcustomer routesとalerts routesまで確認済みだが、RAG、UI保存、production runtime hardeningは未完了。
+- Loop 092でRAG routesへauthenticated_staff runtimeを展開済み。
+- selectedTenantId membership再検証は現在の主要Admin routeまで確認済みだが、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -78,7 +79,7 @@ Before production:
 | `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; RLS/Auth missing |
 | `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; RLS/Auth missing |
 | `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; RLS/Auth missing |
-| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | runtime switch incomplete |
+| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; RLS/Auth missing |
 | `staff_users` | Yes | maps Supabase Auth user to staff identity | Auth/RLS missing |
 | `staff_tenant_memberships` | Yes | active membership decides tenant and role | critical before production |
 
@@ -134,6 +135,7 @@ Rules:
 - Loop 089 applies that boundary to customer read routes.
 - Loop 090 applies that boundary to customer write / AI routes while keeping LINE real push and OpenAI real API disconnected.
 - Loop 091 applies that boundary to alerts routes while keeping MockStaffNotifier and real LINE notification disconnected.
+- Loop 092 applies that boundary to RAG routes while keeping MockAiProvider and OpenAI real API disconnected.
 - `x-selected-tenant-id` is separate from dev-only `x-tenant-id`.
 - If staff has multiple active memberships and no selected tenant, return `tenant_selection_required`.
 - If selected tenant is outside active memberships, return `tenant_membership_denied`.
@@ -213,4 +215,6 @@ Proceed only when:
 - [Supabase RLS Policy Plan](../11_codex_tasks/025_supabase_rls_policy_plan.md)
 - [Authenticated Runtime Selected Tenant Transport Plan](../11_codex_tasks/055_authenticated_runtime_selected_tenant_transport_plan.md)
 - [Loop 088: Authenticated Staff Runtime Full Route Rollout Plan](../11_codex_tasks/088_authenticated_staff_runtime_full_route_rollout_plan.md)
+- [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)
+- [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

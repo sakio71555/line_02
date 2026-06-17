@@ -386,20 +386,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.post("/api/admin/rag/search", async (c) => {
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.searchRag
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.searchRag,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const searchBody = await readRagSearchBody(c.req.raw);
@@ -425,20 +423,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   api.post("/api/admin/rag/answer-draft", async (c) => {
-    const tenantId = c.req.header("x-tenant-id");
-    const tenant = resolveAdminTenant(tenantId, env);
-
-    if (tenant.status !== "ok") {
-      return c.json(tenant.httpResponse.body, tenant.httpResponse.status);
-    }
-
-    const roleGuard = evaluateAdminRouteRoleGuardCompatibility({
-      context: tenant.context,
-      action: adminRouteActions.createRagAnswerDraft
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.createRagAnswerDraft,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
     });
 
-    if (!roleGuard.ok) {
-      return c.json(roleGuard.body, roleGuard.status);
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
     }
 
     const searchBody = await readRagSearchBody(c.req.raw);

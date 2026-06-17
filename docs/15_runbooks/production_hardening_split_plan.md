@@ -17,7 +17,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | default runtime | `in_memory` |
 | RLS | RLS未実装 |
 | Auth/JWT | Auth/JWT未接続 |
-| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。RAG / UI保存 / production runtime hardeningは未完了 |
+| selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。UI保存 / production runtime hardeningは未完了 |
 | production dev_header rejection | 未実装 |
 | LINE real push | disabled/mock |
 | OpenAI real API | mock |
@@ -27,7 +27,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 
 - RLS未実装。
 - Auth/JWT未接続。
-- selectedTenantId transport boundaryは実装済みだが、RAG rollout、UI保存、production runtime hardeningは未完了。
+- selectedTenantId transport boundaryと現在の主要Admin route rolloutは完了済みだが、UI保存、production runtime hardeningは未完了。
 - production dev_header rejection未実装。
 - `service_role` はserver-side onlyであり、RLS bypass権限のためproduction authorizationそのものにはしない。
 - LINE real push gate未実装。
@@ -97,6 +97,15 @@ Loop 091 implementation note:
 - `x-selected-tenant-id` はactive membershipで再検証し、alert list / unreplied check / notify-open処理へは検証済み `AdminTenantContext.tenantId` のみ渡す。
 - notify-openは引き続きMockStaffNotifierで、本物LINE通知は未接続のまま。
 - RAG、production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
+
+Loop 092 implementation note:
+
+- RAG routesへauthenticated_staff runtimeを展開済み。
+- 対象は `POST /api/admin/rag/search`、`POST /api/admin/rag/answer-draft` のみ。
+- `x-selected-tenant-id` はactive membershipで再検証し、RAG search / answer-draft処理へは検証済み `AdminTenantContext.tenantId` のみ渡す。
+- RAG sourceは `tenant_id + allowed_for_ai=true` のみで、MockAiProviderを維持する。
+- customer read/write/AI、alerts、RAGのauthenticated_staff rollout完了を監査記録へ残した。
+- production dev_header rejection、Auth/JWT、RLS SQLは未実装のまま。
 
 ## Auth/JWT Rules
 
@@ -171,18 +180,20 @@ OpenAI real APIはproduction hardening完了後の別Loop。
 
 ## Next Loop
 
-Recommended next loop: Loop 087: selectedTenantId transport boundary.
+Recommended next loop: Loop 093: production dev_header rejection + Auth/JWT boundary.
 
 理由:
 
-- production tenant決定の入口であり、Auth/JWTやRLSより先にselectorの扱いを固定できる。
-- dev_headerをproductionで拒否する前に、authenticated runtimeが安全にtenantを確定できる必要がある。
-- selectedTenantIdをpermissionと誤用しないためのtestを先に置ける。
+- 主要Admin routeのauthenticated_staff rolloutが完了したため、次はproductionで `x-tenant-id` / `dev_header` を信頼しない境界へ進める。
+- ただしSupabase Auth/JWT本接続やRLS SQLは別Loopに分け、production rejectionと混ぜない。
+- local/testのdev_header互換を壊さないよう、production判定とerror mappingを小さく確認する。
 
 ## Related Docs
 
 - [Loop 080: RLS/Auth Production Readiness Plan](../11_codex_tasks/080_rls_auth_production_readiness_plan.md)
 - [Loop 085: Supabase Knowledge/RAG Runtime Boundary](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md)
 - [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
+- [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
+- [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
