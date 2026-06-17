@@ -44,7 +44,8 @@ Loop 091 authenticated runtime alerts routes
 Loop 092 authenticated runtime RAG routes
 Loop 093 production dev_header rejection (done)
 Loop 094A RLS SQL draft review (done, not applied)
-Loop 095 RLS local/staging apply verification
+Loop 095A RLS staging apply planning / dry-run checklist (done, not applied)
+Loop 095B RLS staging apply execution gate
 Loop 096 production readiness gate
 Loop 097 LINE real push gate
 Loop 098 OpenAI real API gate
@@ -127,6 +128,13 @@ Loop 094A implementation note:
 - `service_role` 既存grantは壊さない。
 - staging apply、production apply、Supabase実DB接続は未実施。
 
+Loop 095A planning note:
+
+- RLS staging apply前のGo/No-Go、dry-run checklist、apply後verification、staging smoke、rollback/recovery方針を整理した。
+- apply対象migrationは `packages/db/migrations/0003_rls_core_tables.sql`。
+- Loop 095Aではstaging apply、Supabase実DB接続、`.env.staging` 読み込み、RLS SQL修正は行っていない。
+- 詳細は [Loop 095A task doc](../11_codex_tasks/095a_rls_staging_apply_plan.md) と [RLS Staging Apply Plan](rls_staging_apply_plan.md) を参照する。
+
 ## Auth/JWT Rules
 
 - production Admin APIは `Authorization: Bearer` を必須にする。
@@ -203,12 +211,13 @@ OpenAI real APIはproduction hardening完了後の別Loop。
 
 ## Next Loop
 
-Recommended next loop: Loop 095: RLS local/staging apply verification.
+Recommended next loop: Loop 095B: RLS staging apply execution gate.
 
 理由:
 
 - RLS SQL draftは完了したが、DB上のRLS挙動はまだ未検証。
-- 次はlocal/staging test DBに限定してapplyし、tenant A/B境界とanon拒否を確認する。
+- 次はLoop 095AのGo/No-Goとrollback/recoveryに沿って、staging apply可否を判定する。
+- Goの場合のみstaging test DBに限定してapplyし、tenant A/B境界とanon拒否を確認する。
 - production applyやSupabase Auth/JWT本接続は引き続き別Loopで扱う。
 
 ## Related Docs
@@ -219,6 +228,8 @@ Recommended next loop: Loop 095: RLS local/staging apply verification.
 - [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
 - [Loop 093: Production Dev Header Rejection + Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
 - [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
+- [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md)
+- [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)

@@ -89,6 +89,13 @@ Loop 092で確認したRAG固有条件:
 - staging applyは未実施。
 - production readinessは引き続きNo-Go。
 
+## Loop 095A RLS Staging Apply Plan
+
+- RLS staging apply前のGo/No-Go、verification、staging smoke、rollback/recovery方針を整理。
+- 対象migrationは `packages/db/migrations/0003_rls_core_tables.sql`。
+- staging apply、Supabase実DB接続、`.env.staging` 読み込みは未実施。
+- production readinessは引き続きNo-Go。
+
 ## Production Readiness
 
 production readiness: No-Go
@@ -109,3 +116,4 @@ Loop 095: RLS local/staging apply verification.
 
 - [Loop 093: Production Dev Header Rejection Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
 - [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
+- [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md)

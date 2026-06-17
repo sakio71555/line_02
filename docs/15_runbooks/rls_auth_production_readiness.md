@@ -14,6 +14,8 @@ Supabase stagingでcustomers/messagesの永続化smokeが通った後、producti
 
 - `0001_initial_schema.sql` はstagingへ適用済み。
 - `0002_service_role_postgrest_grants.sql` はstaging PostgREST/Data API smokeのために `service_role` 限定で適用済み。
+- `0003_rls_core_tables.sql` はRLS draftとして作成済みだが、staging applyは未実施。
+- Loop 095AでRLS staging apply前のGo/No-Go、verification、smoke、rollback/recovery planを追加済み。
 - customers/messagesは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - alertsは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - knowledge_pages/RAGは、明示注入したSupabase runtime bundleでstaging smoke済み。
@@ -58,6 +60,7 @@ Loop 086では、staging拡張検証版100%相当の次に進む前にproduction
 Before production:
 
 - [x] RLS SQL is drafted for core tables.
+- [x] RLS staging apply plan / dry-run checklist is documented.
 - [ ] RLS SQL is applied and verified in local/staging test DB.
 - [ ] local or staging test DB verifies tenant A cannot read/write tenant B rows.
 - [ ] Supabase Auth/JWT verification is connected to Admin API.
@@ -105,7 +108,29 @@ Draft方針:
 - `service_role` 既存grantは変更しない。
 - `using true` / `with check true` / broad grantは静的検証で禁止する。
 
-Loop 094Aではstaging applyをしていない。次Loopでlocal/staging test DBに限定してapplyし、tenant A/B境界、anon拒否、service_role bypass前提のrepository filterを確認する。
+Loop 094Aではstaging applyをしていない。Loop 095Aでapply前のGo/No-Go、verification、staging smoke、rollback/recoveryを整理した後、次Loopでlocal/staging test DBに限定してapply可否を判断する。
+
+## Loop 095A RLS Staging Apply Plan
+
+Loop 095AでRLS staging apply前の計画を追加しました。
+
+```text
+docs/11_codex_tasks/095a_rls_staging_apply_plan.md
+docs/15_runbooks/rls_staging_apply_plan.md
+```
+
+整理したこと:
+
+- apply対象migrationは `packages/db/migrations/0003_rls_core_tables.sql`。
+- apply前Go/No-Go checklist。
+- `.env.staging` とsecret値を表示しない運用。
+- apply予定手順。
+- apply後RLS verification checklist。
+- customer/message、alerts、knowledge/RAG、authenticated_staff route smoke。
+- `service_role` smokeだけではRLS確認にならないこと。
+- rollback/recovery方針。
+
+Loop 095Aではstaging apply、Supabase実DB接続、`.env.staging` 読み込み、RLS SQL修正を行っていません。production readiness remains No-Go.
 
 ## Service Role Policy
 
@@ -247,5 +272,7 @@ Proceed only when:
 - [Loop 092: Authenticated Staff RAG Routes and Rollout Audit](../11_codex_tasks/092_authenticated_staff_rag_routes_and_rollout_audit.md)
 - [Loop 093: Production Dev Header Rejection + Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
 - [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
+- [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md)
+- [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

@@ -159,6 +159,8 @@ Loop 093では、production modeで `x-tenant-id` / dev_header pathとdev seed r
 
 Loop 094Aでは、RLS SQLをstagingへapplyせずdraftとして追加し、静的検証で `anon` grant、`using true`、`with check true`、broad grantを検出します。RLSは `draft review -> local/staging apply verification -> production readiness gate` の順に分け、SQL作成とDB適用を同じLoopに混ぜません。詳細は [docs/11_codex_tasks/094a_rls_sql_draft_review.md](11_codex_tasks/094a_rls_sql_draft_review.md) を参照してください。
 
+Loop 095Aでは、RLS staging applyを実行する前にGo/No-Go、dry-run checklist、apply後verification、staging smoke、rollback/recoveryをdocs化します。`0003_rls_core_tables.sql` の実apply、Supabase実DB接続、`.env.staging` 読み込み、RLS SQL修正は別Loopに分けます。詳細は [docs/11_codex_tasks/095a_rls_staging_apply_plan.md](11_codex_tasks/095a_rls_staging_apply_plan.md) と [docs/15_runbooks/rls_staging_apply_plan.md](15_runbooks/rls_staging_apply_plan.md) を参照してください。
+
 本番化Loopとは別に、ローカルデモMVPの完成度を上げるhardening Loopを挟みます。デモ確認ではmock/in-memory/未接続を画面とrunbookで明示し、Supabase Auth、LINE実送信、OpenAI実API、Supabase実DBが接続済みであるように見せないことを優先します。
 
 ローカルデモMVPから社内確認版へ移行する場合は、実装だけでなく、確認順、未接続範囲、できること/まだできないこと、フィードバック項目をrunbook化します。社内確認版は本番運用版ではないため、本物LINE送信、OpenAI API、Supabase本番DB、本番ログイン、本番通知、schedulerが未接続であることを画面と手順書の両方で明示します。

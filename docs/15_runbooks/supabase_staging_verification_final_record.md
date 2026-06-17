@@ -190,12 +190,15 @@ Loop 080 records production readiness as No-Go even after staging customers/mess
 Before production:
 
 - plan and implement RLS policies.
+- apply and verify `0003_rls_core_tables.sql` in staging only after the Loop 095A Go/No-Go checklist passes.
 - add RLS tests against local/staging test DB.
 - connect Supabase Auth/JWT and staff tenant context.
 - implement selectedTenantId transport and membership revalidation.
 - reject dev_header in production.
 - keep service role key server-side only.
 - confirm rollback/backup policy.
+
+RLS staging applyの前提と手順は [Loop 095A task doc](../11_codex_tasks/095a_rls_staging_apply_plan.md) と [RLS Staging Apply Plan](rls_staging_apply_plan.md) を参照する。
 
 ## Next Loop Candidates
 
@@ -209,4 +212,5 @@ Loop 086: RLS/Auth/JWT production hardening split plan
 Loop 087: selectedTenantId transport boundary
 Loop 088: authenticated staff runtime full route rollout plan
 Loop 089: authenticated_staff runtime rollout for customer read routes
+Loop 095A: RLS staging apply planning / dry-run checklist
 ```
