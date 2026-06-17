@@ -18,6 +18,7 @@ Supabase stagingでcustomers/messagesの永続化smokeが通った後、producti
 - Loop 095AでRLS staging apply前のGo/No-Go、verification、smoke、rollback/recovery planを追加済み。
 - Loop 095BでRLS enabled `9/9`、FORCE RLS `9/9`、policies `14/14`、service_role grants維持、staging smoke成功を確認済み。
 - Loop 096でauthenticated role / JWT claim相当のRLS smokeを実施済み。
+- Loop 097でSupabase Auth/JWT connection planとstaging real Auth smoke方針を追加済み。
 - customers/messagesは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - alertsは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - knowledge_pages/RAGは、明示注入したSupabase runtime bundleでstaging smoke済み。
@@ -38,6 +39,7 @@ No-Go理由:
 
 - RLS SQLはLoop 095Bでstaging apply済み。
 - authenticated role / JWT claim相当のRLS smokeはLoop 096で成功済み。ただしSupabase Auth/JWT本接続は未完了。
+- Loop 097でBearer token、Supabase Auth `user.id`、`staff_users.auth_user_id`、active membership、RLS `auth.uid()` の接続計画は整理済み。
 - Supabase Auth/JWT 未接続。
 - selectedTenantId transport boundaryはLoop 087で実装済み。
 - Loop 088で全Admin route rollout planを整理済み。
@@ -68,6 +70,7 @@ Before production:
 - [x] RLS SQL is applied and statically verified in staging DB.
 - [x] authenticated role / JWT claim smoke verifies RLS behavior in staging.
 - [x] staging test DB verifies tenant A cannot read/write tenant B rows with dummy data.
+- [x] Supabase Auth/JWT connection plan and real Auth smoke Go/No-Go are documented.
 - [ ] Supabase Auth/JWT verification is connected to Admin API.
 - [ ] `auth.uid()` maps to `staff_users.auth_user_id`.
 - [ ] only active `staff_users` are allowed.
@@ -82,13 +85,13 @@ Before production:
 
 | table | tenant_id | policy direction | production readiness |
 | --- | ---: | --- | --- |
-| `tenants` | No | authenticated staff reads only membership tenants; platform admin separate | staging RLS applied; authenticated/JWT smoke pending |
-| `tenant_line_settings` | Yes | server/admin settings only; secrets never exposed | staging RLS applied; authenticated/JWT smoke pending |
-| `tenant_ai_settings` | Yes | server/admin settings only | staging RLS applied; authenticated/JWT smoke pending |
-| `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; staging RLS applied; authenticated/JWT smoke pending |
-| `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; staging RLS applied; authenticated/JWT smoke pending |
-| `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; staging RLS applied; authenticated/JWT smoke pending |
-| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; staging RLS applied; authenticated/JWT smoke pending |
+| `tenants` | No | authenticated staff reads only membership tenants; platform admin separate | staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
+| `tenant_line_settings` | Yes | server/admin settings only; secrets never exposed | staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
+| `tenant_ai_settings` | Yes | server/admin settings only | staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
+| `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
+| `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
+| `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
+| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; staging RLS applied; dummy authenticated smoke done; real Auth/JWT pending |
 | `staff_users` | Yes | maps Supabase Auth user to staff identity | staging RLS applied; Auth/JWT connection pending |
 | `staff_tenant_memberships` | Yes | active membership decides tenant and role | staging RLS applied; Auth/JWT connection pending |
 
@@ -180,6 +183,28 @@ scripts/dev-loop/smoke-staging-authenticated-rls.mjs
 - `anon` / `public` broad grantは `0`。
 
 本物Supabase Auth user作成、Supabase Auth/JWT本接続、production接続、LINE/OpenAI本接続は未実施。production readiness remains No-Go.
+
+## Loop 097 Supabase Auth/JWT Connection Plan
+
+Loop 097でSupabase Auth/JWT本接続前の計画を追加しました。
+
+```text
+docs/11_codex_tasks/097_supabase_auth_jwt_connection_plan.md
+docs/15_runbooks/supabase_auth_jwt_connection_plan.md
+tests/integration/supabase-auth-jwt-connection-plan.test.ts
+```
+
+整理したこと:
+
+- `Authorization: Bearer` からSupabase Auth `user.id` を得る方針。
+- Supabase Auth `user.id` と `staff_users.auth_user_id` の接続方針。
+- fake verifierとreal verifierの差分。
+- real verifierのserver-side only境界とtoken非表示ルール。
+- StaffAuthLookup、active staff、active membership、selectedTenantId再検証。
+- RLS `auth.uid()` と `staff_users.auth_user_id` の一致条件。
+- staging real Auth smokeのGo/No-Go。
+
+Loop 097ではSupabase Auth user作成、Supabase Auth/JWT本接続、real verifier実装、RLS SQL変更、production接続を行っていない。production readiness remains No-Go.
 
 ## Service Role Policy
 
@@ -323,6 +348,9 @@ Proceed only when:
 - [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
 - [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md)
 - [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
+- [Loop 096: Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md)
+- [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
+- [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

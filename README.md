@@ -222,6 +222,8 @@ Loop 095Bでは `0003_rls_core_tables.sql` をstaging DBへ適用し、RLS enabl
 
 Loop 096ではauthenticated role / JWT claim相当のRLS smokeを追加しました。staging DB上でdummy `auth.uid()` を使い、active staff + active membershipによるtenant A/B分離、inactive staff/membership拒否、`knowledge_pages.allowed_for_ai` 制御、rollback内write smokeを確認しました。本物Supabase Authユーザー作成やSupabase Auth/JWT本接続は未実施で、production readinessはNo-Go継続です。詳細は [docs/11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md](docs/11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md) を参照してください。
 
+Loop 097ではSupabase Auth/JWT connection planを追加しました。`Authorization: Bearer` からSupabase Auth `user.id` を解決し、`staff_users.auth_user_id`、active staff、active membership、`selectedTenantId` 再検証、RLS `auth.uid()` へ接続する方針を整理しました。実Supabase Auth/JWT接続、Auth user作成、RLS SQL変更、production接続は未実施で、production readinessはNo-Go継続です。詳細は [docs/11_codex_tasks/097_supabase_auth_jwt_connection_plan.md](docs/11_codex_tasks/097_supabase_auth_jwt_connection_plan.md) と [docs/15_runbooks/supabase_auth_jwt_connection_plan.md](docs/15_runbooks/supabase_auth_jwt_connection_plan.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。
