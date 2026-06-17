@@ -218,6 +218,8 @@ Loop 094AではRLS SQL draft reviewを追加しました。core tables向けに 
 
 Loop 095AではRLS staging apply planを追加しました。`0003_rls_core_tables.sql` をstagingへ適用する前に、Go/No-Go、実行予定手順、RLS verification、staging smoke、rollback/recovery方針を整理しました。staging DBへのapplyは未実施で、production readinessはNo-Go継続です。詳細は [docs/11_codex_tasks/095a_rls_staging_apply_plan.md](docs/11_codex_tasks/095a_rls_staging_apply_plan.md) と [docs/15_runbooks/rls_staging_apply_plan.md](docs/15_runbooks/rls_staging_apply_plan.md) を参照してください。
 
+Loop 095Bでは `0003_rls_core_tables.sql` をstaging DBへ適用し、RLS enabled/forced/policy状態、service_role grants、既存staging smokeを確認しました。service_role smokeはRLS bypass前提のため、authenticated role/JWT smokeは後続Loopで行います。production readinessはNo-Go継続です。詳細は [docs/11_codex_tasks/095b_rls_staging_apply_execution_gate.md](docs/11_codex_tasks/095b_rls_staging_apply_execution_gate.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

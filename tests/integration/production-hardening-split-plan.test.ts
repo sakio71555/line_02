@@ -38,10 +38,16 @@ describe("Loop 086 production hardening split plan docs", () => {
     const taskDoc = readText(taskDocPath);
     const runbook = readText(runbookPath);
 
+    expect(taskDoc).toContain("staging拡張検証版100%相当");
+    expect(taskDoc).toContain("production No-Go");
+    expect(taskDoc).toContain("RLS未実装");
+
+    expect(runbook).toContain("staging拡張検証版100%相当");
+    expect(runbook).toContain("production No-Go");
+    expect(runbook).toContain("RLS SQLはLoop 095Bでstaging apply済み");
+    expect(runbook).toContain("authenticated role / JWT smoke");
+
     for (const text of [taskDoc, runbook]) {
-      expect(text).toContain("staging拡張検証版100%相当");
-      expect(text).toContain("production No-Go");
-      expect(text).toContain("RLS未実装");
       expect(text).toContain("Auth/JWT未接続");
       expect(text).toContain("selectedTenantId");
       expect(text).toContain("production dev_header rejection");

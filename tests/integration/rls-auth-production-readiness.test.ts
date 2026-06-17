@@ -45,10 +45,15 @@ describe("Loop 080 RLS/Auth production readiness docs", () => {
     const taskDoc = readText(taskDocPath);
     const runbook = readText(runbookPath);
 
+    expect(taskDoc).toContain("production readiness: No-Go");
+    expect(taskDoc).toContain("RLS 未実装");
+
+    expect(runbook).toContain("production readiness: No-Go");
+    expect(runbook).toContain("RLS SQLはLoop 095Bでstaging apply済み");
+    expect(runbook).toContain("authenticated role / JWT smoke");
+
     for (const text of [taskDoc, runbook]) {
-      expect(text).toContain("production readiness: No-Go");
-      expect(text).toContain("RLS 未実装");
-      expect(text).toContain("Supabase Auth/JWT 未接続");
+      expect(text).toContain("Supabase Auth/JWT");
       expect(text).toContain("selectedTenantId");
       expect(text).toContain("再検証");
       expect(text).toContain("production dev_header rejection");

@@ -19,7 +19,9 @@ Loop 094Aで追加したRLS migration draft `packages/db/migrations/0003_rls_cor
 packages/db/migrations/0003_rls_core_tables.sql
 ```
 
-Loop 095Aではこのmigrationを実行しない。次Loopで明示許可がある場合のみ、stagingに限定して適用する。
+Loop 095Aではこのmigrationを実行しなかった。Loop 095Bでstagingに限定して適用済み。
+
+Loop 095A時点ではstaging apply未実施で、Supabase実DB接続も行っていなかったため、このrunbookの前半はapply前計画として残す。Loop 095B以降の実行結果は末尾のApply Resultに追記する。
 
 ## Target Tables
 
@@ -214,14 +216,44 @@ rollback候補:
 - このrunbookとLoop 095A task docが存在する。
 - RLS static verifierが成功している。
 - lint/typecheck/test/test:integrationが成功している。
-- staging applyは未実施である。
-- Supabase実DB接続は未実施である。
+- Loop 095Bでstaging apply済みである。
+- RLS verification helperが成功している。
+- staging smokeが成功している。
 - production readinessはNo-Go継続である。
+
+## Loop 095B Apply Result
+
+Loop 095Bで `packages/db/migrations/0003_rls_core_tables.sql` をstaging DBへapplyした。
+
+結果:
+
+- apply: successful
+- RLS enabled tables: `9/9`
+- FORCE RLS tables: `9/9`
+- policies verified: `14/14`
+- authenticated policy roles: `14/14`
+- broad anon/public table grants: `0`
+- authenticated minimal grants: verified
+- service_role grants: remain usable
+- customers/messages smoke: passed
+- alerts smoke: passed
+- knowledge/RAG smoke: passed
+
+注意:
+
+- service_roleはRLS bypass前提。
+- service_role smokeだけではauthenticated role/JWTのRLS確認完了ではない。
+- authenticated role/JWT smokeは後続Loopで扱う。
+- rollbackは実行していない。
+- productionには触っていない。
+- LINE/OpenAI real providerは有効化していない。
+- production readiness remains No-Go。
 
 ## Related Docs
 
 - [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
 - [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md)
+- [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Production Hardening Split Plan](production_hardening_split_plan.md)
 - [Supabase Staging Rollback / Recovery](supabase_staging_rollback_recovery.md)

@@ -12,10 +12,13 @@
 ## Schema Apply Status
 
 - `packages/db/migrations/0001_initial_schema.sql`: applied to staging in Loop 078.
+- `packages/db/migrations/0002_service_role_postgrest_grants.sql`: applied to staging in Loop 079.1.
+- `packages/db/migrations/0003_rls_core_tables.sql`: applied to staging in Loop 095B.
 - Schema verification: passed.
 - Required tables, columns, and indexes were confirmed.
-- RLS enabled tables: `0/12`.
-- Policies count: `0`.
+- RLS enabled target tables: `9/9`.
+- FORCE RLS target tables: `9/9`.
+- Policies verified: `14/14`.
 
 ## Dummy Seed
 
@@ -152,10 +155,9 @@ Knowledge/RAG smoke result:
 
 ## Remaining Risks
 
-- RLS SQL is still not implemented.
+- RLS SQL is applied to staging, but authenticated role / JWT smoke is still not completed.
 - Supabase Auth/JWT is still not connected.
-- production dev header rejection is still not implemented.
-- selectedTenantId transport and production membership revalidation are still not connected.
+- selectedTenantId UI保存 is still not completed.
 - staff/auth runtime switch remains future work.
 - staging uses dummy data only.
 
@@ -189,9 +191,8 @@ Loop 080 records production readiness as No-Go even after staging customers/mess
 
 Before production:
 
-- plan and implement RLS policies.
-- apply and verify `0003_rls_core_tables.sql` in staging only after the Loop 095A Go/No-Go checklist passes.
-- add RLS tests against local/staging test DB.
+- keep `0003_rls_core_tables.sql` staging apply result from Loop 095B as the current RLS baseline.
+- add authenticated role / JWT RLS smoke against local/staging test DB.
 - connect Supabase Auth/JWT and staff tenant context.
 - implement selectedTenantId transport and membership revalidation.
 - reject dev_header in production.
@@ -199,6 +200,8 @@ Before production:
 - confirm rollback/backup policy.
 
 RLS staging applyの前提と手順は [Loop 095A task doc](../11_codex_tasks/095a_rls_staging_apply_plan.md) と [RLS Staging Apply Plan](rls_staging_apply_plan.md) を参照する。
+
+Loop 095Bで `0003_rls_core_tables.sql` をstaging DBへapplyした。RLS enabled/forced `9/9`、policies `14/14`、broad anon/public grants `0`、service_role grants維持を確認し、customers/messages、alerts、knowledge/RAG smokeは成功した。service_roleはRLS bypass前提のため、authenticated role/JWT smokeは後続Loopで扱う。詳細は [Loop 095B task doc](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md) を参照する。
 
 ## Next Loop Candidates
 
@@ -213,4 +216,5 @@ Loop 087: selectedTenantId transport boundary
 Loop 088: authenticated staff runtime full route rollout plan
 Loop 089: authenticated_staff runtime rollout for customer read routes
 Loop 095A: RLS staging apply planning / dry-run checklist
+Loop 095B: RLS staging apply execution gate
 ```

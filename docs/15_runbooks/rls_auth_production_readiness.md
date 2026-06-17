@@ -14,15 +14,17 @@ Supabase stagingでcustomers/messagesの永続化smokeが通った後、producti
 
 - `0001_initial_schema.sql` はstagingへ適用済み。
 - `0002_service_role_postgrest_grants.sql` はstaging PostgREST/Data API smokeのために `service_role` 限定で適用済み。
-- `0003_rls_core_tables.sql` はRLS draftとして作成済みだが、staging applyは未実施。
+- `0003_rls_core_tables.sql` はLoop 095Bでstaging DBへ適用済み。
 - Loop 095AでRLS staging apply前のGo/No-Go、verification、smoke、rollback/recovery planを追加済み。
+- Loop 095BでRLS enabled `9/9`、FORCE RLS `9/9`、policies `14/14`、service_role grants維持、staging smoke成功を確認済み。
 - customers/messagesは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - alertsは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - knowledge_pages/RAGは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - staging拡張検証版100%相当。
 - default runtimeは `in_memory` のまま。
 - staff/auth runtimeはSupabase Auth/JWTへ未接続。
-- RLS enabled tablesは `0/12`。
+- RLS core target tablesはLoop 095Bでenabled/forced `9/9`。
+- authenticated role / JWT RLS smokeは未完了。
 - LINE real pushはdisabled/mock。
 - OpenAI APIはmock。
 - production readiness: No-Go。
@@ -33,7 +35,7 @@ production readiness: No-Go
 
 No-Go理由:
 
-- RLS 未実装。RLS SQL draftはLoop 094Aで追加済み。ただし未apply・未検証。
+- RLS SQLはLoop 095Bでstaging apply済み。ただしauthenticated role / JWT smokeは未完了。
 - Supabase Auth/JWT 未接続。
 - selectedTenantId transport boundaryはLoop 087で実装済み。
 - Loop 088で全Admin route rollout planを整理済み。
@@ -61,7 +63,8 @@ Before production:
 
 - [x] RLS SQL is drafted for core tables.
 - [x] RLS staging apply plan / dry-run checklist is documented.
-- [ ] RLS SQL is applied and verified in local/staging test DB.
+- [x] RLS SQL is applied and statically verified in staging DB.
+- [ ] authenticated role / JWT smoke verifies RLS behavior.
 - [ ] local or staging test DB verifies tenant A cannot read/write tenant B rows.
 - [ ] Supabase Auth/JWT verification is connected to Admin API.
 - [ ] `auth.uid()` maps to `staff_users.auth_user_id`.
@@ -77,15 +80,15 @@ Before production:
 
 | table | tenant_id | policy direction | production readiness |
 | --- | ---: | --- | --- |
-| `tenants` | No | authenticated staff reads only membership tenants; platform admin separate | RLS needed |
-| `tenant_line_settings` | Yes | server/admin settings only; secrets never exposed | RLS and secret review needed |
-| `tenant_ai_settings` | Yes | server/admin settings only | RLS needed |
-| `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; RLS/Auth missing |
-| `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; RLS/Auth missing |
-| `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; RLS/Auth missing |
-| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; RLS/Auth missing |
-| `staff_users` | Yes | maps Supabase Auth user to staff identity | Auth/RLS missing |
-| `staff_tenant_memberships` | Yes | active membership decides tenant and role | critical before production |
+| `tenants` | No | authenticated staff reads only membership tenants; platform admin separate | staging RLS applied; authenticated/JWT smoke pending |
+| `tenant_line_settings` | Yes | server/admin settings only; secrets never exposed | staging RLS applied; authenticated/JWT smoke pending |
+| `tenant_ai_settings` | Yes | server/admin settings only | staging RLS applied; authenticated/JWT smoke pending |
+| `customers` | Yes | active staff membership via API, tenant scoped | staging smoke done; staging RLS applied; authenticated/JWT smoke pending |
+| `messages` | Yes | active staff membership via API, tenant/customer scoped | staging smoke done; staging RLS applied; authenticated/JWT smoke pending |
+| `alerts` | Yes | active staff membership via API/checker/notifier | staging smoke done; authenticated route rollout done; staging RLS applied; authenticated/JWT smoke pending |
+| `knowledge_pages` | Yes | tenant scoped and `allowed_for_ai` for RAG | staging smoke done; authenticated route rollout done; staging RLS applied; authenticated/JWT smoke pending |
+| `staff_users` | Yes | maps Supabase Auth user to staff identity | staging RLS applied; Auth/JWT connection pending |
+| `staff_tenant_memberships` | Yes | active membership decides tenant and role | staging RLS applied; Auth/JWT connection pending |
 
 ## Loop 094A RLS Draft
 
@@ -131,6 +134,28 @@ docs/15_runbooks/rls_staging_apply_plan.md
 - rollback/recovery方針。
 
 Loop 095Aではstaging apply、Supabase実DB接続、`.env.staging` 読み込み、RLS SQL修正を行っていません。production readiness remains No-Go.
+
+## Loop 095B RLS Staging Apply
+
+Loop 095BでRLS SQLをstaging DBへ適用しました。
+
+```text
+docs/11_codex_tasks/095b_rls_staging_apply_execution_gate.md
+scripts/dev-loop/verify-staging-rls-policies.mjs
+```
+
+確認結果:
+
+- `0003_rls_core_tables.sql` staging apply: passed
+- RLS enabled tables: `9/9`
+- FORCE RLS tables: `9/9`
+- policies verified: `14/14`
+- broad anon/public table grants: `0`
+- authenticated minimal grants: verified
+- service_role grants: remain usable
+- customers/messages, alerts, knowledge/RAG staging smoke: passed
+
+service_roleはRLS bypass前提のため、この結果だけではproduction Goにしない。authenticated role / JWT smoke、Supabase Auth/JWT本接続、Admin UI selectedTenantId保存、LINE/OpenAI gatesは未完了。
 
 ## Service Role Policy
 
@@ -273,6 +298,7 @@ Proceed only when:
 - [Loop 093: Production Dev Header Rejection + Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
 - [Loop 094A: RLS SQL Draft Review](../11_codex_tasks/094a_rls_sql_draft_review.md)
 - [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md)
+- [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

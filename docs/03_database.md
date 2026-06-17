@@ -57,6 +57,8 @@ Loop 086ではmigration SQL unchanged / no RLS SQLを守り、RLS SQL、Auth/JWT
 
 Loop 094Aではcore tables向けRLS migration draft `packages/db/migrations/0003_rls_core_tables.sql` を追加しました。Loop 095Aではこのdraftをstagingへ適用する前のGo/No-Go、verification、staging smoke、rollback/recovery方針を整理しました。RLS staging applyとSupabase実DB接続はまだ未実施です。詳細は [docs/11_codex_tasks/095a_rls_staging_apply_plan.md](11_codex_tasks/095a_rls_staging_apply_plan.md) と [docs/15_runbooks/rls_staging_apply_plan.md](15_runbooks/rls_staging_apply_plan.md) を参照してください。
 
+Loop 095Bでは `packages/db/migrations/0003_rls_core_tables.sql` をstaging DBへ適用しました。core 9 tablesでRLS enabled/forcedが確認済み、policy countは14、broad anon/public grantなし、service_role grants維持を確認しています。ただしservice_roleはRLS bypass前提のため、authenticated role/JWT smokeは未完了でproduction readinessはNo-Go継続です。詳細は [docs/11_codex_tasks/095b_rls_staging_apply_execution_gate.md](11_codex_tasks/095b_rls_staging_apply_execution_gate.md) を参照してください。
+
 ## ローカルmigration検証
 
 Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。

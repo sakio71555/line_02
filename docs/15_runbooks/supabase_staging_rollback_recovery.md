@@ -17,7 +17,7 @@ Supabase staging migration apply後、runtime switchやdummy seed検証で問題
 - 対象はstaging Supabase projectのみ。
 - production projectでは実行しない。
 - secret、DB URL、project ref、database password、`.env.staging` の値をdocsへ書かない。
-- RLS未実装のため、production readinessはNo-Goのまま扱う。
+- RLS core tablesはLoop 095Bでstaging apply済みだが、authenticated role / JWT smoke未完了のため、production readinessはNo-Goのまま扱う。
 
 ## Rollbackが必要なケース
 
@@ -80,6 +80,8 @@ Loop 094Aでは `packages/db/migrations/0003_rls_core_tables.sql` をRLS SQL dra
 
 Loop 095AではRLS staging apply前のGo/No-Go、apply予定手順、apply後verification、staging smoke、rollback/recovery方針を整理した。RLS rollbackが必要な場合も、その場で即席SQLを書かず、別Loopで明示許可を取る。詳細は [Loop 095A: RLS Staging Apply Plan](../11_codex_tasks/095a_rls_staging_apply_plan.md) と [RLS Staging Apply Plan](rls_staging_apply_plan.md) を参照する。
 
+Loop 095Bでは `0003_rls_core_tables.sql` のstaging applyとRLS verificationが成功したため、rollback/recoveryは実行していない。RLS enabled/forced `9/9`、policies `14/14`、service_role grants維持、既存staging smoke成功を確認した。今後RLS rollbackが必要になった場合も、このrunbook内で即席SQLを作らず、別Loopで明示許可を取る。詳細は [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md) を参照する。
+
 ## DBを作り直す判断
 
 staging DBを作り直す判断は別Loopで行う。
@@ -99,7 +101,7 @@ staging DBを作り直す判断は別Loopで行う。
 - customers/messagesだけがSupabase runtime境界で検証できる。
 - default runtimeは `in_memory` のまま。
 - LINE/OpenAIはmock/disabledのまま。
-- RLS未実装によるproduction No-Goが明記されている。
+- RLS staging apply済みでもauthenticated role / JWT smoke未完了によるproduction No-Goが明記されている。
 
 ## Related Docs
 
@@ -108,3 +110,4 @@ staging DBを作り直す判断は別Loopで行う。
 - [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
+- [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)

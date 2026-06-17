@@ -61,6 +61,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - Loop 077の [psql Availability Setup](psql_availability_setup.md) で、作業者が手動で `psql` を用意する手順と、CodexがinstallやSupabase接続を行わない方針を確認する。
 - Loop 078の [Supabase Staging Migration Apply Result](supabase_staging_migration_apply_result.md) では、safe helper経由でstaging migration applyに成功し、主要table/column/indexを確認した。RLSは未実装のためproductionへ進まない。
 - Loop 079 / 079.1の [Supabase Staging Verification Final Record](supabase_staging_verification_final_record.md) では、staging dummy seed、dummy verification、PostgREST service_role grants recovery、customers/messages API smoke、restart相当のpersistence確認を記録した。RLSは未実装のためproductionへ進まない。
+- Loop 095Bの [RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md) では、`0003_rls_core_tables.sql` をstaging DBへapplyし、RLS enabled/forced `9/9`、policies `14/14`、service_role grants維持、customers/messages・alerts・knowledge/RAG smoke成功を記録した。service_roleはRLS bypass前提のため、authenticated role/JWT smokeが終わるまでproductionへ進まない。
 - Supabase projectがstagingであることを確認する。
 - production projectではないことを確認する。
 - `supabase link` 先を人間が確認する。
@@ -117,6 +118,7 @@ Env / key / project readinessの詳細は [supabase_staging_env_readiness_checkl
 - [Loop 081: Supabase Alerts/Knowledge Staging Runtime Plan](../11_codex_tasks/081_supabase_alerts_knowledge_staging_runtime_plan.md)
 - [Loop 085: Supabase Knowledge/RAG Runtime Boundary](../11_codex_tasks/085_supabase_knowledge_rag_runtime_boundary.md)
 - [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](../11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
+- [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
 - [Supabase Staging Migration Dry-run](supabase_staging_migration_dry_run.md)
 - [Supabase Staging Migration Apply Plan](supabase_staging_migration_apply_plan.md)
 - [Supabase Staging Migration Apply Execution Gate](supabase_staging_migration_apply_execution_gate.md)
