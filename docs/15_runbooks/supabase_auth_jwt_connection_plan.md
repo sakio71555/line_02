@@ -18,6 +18,7 @@ Supabase Auth/JWT本接続へ進む前に、Admin APIが安全に `Authorization
 - Loop 095BでRLS SQLはstaging DBへ適用済み。
 - Loop 096でdummy `request.jwt.claim.sub` によるauthenticated role / JWT claim相当RLS smokeは成功済み。
 - `AuthSessionVerifier`、authenticated runtime、StaffAuthLookup、selectedTenantId transportは存在する。
+- Loop 098で `SupabaseAuthSessionVerifier` real verifier boundaryは追加済み。
 - Supabase Auth/JWT本接続は未実施。
 - Supabase Auth user作成は未実施。
 - production readiness remains No-Go。
@@ -46,6 +47,41 @@ Handling:
 - expired tokenは `session_expired`。
 - `x-selected-tenant-id` はselectorであり、認証ではない。
 - `x-tenant-id` はdev-onlyであり、productionでは拒否される。
+
+## Loop 098 Real Verifier Boundary
+
+Loop 098で以下を追加した。
+
+```text
+apps/api/src/admin/supabase-auth-session-verifier.ts
+tests/integration/supabase-auth-session-verifier.test.ts
+```
+
+Boundary:
+
+```text
+Authorization header
+-> extractBearerToken
+-> SupabaseAuthSessionVerifier.verifyBearerToken(token)
+-> client.auth.getUser(token)
+-> Supabase Auth user.id
+-> AuthUserIdentity.authUserId
+```
+
+The verifier depends on `SupabaseAuthClientLike`, so tests can inject a fake Supabase auth client. Importing the module does not read env, create a real client, or perform network access.
+
+Loop 098 also fixes production guard behavior:
+
+- production mode does not silently use a fake verifier by default.
+- production Bearer request without explicit `adminAuthRuntime` returns `authenticated_staff_required`.
+- explicit fake verifier injection remains allowed in local/test integration tests.
+
+Still not done:
+
+- real Supabase Auth connection.
+- Supabase Auth user creation.
+- staging real Auth smoke.
+- Admin API runtime auto-wiring with the real verifier.
 
 ## Secret and Token Non-Disclosure
 
@@ -84,6 +120,22 @@ Rules:
 - `staff_users.status` がactiveで、`is_active` がtrueのstaffだけを許可する。
 - active `staff_tenant_memberships` だけをtenant/role sourceにする。
 - `staff_users.tenant_id` は互換情報であり、本番のtenant authorityにはしない。
+
+## Error Mapping
+
+Loop 098 keeps the existing error family.
+
+| case | verifier/session result |
+| --- | --- |
+| missing Authorization header | `authenticated_staff_required` via existing mapper |
+| malformed Authorization header | `authenticated_staff_required` via existing mapper |
+| defensive blank verifier token | `invalid_bearer_token` |
+| Supabase auth error | `session_expired` |
+| missing Supabase user | `session_expired` |
+| blank Supabase user id | `session_expired` |
+| thrown network error | `session_expired` |
+
+The verifier result is code-only and does not expose token, URL, key, project ref, or raw Supabase error text.
 
 ## StaffAuthLookup
 
@@ -166,7 +218,7 @@ No-Go:
 次へ進む条件:
 
 - Loop 097 task docとこのrunbookが確認済み。
-- real verifier boundaryの実装Scopeが小さく切れている。
+- Loop 098 real verifier boundaryがtest済み。
 - staging real Auth smokeのNo-Go条件が共有済み。
 - production readiness remains No-Goを維持できる。
 
@@ -178,5 +230,6 @@ No-Go:
 - [Loop 093: Production Dev Header Rejection Auth/JWT Boundary](../11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)
 - [Loop 096: Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md)
 - [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
+- [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [RLS/Auth Production Readiness](rls_auth_production_readiness.md)
 - [Production Hardening Split Plan](production_hardening_split_plan.md)

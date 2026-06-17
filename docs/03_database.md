@@ -63,6 +63,8 @@ Loop 096ではstaging DB上で `SET LOCAL ROLE authenticated` と `request.jwt.c
 
 Loop 097では、実Supabase Auth/JWT接続へ進む前に、`Authorization: Bearer`、Supabase Auth `user.id`、`staff_users.auth_user_id`、active staff / membership、`selectedTenantId` 再検証、RLS `auth.uid()` の接続計画を整理しました。実Auth user作成、real verifier実装、RLS SQL変更、migration変更、production接続は未実施です。詳細は [docs/11_codex_tasks/097_supabase_auth_jwt_connection_plan.md](11_codex_tasks/097_supabase_auth_jwt_connection_plan.md) と [docs/15_runbooks/supabase_auth_jwt_connection_plan.md](15_runbooks/supabase_auth_jwt_connection_plan.md) を参照してください。
 
+Loop 098では、`Authorization: Bearer` tokenをSupabase Auth `user.id` へ変換する `SupabaseAuthSessionVerifier` 境界を追加しました。fake Supabase auth clientでvalid user、missing user、Supabase error、network error、token redactionを検証し、productionではfake verifierをdefault利用しないことを固定しました。実Supabase Auth接続、Auth user作成、staging real Auth smoke、RLS SQL変更、migration変更、production接続は未実施です。詳細は [docs/11_codex_tasks/098_supabase_auth_real_verifier_boundary.md](11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照してください。
+
 ## ローカルmigration検証
 
 Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。

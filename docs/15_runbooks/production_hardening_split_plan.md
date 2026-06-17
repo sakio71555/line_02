@@ -16,7 +16,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | staging milestone | staging拡張検証版100%相当 |
 | default runtime | `in_memory` |
 | RLS | Loop 095Bでstaging apply済み。Loop 096でauthenticated role / JWT claim相当smoke成功済み |
-| Auth/JWT | Loop 097でconnection plan済み。Auth/JWT本接続は未実装 |
+| Auth/JWT | Loop 098でreal verifier boundary済み。Auth/JWT本接続とstaging real Auth smokeは未実装 |
 | selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。UI保存は未完了 |
 | production dev_header rejection | Loop 093で実装済み |
 | LINE real push | disabled/mock |
@@ -28,7 +28,9 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 - RLS SQLはLoop 095Bでstaging apply済み。
 - authenticated role / JWT claim相当のtenant A/B isolation smokeはLoop 096で成功済み。ただしSupabase Auth/JWT本接続は未完了。
 - Loop 097でSupabase Auth/JWT connection planは追加済みだが、real verifier接続とAuth user作成は未実施。
-- Auth/JWT未接続。
+- Loop 098でreal verifier boundaryは追加済みだが、Auth/JWT本接続とstaging real Auth user smokeは未実施。
+- Auth/JWT未接続状態は継続。
+- Auth/JWT本接続は未実装。
 - selectedTenantId transport boundaryと現在の主要Admin route rolloutは完了済みだが、UI保存は未完了。
 - production dev_header rejectionはLoop 093で実装済みだが、Supabase Auth/JWT本接続は未完了。
 - `service_role` はserver-side onlyであり、RLS bypass権限のためproduction authorizationそのものにはしない。
@@ -50,7 +52,7 @@ Loop 095A RLS staging apply planning / dry-run checklist (done, not applied)
 Loop 095B RLS staging apply execution gate (done, staging only)
 Loop 096 authenticated role / JWT RLS smoke (done, staging only)
 Loop 097 Supabase Auth/JWT connection planning (done, docs/test only)
-Loop 098 Supabase Auth real verifier boundary
+Loop 098 Supabase Auth real verifier boundary (done, fake client only)
 Loop 099 staging real Auth user smoke
 Loop 100 LINE real push gate
 Loop 101 OpenAI real API gate
@@ -166,6 +168,14 @@ Loop 097 planning note:
 - Supabase Auth user作成、Supabase Auth/JWT本接続、RLS SQL変更、production接続は未実施。
 - 詳細は [Loop 097 task doc](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md) と [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md) を参照する。
 
+Loop 098 implementation note:
+
+- `SupabaseAuthSessionVerifier` と `SupabaseAuthClientLike` を追加した。
+- fake Supabase auth clientでvalid user、missing user、Supabase error、network error、token redactionを検証した。
+- production modeではfake verifierをdefault利用しないことを固定した。
+- Supabase Auth user作成、staging real Auth smoke、RLS SQL変更、production接続は未実施。
+- 詳細は [Loop 098 task doc](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照する。
+
 ## Auth/JWT Rules
 
 - production Admin APIは `Authorization: Bearer` を必須にする。
@@ -242,13 +252,13 @@ OpenAI real APIはproduction hardening完了後の別Loop。
 
 ## Next Loop
 
-Recommended next loop: Loop 098: Supabase Auth real verifier boundary.
+Recommended next loop: Loop 099: staging real Auth user smoke.
 
 理由:
 
-- Loop 097で本物Supabase Auth/JWT verifier接続へ進む前のplanは作成済み。
-- 次はreal verifier境界だけを小さく実装し、Admin API全体のruntime変更やAuth user smokeとは分ける。
-- production applyやSupabase Auth/JWT本接続のstaging smokeは引き続き別Loopで扱う。
+- Loop 098でreal verifier境界はfake clientで固定済み。
+- 次はstaging real Auth userと `staff_users.auth_user_id` の接続smokeを、production接続なしで小さく扱う。
+- production applyやLINE/OpenAI本接続は引き続き別Loopで扱う。
 
 ## Related Docs
 
@@ -262,6 +272,7 @@ Recommended next loop: Loop 098: Supabase Auth real verifier boundary.
 - [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
 - [Loop 096: Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md)
 - [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
+- [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Route Rollout Completion Audit](authenticated_staff_route_rollout_completion_audit.md)

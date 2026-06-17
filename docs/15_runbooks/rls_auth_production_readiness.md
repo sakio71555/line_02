@@ -19,6 +19,7 @@ Supabase stagingでcustomers/messagesの永続化smokeが通った後、producti
 - Loop 095BでRLS enabled `9/9`、FORCE RLS `9/9`、policies `14/14`、service_role grants維持、staging smoke成功を確認済み。
 - Loop 096でauthenticated role / JWT claim相当のRLS smokeを実施済み。
 - Loop 097でSupabase Auth/JWT connection planとstaging real Auth smoke方針を追加済み。
+- Loop 098でSupabase Auth real verifier boundaryを追加済み。
 - customers/messagesは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - alertsは、明示注入したSupabase runtime bundleでstaging smoke済み。
 - knowledge_pages/RAGは、明示注入したSupabase runtime bundleでstaging smoke済み。
@@ -40,7 +41,8 @@ No-Go理由:
 - RLS SQLはLoop 095Bでstaging apply済み。
 - authenticated role / JWT claim相当のRLS smokeはLoop 096で成功済み。ただしSupabase Auth/JWT本接続は未完了。
 - Loop 097でBearer token、Supabase Auth `user.id`、`staff_users.auth_user_id`、active membership、RLS `auth.uid()` の接続計画は整理済み。
-- Supabase Auth/JWT 未接続。
+- Loop 098でreal verifier boundaryは追加済みだが、Supabase Auth/JWT本接続とstaging real Auth smokeは未実施。
+- Supabase Auth/JWT 本接続は未実装。
 - selectedTenantId transport boundaryはLoop 087で実装済み。
 - Loop 088で全Admin route rollout planを整理済み。
 - Loop 089でcustomer read routesへauthenticated_staff runtimeを展開済み。
@@ -71,7 +73,8 @@ Before production:
 - [x] authenticated role / JWT claim smoke verifies RLS behavior in staging.
 - [x] staging test DB verifies tenant A cannot read/write tenant B rows with dummy data.
 - [x] Supabase Auth/JWT connection plan and real Auth smoke Go/No-Go are documented.
-- [ ] Supabase Auth/JWT verification is connected to Admin API.
+- [x] Supabase Auth real verifier boundary is implemented with fake auth client tests.
+- [ ] Supabase Auth/JWT verification is connected to Admin API runtime.
 - [ ] `auth.uid()` maps to `staff_users.auth_user_id`.
 - [ ] only active `staff_users` are allowed.
 - [ ] only active `staff_tenant_memberships` grant tenant access.
@@ -205,6 +208,26 @@ tests/integration/supabase-auth-jwt-connection-plan.test.ts
 - staging real Auth smokeのGo/No-Go。
 
 Loop 097ではSupabase Auth user作成、Supabase Auth/JWT本接続、real verifier実装、RLS SQL変更、production接続を行っていない。production readiness remains No-Go.
+
+## Loop 098 Supabase Auth Real Verifier Boundary
+
+Loop 098でSupabase Auth real verifier境界を追加しました。
+
+```text
+apps/api/src/admin/supabase-auth-session-verifier.ts
+tests/integration/supabase-auth-session-verifier.test.ts
+docs/11_codex_tasks/098_supabase_auth_real_verifier_boundary.md
+```
+
+確認したこと:
+
+- `SupabaseAuthSessionVerifier` がSupabase Auth `user.id` を `AuthUserIdentity.authUserId` へ変換する。
+- Supabase auth clientは `SupabaseAuthClientLike` として抽象化し、testではfake clientだけを使う。
+- Supabase auth error、missing user、blank user id、thrown network errorは `session_expired` へ安全に畳む。
+- token、URL、key、project ref、raw error textをresultへ含めない。
+- production modeではfake verifierをdefault利用せず、明示 `adminAuthRuntime` がないBearer requestは `authenticated_staff_required`。
+
+Loop 098では実Supabase Auth接続、Supabase Auth user作成、staging real Auth smoke、RLS SQL変更、production接続を行っていない。production readiness remains No-Go.
 
 ## Service Role Policy
 
@@ -350,6 +373,7 @@ Proceed only when:
 - [Loop 095B: RLS Staging Apply Execution Gate](../11_codex_tasks/095b_rls_staging_apply_execution_gate.md)
 - [Loop 096: Authenticated Role JWT RLS Smoke](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md)
 - [Loop 097: Supabase Auth/JWT Connection Plan](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md)
+- [Loop 098: Supabase Auth Real Verifier Boundary](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md)
 - [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md)
 - [RLS Staging Apply Plan](rls_staging_apply_plan.md)
 - [Authenticated Staff Runtime Route Rollout](authenticated_staff_runtime_route_rollout.md)

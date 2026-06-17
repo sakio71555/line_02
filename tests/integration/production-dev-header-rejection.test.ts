@@ -123,6 +123,28 @@ describe("Loop 093 production dev_header rejection and Auth/JWT boundary", () =>
     });
   });
 
+  it("does not silently use a fake verifier by default in production", async () => {
+    const { app, sessionVerifier } = createProductionGateApp();
+
+    const response = await app.fetch(
+      new Request("http://localhost/api/admin/customers", {
+        headers: { authorization: "Bearer private-prod-test-token" }
+      })
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(401);
+    expect(body).toEqual({
+      ok: false,
+      error: "authenticated_staff_required"
+    });
+    expect(sessionVerifier.tokens).toEqual([]);
+    expect(serialized).not.toContain("private-prod-test-token");
+    expect(serialized).not.toContain("secret");
+    expect(serialized).not.toContain("env");
+  });
+
   it("allows production Authorization Bearer path through the fake authenticated boundary", async () => {
     const { app, sessionVerifier } = createProductionGateApp({
       includeAuthRuntime: true

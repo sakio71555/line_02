@@ -194,7 +194,8 @@ Before production:
 - keep `0003_rls_core_tables.sql` staging apply result from Loop 095B as the current RLS baseline.
 - keep Loop 096 authenticated role / JWT claim smoke as the current staging RLS behavior baseline.
 - keep Loop 097 Supabase Auth/JWT connection plan as the verifier/smoke planning baseline.
-- connect Supabase Auth/JWT and staff tenant context.
+- keep Loop 098 Supabase Auth real verifier boundary as the API verifier baseline.
+- run staging real Auth user smoke before production.
 - implement selectedTenantId transport and membership revalidation.
 - reject dev_header in production.
 - keep service role key server-side only.
@@ -207,6 +208,8 @@ Loop 095Bで `0003_rls_core_tables.sql` をstaging DBへapplyした。RLS enable
 Loop 096でauthenticated role / JWT claim相当のRLS smokeをstaging DB上で実施した。dummy `request.jwt.claim.sub` により `auth.uid()` を設定し、active staff + active membershipではtenant A/B分離が効くこと、inactive staff / inactive membershipは読めないこと、`knowledge_pages.allowed_for_ai=false` は読めないこと、write smokeはrollback-onlyで通ることを確認した。本物Supabase Auth user作成、Supabase Auth/JWT本接続、production接続は未実施。詳細は [Loop 096 task doc](../11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md) を参照する。
 
 Loop 097でSupabase Auth/JWT connection planを追加した。`Authorization: Bearer` からSupabase Auth `user.id` を得て `staff_users.auth_user_id`、active staff、active membership、selectedTenantId再検証、RLS `auth.uid()` へ接続する方針とstaging real Auth smokeのGo/No-Goを整理した。実Supabase Auth user作成、Supabase Auth/JWT本接続、RLS SQL変更、production接続は未実施。詳細は [Loop 097 task doc](../11_codex_tasks/097_supabase_auth_jwt_connection_plan.md) と [Supabase Auth/JWT Connection Plan](supabase_auth_jwt_connection_plan.md) を参照する。
+
+Loop 098でSupabase Auth real verifier boundaryを追加した。`SupabaseAuthSessionVerifier` はfake Supabase auth clientでSupabase Auth `user.id` を `AuthUserIdentity.authUserId` へ変換し、token/secret redaction、`session_expired` mapping、production fake verifier default禁止を確認した。実Supabase Auth接続、Auth user作成、staging real Auth smoke、RLS SQL変更、production接続は未実施。詳細は [Loop 098 task doc](../11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照する。
 
 ## Next Loop Candidates
 
@@ -225,4 +228,5 @@ Loop 095B: RLS staging apply execution gate
 Loop 096: authenticated role / JWT RLS smoke
 Loop 097: Supabase Auth/JWT connection plan
 Loop 098: Supabase Auth real verifier boundary
+Loop 099: staging real Auth user smoke
 ```
