@@ -258,7 +258,24 @@ Still not done:
 - real LINE token usage.
 - real recipient / safe channel smoke.
 - persistent send audit/idempotency store.
-- OpenAI real API gate.
+
+## Loop 103 OpenAI Real API Gate and Final Readiness
+
+Loop 103でOpenAI real API gateとproduction readiness final gateを追加した。
+
+Implemented:
+
+- `AI_PROVIDER=openai`、`OPENAI_API_KEY`、`OPENAI_MODEL`、tenant AI settings、RAG source、draft-only/no auto-sendのgateを追加。
+- `OpenAiProvider` はfake transportでResponses API shapeだけを検証。
+- OpenAI API実呼び出し、実HTTP transport、production接続は未実施。
+- production readiness final runbookの最終判定は `production_no_go`。
+
+Still not done:
+
+- Real Admin login/session/token acquisition。
+- Production automatic construction of Supabase Auth client and StaffAuthLookup repository。
+- Real LINE send。
+- Real OpenAI API connection。
 
 Loop 100 note:
 

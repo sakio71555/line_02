@@ -165,6 +165,8 @@ Loop 095Bでは、095AのGo/No-Goに沿って `0003_rls_core_tables.sql` をstag
 
 Loop 096では、RLS staging apply後に `SET LOCAL ROLE authenticated` と `request.jwt.claim.sub` によるdummy `auth.uid()` simulationでtenant A/B分離を確認します。実Supabase Auth user作成、Supabase Auth/JWT本接続、production接続は行わず、write smokeは `BEGIN ... ROLLBACK` 内のdummy rowsだけに限定します。service_role smokeはRLS bypass確認、authenticated smokeはpolicy挙動確認として分けて記録します。詳細は [docs/11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md](11_codex_tasks/096_authenticated_role_jwt_rls_smoke.md) を参照してください。
 
+Loop 103 production readiness final gateでは、Goに必要な条件とNo-Go条件をrunbookとtestで機械的に確認します。OpenAI real API、LINE real push、production Auth runtimeのような外部接続境界は、複数flag、tenant settings、authenticated staff、selectedTenantId再検証、draft-only/no auto-send、secret非表示を満たすまで本接続しません。未実装が残る場合は `production_no_go` として記録します。
+
 Loop 097では、実Supabase Auth/JWT接続へ進む前にconnection planとrunbookを作ります。`Authorization: Bearer` からSupabase Auth `user.id`、`staff_users.auth_user_id`、active staff / membership、`selectedTenantId` 再検証、RLS `auth.uid()` へつなぐ順序を整理し、実Auth user作成やreal verifier接続は後続Loopへ分けます。詳細は [docs/11_codex_tasks/097_supabase_auth_jwt_connection_plan.md](11_codex_tasks/097_supabase_auth_jwt_connection_plan.md) を参照してください。
 
 Loop 098では、Supabase Auth real verifier境界だけを追加します。`SupabaseAuthSessionVerifier` はfake Supabase auth clientで検証し、token/secret redaction、`session_expired` mapping、production fake verifier default禁止を固定します。実Supabase Auth接続、Auth user作成、staging real Auth smoke、Admin UI selectedTenantId保存は後続Loopへ分けます。詳細は [docs/11_codex_tasks/098_supabase_auth_real_verifier_boundary.md](11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照してください。

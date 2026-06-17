@@ -98,3 +98,7 @@ local/dev/testでは `MockLineClient` またはfake transport付き `RealLineCli
 - tokenやuserIdをログ・docs・screenshotsへ出さないこと。
 - productionではないこと、またはproduction Goが明示されていること。
 - OpenAI自動返信と混ぜないこと。
+
+## Loop 103 Final Audit
+
+Loop 103のproduction readiness final gateで、このrunbookの必須条件を再確認しました。本物LINE API送信、LINE token実値利用、実LINE userId利用は引き続き未実施です。production readiness final判定は、LINE gate単体ではなくAuth runtime、Admin login/session、OpenAI gate、production smokeも含めて `production_no_go` としました。

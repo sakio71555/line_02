@@ -55,10 +55,11 @@ No-Go理由:
 - Loop 100でAdmin UI selectedTenantId persistenceを追加済み。
 - Loop 101でAdmin UI token forwarding boundaryとproduction Auth runtime gateを追加済み。
 - Loop 102でLINE real push gateを追加済み。ただし本物LINE送信は未実施。
+- Loop 103でOpenAI real API gateとproduction readiness final gateを追加済み。ただしOpenAI API実呼び出し、production接続、production deploy/smokeは未実施。
 - Supabase Auth/JWT production本接続 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
-- OpenAI mock。
+- OpenAI real API gate済み、defaultはmock。
 - staff/auth runtimeのproduction接続は未完了。
 
 ## Production Hardening Split Plan
@@ -90,6 +91,8 @@ Before production:
 - [x] production Auth runtime gate can use `SupabaseAuthSessionVerifier` when explicitly configured and injected.
 - [x] LINE real push gate requires flags, authenticated_staff, selectedTenantId, permission, tenant match, confirmation, and idempotency.
 - [ ] LINE real push uses a real safe transport in staging.
+- [x] OpenAI real API gate requires provider/key/model/tenant AI settings/RAG source/draft-only/no auto-send.
+- [ ] OpenAI real API uses a real safe transport in staging.
 - [x] production rejects `x-tenant-id` / `dev_header`.
 - [ ] production automatically wires real Supabase Auth client and StaffAuthLookup repository.
 - [ ] service_role usage is server-side only and minimized.

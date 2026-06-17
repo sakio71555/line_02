@@ -161,8 +161,8 @@ Real Auth smoke result:
 
 ## LINE / OpenAI State
 
-- LINE real push remains disabled.
-- OpenAI remains mock.
+- LINE real push remains disabled by default, with Loop 102 gate in place.
+- OpenAI remains mock by default, with Loop 103 real API gate in place.
 - No real LINE API send was performed.
 - No OpenAI API call was performed.
 
@@ -181,6 +181,7 @@ Real Auth smoke result:
 - selectedTenantId UI保存 is completed in Loop 100.
 - staff/auth production runtime switch remains future work.
 - staging uses dummy data only.
+- Loop 103 final production readiness判定は `production_no_go`。production runtime auto config、Admin login/session、real LINE/OpenAI smoke、production deployは未実施。
 
 ## Loop 085 Knowledge/RAG Runtime Smoke
 
