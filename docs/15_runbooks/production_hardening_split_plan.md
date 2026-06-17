@@ -19,7 +19,7 @@ Loop 085でstaging拡張検証版100%相当に到達した後、productionへ進
 | Auth/JWT | Loop 098でreal verifier boundary済み。Loop 099でstaging real Auth user smoke成功済み。production本接続は未実装 |
 | selectedTenantId | Loop 087でtransport boundary実装。Loop 088で全route rollout plan整理。Loop 089でcustomer read routesへ展開済み。Loop 090でcustomer write / AI routesへ展開済み。Loop 091でalerts routesへ展開済み。Loop 092でRAG routesへ展開済み。Loop 100でAdmin UI保存を追加済み |
 | production dev_header rejection | Loop 093で実装済み |
-| LINE real push | disabled/mock |
+| LINE real push | Loop 102でgate追加済み。実送信は未実施 |
 | OpenAI real API | mock |
 | production readiness | production No-Go |
 
@@ -56,9 +56,10 @@ Loop 097 Supabase Auth/JWT connection planning (done, docs/test only)
 Loop 098 Supabase Auth real verifier boundary (done, fake client only)
 Loop 099 staging real Auth user smoke (done, staging only)
 Loop 100 Admin UI selectedTenantId persistence (done)
-Loop 101 LINE real push gate
-Loop 102 OpenAI real API gate
-Loop 103 production readiness final gate
+Loop 101 Admin UI token forwarding + production Auth runtime gate
+Loop 102 LINE real push gate
+Loop 103 OpenAI real API gate
+Loop 104 production readiness final gate
 ```
 
 ## selectedTenantId Rules
@@ -242,13 +243,18 @@ RLSは次の順で扱う。
 
 ## LINE Real Push Gate
 
-LINE real pushはproduction hardening完了後の別Loop。
+Loop 102でLINE real push gateを追加済み。ただし本物LINE送信は未実施。
 
-- `LINE_REAL_PUSH_ENABLED=true` を明示するまで送信しない。
+- `LINE_MESSAGING_ENABLED=true` と `LINE_REAL_PUSH_ENABLED=true` の両方が必要。
 - server-side LineClientだけがtokenを扱う。
 - authenticated staff contextと `send_staff_reply` permissionを必須にする。
+- `x-selected-tenant-id` はactive membershipで再検証する。
+- customer tenant一致、送信前確認、idempotency keyを必須にする。
+- duplicate idempotency keyは拒否する。
+- `RealLineClient` はfake transportでpayload/redactionを検証済み。
 - stagingではdummy recipient / safe channelだけで確認する。
 - failed send時にmessage保存しない既存方針を維持する。
+- 本物LINE Messaging APIへのHTTP request、token実値利用、実LINE userId利用はまだ行わない。
 
 ## OpenAI Real API Gate
 

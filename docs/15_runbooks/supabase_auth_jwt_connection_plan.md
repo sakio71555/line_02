@@ -240,6 +240,26 @@ Still not done:
 - production connection or production smoke.
 - LINE/OpenAI real connection.
 
+## Loop 102 LINE Real Push Gate
+
+Loop 102でLINE real push gateを追加した。
+
+Implemented:
+
+- real push path requires `LINE_MESSAGING_ENABLED=true` and `LINE_REAL_PUSH_ENABLED=true`.
+- real push path requires authenticated_staff, `send_staff_reply` permission, selectedTenantId revalidation, customer tenant match, confirmation, and idempotency.
+- default mock path remains available for local/dev/test.
+- `RealLineClient` boundary is tested with fake transport only.
+- token/userId raw values are not logged or documented.
+
+Still not done:
+
+- real LINE Messaging API transport.
+- real LINE token usage.
+- real recipient / safe channel smoke.
+- persistent send audit/idempotency store.
+- OpenAI real API gate.
+
 Loop 100 note:
 
 - Admin UI selectedTenantId persistenceは完了。

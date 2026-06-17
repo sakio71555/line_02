@@ -120,6 +120,89 @@ export interface LineClient {
   pushMessage(to: string, messages: LineReplyMessage[]): Promise<void>;
 }
 
+export interface LineMessagingPushRequest {
+  channelAccessToken: string;
+  endpoint: string;
+  to: string;
+  messages: LineReplyMessage[];
+}
+
+export interface LineMessagingReplyRequest {
+  channelAccessToken: string;
+  endpoint: string;
+  replyToken: string;
+  messages: LineReplyMessage[];
+}
+
+export interface LineMessagingTransport {
+  pushMessage(request: LineMessagingPushRequest): Promise<void>;
+  replyMessage?(request: LineMessagingReplyRequest): Promise<void>;
+}
+
+export interface RealLineClientConfig {
+  channelAccessToken: string;
+  transport: LineMessagingTransport;
+  pushEndpoint?: string;
+  replyEndpoint?: string;
+}
+
+export class LineMessagingApiError extends Error {
+  constructor(message = "LINE Messaging API request failed.") {
+    super(message);
+    this.name = "LineMessagingApiError";
+  }
+}
+
+export class RealLineClient implements LineClient {
+  private readonly channelAccessToken: string;
+  private readonly pushEndpoint: string;
+  private readonly replyEndpoint: string;
+  private readonly transport: LineMessagingTransport;
+
+  constructor(config: RealLineClientConfig) {
+    const token = config.channelAccessToken.trim();
+
+    if (!token) {
+      throw new LineMessagingApiError("LINE channel access token is required.");
+    }
+
+    this.channelAccessToken = token;
+    this.transport = config.transport;
+    this.pushEndpoint = config.pushEndpoint ?? "https://api.line.me/v2/bot/message/push";
+    this.replyEndpoint = config.replyEndpoint ?? "https://api.line.me/v2/bot/message/reply";
+  }
+
+  async replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void> {
+    if (!this.transport.replyMessage) {
+      throw new LineMessagingApiError("LINE reply transport is not configured.");
+    }
+
+    try {
+      await this.transport.replyMessage({
+        channelAccessToken: this.channelAccessToken,
+        endpoint: this.replyEndpoint,
+        replyToken,
+        messages
+      });
+    } catch {
+      throw new LineMessagingApiError();
+    }
+  }
+
+  async pushMessage(to: string, messages: LineReplyMessage[]): Promise<void> {
+    try {
+      await this.transport.pushMessage({
+        channelAccessToken: this.channelAccessToken,
+        endpoint: this.pushEndpoint,
+        to,
+        messages
+      });
+    } catch {
+      throw new LineMessagingApiError();
+    }
+  }
+}
+
 export class MockLineClient implements LineClient {
   readonly replies: Array<{ replyToken: string; messages: LineReplyMessage[] }> = [];
   readonly pushes: Array<{ to: string; messages: LineReplyMessage[] }> = [];

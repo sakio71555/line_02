@@ -65,10 +65,19 @@ import {
   evaluateAdminRouteRoleGuardCompatibility
 } from "./admin/role-guarded-handler";
 import {
+  evaluateStaffReplyLinePushGate,
+  inferLineClientMode,
+  InMemoryLinePushIdempotencyStore,
+  type LineClientMode,
+  type LinePushIdempotencyStore,
+  type StaffReplyLinePushRequest
+} from "./admin/line-real-push-gate";
+import {
   createProductionAdminAuthRuntimeDependencies
 } from "./admin/production-auth-runtime-gate";
 import { resolveSelectedTenantIdTransport } from "./admin/selected-tenant-transport";
 import type { SupabaseAuthClientLike } from "./admin/supabase-auth-session-verifier";
+import type { AdminTenantContext } from "./admin/tenant-context";
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
@@ -83,6 +92,8 @@ export interface ApiAppDependencies {
   supabaseAuthClient?: SupabaseAuthClientLike;
   staffAuthLookup?: StaffAuthLookup;
   authenticatedSelectedTenantId?: string | null;
+  lineClientMode?: LineClientMode;
+  linePushIdempotencyStore?: LinePushIdempotencyStore;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
 }
@@ -129,6 +140,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const authenticatedSelectedTenantId = dependencies.authenticatedSelectedTenantId;
   const now = dependencies.now;
   const env = dependencies.env ?? process.env;
+  const lineClientMode = dependencies.lineClientMode ?? inferLineClientMode(env);
+  const linePushIdempotencyStore =
+    dependencies.linePushIdempotencyStore ?? new InMemoryLinePushIdempotencyStore();
   const adminAuthRuntime =
     dependencies.adminAuthRuntime ??
     (isProductionRuntime(env)
@@ -529,9 +543,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "customer_not_found" }, 404);
     }
 
-    const replyBody = await readStaffReplyBody(c.req.raw);
+    const replyRequest = await readStaffReplyBody(c.req.raw);
 
-    if (!replyBody) {
+    if (!replyRequest) {
       return c.json({ ok: false, error: "invalid_reply_body" }, 400);
     }
 
@@ -539,16 +553,39 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "cannot_reply_without_line_user_id" }, 409);
     }
 
+    const linePushGate = evaluateStaffReplyLinePushGate({
+      env,
+      lineClientMode,
+      tenantContext: tenant.context,
+      selectedTenantId: tenant.selectedTenantId,
+      customer,
+      request: replyRequest
+    });
+
+    if (!linePushGate.ok) {
+      return c.json({ ok: false, error: linePushGate.error }, linePushGate.status);
+    }
+
+    if (linePushGate.idempotencyScope && !linePushIdempotencyStore.reserve(linePushGate.idempotencyScope)) {
+      return c.json({ ok: false, error: "real_push_duplicate" }, 409);
+    }
+
     try {
-      await lineClient.pushMessage(customer.line_user_id, [{ type: "text", text: replyBody }]);
+      await lineClient.pushMessage(customer.line_user_id, [
+        { type: "text", text: replyRequest.body }
+      ]);
     } catch {
+      if (linePushGate.idempotencyScope) {
+        linePushIdempotencyStore.release(linePushGate.idempotencyScope);
+      }
+
       return c.json({ ok: false, error: "line_send_failed" }, 502);
     }
 
     const result = await recordStaffTextReply({
       tenant_id: tenant.tenantId,
       customer,
-      body: replyBody,
+      body: replyRequest.body,
       staff_user_id: readOptionalHeader(c.req.header("x-staff-id")),
       customerRepository,
       messageRepository
@@ -734,7 +771,12 @@ function hasTenantIdHeader(tenantIdHeader: string | undefined): tenantIdHeader i
 }
 
 type TenantScopedAdminRouteTenantResolution =
-  | { ok: true; tenantId: string }
+  | {
+      ok: true;
+      tenantId: string;
+      context: AdminTenantContext;
+      selectedTenantId: string | null;
+    }
   | {
       ok: false;
       body: AdminAuthErrorHttpResponse["body"];
@@ -799,7 +841,9 @@ async function resolveTenantScopedAdminRouteTenant(input: {
 
     return {
       ok: true,
-      tenantId: runtime.tenantId
+      tenantId: runtime.tenantId,
+      context: runtime.context,
+      selectedTenantId: selectedTenant.selectedTenantId
     };
   }
 
@@ -828,7 +872,9 @@ async function resolveTenantScopedAdminRouteTenant(input: {
 
   return {
     ok: true,
-    tenantId: tenant.tenantId
+    tenantId: tenant.tenantId,
+    context: tenant.context,
+    selectedTenantId: null
   };
 }
 
@@ -1023,7 +1069,7 @@ function isProductionRuntime(env: NodeJS.ProcessEnv): boolean {
   return env.APP_ENV === "production" || env.NODE_ENV === "production";
 }
 
-async function readStaffReplyBody(request: Request): Promise<string | null> {
+async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushRequest | null> {
   let parsed: unknown;
 
   try {
@@ -1038,7 +1084,22 @@ async function readStaffReplyBody(request: Request): Promise<string | null> {
 
   const body = parsed.body.trim();
 
-  return body.length > 0 ? body : null;
+  if (!body) {
+    return null;
+  }
+
+  return {
+    body,
+    realLinePushConfirmed: parsed.real_line_push_confirmed === true,
+    linePushConfirmation:
+      typeof parsed.line_push_confirmation === "string"
+        ? parsed.line_push_confirmation.trim()
+        : null,
+    idempotencyKey:
+      typeof parsed.idempotency_key === "string" && parsed.idempotency_key.trim()
+        ? parsed.idempotency_key.trim()
+        : null
+  };
 }
 
 async function readRagSearchBody(

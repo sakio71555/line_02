@@ -54,6 +54,7 @@ No-Go理由:
 - Loop 093でproduction dev_header rejectionとdev seed route rejectionを実装済み。
 - Loop 100でAdmin UI selectedTenantId persistenceを追加済み。
 - Loop 101でAdmin UI token forwarding boundaryとproduction Auth runtime gateを追加済み。
+- Loop 102でLINE real push gateを追加済み。ただし本物LINE送信は未実施。
 - Supabase Auth/JWT production本接続 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -87,6 +88,8 @@ Before production:
 - [x] Admin UI can persist selectedTenantId as a selector and send `x-selected-tenant-id`.
 - [x] Admin UI helper can forward a provider-supplied Bearer token without storing or displaying it.
 - [x] production Auth runtime gate can use `SupabaseAuthSessionVerifier` when explicitly configured and injected.
+- [x] LINE real push gate requires flags, authenticated_staff, selectedTenantId, permission, tenant match, confirmation, and idempotency.
+- [ ] LINE real push uses a real safe transport in staging.
 - [x] production rejects `x-tenant-id` / `dev_header`.
 - [ ] production automatically wires real Supabase Auth client and StaffAuthLookup repository.
 - [ ] service_role usage is server-side only and minimized.

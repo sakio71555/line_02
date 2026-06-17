@@ -232,6 +232,8 @@ Loop 100ではAdmin UI selectedTenantId persistenceを追加しました。`/sel
 
 Loop 101ではAdmin UI token forwarding boundaryとproduction Auth runtime gateを追加しました。Admin API helperはaccess token providerから受け取ったtokenを `Authorization: Bearer` headerへだけ載せ、保存・表示はしません。production modeでは開発用 `x-tenant-id` を送らない設定を使えます。API側は `AUTH_SESSION_VERIFIER=supabase` と注入されたfake可能なSupabase Auth client/StaffAuthLookupがある場合だけ `SupabaseAuthSessionVerifier` を使います。実Supabase Auth login、token取得、production接続、LINE/OpenAI本接続は未実装です。詳細は [docs/11_codex_tasks/101_admin_ui_token_forwarding_auth_runtime_gate.md](docs/11_codex_tasks/101_admin_ui_token_forwarding_auth_runtime_gate.md) を参照してください。
 
+Loop 102ではLINE real push gateを追加しました。`LINE_MESSAGING_ENABLED=true` と `LINE_REAL_PUSH_ENABLED=true` の明示、authenticated_staff、`send_staff_reply` permission、`selectedTenantId` 再検証、customer tenant一致、送信前確認、idempotencyを満たさない限りreal push pathは動きません。MockLineClientは維持し、RealLineClient boundaryはfake transportで検証します。本物LINE API送信、LINE token実値利用、実LINE userId利用は未実施です。詳細は [docs/11_codex_tasks/102_line_real_push_gate.md](docs/11_codex_tasks/102_line_real_push_gate.md) と [docs/15_runbooks/line_real_push_gate.md](docs/15_runbooks/line_real_push_gate.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

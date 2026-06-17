@@ -496,6 +496,8 @@ Loop 100ではAdmin UI側にselectedTenantId persistenceを追加しました。
 
 Loop 101ではAdmin UI token forwarding boundaryとproduction Auth runtime gateを追加しました。Bearer tokenはAdmin API requestの `Authorization` headerへだけ転送し、DB row、localStorage、cookie、UI、docsには保存・表示しません。production API側は `AUTH_SESSION_VERIFIER=supabase` と注入済みAuth client/StaffAuthLookupがある場合だけ `SupabaseAuthSessionVerifier` を使い、repositoryへ渡すtenantは引き続きactive membership再検証後の `AdminTenantContext.tenantId` だけです。実Supabase Auth loginやproduction接続は未実装です。
 
+Loop 102ではLINE real push gateを追加しました。DB schema変更はしていません。real push pathは `LINE_MESSAGING_ENABLED=true`、`LINE_REAL_PUSH_ENABLED=true`、authenticated_staff、`send_staff_reply` permission、selectedTenantId再検証、customer tenant一致、送信前確認、idempotency keyを必須にします。push成功後にstaff messageをtimelineへ保存する既存方針を維持し、本番向け永続audit/idempotency storeは後続Loopで扱います。
+
 - [Loop 086: RLS/Auth/JWT Production Hardening Split Plan](11_codex_tasks/086_rls_auth_jwt_production_hardening_split_plan.md)
 - [Production Hardening Split Plan](15_runbooks/production_hardening_split_plan.md)
 - [Loop 093: Production Dev Header Rejection Auth/JWT Boundary](11_codex_tasks/093_production_dev_header_rejection_auth_jwt_boundary.md)

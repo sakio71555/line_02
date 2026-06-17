@@ -76,6 +76,7 @@ Grant verification result:
 - Knowledge/RAG runtime boundary/staging smoke passed in Loop 085.
 - Staff/auth production runtime, LINE, and OpenAI are not switched in this record.
 - Loop 099 adds staging-only real Auth user smoke for Auth/JWT and RLS `auth.uid()` linkage.
+- Loop 102 adds LINE real push gate in code/tests, but this staging record still has no real LINE send, no real LINE token usage, and no real LINE userId.
 
 ## API Smoke
 

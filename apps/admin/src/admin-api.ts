@@ -392,10 +392,36 @@ export async function createRagAnswerDraft(
 }
 
 export async function sendStaffReply(
-  input: { customerId: string; body: string },
+  input: {
+    customerId: string;
+    body: string;
+    realLinePushConfirmed?: boolean;
+    linePushConfirmation?: string;
+    idempotencyKey?: string;
+  },
   options: AdminApiRequestOptions = {}
 ): Promise<AdminStaffReplyResponse> {
   const config = options.config ?? getAdminApiConfig();
+  const requestBody: {
+    body: string;
+    real_line_push_confirmed?: boolean;
+    line_push_confirmation?: string;
+    idempotency_key?: string;
+  } = {
+    body: input.body
+  };
+
+  if (input.realLinePushConfirmed !== undefined) {
+    requestBody.real_line_push_confirmed = input.realLinePushConfirmed;
+  }
+
+  if (input.linePushConfirmation !== undefined) {
+    requestBody.line_push_confirmation = input.linePushConfirmation;
+  }
+
+  if (input.idempotencyKey !== undefined) {
+    requestBody.idempotency_key = input.idempotencyKey;
+  }
 
   return adminApiFetch<AdminStaffReplyResponse>(
     adminCustomerReplyPath(input.customerId),
@@ -405,9 +431,7 @@ export async function sendStaffReply(
         "content-type": "application/json",
         "x-staff-id": config.staffId ?? DEFAULT_STAFF_ID
       },
-      body: JSON.stringify({
-        body: input.body
-      })
+      body: JSON.stringify(requestBody)
     },
     {
       ...options,

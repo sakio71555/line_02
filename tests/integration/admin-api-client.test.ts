@@ -462,6 +462,39 @@ describe("admin read-only API client", () => {
     );
   });
 
+  it("can include real LINE push confirmation fields in staff reply requests", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await sendStaffReply(
+      {
+        customerId: "customer_001",
+        body: "確認済みの返信です。",
+        realLinePushConfirmed: true,
+        linePushConfirmation: "CONFIRM_REAL_LINE_PUSH",
+        idempotencyKey: "idem_admin_helper"
+      },
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome"
+        },
+        fetchFn: async (input, init) => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    expect(calls[0]?.init?.body).toBe(
+      JSON.stringify({
+        body: "確認済みの返信です。",
+        real_line_push_confirmed: true,
+        line_push_confirmation: "CONFIRM_REAL_LINE_PUSH",
+        idempotency_key: "idem_admin_helper"
+      })
+    );
+  });
+
   it("uses the default staff id for staff replies when config omits staffId", async () => {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
 
