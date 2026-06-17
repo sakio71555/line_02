@@ -28,6 +28,7 @@ import {
   type CustomerRepository,
   type Message,
   type MessageRepository,
+  type StaffAuthLookup,
   type StaffNotifier
 } from "@amami-line-crm/domain";
 import {
@@ -63,7 +64,11 @@ import {
   adminRouteActions,
   evaluateAdminRouteRoleGuardCompatibility
 } from "./admin/role-guarded-handler";
+import {
+  createProductionAdminAuthRuntimeDependencies
+} from "./admin/production-auth-runtime-gate";
 import { resolveSelectedTenantIdTransport } from "./admin/selected-tenant-transport";
+import type { SupabaseAuthClientLike } from "./admin/supabase-auth-session-verifier";
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
@@ -75,6 +80,8 @@ export interface ApiAppDependencies {
   aiProvider?: AiProvider;
   knowledgePageRepository?: KnowledgePageRepository;
   adminAuthRuntime?: AuthenticatedAdminRuntimeDependencies;
+  supabaseAuthClient?: SupabaseAuthClientLike;
+  staffAuthLookup?: StaffAuthLookup;
   authenticatedSelectedTenantId?: string | null;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
@@ -119,10 +126,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     dependencies.knowledgePageRepository ??
     dependencies.customerMessageRepositories?.knowledgePageRepository ??
     defaultKnowledgePageRepository;
-  const adminAuthRuntime = dependencies.adminAuthRuntime;
   const authenticatedSelectedTenantId = dependencies.authenticatedSelectedTenantId;
   const now = dependencies.now;
   const env = dependencies.env ?? process.env;
+  const adminAuthRuntime =
+    dependencies.adminAuthRuntime ??
+    (isProductionRuntime(env)
+      ? createProductionAdminAuthRuntimeDependencies({
+          env,
+          supabaseAuthClient: dependencies.supabaseAuthClient,
+          staffAuthLookup: dependencies.staffAuthLookup
+        })
+      : undefined);
 
   api.get("/health", (c) => {
     const config = loadAppConfig(env);

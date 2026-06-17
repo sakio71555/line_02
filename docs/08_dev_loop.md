@@ -294,6 +294,10 @@ Loop完了後は、Codex完了報告の要点を `docs/14_dev_logs/YYYY-MM-DD.md
 
 Loop 100では、Admin UIで選択した `selectedTenantId` をlocalStorageとcookieに保存し、server-side Admin API helperから `x-selected-tenant-id` として送るところだけを扱いました。`selectedTenantId` は権限ではなくselectorで、API側のactive membership再検証を必須にします。開発用 `x-tenant-id` と混同せず、Bearer token、API key、session値は保存・表示しません。Supabase Auth/JWT production runtime、LINE real push、OpenAI real APIは別Loopに分けます。
 
+## Admin Auth token forwarding
+
+Loop 101では、Admin UIが将来のSupabase Auth access tokenをAdmin APIへ渡すための境界だけを追加しました。tokenはproviderからrequest時に読み、`Authorization: Bearer` headerへ載せるだけで、localStorage、cookie、UI、docs、dev logへ保存・表示しません。production向けhelperでは開発用 `x-tenant-id` を送らない設定を使い、`x-selected-tenant-id` は引き続きselectorとしてactive membership再検証を受けます。Supabase Auth login/session本実装、production接続、LINE/OpenAI本接続は別Loopに分けます。
+
 ## 完了報告フォーマット
 
 ```md

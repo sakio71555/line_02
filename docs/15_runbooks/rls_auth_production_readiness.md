@@ -53,6 +53,7 @@ No-Go理由:
 - Loop 092でRAG routesへauthenticated_staff runtimeを展開済み。
 - Loop 093でproduction dev_header rejectionとdev seed route rejectionを実装済み。
 - Loop 100でAdmin UI selectedTenantId persistenceを追加済み。
+- Loop 101でAdmin UI token forwarding boundaryとproduction Auth runtime gateを追加済み。
 - Supabase Auth/JWT production本接続 未実装。
 - service_role grantsはstaging PostgREST smoke用で、production authorizationではない。
 - LINE real push disabled。
@@ -84,7 +85,10 @@ Before production:
 - [x] staging smoke verifies role is read from active membership.
 - [x] staging smoke verifies selectedTenantId is revalidated against active memberships.
 - [x] Admin UI can persist selectedTenantId as a selector and send `x-selected-tenant-id`.
+- [x] Admin UI helper can forward a provider-supplied Bearer token without storing or displaying it.
+- [x] production Auth runtime gate can use `SupabaseAuthSessionVerifier` when explicitly configured and injected.
 - [x] production rejects `x-tenant-id` / `dev_header`.
+- [ ] production automatically wires real Supabase Auth client and StaffAuthLookup repository.
 - [ ] service_role usage is server-side only and minimized.
 - [ ] browser / LIFF / Next client components do not receive service role keys.
 

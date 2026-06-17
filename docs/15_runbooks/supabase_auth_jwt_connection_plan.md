@@ -219,6 +219,27 @@ Still not done:
 - OpenAI real API gate。
 - production readiness final gate。
 
+## Loop 101 Admin UI Token Forwarding and Runtime Gate
+
+Loop 101でAdmin UI token forwarding boundaryとproduction Auth runtime gateを追加した。
+
+Implemented:
+
+- Admin API helper can accept an access token provider and forward `Authorization: Bearer` to the Admin API.
+- The token is not saved to localStorage, cookie, UI, docs, or dev log.
+- Admin helper can suppress the local/dev/test `x-tenant-id` header for production-style requests.
+- `x-selected-tenant-id` remains a selector, not permission.
+- production mode can use `SupabaseAuthSessionVerifier` when `AUTH_SESSION_VERIFIER=supabase` and a Supabase Auth client-like object plus StaffAuthLookup are explicitly injected.
+- Missing runtime dependencies fail safe as `authenticated_staff_required`.
+
+Still not done:
+
+- Real Admin login/session UI.
+- Real token acquisition, refresh, or logout.
+- Production automatic construction of Supabase Auth client and StaffAuthLookup repository.
+- production connection or production smoke.
+- LINE/OpenAI real connection.
+
 Loop 100 note:
 
 - Admin UI selectedTenantId persistenceは完了。

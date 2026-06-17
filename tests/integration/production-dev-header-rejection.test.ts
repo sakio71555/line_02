@@ -12,6 +12,10 @@ import type {
   AuthSessionVerifier,
   AuthSessionVerifierResult
 } from "../../apps/api/src/admin/auth-session";
+import type {
+  SupabaseAuthClientLike,
+  SupabaseAuthGetUserResultLike
+} from "../../apps/api/src/admin/supabase-auth-session-verifier";
 
 const now = "2026-06-17T03:00:00.000Z";
 
@@ -145,6 +149,55 @@ describe("Loop 093 production dev_header rejection and Auth/JWT boundary", () =>
     expect(serialized).not.toContain("env");
   });
 
+  it("fails safely when production requests supabase verifier mode without runtime dependencies", async () => {
+    const { app } = createProductionGateApp({
+      env: { AUTH_SESSION_VERIFIER: "supabase" }
+    });
+
+    const response = await app.fetch(
+      new Request("http://localhost/api/admin/customers", {
+        headers: { authorization: "Bearer private-prod-test-token" }
+      })
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(401);
+    expect(body).toEqual({
+      ok: false,
+      error: "authenticated_staff_required"
+    });
+    expect(serialized).not.toContain("private-prod-test-token");
+    expect(serialized).not.toContain("secret");
+    expect(serialized).not.toContain("env");
+  });
+
+  it("uses SupabaseAuthSessionVerifier through the production runtime gate when injected", async () => {
+    const { app, supabaseAuthClient, sessionVerifier } = createProductionGateApp({
+      useSupabaseAuthGate: true
+    });
+
+    const response = await app.fetch(
+      new Request("http://localhost/api/admin/customers", {
+        headers: { authorization: "Bearer private-prod-test-token" }
+      })
+    );
+    const body = await response.json();
+    const serialized = JSON.stringify(body);
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      customers: []
+    });
+    expect(supabaseAuthClient.tokens).toEqual(["private-prod-test-token"]);
+    expect(sessionVerifier.tokens).toEqual([]);
+    expect(serialized).not.toContain("private-prod-test-token");
+    expect(serialized).not.toContain("secret");
+    expect(serialized).not.toContain("env");
+  });
+
   it("allows production Authorization Bearer path through the fake authenticated boundary", async () => {
     const { app, sessionVerifier } = createProductionGateApp({
       includeAuthRuntime: true
@@ -241,6 +294,7 @@ describe("Loop 093 production dev_header rejection and Auth/JWT boundary", () =>
 
 interface CreateProductionGateAppInput {
   includeAuthRuntime?: boolean;
+  useSupabaseAuthGate?: boolean;
   env?: NodeJS.ProcessEnv;
 }
 
@@ -249,6 +303,16 @@ function createProductionGateApp(input: CreateProductionGateAppInput = {}) {
     "private-prod-test-token": {
       authUserId: "auth_owner",
       email: "owner@example.test"
+    }
+  });
+  const supabaseAuthClient = new FakeSupabaseAuthClient({
+    "private-prod-test-token": {
+      data: {
+        user: {
+          id: "auth_owner",
+          email: "owner@example.test"
+        }
+      }
     }
   });
   const staffAuthLookup = createFakeStaffAuthLookup();
@@ -262,18 +326,26 @@ function createProductionGateApp(input: CreateProductionGateAppInput = {}) {
           }
         }
       : {}),
+    ...(input.useSupabaseAuthGate
+      ? {
+          supabaseAuthClient,
+          staffAuthLookup
+        }
+      : {}),
     env: {
       TENANT_ID: "tenant_amamihome",
       TENANT_SLUG: "amamihome",
       LINE_CHANNEL_SECRET: "test-secret",
       APP_ENV: "production",
+      ...(input.useSupabaseAuthGate ? { AUTH_SESSION_VERIFIER: "supabase" } : {}),
       ...input.env
     }
   });
 
   return {
     app,
-    sessionVerifier
+    sessionVerifier,
+    supabaseAuthClient
   };
 }
 
@@ -288,6 +360,22 @@ class FakeAuthSessionVerifier implements AuthSessionVerifier {
     this.tokens.push(token);
 
     return this.responses[token] ?? null;
+  }
+}
+
+class FakeSupabaseAuthClient implements SupabaseAuthClientLike {
+  readonly tokens: string[] = [];
+
+  readonly auth: SupabaseAuthClientLike["auth"];
+
+  constructor(private readonly responses: Record<string, SupabaseAuthGetUserResultLike>) {
+    this.auth = {
+      getUser: async (accessToken: string): Promise<SupabaseAuthGetUserResultLike> => {
+        this.tokens.push(accessToken);
+
+        return this.responses[accessToken] ?? { error: { name: "AuthApiError" } };
+      }
+    };
   }
 }
 

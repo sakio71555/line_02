@@ -8,6 +8,11 @@ import type {
   ResponseMode
 } from "@amami-line-crm/domain";
 
+import {
+  createBearerAuthorizationHeader,
+  readAdminAccessToken,
+  type AdminAccessTokenProvider
+} from "./admin-auth-token";
 import { formatAdminApiErrorCodeForUi, validateSelectedTenantId } from "./selected-tenant";
 
 export const DEFAULT_API_BASE_URL = "http://localhost:4000";
@@ -19,6 +24,7 @@ export interface AdminApiConfig {
   tenantId: string;
   staffId?: string;
   selectedTenantId?: string | null;
+  includeDevTenantHeader?: boolean;
 }
 
 export interface AdminCustomerListItem extends DomainCustomerListItem {
@@ -149,6 +155,7 @@ export interface AdminNotifyOpenAlertsResponse {
 export interface AdminApiRequestOptions {
   config?: AdminApiConfig;
   fetchFn?: AdminApiFetch;
+  accessTokenProvider?: AdminAccessTokenProvider;
 }
 
 type AdminApiFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
@@ -157,7 +164,8 @@ export function getAdminApiConfig(env: NodeJS.ProcessEnv = process.env): AdminAp
   return {
     apiBaseUrl: env.API_BASE_URL ?? DEFAULT_API_BASE_URL,
     tenantId: env.TENANT_ID ?? DEFAULT_TENANT_ID,
-    staffId: env.STAFF_ID ?? DEFAULT_STAFF_ID
+    staffId: env.STAFF_ID ?? DEFAULT_STAFF_ID,
+    includeDevTenantHeader: shouldIncludeDevTenantHeader(env)
   };
 }
 
@@ -183,10 +191,19 @@ export async function adminApiFetch<T>(
     throw new Error(formatAdminApiKnownError("invalid_selected_tenant_id"));
   }
 
-  headers.set("x-tenant-id", config.tenantId);
+  if (config.includeDevTenantHeader !== false) {
+    headers.set("x-tenant-id", config.tenantId);
+  }
 
   if (selectedTenantId.selectedTenantId) {
     headers.set("x-selected-tenant-id", selectedTenantId.selectedTenantId);
+  }
+
+  const accessToken = await readAdminAccessToken(options.accessTokenProvider);
+  const authorizationHeader = accessToken ? createBearerAuthorizationHeader(accessToken) : null;
+
+  if (authorizationHeader && !headers.has("authorization")) {
+    headers.set("authorization", authorizationHeader);
   }
 
   if (!headers.has("accept")) {
@@ -231,6 +248,20 @@ export function formatAdminApiKnownError(errorCode: string): string {
   const message = formatAdminApiErrorCodeForUi(errorCode);
 
   return message ? `${message} (${errorCode})` : errorCode;
+}
+
+export function shouldIncludeDevTenantHeader(env: NodeJS.ProcessEnv = process.env): boolean {
+  const explicit = env.ADMIN_API_INCLUDE_DEV_TENANT_HEADER?.trim().toLowerCase();
+
+  if (explicit === "true") {
+    return true;
+  }
+
+  if (explicit === "false") {
+    return false;
+  }
+
+  return env.APP_ENV !== "production" && env.NODE_ENV !== "production";
 }
 
 export function adminCustomerDetailPath(customerId: string): string {

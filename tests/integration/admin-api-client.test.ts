@@ -15,8 +15,13 @@ import {
   getAdminApiConfig,
   listAlerts,
   notifyOpenAlerts,
-  sendStaffReply
+  sendStaffReply,
+  shouldIncludeDevTenantHeader
 } from "../../apps/admin/src/admin-api";
+import {
+  createBearerAuthorizationHeader,
+  readAdminAccessToken
+} from "../../apps/admin/src/admin-auth-token";
 
 describe("admin read-only API client", () => {
   it("uses safe local defaults for API_BASE_URL and TENANT_ID", () => {
@@ -25,8 +30,27 @@ describe("admin read-only API client", () => {
     expect(config).toEqual({
       apiBaseUrl: DEFAULT_API_BASE_URL,
       tenantId: DEFAULT_TENANT_ID,
-      staffId: DEFAULT_STAFF_ID
+      staffId: DEFAULT_STAFF_ID,
+      includeDevTenantHeader: true
     });
+  });
+
+  it("disables the dev tenant header by default in production admin config", () => {
+    expect(shouldIncludeDevTenantHeader({ APP_ENV: "production" })).toBe(false);
+    expect(shouldIncludeDevTenantHeader({ NODE_ENV: "production" })).toBe(false);
+    expect(
+      shouldIncludeDevTenantHeader({
+        APP_ENV: "production",
+        ADMIN_API_INCLUDE_DEV_TENANT_HEADER: "true"
+      })
+    ).toBe(true);
+    expect(
+      getAdminApiConfig({
+        APP_ENV: "production",
+        API_BASE_URL: "https://admin-api.example.invalid",
+        TENANT_ID: "tenant_amamihome"
+      }).includeDevTenantHeader
+    ).toBe(false);
   });
 
   it("builds admin API URLs from the configured base URL", () => {
@@ -96,6 +120,119 @@ describe("admin read-only API client", () => {
     expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
     expect(headers.get("x-selected-tenant-id")).toBe("tenant_other");
     expect(headers.get("authorization")).toBeNull();
+  });
+
+  it("attaches an Authorization Bearer header from an access token provider", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await adminApiFetch(
+      "/api/admin/customers",
+      {},
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome",
+          selectedTenantId: "tenant_amamihome"
+        },
+        accessTokenProvider: async () => " private-admin-token ",
+        fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(headers.get("authorization")).toBe("Bearer private-admin-token");
+    expect(headers.get("x-selected-tenant-id")).toBe("tenant_amamihome");
+    expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
+  });
+
+  it("does not attach Authorization when the access token provider is absent or blank", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await adminApiFetch(
+      "/api/admin/customers",
+      {},
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome"
+        },
+        accessTokenProvider: async () => "   ",
+        fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(headers.get("authorization")).toBeNull();
+  });
+
+  it("can suppress x-tenant-id for production-style Authorization requests", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await adminApiFetch(
+      "/api/admin/customers",
+      {},
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome",
+          selectedTenantId: "tenant_amamihome",
+          includeDevTenantHeader: false
+        },
+        accessTokenProvider: () => "private-admin-token",
+        fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(headers.get("x-tenant-id")).toBeNull();
+    expect(headers.get("x-selected-tenant-id")).toBe("tenant_amamihome");
+    expect(headers.get("authorization")).toBe("Bearer private-admin-token");
+  });
+
+  it("keeps access tokens out of provider and API error messages", async () => {
+    await expect(readAdminAccessToken(() => " private-admin-token ")).resolves.toBe(
+      "private-admin-token"
+    );
+    expect(createBearerAuthorizationHeader(" private-admin-token ")).toBe(
+      "Bearer private-admin-token"
+    );
+
+    await expect(
+      readAdminAccessToken(() => {
+        throw new Error("private-admin-token");
+      })
+    ).rejects.toThrow("Admin auth token provider failed.");
+
+    await expect(
+      adminApiFetch(
+        "/api/admin/customers",
+        {},
+        {
+          config: {
+            apiBaseUrl: "http://localhost:4000",
+            tenantId: "tenant_amamihome"
+          },
+          accessTokenProvider: () => "private-admin-token",
+          fetchFn: async () =>
+            new Response(JSON.stringify({ ok: false, error: "authenticated_staff_required" }), {
+              status: 401,
+              statusText: "Unauthorized"
+            })
+        }
+      )
+    ).rejects.not.toThrow("private-admin-token");
   });
 
   it("does not attach x-selected-tenant-id when the selector is absent", async () => {
