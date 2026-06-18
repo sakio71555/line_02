@@ -4,12 +4,17 @@ import {
   getAdminApiConfig,
   getAdminCustomerDetail,
   getAdminCustomerTimeline,
-  type AdminApiRequestOptions
+  type AdminApiRequestOptions,
+  type AdminCustomerDetailResponse,
+  type AdminCustomerTimelineResponse
 } from "../../../src/admin-api";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import { CustomerActionPanel } from "./customer-actions";
 
 export const dynamic = "force-dynamic";
+
+type AdminCustomerDetail = AdminCustomerDetailResponse["customer"];
+type AdminTimelineMessage = AdminCustomerTimelineResponse["messages"][number];
 
 export default async function CustomerDetailPage({
   params
@@ -29,7 +34,7 @@ export default async function CustomerDetailPage({
           <p className="eyebrow">ローカルデモ顧客詳細</p>
           <h1>顧客詳細</h1>
           <p className="meta">
-            利用先ID: <span className="mono">{config.tenantId}</span> / お客様ID:{" "}
+            利用先: <span className="mono">{config.tenantId}</span> / お客様ID:{" "}
             <span className="mono">{customerId}</span>
           </p>
           <p className="meta">
@@ -49,34 +54,64 @@ export default async function CustomerDetailPage({
           確認用で、LINE送信も保存もしません。
         </p>
         <p className="meta">
-          選択中の利用先は <span className="mono">x-selected-tenant-id</span>{" "}
-          でAdmin APIへ渡します。開発用 <span className="mono">x-tenant-id</span>{" "}
-          は本番権限ではありません。
+          選択中の利用先は、保存済みの利用先情報としてAPIに渡されます。
         </p>
       </div>
 
-      <section className="section">
-        <h2>お客様情報</h2>
-        {detail.status === "error" ? (
+      {detail.status === "error" ? (
+        <section className="section">
           <div className="error">
             <strong>APIエラー</strong>
             <pre>{detail.message}</pre>
           </div>
-        ) : (
-          <dl className="detail-grid">
-            {customerDetailEntries(detail.customer).map(([label, value]) => (
-              <FragmentPair key={label} label={label} value={formatDetailValue(value)} />
-            ))}
-          </dl>
-        )}
-      </section>
+        </section>
+      ) : (
+        <>
+          <section className="customer-hero" aria-labelledby="customer-detail-title">
+            <div className="customer-hero-title">
+              <div>
+                <p className="eyebrow">お客様詳細</p>
+                <h1 id="customer-detail-title">{getCustomerRecipientLabel(detail.customer)}</h1>
+                <p className="meta mono">{detail.customer.id}</p>
+              </div>
+              <span className={getResponseModeBadgeClass(detail.customer.response_mode)}>
+                {formatResponseMode(detail.customer.response_mode)}
+              </span>
+            </div>
+            <div className="detail-chip-list" aria-label="お客様の状態">
+              <span className="status-pill">{formatCustomerStatus(detail.customer.status)}</span>
+              <span className="status-pill status-pill-muted">
+                最終お客様発言 {formatDetailValue(detail.customer.last_customer_message_at)}
+              </span>
+              <span className="status-pill status-pill-muted">
+                最終担当者返信 {formatDetailValue(detail.customer.last_staff_reply_at)}
+              </span>
+            </div>
+            <div className="detail-chip-list" aria-label="タグ">
+              {detail.customer.tags.length > 0 ? (
+                detail.customer.tags.map((tag) => (
+                  <span className="status-pill status-pill-muted" key={tag}>
+                    {tag}
+                  </span>
+                ))
+              ) : (
+                <span className="status-pill status-pill-muted">タグなし</span>
+              )}
+            </div>
+          </section>
 
-      {detail.status === "error" ? null : (
-        <CustomerActionPanel
-          customerId={customerId}
-          recipientLabel={getCustomerRecipientLabel(detail.customer)}
-          tenantId={config.selectedTenantId ?? config.tenantId}
-        />
+          <section className="section">
+            <h2>お客様情報</h2>
+            <div className="customer-key-grid">
+              {customerDetailEntries(detail.customer).map(([label, value]) => (
+                <dl className="admin-card customer-key-card" key={label}>
+                  <dt>{label}</dt>
+                  <dd>{formatDetailValue(value)}</dd>
+                </dl>
+              ))}
+            </div>
+          </section>
+        </>
       )}
 
       <section className="section">
@@ -89,48 +124,43 @@ export default async function CustomerDetailPage({
         ) : timeline.messages.length === 0 ? (
           <p className="empty">表示できるメッセージはまだありません。</p>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>日時</th>
-                  <th>発言者</th>
-                  <th>種類</th>
-                  <th>内容</th>
-                  <th>LINEメッセージID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {timeline.messages.map((message) => (
-                  <tr key={message.id}>
-                    <td>{message.created_at}</td>
-                    <td>{formatMessageRole(message.role)}</td>
-                    <td>{formatMessageType(message.message_type)}</td>
-                    <td className="message-body">{formatDetailValue(message.body)}</td>
-                    <td className="mono">{formatDetailValue(message.line_message_id)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ol className="timeline-list" aria-label="相談タイムライン">
+            {timeline.messages.map((message) => (
+              <li className={`timeline-item ${getTimelineItemClass(message)}`} key={message.id}>
+                <div className="timeline-meta">
+                  <span className={getTimelineRoleBadgeClass(message.role)}>
+                    {formatMessageRole(message.role)}
+                  </span>
+                  <span className="status-pill status-pill-muted">
+                    {formatMessageType(message.message_type)}
+                  </span>
+                  <span className="meta">{message.created_at}</span>
+                </div>
+                <p className="timeline-body">{formatDetailValue(message.body)}</p>
+                {message.line_message_id || message.source_url ? (
+                  <div className="timeline-meta">
+                    {message.line_message_id ? (
+                      <span className="meta mono">LINE ID: {message.line_message_id}</span>
+                    ) : null}
+                    {message.source_url ? (
+                      <a href={message.source_url}>参考URL</a>
+                    ) : null}
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ol>
         )}
       </section>
-    </main>
-  );
-}
 
-function FragmentPair({
-  label,
-  value
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </>
+      {detail.status === "error" ? null : (
+        <CustomerActionPanel
+          customerId={customerId}
+          recipientLabel={getCustomerRecipientLabel(detail.customer)}
+          tenantId={config.selectedTenantId ?? config.tenantId}
+        />
+      )}
+    </main>
   );
 }
 
@@ -164,11 +194,11 @@ async function loadCustomerTimeline(customerId: string, options: AdminApiRequest
   }
 }
 
-function customerDetailEntries(customer: Awaited<ReturnType<typeof getAdminCustomerDetail>>["customer"]) {
+function customerDetailEntries(customer: AdminCustomerDetail) {
   return [
     ["お客様ID", customer.id],
     ["利用先ID", customer.tenant_id],
-    ["LINEユーザーID（デモ）", customer.line_user_id],
+    ["LINE連携ID（デモ）", customer.line_user_id],
     ["LINE表示名", customer.line_display_name],
     ["お名前", customer.name],
     ["電話番号", customer.phone],
@@ -190,7 +220,7 @@ function customerDetailEntries(customer: Awaited<ReturnType<typeof getAdminCusto
 }
 
 function getCustomerRecipientLabel(
-  customer: Awaited<ReturnType<typeof getAdminCustomerDetail>>["customer"]
+  customer: AdminCustomerDetail
 ): string {
   return customer.line_display_name || customer.name || customer.id;
 }
@@ -252,4 +282,56 @@ function formatMessageType(type: string): string {
   };
 
   return labels[type] ?? type;
+}
+
+function getResponseModeBadgeClass(mode: string): string {
+  if (mode === "human_required" || mode === "human_active") {
+    return "status-pill status-pill-warning";
+  }
+
+  if (mode === "emergency") {
+    return "status-pill status-pill-danger";
+  }
+
+  if (mode === "closed") {
+    return "status-pill status-pill-muted";
+  }
+
+  return "status-pill";
+}
+
+function getTimelineRoleBadgeClass(role: string): string {
+  if (role === "customer") {
+    return "status-pill status-pill-warning";
+  }
+
+  if (role === "staff") {
+    return "status-pill";
+  }
+
+  if (role === "ai" || role === "system") {
+    return "status-pill status-pill-muted";
+  }
+
+  return "status-pill";
+}
+
+function getTimelineItemClass(message: AdminTimelineMessage): string {
+  if (message.role === "customer") {
+    return "timeline-item-customer";
+  }
+
+  if (message.role === "staff") {
+    return "timeline-item-staff";
+  }
+
+  if (message.role === "ai") {
+    return "timeline-item-ai";
+  }
+
+  if (message.role === "system") {
+    return "timeline-item-system";
+  }
+
+  return "";
 }

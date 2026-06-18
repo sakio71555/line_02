@@ -13,40 +13,42 @@ export function SelectTenantPageView({
         <div>
           <p className="eyebrow">利用先選択</p>
           <h1>利用先を選ぶ</h1>
+          <p className="meta">担当者が見る会社・店舗を切り替えるための画面です。</p>
         </div>
         <a href="/">トップへ戻る</a>
       </div>
 
       <div className="notice">
         <p>
-          スタッフが複数の利用先に所属する場合に、操作対象の利用先を選ぶための画面です。
-          今回は選択したtenant selectorを保存し、Admin APIへ
-          <span className="mono"> x-selected-tenant-id </span>
-          として渡せるようにします。
+          スタッフが複数の利用先に所属する場合に、操作対象の利用先を選びます。
+          今はアマミホームを選んでローカルデモを確認します。
         </p>
         <p className="meta">
-          選択値は権限ではありません。API側でauthenticated staffのactive membershipを再検証し、
-          検証済みtenantだけをrepositoryへ渡す前提です。
+          保存するのは利用先の選択情報だけです。ログイン情報、APIキー、パスワードは保存しません。
         </p>
       </div>
 
       <section className="section">
         <h2>利用先候補</h2>
         <div className="action-grid">
-          <div className="action-panel">
+          <div className="tenant-card">
             <h3>アマミホーム</h3>
+            <div className="status-pill-list">
+              <span className="status-pill">現在のデモ利用先</span>
+              <span className="status-pill status-pill-muted">一時保存</span>
+            </div>
             <dl className="compact-detail">
-              <dt>tenant_id</dt>
+              <dt>利用先ID</dt>
               <dd className="mono">tenant_amamihome</dd>
-              <dt>slug</dt>
+              <dt>短い名前</dt>
               <dd className="mono">amamihome</dd>
-              <dt>domain</dt>
+              <dt>公式サイト</dt>
               <dd className="mono">amamihome.net</dd>
-              <dt>status</dt>
+              <dt>状態</dt>
               <dd>開発確認用 / 選択保存対応</dd>
             </dl>
             <p className="meta">
-              開発確認ではこのtenantを選びます。将来はAPIから所属利用先一覧を取得する想定です。
+              開発確認ではこの利用先を選びます。将来は所属している利用先だけを一覧表示する想定です。
             </p>
           </div>
           {selectedTenantForm}
@@ -57,16 +59,14 @@ export function SelectTenantPageView({
         <h2>保存ルール</h2>
         <ul>
           <li>
-            保存するのは <span className="mono">selectedTenantId</span> だけです。
+            保存するのは利用先を示すIDだけです。
           </li>
-          <li>Bearer token、APIキー、Supabase secret、session値は保存・表示しません。</li>
+          <li>ログイン情報、APIキー、secret、session値は保存・表示しません。</li>
           <li>
-            <span className="mono">localStorage</span> は画面表示用、
-            <span className="mono"> cookie</span> はServer ActionからAdmin APIへ渡すために使います。
+            画面表示とサーバー側の操作で、同じ利用先IDを使います。
           </li>
           <li>
-            <span className="mono">x-selected-tenant-id</span> はselectorで、
-            開発用 <span className="mono">x-tenant-id</span> とは別物です。
+            利用先の選択は権限そのものではありません。権限確認はAPI側で行う方針です。
           </li>
           <li>Supabase Auth / JWTのproduction本接続はまだ未完了です。</li>
         </ul>
@@ -75,8 +75,8 @@ export function SelectTenantPageView({
       <section className="section">
         <h2>開発確認用の導線</h2>
         <p className="meta">
-          既存の開発確認用MVPは引き続き <span className="mono">x-tenant-id</span>{" "}
-          経由でも動作します。本物の認証処理と利用先一覧API取得はまだ行いません。
+          既存の開発確認用MVPは引き続きローカルデモとして動作します。本物の認証処理と
+          利用先一覧API取得はまだ行いません。
         </p>
         <ul className="nav-links">
           <li>

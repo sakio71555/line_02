@@ -322,6 +322,18 @@ Loop 108では、VPS上で将来実行するdry deployment preflight command pac
 
 Loop 109では、VPSへlocalhost-onlyのreview/mock配置を行う場合も、まずローカル品質ゲートを通し、VPSではread-only audit、backup、release配置、secretなしenv、install/build、localhost-only systemd start、127.0.0.1 smokeの順で進めます。Nginx、certbot、LINE webhook、LINE/OpenAI/Supabase実接続は別Loopに分け、No-Goを検知したらamami-line-crm serviceだけ停止して既存アプリへ影響を出さないようにします。
 
+## Admin UI Mobile-First Loops
+
+Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。
+
+UI Loopでは以下を守ります。
+
+- API contract、Auth/RLS、Supabase runtime、LINE/OpenAI gateを変更しない。
+- `tenant` は「利用先」、`mock` は「デモ用 / デモ保存」、`in-memory` は「一時保存」と表示する。
+- AI要約、AI返信下書き、RAG回答案は「AI補助」として扱い、自動送信しないことを明示する。
+- 担当者返信では「これはデモ保存です」「本物のLINEには送信されません」を維持する。
+- VPS localhost-only review環境へ反映する場合は、UI commit後に別Loopで再配置する。
+
 ## 完了報告フォーマット
 
 ```md

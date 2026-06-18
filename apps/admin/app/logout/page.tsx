@@ -3,31 +3,30 @@ import React from "react";
 export default function LogoutBoundaryPage() {
   return (
     <main>
+      <section className="login-card" aria-labelledby="admin-logout-title">
       <div className="page-header">
         <div>
-          <p className="eyebrow">ログアウト境界</p>
-          <h1>ログアウト</h1>
+          <p className="eyebrow">ログアウト準備中</p>
+          <h1 id="admin-logout-title">ログアウト</h1>
         </div>
         <a href="/">トップへ戻る</a>
       </div>
 
       <div className="notice">
         <p>
-          Supabase Auth sessionのlogout境界を追加済みです。実Auth client注入と本番接続は
-          後続Loopで行います。
+          ログアウト後に安全にセッションを消すための準備画面です。本番接続は後続Loopで行います。
         </p>
         <p className="meta">
-          logout後はAuth client側のsessionをclearします。access tokenは画面表示せず、
-          localStorageやcookieへ独自保存しません。
+          access tokenは画面表示せず、localStorageやcookieへ独自保存しません。
         </p>
       </div>
 
       <section className="section">
-        <h2>logoutの扱い</h2>
+        <h2>ログアウトの扱い</h2>
         <ul>
-          <li>fake Auth clientではsignOut後にtoken providerがnullを返すことを確認します。</li>
-          <li>selectedTenantIdは利用先selectorなので、tokenとは別に扱います。</li>
-          <li>本物のSupabase Auth signOutはまだ呼びません。</li>
+          <li>デモ用のログアウトでは、ログイン確認情報が残らないことを確認します。</li>
+          <li>利用先の選択情報はログイン情報とは別に扱います。</li>
+          <li>本物のログアウト処理はまだ呼びません。</li>
         </ul>
       </section>
 
@@ -44,6 +43,7 @@ export default function LogoutBoundaryPage() {
             <a href="/customers">顧客一覧へ進む</a>
           </li>
         </ul>
+      </section>
       </section>
     </main>
   );

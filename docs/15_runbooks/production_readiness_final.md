@@ -218,6 +218,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Admin loginで実Bearer tokenを取得し、表示しない。
 - Loop 105時点ではfake auth client境界のみのため、real login smokeは未実施として扱う。
 - VPS deploymentはLoop 109でlocalhost-only review配置まで進めるが、Nginx公開、SSL、external smoke、LINE webhook、LINE/OpenAI/Supabase実接続は未実施として扱う。
+- Loop 110ではAdmin UIをモバイルファーストに刷新するが、API/Auth/RLS/LINE/OpenAI gateやVPS配置は変更しない。VPS localhost-only review環境は旧commitのままで、UI反映には別Loopの再配置が必要。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。

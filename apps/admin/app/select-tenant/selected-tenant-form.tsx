@@ -7,8 +7,6 @@ import {
   createClearSelectedTenantCookieValue,
   createSelectedTenantCookieValue,
   readSelectedTenantIdFromStorage,
-  SELECTED_TENANT_COOKIE_NAME,
-  SELECTED_TENANT_STORAGE_KEY,
   validateSelectedTenantId,
   writeSelectedTenantIdToStorage
 } from "../../src/selected-tenant";
@@ -56,7 +54,7 @@ export function SelectedTenantForm() {
     setInputValue(result.selectedTenantId);
     setSelectedTenantId(result.selectedTenantId);
     setError(null);
-    setMessage("利用先を保存しました。次のAdmin API requestから送られます。");
+    setMessage("利用先を保存しました。次の画面確認から使われます。");
   }
 
   function handleClear() {
@@ -77,7 +75,8 @@ export function SelectedTenantForm() {
         <h3>操作対象の利用先を保存する</h3>
       </div>
       <p className="meta">
-        保存するのは非secretのtenant selectorだけです。Bearer token、APIキー、session値は保存も表示もしません。
+        保存するのは秘密情報ではない利用先IDだけです。ログイン情報、APIキー、session値は
+        保存も表示もしません。
       </p>
       <form className="action-form" onSubmit={handleSave}>
         <label htmlFor="selected-tenant-id">利用先ID</label>
@@ -99,13 +98,10 @@ export function SelectedTenantForm() {
       <dl className="compact-detail">
         <dt>現在の保存値</dt>
         <dd className="mono">{selectedTenantId ?? "未選択"}</dd>
-        <dt>送信header</dt>
-        <dd className="mono">x-selected-tenant-id</dd>
+        <dt>次回の確認先</dt>
+        <dd>{selectedTenantId ? "保存した利用先を使います。" : "まだ利用先は未選択です。"}</dd>
         <dt>保存先</dt>
-        <dd>
-          <span className="mono">{SELECTED_TENANT_STORAGE_KEY}</span> と{" "}
-          <span className="mono">{SELECTED_TENANT_COOKIE_NAME}</span>
-        </dd>
+        <dd>画面表示用の保存場所とサーバー側操作用cookie</dd>
         <dt>入力チェック</dt>
         <dd>{preview.ok ? "送信できる形式です。" : "形式が正しくありません。"}</dd>
       </dl>

@@ -12,17 +12,18 @@ describe("admin auth placeholder pages", () => {
   it("renders the login session boundary without exposing tokens", () => {
     const html = renderToStaticMarkup(<LoginPlaceholderPage />);
 
-    expect(html).toContain("管理画面ログイン");
-    expect(html).toContain("Supabase Auth sessionを扱うための最小境界");
+    expect(html).toContain("アマミホーム相談管理へログイン");
+    expect(html).toContain("本番ログイン接続前の確認画面");
     expect(html).toContain("type=\"email\"");
     expect(html).toContain("type=\"password\"");
     expect(html).toContain("<button type=\"button\" disabled=\"\"");
-    expect(html).toContain("Auth client接続待ち");
-    expect(html).toContain("token providerから都度渡します");
+    expect(html).toContain("ログイン接続待ち");
+    expect(html).toContain("セッションの扱い");
+    expect(html).toContain("管理APIへの通信にだけ使い");
     expect(html).toContain("localStorageやcookieへ独自保存しません");
     expect(html).not.toContain("action=");
     expect(html).not.toContain("private-admin-session-token");
-    expect(html).toContain("ログイン境界");
+    expect(html).toContain("ローカルデモとして動作します");
     expect(html).toContain("顧客一覧へ進む");
     expect(html).toContain("未返信アラートへ進む");
     expect(html).toContain("ログアウト境界");
@@ -32,10 +33,10 @@ describe("admin auth placeholder pages", () => {
     const html = renderToStaticMarkup(<LogoutBoundaryPage />);
 
     expect(html).toContain("ログアウト");
-    expect(html).toContain("Supabase Auth sessionのlogout境界");
-    expect(html).toContain("Auth client側のsessionをclear");
+    expect(html).toContain("ログアウト後に安全にセッションを消す");
+    expect(html).toContain("デモ用のログアウト");
     expect(html).toContain("localStorageやcookieへ独自保存しません");
-    expect(html).toContain("本物のSupabase Auth signOutはまだ呼びません");
+    expect(html).toContain("本物のログアウト処理はまだ呼びません");
     expect(html).toContain("ログイン境界へ戻る");
     expect(html).not.toContain("private-admin-session-token");
     expect(html).not.toContain("Authorization");
@@ -58,9 +59,9 @@ describe("admin auth placeholder pages", () => {
     expect(html).toContain("amami-line-crm:selectedTenantId");
     expect(html).toContain("amami_line_crm_selected_tenant_id");
     expect(html).toContain("x-selected-tenant-id");
-    expect(html).toContain("x-tenant-id");
-    expect(html).toContain("Bearer token、APIキー、Supabase secret、session値は保存・表示しません");
-    expect(html).toContain("選択値は権限ではありません");
+    expect(html).not.toContain("x-tenant-id");
+    expect(html).toContain("ログイン情報、APIキー、secret、session値は保存・表示しません");
+    expect(html).toContain("利用先の選択は権限そのものではありません");
     expect(html).toContain("利用先一覧API取得はまだ行いません");
     expect(html).toContain("Supabase Auth / JWT");
     expect(html).toContain("ログイン準備画面");
@@ -97,7 +98,7 @@ function SelectedTenantFormFixture() {
       <p>amami-line-crm:selectedTenantId</p>
       <p>amami_line_crm_selected_tenant_id</p>
       <p>x-selected-tenant-id</p>
-      <p>Bearer token、APIキー、Supabase secret、session値は保存・表示しません</p>
+      <p>ログイン情報、APIキー、secret、session値は保存・表示しません</p>
     </div>
   );
 }

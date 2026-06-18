@@ -36,15 +36,18 @@ describe("admin customer action panel", () => {
       />
     );
 
-    expect(html).toContain("次にできること");
+    expect(html).toContain("AI補助と担当者返信");
+    expect(html).toContain("AI補助を開く");
+    expect(html).toContain("AI下書きと回答案は自動送信されません");
     expect(html).toContain("相談内容をまとめる");
-    expect(html).toContain("OpenAI APIには接続していません");
+    expect(html).toContain("デモ用AI");
     expect(html).toContain("返信文の下書きを作る");
     expect(html).toContain("LINEに送信されません");
     expect(html).toContain("ホームページ情報から回答案を作る");
-    expect(html).toContain("Webクロール、embedding、pgvectorは未接続");
+    expect(html).toContain("事前登録した情報だけを参考");
     expect(html).toContain("オンライン相談 / メンテナンス / 新築 / リフォーム");
     expect(html).toContain("担当者として返信する");
+    expect(html).toContain("これはデモ保存です");
     expect(html).toContain("本物のLINEには送信されません");
     expect(html).toContain("送信前に確認する");
     expect(html).toContain("権限ごとの表示制御は準備中です");
@@ -75,6 +78,7 @@ describe("admin customer action panel", () => {
     expect(html).toContain("送信内容");
     expect(html).toContain("モデルホーム見学について担当者より確認いたします。");
     expect(html).toContain("デモ用");
+    expect(html).toContain("これはデモ保存です");
     expect(html).toContain("本物のLINEには送信されません");
     expect(html).toContain("タイムラインにスタッフ返信として保存されます");
     expect(html).toContain("この内容を確認しました");

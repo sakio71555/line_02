@@ -23,8 +23,7 @@ export function AlertsPageView({
           <p className="eyebrow">ローカルデモ未返信アラート</p>
           <h1>対応が必要な相談を確認する</h1>
           <p className="meta">
-            利用先ID: <span className="mono">{config.tenantId}</span> / API:{" "}
-            <span className="mono">{config.apiBaseUrl}</span>
+            利用先: <span className="mono">{config.tenantId}</span>
           </p>
           <p className="meta">
             選択中の利用先:{" "}
@@ -52,8 +51,7 @@ export function AlertsPageView({
           本物のLINE、Slack、メールには通知されません。Supabase永続化もまだ未接続です。
         </p>
         <p className="meta">
-          選択中の利用先は <span className="mono">x-selected-tenant-id</span>{" "}
-          として送られ、API側でmembership再検証される前提です。
+          選択中の利用先は、保存済みの利用先情報としてAPI側で確認されます。
         </p>
       </section>
 
@@ -96,44 +94,39 @@ export function AlertsPageView({
             「未返信チェックを実行する」を押してください。
           </p>
         ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>状態</th>
-                  <th>緊急度</th>
-                  <th>種類</th>
-                  <th>お客様</th>
-                  <th>内容</th>
-                  <th>デモ通知日時</th>
-                  <th>作成日時</th>
-                </tr>
-              </thead>
-              <tbody>
-                {alerts.alerts.map((alert) => (
-                  <tr key={alert.id}>
-                    <td>
-                      <span className="status-pill">{formatAlertStatus(alert.status)}</span>
-                      <p className="meta mono">{alert.status}</p>
-                    </td>
-                    <td>
-                      <span className="status-pill">{formatAlertSeverity(alert.severity)}</span>
-                      <p className="meta mono">{alert.severity}</p>
-                    </td>
-                    <td>{formatAlertType(alert.type)}</td>
-                    <td className="mono">
-                      <a href={`/customers/${encodeURIComponent(alert.customer_id)}`}>
-                        {alert.customer_id}
-                      </a>
-                    </td>
-                    <td className="message-body">{alert.message}</td>
-                    <td>{formatNullable(alert.notified_at)}</td>
-                    <td>{alert.created_at}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="alert-card-list" aria-label="アラートカード">
+            {alerts.alerts.map((alert) => (
+              <li className="alert-card" key={alert.id}>
+                <div className="alert-card-header">
+                  <div>
+                    <p className="eyebrow">{formatAlertType(alert.type)}</p>
+                    <h3 className="alert-card-title">{formatAlertStatus(alert.status)}</h3>
+                    <small className="mono">{alert.id}</small>
+                  </div>
+                  <span className={getAlertSeverityBadgeClass(alert.severity)}>
+                    {formatAlertSeverity(alert.severity)}
+                  </span>
+                </div>
+                <p className="alert-card-message">{alert.message}</p>
+                <div className="alert-card-meta">
+                  <span className={getAlertStatusBadgeClass(alert.status)}>
+                    {formatAlertStatus(alert.status)}
+                  </span>
+                  <span className="status-pill status-pill-muted">作成 {alert.created_at}</span>
+                  <span className="status-pill status-pill-muted">
+                    デモ通知 {formatNullable(alert.notified_at)}
+                  </span>
+                </div>
+                <a
+                  className="card-action-link"
+                  href={`/customers/${encodeURIComponent(alert.customer_id)}`}
+                >
+                  お客様詳細を見る
+                </a>
+                <p className="meta mono">customer_id: {alert.customer_id}</p>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </main>
@@ -176,4 +169,28 @@ export function formatAlertType(type: AdminAlertListItem["type"]): string {
   };
 
   return labels[type];
+}
+
+function getAlertStatusBadgeClass(status: AdminAlertListItem["status"]): string {
+  if (status === "open") {
+    return "status-pill status-pill-warning";
+  }
+
+  if (status === "notified") {
+    return "status-pill";
+  }
+
+  return "status-pill status-pill-muted";
+}
+
+function getAlertSeverityBadgeClass(severity: AdminAlertListItem["severity"]): string {
+  if (severity === "critical") {
+    return "status-pill status-pill-danger";
+  }
+
+  if (severity === "high" || severity === "medium") {
+    return "status-pill status-pill-warning";
+  }
+
+  return "status-pill status-pill-muted";
 }

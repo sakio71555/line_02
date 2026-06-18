@@ -51,8 +51,10 @@ describe("admin alerts page", () => {
     expect(html).toContain("対応待ち");
     expect(html).toContain("デモ通知済み");
     expect(html).toContain("未返信アラート一覧");
+    expect(html).toContain("アラートカード");
     expect(html).toContain("未返信の相談");
     expect(html).toContain("href=\"/customers/customer_demo_yamada_taro\"");
+    expect(html).toContain("お客様詳細を見る");
     expect(html).toContain("本物のLINE、Slack、メールには通知されません");
   });
 

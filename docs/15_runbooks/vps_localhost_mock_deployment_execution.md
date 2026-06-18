@@ -232,6 +232,10 @@ Still:
 production_no_go
 ```
 
+## Loop 110 Local UI Note
+
+Loop 110でAdmin UIをモバイルファーストに刷新したが、このrunbookで作成したVPS localhost-only review環境にはまだ再配置していない。VPS上のAdmin/APIはLoop 109時点の旧commitのままであり、Loop 110の下部ナビ、顧客カード、タイムライン、アラートカードを確認するには別Loopで再配置する。
+
 Next:
 
-- Loop 110: User tunnel review and UI checklist
+- Loop 111: VPS localhost-only redeploy for mobile UI review

@@ -131,112 +131,121 @@ export function CustomerActionPanelView({
 }) {
   return (
     <section className="section">
-      <h2>次にできること</h2>
+      <h2>AI補助と担当者返信</h2>
       <p className="meta">
-        上から順に試すと、相談内容の確認、返信文の準備、参考情報の確認、担当者返信までの流れが分かります。
+        AI下書きと回答案は確認用です。お客様へ自動送信せず、最後は担当者が内容を見て返信します。
       </p>
       <RoleVisibilityNote variant="customer-actions" />
-      <div className="action-grid">
-        <article className="action-panel">
-          <div className="action-card-header">
-            <p className="result-label">Step 1</p>
-            <h3>相談内容をまとめる</h3>
-          </div>
-          <div className="status-pill-list">
-            <span className="status-pill">デモ用AI</span>
-            <span className="status-pill">タイムラインに保存</span>
-          </div>
-          <p className="meta">
-            デモ用AIが、これまでの相談内容を短くまとめます。今はOpenAI APIには接続していません。
-            結果はタイムラインにAI要約として保存されます。
-          </p>
-          <form action={runSummary} className="action-form">
-            <button type="submit" disabled={summaryPending}>
-              {summaryPending ? "まとめています..." : "相談内容をまとめる"}
-            </button>
-          </form>
-          <AiSummaryResult state={summaryState} />
-        </article>
 
-        <article className="action-panel">
-          <div className="action-card-header">
-            <p className="result-label">Step 2</p>
-            <h3>返信文の下書きを作る</h3>
-          </div>
-          <div className="status-pill-list">
-            <span className="status-pill">下書き確認用</span>
-            <span className="status-pill">LINEには送信されません</span>
-          </div>
-          <p className="meta">
-            お客様への返信文をデモ用AIで作ります。この下書きはまだLINEに送信されません。
-            内容を確認してから担当者が返信する想定です。
-          </p>
-          <form action={runReplyDraft} className="action-form">
-            <button type="submit" disabled={replyDraftPending}>
-              {replyDraftPending ? "作成中..." : "返信文の下書きを作る"}
-            </button>
-          </form>
-          <AiReplyDraftResult state={replyDraftState} />
-        </article>
+      <details className="ai-assist-details">
+        <summary>
+          <strong>AI補助を開く</strong>
+          <span className="meta">AI下書きと回答案は自動送信されません。</span>
+        </summary>
+        <div className="ai-assist-body">
+          <div className="action-grid">
+            <article className="action-panel">
+              <div className="action-card-header">
+                <p className="result-label">AI補助 1</p>
+                <h3>相談内容をまとめる</h3>
+              </div>
+              <div className="status-pill-list">
+                <span className="status-pill">デモ用AI</span>
+                <span className="status-pill">タイムラインに保存</span>
+              </div>
+              <p className="meta">
+                デモ用AIが、これまでの相談内容を短くまとめます。結果はタイムラインに
+                AI要約として保存されます。
+              </p>
+              <form action={runSummary} className="action-form">
+                <button type="submit" disabled={summaryPending}>
+                  {summaryPending ? "まとめています..." : "相談内容をまとめる"}
+                </button>
+              </form>
+              <AiSummaryResult state={summaryState} />
+            </article>
 
-        <article className="action-panel action-panel-wide">
-          <div className="action-card-header">
-            <p className="result-label">Step 3</p>
-            <h3>ホームページ情報から回答案を作る</h3>
-          </div>
-          <div className="status-pill-list">
-            <span className="status-pill">参考情報つき回答案</span>
-            <span className="status-pill">Webクロール未接続</span>
-            <span className="status-pill">OpenAI API未接続</span>
-          </div>
-          <p className="meta">
-            デモ用に登録したアマミホームの参考情報から、回答案を作ります。
-            今はWebクロール、embedding、pgvectorは未接続です。
-          </p>
-          <p className="meta">
-            試しやすいキーワード: {ragExampleKeywords.join(" / ")}
-          </p>
-          <form action={runRagAnswer} className="action-form">
-            <label htmlFor="rag-query">質問</label>
-            <textarea
-              id="rag-query"
-              name="query"
-              placeholder="例: オンライン相談はできますか？"
-              rows={3}
-            />
-            <button type="submit" disabled={ragAnswerPending}>
-              {ragAnswerPending ? "作成中..." : "ホームページ情報から回答案を作る"}
-            </button>
-          </form>
-          <RagAnswerDraftResult state={ragAnswerState} />
-        </article>
+            <article className="action-panel">
+              <div className="action-card-header">
+                <p className="result-label">AI補助 2</p>
+                <h3>返信文の下書きを作る</h3>
+              </div>
+              <div className="status-pill-list">
+                <span className="status-pill">下書き確認用</span>
+                <span className="status-pill">LINEには送信されません</span>
+              </div>
+              <p className="meta">
+                お客様への返信文をデモ用AIで作ります。この下書きはまだLINEに送信されません。
+                内容を確認してから担当者が返信する想定です。
+              </p>
+              <form action={runReplyDraft} className="action-form">
+                <button type="submit" disabled={replyDraftPending}>
+                  {replyDraftPending ? "作成中..." : "返信文の下書きを作る"}
+                </button>
+              </form>
+              <AiReplyDraftResult state={replyDraftState} />
+            </article>
 
-        <article className="action-panel action-panel-wide">
-          <div className="action-card-header">
-            <p className="result-label">Step 4</p>
-            <h3>担当者として返信する</h3>
+            <article className="action-panel action-panel-wide">
+              <div className="action-card-header">
+                <p className="result-label">AI補助 3</p>
+                <h3>ホームページ情報から回答案を作る</h3>
+              </div>
+              <div className="status-pill-list">
+                <span className="status-pill">参考情報つき回答案</span>
+                <span className="status-pill">デモ用AI</span>
+                <span className="status-pill">事前登録情報</span>
+              </div>
+              <p className="meta">
+                デモ用に登録したアマミホームの参考情報から、回答案を作ります。
+                事前登録した情報だけを参考にし、お客様へ自動送信しません。
+              </p>
+              <p className="meta">
+                試しやすいキーワード: {ragExampleKeywords.join(" / ")}
+              </p>
+              <form action={runRagAnswer} className="action-form">
+                <label htmlFor="rag-query">質問</label>
+                <textarea
+                  id="rag-query"
+                  name="query"
+                  placeholder="例: オンライン相談はできますか？"
+                  rows={3}
+                />
+                <button type="submit" disabled={ragAnswerPending}>
+                  {ragAnswerPending ? "作成中..." : "ホームページ情報から回答案を作る"}
+                </button>
+              </form>
+              <RagAnswerDraftResult state={ragAnswerState} />
+            </article>
           </div>
-          <div className="status-pill-list">
-            <span className="status-pill">デモ用送信</span>
-            <span className="status-pill">本物のLINEには送信されません</span>
-            <span className="status-pill">タイムラインに保存</span>
-          </div>
-          <p className="meta">
-            入力した内容をスタッフ返信としてタイムラインに保存します。今はデモ用送信なので、
-            本物のLINEには送信されません。
-          </p>
-          {staffReplyForm ?? (
-            <StaffReplyConfirmationForm
-              pending={staffReplyPending}
-              recipientLabel={staffReplyRecipientLabel}
-              runStaffReply={runStaffReply}
-              state={staffReplyState}
-              tenantId={staffReplyTenantId}
-            />
-          )}
-          <StaffReplyResult state={staffReplyState} />
-        </article>
-      </div>
+        </div>
+      </details>
+
+      <article className="action-panel action-panel-wide staff-reply-panel">
+        <div className="action-card-header">
+          <p className="result-label">担当者返信</p>
+          <h3>担当者として返信する</h3>
+        </div>
+        <div className="status-pill-list">
+          <span className="status-pill">これはデモ保存です</span>
+          <span className="status-pill">本物のLINEには送信されません</span>
+          <span className="status-pill">タイムラインに保存</span>
+        </div>
+        <p className="meta">
+          入力した内容をスタッフ返信としてタイムラインに保存します。今はデモ用送信なので、
+          本物のLINEには送信されません。
+        </p>
+        {staffReplyForm ?? (
+          <StaffReplyConfirmationForm
+            pending={staffReplyPending}
+            recipientLabel={staffReplyRecipientLabel}
+            runStaffReply={runStaffReply}
+            state={staffReplyState}
+            tenantId={staffReplyTenantId}
+          />
+        )}
+        <StaffReplyResult state={staffReplyState} />
+      </article>
     </section>
   );
 }
@@ -344,6 +353,7 @@ export function StaffReplyConfirmationCard({
         <h4>この内容でデモ保存しますか？</h4>
       </div>
       <div className="status-pill-list">
+        <span className="status-pill">これはデモ保存です</span>
         <span className="status-pill">デモ用</span>
         <span className="status-pill">本物のLINEには送信されません</span>
       </div>
@@ -574,7 +584,7 @@ function formatProvider(provider: string | undefined): string {
   }
 
   if (provider === "openai") {
-    return "OpenAI API";
+    return "外部AI";
   }
 
   return "-";
