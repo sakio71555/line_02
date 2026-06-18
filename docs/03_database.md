@@ -71,6 +71,8 @@ Loop 103ではproduction readiness final gateを追加し、RLS/Auth/selectedTen
 
 Loop 106ではtaiyolabel.site向けVPS deployment plan and templatesを追加しました。DB schema、RLS SQL、migration、GRANT、Supabase接続は変更していません。VPS deploy、SSL発行、LINE webhook設定、OpenAI real API smoke、production Supabase接続は未実施で、production readinessは引き続き `production_no_go` です。詳細は [docs/15_runbooks/vps_deployment_taiyolabel_site.md](15_runbooks/vps_deployment_taiyolabel_site.md) を参照してください。
 
+Loop 107ではproduction start scriptsとAPI port boundaryだけを追加しました。DB schema、RLS SQL、migration、GRANT、Supabase接続は変更していません。API production defaultは `127.0.0.1:8788`、Admin planned upstreamは `127.0.0.1:3002` へ揃えましたが、VPS deploy、SSL発行、LINE webhook設定、OpenAI real API smoke、production Supabase接続は未実施で、production readinessは引き続き `production_no_go` です。詳細は [docs/15_runbooks/production_start_script_and_port_boundary.md](15_runbooks/production_start_script_and_port_boundary.md) を参照してください。
+
 ## ローカルmigration検証
 
 Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。

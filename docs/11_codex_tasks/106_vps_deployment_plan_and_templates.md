@@ -95,16 +95,23 @@ Planned names do not conflict with current audit:
 - `deploy/vps/taiyolabel/env/api.env.example`
 - `deploy/vps/taiyolabel/env/admin.env.example`
 
-## Important No-Go Found in Repo
+## Important No-Go Found in Repo at Loop 106
 
-Current package scripts do not define production `start` scripts:
+At Loop 106 time, package scripts did not define production `start` scripts:
 
 - `apps/api/package.json` has `dev`, `build`, `typecheck` only.
 - `apps/admin/package.json` has `dev`, `build`, `typecheck` only.
 
-Also, `apps/api/src/index.ts` currently starts the API server on a fixed port in code. The planned `127.0.0.1:8788` upstream needs a later production start/port boundary before real deployment.
+Also at Loop 106 time, `apps/api/src/index.ts` started the API server on a fixed port in code. The planned `127.0.0.1:8788` upstream needed a later production start/port boundary before real deployment.
 
-Therefore the systemd templates are fail-closed placeholders. They must not be installed until a later Loop adds and verifies real production start scripts and port configuration.
+Therefore, at Loop 106 time, the systemd templates were fail-closed placeholders and were not installable until a later Loop added and verified real production start scripts and port configuration.
+
+Loop 107 follow-up:
+
+- production start scripts are now defined。
+- API planned port `8788` is now wired in runtime code。
+- systemd templates are now synchronized with real `npx pnpm@10.12.1 --filter ... start` commands。
+- VPS deploy, SSL, nginx/systemd install, external smoke, LINE/OpenAI/Supabase production connections remain out of scope and `production_no_go` remains。
 
 ## LINE Webhook Route
 
@@ -131,7 +138,7 @@ Do not write the real webhook secret path into docs or screenshots.
 - nginx templates contain `127.0.0.1:3002` / `127.0.0.1:8788`。
 - nginx templates do not contain `default_server`。
 - nginx templates do not reuse existing `app.ajnl.net` cert path。
-- systemd templates are fail-closed and mention `amami-line-crm-api/admin`。
+- systemd templates mention `amami-line-crm-api/admin` and, after Loop 107, call real start scripts。
 - env examples do not contain secret-like values。
 - docs preserve `production_no_go`。
 
@@ -148,8 +155,8 @@ Still No-Go:
 
 - No VPS deploy。
 - No SSL issue。
-- No production start scripts。
-- No API port configurability for planned 8788 upstream。
+- Loop 107 resolved production start scripts。
+- Loop 107 resolved API port configurability for planned 8788 upstream。
 - No LINE webhook setup。
 - No OpenAI real API smoke。
 - No production Supabase connection。

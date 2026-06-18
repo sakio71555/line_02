@@ -88,6 +88,7 @@ Before certbot:
 - `nginx -t` passes。
 - existing `app.ajnl.net` certificate is not reused。
 - cert name `amami-line-crm-taiyolabel` is confirmed。
+- API local upstream is `127.0.0.1:8788` and Admin local upstream is `127.0.0.1:3002` after Loop 107 start/port boundary verification。
 
 ## Final Gate
 
@@ -99,3 +100,7 @@ Production remains No-Go until:
 - LINE safe recipient smoke is explicitly approved and completed。
 - OpenAI real API smoke is explicitly approved and completed。
 - rollback owner and rollback steps are confirmed。
+
+## Production start and port boundary
+
+Loop 107ではproduction start scriptsとAPI/Admin local port境界をrepo内で整えました。これは外部サービス接続ではなく、VPS実配置前の起動境界整備です。nginx/certbot/systemd実行、LINE webhook設定、OpenAI/LINE real enablementは後続Loopで明示的に扱います。

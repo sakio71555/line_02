@@ -1,7 +1,6 @@
 # amami-line-crm Admin systemd template.
-# Loop 106 does not install this file.
-# Current repo has no production start script for @amami-line-crm/admin.
-# Treat this as a No-Go placeholder until a later Loop adds a real production start boundary.
+# Loop 107 wires the production start command and local port boundary.
+# This is still a template only. Do not install without a dedicated VPS deploy Loop.
 
 [Unit]
 Description=amami-line-crm-admin
@@ -12,6 +11,7 @@ Type=simple
 WorkingDirectory=/var/www/amami-line-crm
 EnvironmentFile=/etc/amami-line-crm/admin.env
 Environment=HOST=127.0.0.1
+Environment=HOSTNAME=127.0.0.1
 Environment=ADMIN_HOST=127.0.0.1
 Environment=ADMIN_PORT=3002
 Environment=PORT=3002
@@ -20,10 +20,7 @@ Group=www-data
 Restart=always
 RestartSec=5
 
-# Fail closed until a real production start script exists.
-# Future replacement example after a dedicated start script exists:
-# ExecStart=/usr/bin/env npx pnpm@10.12.1 --filter @amami-line-crm/admin start
-ExecStart=/bin/sh -c 'echo "No production Admin start script is defined for amami-line-crm; do not install this template yet"; exit 1'
+ExecStart=/usr/bin/env npx pnpm@10.12.1 --filter @amami-line-crm/admin start
 
 [Install]
 WantedBy=multi-user.target

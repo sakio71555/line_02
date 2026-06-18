@@ -768,6 +768,30 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
 export const app = createApiApp();
 
+export interface ApiServerListenOptions {
+  port: number;
+  hostname?: string;
+}
+
+export const DEFAULT_API_DEVELOPMENT_PORT = 4000;
+export const DEFAULT_API_PRODUCTION_HOST = "127.0.0.1";
+export const DEFAULT_API_PRODUCTION_PORT = 8788;
+
+export function resolveApiServerListenOptions(
+  env: NodeJS.ProcessEnv = process.env
+): ApiServerListenOptions {
+  const production = isProductionRuntime(env);
+  const hostname =
+    readNonEmptyEnvValue(env.API_HOST) ??
+    readNonEmptyEnvValue(env.HOST) ??
+    (production ? DEFAULT_API_PRODUCTION_HOST : undefined);
+  const port =
+    parsePort(readNonEmptyEnvValue(env.API_PORT) ?? readNonEmptyEnvValue(env.PORT)) ??
+    (production ? DEFAULT_API_PRODUCTION_PORT : DEFAULT_API_DEVELOPMENT_PORT);
+
+  return hostname ? { hostname, port } : { port };
+}
+
 function hasAuthorizationHeader(authorizationHeader: string | undefined): authorizationHeader is string {
   return Boolean(authorizationHeader?.trim());
 }
@@ -1165,6 +1189,26 @@ function readOptionalHeader(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
+function readNonEmptyEnvValue(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+
+  return trimmed ? trimmed : undefined;
+}
+
+function parsePort(value: string | undefined): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+    return undefined;
+  }
+
+  return parsed;
+}
+
 function toAiConversationTurns(
   messages: Array<{
     role: AiConversationTurn["role"];
@@ -1288,13 +1332,17 @@ function resolveWebhookTenant(
 }
 
 if (process.env.NODE_ENV !== "test") {
+  const listenOptions = resolveApiServerListenOptions(process.env);
+
   serve(
     {
       fetch: app.fetch,
-      port: 4000
+      ...listenOptions
     },
     (info) => {
-      console.log(`API server listening on http://localhost:${info.port}`);
+      console.log(
+        `API server listening on http://${listenOptions.hostname ?? "localhost"}:${info.port}`
+      );
     }
   );
 }

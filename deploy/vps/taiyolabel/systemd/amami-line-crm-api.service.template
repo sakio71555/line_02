@@ -1,7 +1,6 @@
 # amami-line-crm API systemd template.
-# Loop 106 does not install this file.
-# Current repo has no production start script for @amami-line-crm/api, and apps/api currently listens on a fixed port in code.
-# Treat this as a No-Go placeholder until a later Loop adds a real production start boundary.
+# Loop 107 wires the production start command and local port boundary.
+# This is still a template only. Do not install without a dedicated VPS deploy Loop.
 
 [Unit]
 Description=amami-line-crm-api
@@ -20,10 +19,7 @@ Group=www-data
 Restart=always
 RestartSec=5
 
-# Fail closed until a real production start script exists.
-# Future replacement example after a dedicated start script exists:
-# ExecStart=/usr/bin/env npx pnpm@10.12.1 --filter @amami-line-crm/api start
-ExecStart=/bin/sh -c 'echo "No production API start script is defined for amami-line-crm; do not install this template yet"; exit 1'
+ExecStart=/usr/bin/env npx pnpm@10.12.1 --filter @amami-line-crm/api start
 
 [Install]
 WantedBy=multi-user.target

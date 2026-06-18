@@ -81,7 +81,7 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     );
   });
 
-  it("keeps systemd templates fail-closed until production start scripts exist", () => {
+  it("wires systemd templates to verified production start scripts after Loop 107", () => {
     const combined = `${readText(apiSystemdPath)}\n${readText(adminSystemdPath)}`;
 
     expect(combined).toContain("Description=amami-line-crm-api");
@@ -92,8 +92,14 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     expect(combined).toContain("API_PORT=8788");
     expect(combined).toContain("ADMIN_PORT=3002");
     expect(combined).toContain("Restart=always");
-    expect(combined).toContain("No production API start script is defined");
-    expect(combined).toContain("No production Admin start script is defined");
+    expect(combined).toContain(
+      "ExecStart=/usr/bin/env npx pnpm@10.12.1 --filter @amami-line-crm/api start"
+    );
+    expect(combined).toContain(
+      "ExecStart=/usr/bin/env npx pnpm@10.12.1 --filter @amami-line-crm/admin start"
+    );
+    expect(combined).not.toContain("No production API start script is defined");
+    expect(combined).not.toContain("No production Admin start script is defined");
   });
 
   it("keeps env examples empty for secrets and disabled for real external APIs", () => {
@@ -121,7 +127,7 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     expect(combined).not.toMatch(/postgres(?:ql)?:\/\//iu);
   });
 
-  it("records production_no_go and the repo deployment blockers", () => {
+  it("records production_no_go and the remaining deployment blockers", () => {
     const combined = [
       readText(taskDocPath),
       readText(runbookPath),
@@ -131,6 +137,7 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     expect(combined).toContain("production_no_go");
     expect(combined).toContain("production start scripts");
     expect(combined).toContain("API planned port `8788`");
+    expect(combined).toContain("Loop 107");
     expect(combined).toContain("VPS SSH");
     expect(combined).toContain("nginx");
     expect(combined).toContain("certbot");

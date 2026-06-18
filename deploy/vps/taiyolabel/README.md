@@ -21,4 +21,4 @@ Do not copy them to the server without first reading:
 - Do not reuse the existing `app.ajnl.net` certificate.
 - Do not create `.env.production` in the repository.
 - Fill production secrets manually on the VPS only, outside git.
-- Current package scripts do not define production `start` scripts, and the API server currently listens on a fixed port in code. Treat systemd templates as No-Go placeholders until a later Loop adds a real production start boundary.
+- Loop 107 adds production `start` scripts and wires the API planned port boundary. These templates are still not applied to the VPS until a dedicated deployment Loop performs preflight, build/start smoke, systemd install, nginx checks, SSL, and rollback planning.

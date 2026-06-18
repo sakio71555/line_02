@@ -91,21 +91,29 @@ Planned conflict check from audit:
 
 These are templates only. Do not install them directly without a new deploy Loop.
 
-## Repo No-Go Found Before Deployment
+## Repo Start/Port Boundary
 
-Production start scripts are not available yet:
+Loop 106 recorded repo-level deployment blockers:
 
-- `apps/api/package.json`: `dev`, `build`, `typecheck`
-- `apps/admin/package.json`: `dev`, `build`, `typecheck`
+- production start scripts were missing。
+- API planned port `8788` was not wired into runtime code。
 
-The planned API upstream is `127.0.0.1:8788`, but current API server startup code uses a fixed port. Because Loop 106 is docs/templates only, this is recorded as a No-Go rather than fixed.
+Loop 107 resolved those repo-level start/port blockers:
 
-Before real VPS deployment, add a small Loop for:
+- `@amami-line-crm/api` has `start: node dist/index.js`。
+- `@amami-line-crm/admin` has `start: next start`。
+- API production binding resolves `API_HOST` / `HOST` and `API_PORT` / `PORT` with safe default `127.0.0.1:8788`。
+- Admin production binding uses Next.js `HOSTNAME=127.0.0.1` and `PORT=3002`。
+- systemd templates now call `npx pnpm@10.12.1 --filter ... start`。
 
-- production start scripts or a safe process command。
-- API port configurability for `8788`。
-- Admin production start command for `3002`。
-- local build/start smoke without production secrets。
+Still do not deploy directly from this runbook. Before real VPS deployment, run a dedicated Loop for:
+
+- production build/start local smoke without production secrets。
+- VPS read-only preflight。
+- systemd install/start plan。
+- nginx `nginx -t` / reload plan。
+- SSL/certbot plan。
+- rollback owner and external smoke approval。
 
 ## Future Deployment Steps
 
@@ -126,8 +134,8 @@ Do not run these commands in Loop 106. They are a future operator checklist.
    - do not paste values into docs, screenshots, prompts, or commits。
 6. Install dependencies with `npx pnpm@10.12.1 install` or corepack-managed pnpm after verifying the VPS pnpm setup。
 7. Build the repo。
-8. Add real production start scripts if still missing。
-9. Create systemd services from templates only after replacing fail-closed `ExecStart` lines。
+8. Confirm Loop 107 start/port boundary tests pass。
+9. Create systemd services from templates only in a dedicated deployment Loop。
 10. Start local services on `127.0.0.1:3002` and `127.0.0.1:8788`。
 11. Run local curl smoke against local upstreams。
 12. Add nginx HTTP bootstrap config for `admin.taiyolabel.site` and `api.taiyolabel.site`。
@@ -218,8 +226,9 @@ Stop before deploy if any of these are true:
 - port `3002` or `8788` is already in use。
 - `/var/www/amami-line-crm` already exists with unknown content。
 - `amami-line-crm-*` systemd service already exists。
-- production start scripts are still missing。
-- API cannot bind to planned `8788` upstream。
+- production start script tests fail。
+- API cannot bind to planned `127.0.0.1:8788` upstream。
+- Admin cannot bind to planned `127.0.0.1:3002` upstream。
 - `nginx -t` fails。
 - existing `app.ajnl.net`, `api.ajnl.net`, `ehime-portal`, `line-transport`, or other VPS apps might break。
 - certbot dry-run or issue fails。
@@ -254,6 +263,13 @@ Progress in Loop 106:
 - admin/API host and internal port plan documented。
 - nginx/systemd/env templates added。
 - SSL, secret, LINE webhook, rollback, and No-Go procedures documented。
+
+Progress in Loop 107:
+
+- production start scripts added。
+- API planned port `8788` wired to runtime boundary。
+- Admin planned port `3002` represented by `HOSTNAME` / `PORT`。
+- systemd/env templates synchronized with real package scripts。
 
 Final status remains:
 
