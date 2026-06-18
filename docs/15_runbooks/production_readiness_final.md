@@ -22,6 +22,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | VPS deployment plan | `taiyolabel.site` DNS/VPS audit、nginx/systemd/env templates、rollback plan追加済み |
 | production start/port boundary | API/Admin start scriptsと `127.0.0.1:8788` / `127.0.0.1:3002` 境界追加済み |
 | VPS dry deployment preflight | command pack、rollback、No-Go checklist追加済み |
+| VPS localhost mock deployment | localhost-only review配置を実施。Nginx/SSL/LINE/OpenAI/Supabase実接続なし |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -155,8 +156,8 @@ Loop 107でproduction start/port boundaryを追加した。
 
 追加済み:
 
-- `@amami-line-crm/api` の `start: node dist/index.js`。
-- `@amami-line-crm/admin` の `start: next start`。
+- `@amami-line-crm/api` の `start` はLoop 109のlocalhost-only reviewでは `tsx src/index.ts` を使う。compiled API runtimeは別Loopで整理する。
+- `@amami-line-crm/admin` の `start` はLoop 109で `next start --hostname 127.0.0.1` へ補正。
 - API production default `127.0.0.1:8788`。
 - Admin production env `HOSTNAME=127.0.0.1` / `PORT=3002`。
 - systemd templatesの `npx pnpm@10.12.1 --filter ... start`。
@@ -181,17 +182,17 @@ Loop 108でVPS dry deployment preflight command packを追加した。
 
 未実施:
 
-- VPS SSH。
 - nginx config install / `nginx -t` / reload。
 - certbot issue。
-- systemd install/start。
 - production deploy / external smoke。
 - production Supabase connection。
 - Admin real login smoke。
 - LINE webhook registration and real LINE smoke。
 - OpenAI real smoke。
 
-Repo-level start/port blockers from Loop 106 are resolved by Loop 107, but deployment remains No-Go until VPS install and smoke are performed.
+Loop 109でlocalhost-only mock deploymentを実施する。対象は `/var/www/amami-line-crm`、`/etc/amami-line-crm/*.env`、`amami-line-crm-api.service`、`amami-line-crm-admin.service`、`127.0.0.1:8788` / `127.0.0.1:3002` local smokeだけ。Nginx設定、`nginx -t`、reload、certbot、LINE webhook、LINE/OpenAI/Supabase実接続は未実施のまま維持する。
+
+Loop 109 smokeで、API/Adminのstart境界とworkspace package exportsはVPS上の実build出力に合わせて補正した。これによりlocalhost-only reviewは前進するが、public production deployment remains No-Go until nginx/SSL/external smoke/Auth/LINE/OpenAI production gates are completed.
 
 ## Secret Handling
 
@@ -216,7 +217,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - production env valuesは値非表示でpresence/safetyだけ確認する。
 - Admin loginで実Bearer tokenを取得し、表示しない。
 - Loop 105時点ではfake auth client境界のみのため、real login smokeは未実施として扱う。
-- VPS deploymentはLoop 108時点でもrunbook/templates/start boundary/preflight command packのみで、サーバー作業は未実施として扱う。
+- VPS deploymentはLoop 109でlocalhost-only review配置まで進めるが、Nginx公開、SSL、external smoke、LINE webhook、LINE/OpenAI/Supabase実接続は未実施として扱う。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。
@@ -231,6 +232,6 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command packは追加済みだが、SSL issue、systemd/nginx実配置、production smokeは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置は追加済みだが、SSL issue、nginx公開、production external smokeは未実施。
 
-この判定は、Loop 108時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。
+この判定は、Loop 109時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。

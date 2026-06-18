@@ -13,6 +13,13 @@ import {
 const repoRoot = process.cwd();
 const apiPackagePath = join(repoRoot, "apps/api/package.json");
 const adminPackagePath = join(repoRoot, "apps/admin/package.json");
+const apiRuntimePackagePaths = [
+  join(repoRoot, "packages/ai/package.json"),
+  join(repoRoot, "packages/config/package.json"),
+  join(repoRoot, "packages/domain/package.json"),
+  join(repoRoot, "packages/line/package.json"),
+  join(repoRoot, "packages/rag/package.json")
+];
 const apiSystemdPath = join(
   repoRoot,
   "deploy/vps/taiyolabel/systemd/amami-line-crm-api.service.template"
@@ -88,10 +95,23 @@ describe("Loop 107 production start script and port boundary", () => {
     const apiPackage = readJsonPackage(apiPackagePath);
     const adminPackage = readJsonPackage(adminPackagePath);
 
-    expect(apiPackage.scripts.start).toBe("node dist/index.js");
+    expect(apiPackage.scripts.start).toBe("tsx src/index.ts");
     expect(apiPackage.scripts.build).toContain("tsc -p tsconfig.json");
-    expect(adminPackage.scripts.start).toBe("next start");
+    expect(apiPackage.dependencies["@amami-line-crm/rag"]).toBe("workspace:*");
+    expect(adminPackage.scripts.start).toBe("next start --hostname 127.0.0.1");
     expect(adminPackage.scripts.build).toBe("next build");
+  });
+
+  it("keeps workspace package exports aligned with the API production build output", () => {
+    for (const packagePath of apiRuntimePackagePaths) {
+      const packageJson = readJsonPackage(packagePath);
+      const packageName = packageJson.name.replace("@amami-line-crm/", "");
+
+      expect(packageJson.main).toBe(`./dist/${packageName}/src/index.js`);
+      expect(packageJson.types).toBe(`./dist/${packageName}/src/index.d.ts`);
+      expect(packageJson.exports["."].default).toBe(`./dist/${packageName}/src/index.js`);
+      expect(packageJson.exports["."].types).toBe(`./dist/${packageName}/src/index.d.ts`);
+    }
   });
 
   it("wires systemd templates to existing start scripts and planned local ports", () => {
@@ -159,7 +179,19 @@ function readText(filePath: string): string {
 }
 
 function readJsonPackage(filePath: string): {
+  name: string;
+  main: string;
+  types: string;
+  exports: Record<string, { default: string; types: string }>;
   scripts: Record<string, string>;
+  dependencies: Record<string, string>;
 } {
-  return JSON.parse(readText(filePath)) as { scripts: Record<string, string> };
+  return JSON.parse(readText(filePath)) as {
+    name: string;
+    main: string;
+    types: string;
+    exports: Record<string, { default: string; types: string }>;
+    scripts: Record<string, string>;
+    dependencies: Record<string, string>;
+  };
 }

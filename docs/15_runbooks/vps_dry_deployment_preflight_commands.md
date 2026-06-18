@@ -211,6 +211,8 @@ Rules:
 - Confirm the VPS can execute `npx pnpm@10.12.1`.
 - Start/enable systemd only in a later approved execution Loop.
 
+Loop 109 executes only the localhost-bound service subset. It creates and starts `amami-line-crm-api.service` and `amami-line-crm-admin.service`, but still does not enable them and still does not touch Nginx or certbot.
+
 ## Phase 6: nginx HTTP Bootstrap Plan
 
 Planned future nginx files:

@@ -16,6 +16,8 @@ Rollback must remove or disable only amami-line-crm assets. Existing apps and ce
 - `/var/www/amami-line-crm`
 - letsencrypt cert name: `amami-line-crm-taiyolabel`
 
+Loop 109 touches only the two systemd service files, `/etc/amami-line-crm`, and `/var/www/amami-line-crm`. Because Nginx and certbot are not touched in Loop 109, rollback for that Loop does not need nginx reload or certificate deletion.
+
 ## Do Not Touch
 
 - `/etc/nginx/sites-available/default`

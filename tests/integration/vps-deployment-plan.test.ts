@@ -138,7 +138,7 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     expect(combined).toContain("production start scripts");
     expect(combined).toContain("API planned port `8788`");
     expect(combined).toContain("Loop 107");
-    expect(combined).toContain("VPS SSH");
+    expect(combined).toContain("localhost-only");
     expect(combined).toContain("nginx");
     expect(combined).toContain("certbot");
   });

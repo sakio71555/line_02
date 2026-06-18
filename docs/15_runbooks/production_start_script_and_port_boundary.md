@@ -19,6 +19,8 @@ Root build remains:
 npx pnpm@10.12.1 build
 ```
 
+Loop 109のlocalhost-only VPS smokeで、APIのtsc出力は `apps/api/dist/apps/api/src/index.js`、Next.js Adminは `next start --hostname 127.0.0.1` の明示が必要であることを確認した。start scriptsとworkspace package exportsはこの出力に合わせて同期する。
+
 ## API Binding
 
 Production API binding is resolved in `apps/api/src/index.ts`.
@@ -49,7 +51,7 @@ This keeps the production API service behind nginx and avoids accidental public 
 
 ## Admin Binding
 
-Admin uses the Next.js production server.
+Admin uses the Next.js production server with an explicit localhost hostname.
 
 Planned VPS Admin env:
 
@@ -60,7 +62,7 @@ ADMIN_HOST=127.0.0.1
 ADMIN_PORT=3002
 ```
 
-`HOSTNAME` / `PORT` are the Next.js runtime binding values. `ADMIN_HOST` / `ADMIN_PORT` are retained as deployment documentation values for consistency with nginx and systemd.
+The Admin `start` script passes `--hostname 127.0.0.1`; `PORT` remains the Next.js runtime port value. `ADMIN_HOST` / `ADMIN_PORT` are retained as deployment documentation values for consistency with nginx and systemd.
 
 ## Systemd Template Commands
 

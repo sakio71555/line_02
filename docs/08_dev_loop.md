@@ -320,6 +320,8 @@ Loop 107では、VPS実配置へ進む前のproduction start scriptとport bound
 
 Loop 108では、VPS上で将来実行するdry deployment preflight command packだけをdocs化します。read-only audit、backup、secret env、release directory、local smoke、systemd、nginx、certbot、external smoke、rollback、No-Goを実行順に整理しますが、CodexはVPSへSSHせず、nginx/systemd/certbotやproduction接続を実行しません。実VPS作業はLoop 109以降の明示許可とさらに細かいgateに分けます。
 
+Loop 109では、VPSへlocalhost-onlyのreview/mock配置を行う場合も、まずローカル品質ゲートを通し、VPSではread-only audit、backup、release配置、secretなしenv、install/build、localhost-only systemd start、127.0.0.1 smokeの順で進めます。Nginx、certbot、LINE webhook、LINE/OpenAI/Supabase実接続は別Loopに分け、No-Goを検知したらamami-line-crm serviceだけ停止して既存アプリへ影響を出さないようにします。
+
 ## 完了報告フォーマット
 
 ```md

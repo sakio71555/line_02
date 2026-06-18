@@ -25,3 +25,4 @@ Do not copy them to the server without first reading:
 - Fill production secrets manually on the VPS only, outside git.
 - Loop 107 adds production `start` scripts and wires the API planned port boundary. These templates are still not applied to the VPS until a dedicated deployment Loop performs preflight, build/start smoke, systemd install, nginx checks, SSL, and rollback planning.
 - Loop 108 adds preflight command packs under `deploy/vps/taiyolabel/preflight/`. They are documentation only and must not be treated as executed work.
+- Loop 109 performs only a localhost-bound review/mock deployment subset. Nginx, certbot, LINE webhook, LINE/OpenAI real calls, and Supabase production/staging connections remain out of scope.

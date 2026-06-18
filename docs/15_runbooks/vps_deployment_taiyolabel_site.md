@@ -100,10 +100,10 @@ Loop 106 recorded repo-level deployment blockers:
 
 Loop 107 resolved those repo-level start/port blockers:
 
-- `@amami-line-crm/api` has `start: node dist/index.js`。
-- `@amami-line-crm/admin` has `start: next start`。
+- `@amami-line-crm/api` has review/mock `start: tsx src/index.ts` to avoid Node ESM extensionless import issues until a dedicated compiled API runtime Loop。
+- `@amami-line-crm/admin` has `start: next start --hostname 127.0.0.1`。
 - API production binding resolves `API_HOST` / `HOST` and `API_PORT` / `PORT` with safe default `127.0.0.1:8788`。
-- Admin production binding uses Next.js `HOSTNAME=127.0.0.1` and `PORT=3002`。
+- Admin production binding uses an explicit Next.js localhost hostname and `PORT=3002`。
 - systemd templates now call `npx pnpm@10.12.1 --filter ... start`。
 
 Still do not deploy directly from this runbook. Before real VPS deployment, run a dedicated Loop for:
@@ -123,6 +123,8 @@ Loop 108 adds the dry deployment preflight command pack for those steps:
 - `deploy/vps/taiyolabel/preflight/`
 
 The command pack is documentation only. It is not executed in Loop 108.
+
+Loop 109 executes only the localhost mock subset: `/var/www/amami-line-crm`, `/etc/amami-line-crm/*.env`, `amami-line-crm-api.service`, `amami-line-crm-admin.service`, and local curl smoke. It still does not install nginx config, reload nginx, run certbot, configure LINE webhook, or connect to LINE/OpenAI/Supabase.
 
 ## Future Deployment Steps
 
