@@ -115,6 +115,15 @@ Still do not deploy directly from this runbook. Before real VPS deployment, run 
 - SSL/certbot plan。
 - rollback owner and external smoke approval。
 
+Loop 108 adds the dry deployment preflight command pack for those steps:
+
+- `docs/15_runbooks/vps_dry_deployment_preflight_commands.md`
+- `docs/15_runbooks/vps_dry_deployment_rollback.md`
+- `docs/15_runbooks/vps_dry_deployment_no_go_checklist.md`
+- `deploy/vps/taiyolabel/preflight/`
+
+The command pack is documentation only. It is not executed in Loop 108.
+
 ## Future Deployment Steps
 
 Do not run these commands in Loop 106. They are a future operator checklist.
@@ -270,6 +279,13 @@ Progress in Loop 107:
 - API planned port `8788` wired to runtime boundary。
 - Admin planned port `3002` represented by `HOSTNAME` / `PORT`。
 - systemd/env templates synchronized with real package scripts。
+
+Progress in Loop 108:
+
+- dry deployment preflight command pack added。
+- rollback runbook added。
+- No-Go checklist added。
+- secret injection, nginx, systemd, certbot, and external smoke checks documented。
 
 Final status remains:
 

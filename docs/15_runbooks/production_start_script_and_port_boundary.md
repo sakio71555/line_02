@@ -124,3 +124,13 @@ Final status remains:
 ```text
 production_no_go
 ```
+
+## Loop 108 Follow-up
+
+Loop 108 adds the VPS dry deployment preflight command pack, rollback runbook, and No-Go checklist. It does not execute VPS SSH, systemd, nginx, certbot, external smoke, LINE/OpenAI, or Supabase commands.
+
+Next operator docs:
+
+- `docs/15_runbooks/vps_dry_deployment_preflight_commands.md`
+- `docs/15_runbooks/vps_dry_deployment_rollback.md`
+- `docs/15_runbooks/vps_dry_deployment_no_go_checklist.md`

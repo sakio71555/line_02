@@ -318,6 +318,8 @@ VPS deploymentは、実サーバー作業へ進む前に必ずdocs/templates Loo
 
 Loop 107では、VPS実配置へ進む前のproduction start scriptとport boundaryだけを小さく実装しました。APIはproduction defaultで `127.0.0.1:8788`、AdminはNext.js `HOSTNAME=127.0.0.1` / `PORT=3002` を使う方針に揃えます。start/port境界が整っても、SSH、systemd install、nginx reload、certbot、external smokeは後続Loopへ分け、production readinessは `production_no_go` のまま扱います。
 
+Loop 108では、VPS上で将来実行するdry deployment preflight command packだけをdocs化します。read-only audit、backup、secret env、release directory、local smoke、systemd、nginx、certbot、external smoke、rollback、No-Goを実行順に整理しますが、CodexはVPSへSSHせず、nginx/systemd/certbotやproduction接続を実行しません。実VPS作業はLoop 109以降の明示許可とさらに細かいgateに分けます。
+
 ## 完了報告フォーマット
 
 ```md

@@ -6,6 +6,8 @@ Do not copy them to the server without first reading:
 
 - `docs/15_runbooks/vps_deployment_taiyolabel_site.md`
 - `docs/11_codex_tasks/106_vps_deployment_plan_and_templates.md`
+- `docs/15_runbooks/vps_dry_deployment_preflight_commands.md`
+- `docs/15_runbooks/vps_dry_deployment_no_go_checklist.md`
 
 ## Planned public routes
 
@@ -22,3 +24,4 @@ Do not copy them to the server without first reading:
 - Do not create `.env.production` in the repository.
 - Fill production secrets manually on the VPS only, outside git.
 - Loop 107 adds production `start` scripts and wires the API planned port boundary. These templates are still not applied to the VPS until a dedicated deployment Loop performs preflight, build/start smoke, systemd install, nginx checks, SSL, and rollback planning.
+- Loop 108 adds preflight command packs under `deploy/vps/taiyolabel/preflight/`. They are documentation only and must not be treated as executed work.

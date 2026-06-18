@@ -104,3 +104,7 @@ Production remains No-Go until:
 ## Production start and port boundary
 
 Loop 107ではproduction start scriptsとAPI/Admin local port境界をrepo内で整えました。これは外部サービス接続ではなく、VPS実配置前の起動境界整備です。nginx/certbot/systemd実行、LINE webhook設定、OpenAI/LINE real enablementは後続Loopで明示的に扱います。
+
+## VPS dry deployment preflight
+
+Loop 108ではVPS dry deployment preflight command pack、rollback、No-Go checklistを追加しました。これは将来ユーザーがVPS上で実行する前の手順整理であり、CodexはVPS SSH、nginx/systemd/certbot、LINE/OpenAI、Supabase接続を実行していません。詳細は `docs/15_runbooks/vps_dry_deployment_preflight_commands.md` を参照してください。
