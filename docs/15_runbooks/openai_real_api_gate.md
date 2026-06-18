@@ -101,3 +101,16 @@ packages/ai/src/index.ts
 - fallback/error handlingがUIで分かること。
 - LINE送信とAI draftが分離されていること。
 - production enablementは別Loopで明示許可されていること。
+
+## Loop 106 VPS Deployment Planning Note
+
+Loop 106でVPS deployment plan/templatesを追加しましたが、OpenAI real API smokeは行っていません。
+
+Future VPS env examples keep:
+
+```text
+AI_PROVIDER=mock
+OPENAI_REAL_API_ENABLED=false
+```
+
+OpenAI real API enablement requires a separate approved Loop after deploy/SSL/Auth smoke and cost/rate limit policy are confirmed.

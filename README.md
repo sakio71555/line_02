@@ -240,6 +240,8 @@ Loop 104ではproduction Auth runtime auto wiringを追加しました。product
 
 Loop 105ではAdmin login/session minimal integrationを追加しました。Admin UI側でSupabase Auth sessionを扱うための最小境界、fake auth clientによるsign-in / refresh / logout test、既存Admin API helperへtoken providerを渡す境界を追加しました。access tokenはUI、docs、dev log、localStorage、cookieへ独自保存・表示しません。実Supabase Auth接続、production deploy、LINE/OpenAI本接続は未実施です。詳細は [docs/11_codex_tasks/105_admin_login_session_minimal_integration.md](docs/11_codex_tasks/105_admin_login_session_minimal_integration.md) と [docs/15_runbooks/admin_login_session_minimal_integration.md](docs/15_runbooks/admin_login_session_minimal_integration.md) を参照してください。
 
+Loop 106ではtaiyolabel.site向けVPS deployment plan and templatesを追加しました。`admin.taiyolabel.site` / `api.taiyolabel.site` の予定route、nginx template、systemd fail-closed template、env example、SSL/certbot手順、rollback、No-Go条件をrepo内に追加しました。VPS接続、nginx reload、certbot、systemd作成、LINE/OpenAI/Supabase production接続は未実施で、production readinessは引き続き `production_no_go` です。詳細は [docs/11_codex_tasks/106_vps_deployment_plan_and_templates.md](docs/11_codex_tasks/106_vps_deployment_plan_and_templates.md) と [docs/15_runbooks/vps_deployment_taiyolabel_site.md](docs/15_runbooks/vps_deployment_taiyolabel_site.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。
@@ -288,7 +290,7 @@ Loop 049ではauthenticated runtime connection planを追加しました。`dev_
 
 Loop 050ではdev header production rejection planを追加しました。`x-tenant-id` / `dev_header` をproductionで拒否するためのruntime mode、環境判定、error response、staging移行、local/test互換方針を整理しましたが、拒否実装、JWT/session接続、API差し替えはまだ未実装です。詳細は [docs/11_codex_tasks/050_dev_header_production_rejection_plan.md](docs/11_codex_tasks/050_dev_header_production_rejection_plan.md) を参照してください。
 
-Loop 051ではAdmin API向けのSupabase Auth session extraction boundaryを追加しました。`Authorization: Bearer <token>` の解析、token verifier interface、session extraction error mappingを用意しましたが、まだAdmin API route、Supabase Auth実接続、Admin UI token forwardingには接続していません。詳細は [docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md](docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md) を参照してください。
+Loop 051ではAdmin API向けのSupabase Auth session extraction boundaryを追加しました。Bearer token付きAuthorization headerの解析、token verifier interface、session extraction error mappingを用意しましたが、まだAdmin API route、Supabase Auth実接続、Admin UI token forwardingには接続していません。詳細は [docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md](docs/11_codex_tasks/051_supabase_auth_session_extraction_boundary.md) を参照してください。
 
 Loop 052ではfake authenticated staff runtime connectionを追加しました。fake `AuthSessionVerifier` とfake `StaffAuthLookup` を使い、Bearer tokenから `AdminTenantContext(source=authenticated_staff)` とrole guardまで通す境界を検証しましたが、Admin API route接続、Supabase Auth本接続、JWT本検証はまだ未実装です。詳細は [docs/11_codex_tasks/052_fake_authenticated_staff_runtime_connection.md](docs/11_codex_tasks/052_fake_authenticated_staff_runtime_connection.md) を参照してください。
 

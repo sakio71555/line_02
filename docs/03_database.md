@@ -69,6 +69,8 @@ Loop 099では、staging real Auth user smokeを実施しました。dummy Supab
 
 Loop 103ではproduction readiness final gateを追加し、RLS/Auth/selectedTenantId/LINE/OpenAIの最終確認をrunbook化しました。Loop 104ではproduction Auth runtime auto wiringを追加し、`AUTH_SESSION_VERIFIER=supabase` の明示時にSupabase Auth client境界とStaffAuthLookup境界をserver-sideで構成できるようにしました。Loop 105ではAdmin UI側にSupabase Auth sessionを扱う最小境界を追加し、fake auth clientでsign-in / refresh / logoutとAdmin API token provider連携を検証しました。DB schema、RLS SQL、migration、GRANTは変更していません。実Supabase Auth接続、real LINE/OpenAI smoke、production deployは未実施のため、最終判定は引き続き `production_no_go` です。詳細は [docs/15_runbooks/production_readiness_final.md](15_runbooks/production_readiness_final.md) を参照してください。
 
+Loop 106ではtaiyolabel.site向けVPS deployment plan and templatesを追加しました。DB schema、RLS SQL、migration、GRANT、Supabase接続は変更していません。VPS deploy、SSL発行、LINE webhook設定、OpenAI real API smoke、production Supabase接続は未実施で、production readinessは引き続き `production_no_go` です。詳細は [docs/15_runbooks/vps_deployment_taiyolabel_site.md](15_runbooks/vps_deployment_taiyolabel_site.md) を参照してください。
+
 ## ローカルmigration検証
 
 Loop 026ではlocal migration testの手順を整理しました。現在の環境ではSupabase CLIはありますが、Docker daemonが使えず `psql` もないため、実DBへのmigration適用は未実行です。

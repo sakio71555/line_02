@@ -102,3 +102,21 @@ local/dev/testでは `MockLineClient` またはfake transport付き `RealLineCli
 ## Loop 103 Final Audit
 
 Loop 103のproduction readiness final gateで、このrunbookの必須条件を再確認しました。本物LINE API送信、LINE token実値利用、実LINE userId利用は引き続き未実施です。production readiness final判定は、LINE gate単体ではなくAuth runtime、Admin login/session、OpenAI gate、production smokeも含めて `production_no_go` としました。
+
+## Loop 106 VPS Deployment Planning Note
+
+Loop 106で `api.taiyolabel.site` のplanned routeとLINE webhook URL shapeをdeployment runbookへ記録しました。
+
+Code route:
+
+```text
+POST /api/line/webhook/:webhookSecret
+```
+
+Future URL shape:
+
+```text
+https://api.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+```
+
+Loop 106ではLINE webhook設定、本物LINE API送信、LINE token実値利用、安全recipient smokeは行っていません。`LINE_MESSAGING_ENABLED=false` と `LINE_REAL_PUSH_ENABLED=false` を維持します。

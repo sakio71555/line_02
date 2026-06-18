@@ -77,6 +77,18 @@ http://localhost:3000/logout
 - production deploy。
 - production smoke。
 
+## VPS Deployment Note
+
+Loop 106で `taiyolabel.site` 向けVPS deployment plan/templatesを追加したが、Admin real login smokeはまだ未実施。
+
+Before production login enablement:
+
+- deploy target must be up。
+- SSL smoke must pass。
+- Supabase Auth client injection must be implemented。
+- access token must remain hidden from UI, docs, dev log, localStorage, and cookie。
+- selectedTenantId must remain a selector and be revalidated server-side。
+
 ## Go / No-Go
 
 Go:
