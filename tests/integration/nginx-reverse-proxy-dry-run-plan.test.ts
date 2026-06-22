@@ -8,6 +8,10 @@ const taskDocPath = join(
   repoRoot,
   "docs/11_codex_tasks/112_nginx_reverse_proxy_dry_run_plan.md"
 );
+const candidateTaskDocPath = join(
+  repoRoot,
+  "docs/11_codex_tasks/112_nginx_reverse_proxy_dry_run_and_sites_available_candidate.md"
+);
 const runbookPath = join(repoRoot, "docs/15_runbooks/nginx_reverse_proxy_dry_run_plan.md");
 const reverseProxyExamplePath = join(
   repoRoot,
@@ -22,7 +26,7 @@ const devLogPath = join(repoRoot, "docs/14_dev_logs/2026-06-22.md");
 
 describe("Loop 112 Nginx reverse proxy dry-run plan", () => {
   it("adds the dry-run docs and repo-local reverse proxy example", () => {
-    for (const filePath of [taskDocPath, runbookPath, reverseProxyExamplePath]) {
+    for (const filePath of [taskDocPath, candidateTaskDocPath, runbookPath, reverseProxyExamplePath]) {
       expect(existsSync(filePath), filePath).toBe(true);
     }
   });
@@ -42,17 +46,24 @@ describe("Loop 112 Nginx reverse proxy dry-run plan", () => {
     expect(example).toContain("X-Forwarded-Proto");
     expect(example).toContain("X-Forwarded-Host");
     expect(example).toContain("X-Forwarded-Port");
+    expect(example).not.toContain("sites-enabled");
     expect(example).not.toContain("admin.taiyolabel.site");
     expect(example).not.toContain("api.taiyolabel.site");
+    expect(example).not.toContain("amami-line-crm.invalid");
     expect(example).not.toContain("ssl_certificate");
     expect(example).not.toContain("default_server");
   });
 
-  it("documents the dry-run boundary without enabling public nginx", () => {
-    const combined = [readText(taskDocPath), readText(runbookPath)].join("\n");
+  it("documents the sites-available candidate boundary without enabling public nginx", () => {
+    const combined = [readText(taskDocPath), readText(candidateTaskDocPath), readText(runbookPath)].join(
+      "\n"
+    );
 
     expect(combined).toContain("production_no_go");
     expect(combined).toContain("sites-enabled");
+    expect(combined).toContain("/etc/nginx/sites-available/amami-line-crm.conf");
+    expect(combined).toContain("amami-line-crm.invalid");
+    expect(combined).toContain("sudo nginx -t");
     expect(combined).toContain("Nginx reload");
     expect(combined).toContain("certbot");
     expect(combined).toContain("DNS");
@@ -61,6 +72,7 @@ describe("Loop 112 Nginx reverse proxy dry-run plan", () => {
     expect(combined).toContain("curl -sS -H 'Host: _CHANGE_ME_'");
     expect(combined).toContain("127.0.0.1:3002");
     expect(combined).toContain("127.0.0.1:8788");
+    expect(combined).toContain("A file under `sites-available` is not active");
   });
 
   it("updates loop, readiness, and dev log docs while keeping production No-Go", () => {

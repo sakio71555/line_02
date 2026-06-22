@@ -9,7 +9,7 @@ The current VPS review environment is localhost-only:
 - Admin: `127.0.0.1:3002`
 - API: `127.0.0.1:8788`
 
-Loop 112 documents the reverse proxy dry-run path and adds a repo-local example config. It does not enable public access.
+Loop 112 documents the reverse proxy dry-run path, adds a repo-local example config, and may place a candidate file under `sites-available` for `nginx -t` confirmation only. It does not enable public access.
 
 ## Current Public Status
 
@@ -21,15 +21,19 @@ production_no_go
 
 Loop 112 does not:
 
-- create `/etc/nginx/sites-available/amami-line-crm`
 - create `/etc/nginx/sites-enabled/amami-line-crm`
-- run `nginx -t` against a new app config
 - reload or restart Nginx
 - run certbot
 - change DNS
 - change firewall or public ports
 - register LINE webhook
 - connect LINE/OpenAI/Supabase real services
+
+Loop 112 may:
+
+- create or replace `/etc/nginx/sites-available/amami-line-crm.conf` as a candidate file
+- back up an existing same-name candidate
+- run `sudo nginx -t` only
 
 ## Local Preconditions
 
@@ -116,6 +120,36 @@ server_name _CHANGE_ME_;
 
 Do not copy this file directly to `sites-enabled`. Do not enable it without replacing `_CHANGE_ME_` in a later approved Loop.
 
+## Candidate File
+
+The VPS candidate file is:
+
+```text
+/etc/nginx/sites-available/amami-line-crm.conf
+```
+
+Use the repo-local example as the source, but replace the example-only host with:
+
+```text
+server_name amami-line-crm.invalid;
+```
+
+Rationale:
+
+- the real production domain is not confirmed in this Loop.
+- `.invalid` is a reserved placeholder and should not resolve publicly.
+- it is safer than a catch-all `server_name _;`.
+- it keeps the candidate parseable without hard-coding a real public host.
+
+If a same-name candidate already exists, back it up first:
+
+```bash
+sudo cp -a /etc/nginx/sites-available/amami-line-crm.conf \
+  /etc/nginx/sites-available/amami-line-crm.conf.loop112-backup-YYYYMMDD-HHMMSS
+```
+
+Never create a `sites-enabled` symlink in this Loop.
+
 ## Routing Shape
 
 The dry-run example uses one host with path-based API routing:
@@ -136,28 +170,38 @@ The example preserves common proxy headers:
 - `X-Forwarded-Port`
 - websocket `Upgrade` / `Connection`
 
-## Future Staged Dry-run Procedure
+## Sites-available Candidate Procedure
 
-Loop 112 stops before this procedure. A future explicit Loop may do the following:
+Loop 112 may do the following:
 
 1. Confirm local checks and secret scan.
 2. Confirm VPS read-only audit is still healthy.
-3. Copy the example to a staging-only filename under `/etc/nginx/sites-available`.
-4. Replace `_CHANGE_ME_` with the approved host.
-5. Do not create a `sites-enabled` symlink yet.
-6. Run Nginx config test.
-7. If the config test fails, stop and remove the staged file.
+3. Copy the example to `/etc/nginx/sites-available/amami-line-crm.conf`.
+4. Replace `_CHANGE_ME_` with `amami-line-crm.invalid`.
+5. Do not create a `sites-enabled` symlink.
+6. Run `sudo nginx -t`.
+7. If the config test fails, stop and remove or fix only the candidate file.
 8. If the config test passes, record the result and stop.
 
 The symlink and Nginx reload must be a later explicit public-enable Loop.
 
+Important limitation:
+
+- A file under `sites-available` is not active unless included or symlinked by the VPS Nginx configuration.
+- Therefore `sudo nginx -t` primarily verifies the active Nginx configuration remains healthy after candidate placement.
+- Full validation of the candidate as an included config must happen in a later explicit staged-enable Loop before any reload.
+
 ## Future Host-header Smoke
 
-Only after a config has been staged and tested in a later Loop:
+Only after a config has been staged into the active Nginx include path in a later Loop:
 
 ```bash
 curl -sS -H 'Host: _CHANGE_ME_' http://127.0.0.1/api/health
 curl -sS -I -H 'Host: _CHANGE_ME_' http://127.0.0.1/
+curl -sS -I -H 'Host: _CHANGE_ME_' http://127.0.0.1/login
+curl -sS -I -H 'Host: _CHANGE_ME_' http://127.0.0.1/select-tenant
+curl -sS -I -H 'Host: _CHANGE_ME_' http://127.0.0.1/customers
+curl -sS -I -H 'Host: _CHANGE_ME_' http://127.0.0.1/alerts
 ```
 
 Expected:
@@ -187,6 +231,21 @@ production_no_go
 
 ## Rollback for a Later Enablement Loop
 
+For Loop 112 candidate-only rollback:
+
+```bash
+sudo rm -f /etc/nginx/sites-available/amami-line-crm.conf
+```
+
+If a backup was created from a pre-existing candidate:
+
+```bash
+sudo cp /etc/nginx/sites-available/amami-line-crm.conf.loop112-backup-YYYYMMDD-HHMMSS \
+  /etc/nginx/sites-available/amami-line-crm.conf
+```
+
+No reload is required because this Loop does not enable the site.
+
 If a later Loop enables the site and needs rollback, limit changes to amami-line-crm:
 
 ```bash
@@ -207,14 +266,20 @@ Loop 112 records:
 - API `/health` returned `200`.
 - Admin `/login` returned `200`.
 - review ports `3002` / `8788` were not public-bound.
-- `/etc/nginx/sites-enabled/amami-line-crm` and `/etc/nginx/sites-available/amami-line-crm` were absent.
+- `/etc/nginx/sites-enabled/amami-line-crm` and `/etc/nginx/sites-enabled/amami-line-crm.conf` were absent.
 - reverse proxy example is repo-local only.
 - `_CHANGE_ME_` prevents accidental production use.
+- candidate placement created `/etc/nginx/sites-available/amami-line-crm.conf`.
+- backup was not needed because no same-name candidate existed.
+- candidate uses `server_name amami-line-crm.invalid;`.
+- `sudo nginx -t` passed.
+- candidate is not active in `nginx -T` because it is not symlinked/enabled.
 - no Nginx enable/reload/restart/certbot/DNS/public exposure is performed.
 - production readiness remains `production_no_go`.
 
 ## Next
 
-- Loop 113: Nginx reverse proxy staged config test
-- Loop 114: LINE webhook production dry-run checklist
-- Loop 115: Supabase production runtime preflight
+- Loop 113: Nginx sites-enabled enable dry-run final gate
+- Loop 114: Domain/DNS/HTTPS readiness checklist
+- Loop 115: LINE webhook production dry-run checklist
+- Loop 116: Supabase staging connection preflight

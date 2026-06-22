@@ -1,6 +1,6 @@
 # amami-line-crm reverse proxy dry-run example.
 # Loop 112 keeps this file as repo documentation only.
-# Do not copy to sites-enabled, reload nginx, restart nginx, run certbot, or change DNS in Loop 112.
+# Do not enable, reload nginx, restart nginx, run certbot, or change DNS in Loop 112.
 # Replace _CHANGE_ME_ and run a dedicated future dry-run before enabling this config.
 
 server {
