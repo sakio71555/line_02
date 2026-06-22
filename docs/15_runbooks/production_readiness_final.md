@@ -23,6 +23,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | production start/port boundary | API/Admin start scriptsと `127.0.0.1:8788` / `127.0.0.1:3002` 境界追加済み |
 | VPS dry deployment preflight | command pack、rollback、No-Go checklist追加済み |
 | VPS localhost mock deployment | localhost-only review配置を実施。Nginx/SSL/LINE/OpenAI/Supabase実接続なし |
+| VPS localhost mobile UI review | Loop 110 mobile Admin UIをlocalhost-only review環境へ再配置し、SSH tunnel経由のmobile smoke済み。Nginx/SSL/DNS/public公開なし |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -219,6 +220,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Loop 105時点ではfake auth client境界のみのため、real login smokeは未実施として扱う。
 - VPS deploymentはLoop 109でlocalhost-only review配置まで進めるが、Nginx公開、SSL、external smoke、LINE webhook、LINE/OpenAI/Supabase実接続は未実施として扱う。
 - Loop 110ではAdmin UIをモバイルファーストに刷新するが、API/Auth/RLS/LINE/OpenAI gateやVPS配置は変更しない。VPS localhost-only review環境は旧commitのままで、UI反映には別Loopの再配置が必要。
+- Loop 111ではAdmin mobile UIをVPS localhost-only review環境へ再配置し、Browser smokeで横スクロールなし、主要routeの致命的エラーなし、localhost-only bind維持を確認した。Nginx公開、HTTPS、DNS、external smoke、LINE/OpenAI/Supabase実接続は未実施のまま。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。

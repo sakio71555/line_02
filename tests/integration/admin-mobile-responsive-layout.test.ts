@@ -11,6 +11,7 @@ describe("admin mobile responsive layout styles", () => {
     expect(css).toContain("safe-area-inset-bottom");
     expect(css).toContain(".admin-bottom-nav");
     expect(css).toContain(".admin-bottom-nav-link");
+    expect(css).toContain(".page-header > a");
     expect(css).toContain("min-height: 44px");
     expect(css).toContain("@media (min-width: 768px)");
   });

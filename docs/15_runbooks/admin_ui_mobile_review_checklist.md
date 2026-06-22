@@ -86,3 +86,41 @@ Loop 110後の管理画面を、スマートフォン優先で確認するため
 - LINE real push gateは変えない。
 - OpenAI real API gateは変えない。
 - VPS localhost-only review環境へは、別Loopで再配置するまで反映されない。
+
+## Loop 111 Browser Review Result
+
+Loop 111でVPS localhost-only review環境へ再配置し、SSH tunnel経由で以下を確認した。
+
+Checked viewports:
+
+- 375 x 667
+- 390 x 844
+- 430 x 932
+- 768 x 1024
+- 1280 x 800
+
+Checked pages:
+
+- `/`
+- `/login`
+- `/select-tenant`
+- `/customers`
+- `/customers/customer_demo_yamada_taro`
+- `/alerts`
+- `/permission-denied`
+- `/session-expired`
+
+Result:
+
+- 40 checks completed.
+- 横スクロールなし。
+- 致命的エラー表示なし。
+- app pagesの下部/上部nav表示は維持。
+- `/login` に不要なmain navは表示されない。
+- 顧客カード、顧客詳細、タイムライン、アラートカードは読み取り可能。
+- 「これはデモ保存です」「本物のLINEには送信されません」などの安全文言は維持。
+- ページヘッダーの「トップへ戻る」「一覧へ戻る」は44px以上のtap targetへ修正済み。
+
+Residual review item:
+
+- `/permission-denied` などの準備画面リンクが一部説明文内でinline technical linkとして残る。主要操作ではないが、初心者向けには後続Loopでbutton風の「準備画面を見る」表示へ整理するとよい。

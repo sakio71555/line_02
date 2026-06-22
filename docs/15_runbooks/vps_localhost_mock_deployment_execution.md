@@ -239,3 +239,54 @@ Loop 110でAdmin UIをモバイルファーストに刷新したが、このrunb
 Next:
 
 - Loop 111: VPS localhost-only redeploy for mobile UI review
+
+## Loop 111 Redeploy Record
+
+Loop 111で、VPS localhost-only review環境をAdmin mobile UI確認用に再配置した。
+
+Start:
+
+- Local latest UI commit: `6b0b827dc2b9edf3a497def59dc107eda15bb27b`
+- VPS `DEPLOYED_COMMIT`: `516e07ee6746c04a57e6ff222aeb9a74e678c13d`
+- VPS release directory: copy-based release without `.git`
+- Services: `amami-line-crm-api.service` / `amami-line-crm-admin.service`
+
+Execution:
+
+- Created rollback backup: `/root/deploy-backups/amami-line-crm/loop111-20260622-153449`
+- Streamed tracked files from local git archive to `/var/www/amami-line-crm`
+- Ran `npx pnpm@10.12.1 build` on the VPS without dependency install
+- Restarted only `amami-line-crm-api.service` and `amami-line-crm-admin.service`
+- Applied a small UI polish commit for mobile tap target sizing
+
+Final VPS deployed source:
+
+```text
+176cb34fc6059ecabfb9826daacaabc2a437bebe
+```
+
+Final localhost smoke:
+
+- API: `127.0.0.1:8788`, active
+- Admin: `127.0.0.1:3002`, active
+- Public bind for review ports: none
+- `/health`: `200`, external connections disabled
+- Admin `/`, `/login`, `/select-tenant`, `/customers`, `/customers/:customerId`, `/alerts`: `200`
+- demo seed / unreplied check / notify-open: `200`
+- alert aggregate after notify: one `notified` alert
+
+Still not done:
+
+- Nginx config install / `nginx -t` / reload
+- certbot / HTTPS
+- DNS change
+- public port opening
+- LINE API calls
+- OpenAI API calls
+- Supabase production/staging connection
+
+Production readiness remains:
+
+```text
+production_no_go
+```
