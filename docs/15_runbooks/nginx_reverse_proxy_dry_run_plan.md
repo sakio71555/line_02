@@ -277,9 +277,28 @@ Loop 112 records:
 - no Nginx enable/reload/restart/certbot/DNS/public exposure is performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 113 Confirmed
+
+Loop 113 records:
+
+- local `git diff --check`, lint, typecheck, test, test:integration, and build passed before VPS work.
+- VPS release path remained `/var/www/amami-line-crm`.
+- VPS deployed commit remained `176cb34fc6059ecabfb9826daacaabc2a437bebe`.
+- candidate file `/etc/nginx/sites-available/amami-line-crm.conf` was present.
+- `/etc/nginx/sites-enabled/amami-line-crm.conf` was absent before dry-run.
+- temporary symlink `/etc/nginx/sites-enabled/amami-line-crm.conf` was created only for the include dry-run.
+- `sudo nginx -t` passed while the candidate was included.
+- `sudo nginx -T` summary showed `amami-line-crm.invalid`, `127.0.0.1:8788`, and `127.0.0.1:3002`.
+- temporary symlink was removed.
+- post-cleanup `sudo nginx -t` passed.
+- API `/health` returned `200` and Admin `/login` returned `200`.
+- review ports `3002` / `8788` remained localhost-bound.
+- no Nginx reload/restart/certbot/DNS/public exposure was performed.
+- production readiness remains `production_no_go`.
+
 ## Next
 
-- Loop 113: Nginx sites-enabled enable dry-run final gate
-- Loop 114: Domain/DNS/HTTPS readiness checklist
-- Loop 115: LINE webhook production dry-run checklist
-- Loop 116: Supabase staging connection preflight
+- Loop 114: actual Nginx enable + reload final approval gate
+- Loop 115: Domain/DNS/HTTPS readiness checklist
+- Loop 116: LINE webhook production dry-run checklist
+- Loop 117: Supabase staging connection preflight
