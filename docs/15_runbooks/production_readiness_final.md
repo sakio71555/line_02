@@ -24,6 +24,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | VPS dry deployment preflight | command pack、rollback、No-Go checklist追加済み |
 | VPS localhost mock deployment | localhost-only review配置を実施。Nginx/SSL/LINE/OpenAI/Supabase実接続なし |
 | VPS localhost mobile UI review | Loop 110 mobile Admin UIをlocalhost-only review環境へ再配置し、SSH tunnel経由のmobile smoke済み。Nginx/SSL/DNS/public公開なし |
+| Nginx reverse proxy dry-run plan | `_CHANGE_ME_` placeholder付きrepo-local example、Host header smoke案、Go/No-Go、rollback方針を追加。Nginx有効化/reload/certbot/DNS/public公開なし |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -221,6 +222,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - VPS deploymentはLoop 109でlocalhost-only review配置まで進めるが、Nginx公開、SSL、external smoke、LINE webhook、LINE/OpenAI/Supabase実接続は未実施として扱う。
 - Loop 110ではAdmin UIをモバイルファーストに刷新するが、API/Auth/RLS/LINE/OpenAI gateやVPS配置は変更しない。VPS localhost-only review環境は旧commitのままで、UI反映には別Loopの再配置が必要。
 - Loop 111ではAdmin mobile UIをVPS localhost-only review環境へ再配置し、Browser smokeで横スクロールなし、主要routeの致命的エラーなし、localhost-only bind維持を確認した。Nginx公開、HTTPS、DNS、external smoke、LINE/OpenAI/Supabase実接続は未実施のまま。
+- Loop 112ではNginx reverse proxy dry-run planとplaceholder exampleを追加したが、`sites-enabled` 作成、Nginx reload/restart、certbot、DNS変更、public公開は未実施のまま。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。
@@ -235,6 +237,6 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置は追加済みだが、SSL issue、nginx公開、production external smokeは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx reverse proxy dry-run planは追加済みだが、SSL issue、nginx公開、production external smokeは未実施。
 
-この判定は、Loop 109時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。
+この判定は、Loop 112時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。

@@ -250,6 +250,8 @@ Loop 109ではVPS localhost-only mock deploymentを実施しました。`/var/ww
 
 Loop 110ではAdmin UIをモバイルファーストに刷新しました。共通Admin shell、スマートフォン用下部ナビ、顧客カード、会話タイムライン、AI補助折りたたみ、担当者返信、アラートカードを整理しました。API/runtime/RLS/LINE/OpenAI gateは未変更で、VPS localhost-only review環境はLoop 109の旧commitのままです。反映には別Loopで再配置が必要です。詳細は [docs/11_codex_tasks/110_admin_ui_mobile_first_modernization.md](docs/11_codex_tasks/110_admin_ui_mobile_first_modernization.md) と [docs/15_runbooks/admin_ui_mobile_review_checklist.md](docs/15_runbooks/admin_ui_mobile_review_checklist.md) を参照してください。
 
+Loop 112ではNginx公開前のreverse proxy dry-run planを追加しました。`_CHANGE_ME_` placeholder付きのrepo-local exampleと、Host header smoke、Go/No-Go、rollback方針を整理しましたが、Nginx有効化、reload/restart、certbot、DNS変更、public公開は行っていません。production readinessは引き続き `production_no_go` です。詳細は [docs/11_codex_tasks/112_nginx_reverse_proxy_dry_run_plan.md](docs/11_codex_tasks/112_nginx_reverse_proxy_dry_run_plan.md) と [docs/15_runbooks/nginx_reverse_proxy_dry_run_plan.md](docs/15_runbooks/nginx_reverse_proxy_dry_run_plan.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

@@ -324,6 +324,8 @@ Loop 108では、VPS上で将来実行するdry deployment preflight command pac
 
 Loop 109では、VPSへlocalhost-onlyのreview/mock配置を行う場合も、まずローカル品質ゲートを通し、VPSではread-only audit、backup、release配置、secretなしenv、install/build、localhost-only systemd start、127.0.0.1 smokeの順で進めます。Nginx、certbot、LINE webhook、LINE/OpenAI/Supabase実接続は別Loopに分け、No-Goを検知したらamami-line-crm serviceだけ停止して既存アプリへ影響を出さないようにします。
 
+Loop 112のようなNginx公開前Loopでは、reverse proxy configをいきなりVPSへ有効化せず、repo-local example、Host header smoke案、Go/No-Go、rollback方針を先にdocs化します。`sites-enabled` symlink作成、Nginx reload/restart、certbot、DNS変更、public公開は、staged config testが通った後の別Loopで明示許可されるまで行いません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。
