@@ -9,6 +9,7 @@ server {
     server_name _CHANGE_ME_;
 
     client_max_body_size 10m;
+    add_header X-Amami-Line-Crm-Proxy "amami-line-crm" always;
 
     location = /api/health {
         proxy_pass http://127.0.0.1:8788/health;

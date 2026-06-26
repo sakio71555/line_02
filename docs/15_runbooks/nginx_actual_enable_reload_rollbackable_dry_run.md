@@ -124,6 +124,18 @@ The candidate is parseable and reloadable, but functional Host header routing is
 
 Do not proceed to real domain, DNS, HTTPS, or external smoke until a follow-up Loop diagnoses and fixes the candidate routing.
 
+## Loop 115 Follow-up
+
+Loop 115 diagnosed the route shape without system Nginx reload/restart:
+
+- direct API `/health` returned `200`.
+- direct API `/api/health` returned `404`, confirming the API contract is `/health`.
+- standalone localhost-only Nginx on `127.0.0.1:18080` returned `200` for `/api/health` through the candidate mapping.
+- the repo-local example and VPS candidate now include `X-Amami-Line-Crm-Proxy` so a future Host header smoke can prove whether the candidate server block handled the request.
+- production readiness remains `production_no_go`.
+
+The next reload-capable Loop should check the diagnostic header before considering real domain, DNS, HTTPS, or external smoke.
+
 ## Recovery Command If A Symlink Is Ever Found
 
 Use only the app symlink path:
@@ -144,5 +156,5 @@ curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3002/login
 
 ## Next
 
-- Loop 115: Nginx Host-header routing diagnosis
 - Loop 116: Domain/DNS/HTTPS readiness checklist
+- Loop 117: real domain Nginx enable plan

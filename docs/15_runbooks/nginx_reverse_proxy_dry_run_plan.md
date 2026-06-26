@@ -316,9 +316,22 @@ Loop 114 records:
 - real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 115 Confirmed
+
+Loop 115 records:
+
+- Loop 114 commit `76b6914` was pushed before new diagnosis work.
+- direct Admin/API upstreams were healthy.
+- direct API `/health` returned `200`, while direct API `/api/health` returned `404`.
+- standalone localhost-only Nginx on `127.0.0.1:18080` returned `200` for `/api/health` through the candidate mapping.
+- this confirms the candidate route shape maps `/api/health` to upstream `/health` correctly when the request reaches that server block.
+- the repo-local example now includes `X-Amami-Line-Crm-Proxy` as a non-secret diagnostic header.
+- the VPS candidate can be refreshed from the repo example and included with a temporary `sites-enabled` symlink for `sudo nginx -t` only.
+- system Nginx reload/restart, real domain, DNS, HTTPS/certbot execution, public exposure, LINE/OpenAI/Supabase real connections, and permanent enablement were not performed.
+- production readiness remains `production_no_go`.
+
 ## Next
 
-- Loop 115: Nginx Host-header routing diagnosis
 - Loop 116: Domain/DNS/HTTPS readiness checklist
 - Loop 117: real domain Nginx enable plan
 - Loop 118: LINE webhook production dry-run checklist

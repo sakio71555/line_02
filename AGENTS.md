@@ -46,6 +46,7 @@ This project must be built by loop engineering. Never implement broad features i
 - 秘密情報、API key、LINE userId、`.env` の値、本番ログをREADME、docs、dev log、Codex prompt、commit messageに書かない。
 - 変更後はScopeに応じて `git diff --check`、`npx pnpm@10.12.1 lint`、`npx pnpm@10.12.1 typecheck`、`npx pnpm@10.12.1 test`、`npx pnpm@10.12.1 test:integration`、`npx pnpm@10.12.1 build` を確認する。
 - Loop完了時は `docs/11_codex_tasks/` に作業記録を残し、必要に応じて `docs/14_dev_logs/YYYY-MM-DD.md` に短く追記する。
+- Loop完了時の作業ログと完了報告には、必要に応じて開始時/終了時git status、commit hash、push有無、実行コマンド、変更ファイル、safety boundary、production readiness、残リスク、次Loopを含める。
 - commit前の報告では、変更ファイル、実行コマンド、test/build結果、tenant_id分離、外部API未接続、残リスク、次Loopを確認する。
 - git push は明示指示があるLoop以外では禁止。
 
@@ -73,6 +74,7 @@ This project must be built by loop engineering. Never implement broad features i
 - 作業ログはObsidianで見返すためのMarkdown記録であり、プロダクト機能ではない。
 - 作業ログには実顧客情報、LINE userId、APIキー、`.env`、本番ログを書かない。
 - 作業ログには完了報告の要点、テスト結果、tenant_id分離、外部API mock確認、残リスク、次Loopを書く。
+- VPS/Nginx/production readinessに関わるLoopでは、reload/restart実行有無、public exposure有無、real domain/DNS/HTTPS有無、LINE/OpenAI/Supabase実接続有無、`production_no_go` 維持有無も記録する。
 
 ## Loop Report Format
 
