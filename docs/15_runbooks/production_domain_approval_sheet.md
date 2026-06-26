@@ -12,12 +12,15 @@ Do not add secrets, tokens, credential values, `.env` contents, certificate secr
 Production hostname: admin.taiyolabel.site
 Base domain: taiyolabel.site
 Hostname role: verification / admin management hostname, not the client final URL
+Host purpose: review/admin hostname
+Client-facing final hostname: undecided
 Expected VPS IPv4: 160.251.174.201
 Admin public origin: https://admin.taiyolabel.site
 API public origin: https://admin.taiyolabel.site/api
 URL topology: same-host /api path candidate for read-only DNS confirmation
 DNS provider: dnsv.jp / GMO DNS inferred from NS, account owner unconfirmed
 DNS account owner: unknown
+DNS change owner: unknown
 DNS rollback owner: unknown
 A record target: 160.251.174.201
 AAAA record target: none observed
@@ -35,6 +38,8 @@ Certificate approver: unknown
 LINE webhook approver: unknown
 Maintenance window: unknown
 External smoke approver: unknown
+Rollback command owner: unknown
+Final Go / No-Go owner: unknown
 Final approver: unknown
 Approval date: 2026-06-26
 ```
@@ -52,6 +57,8 @@ https://<production-host>/api/line/webhook/<webhookSecretPath>
 
 Loop 118 retry approved `admin.taiyolabel.site` / `taiyolabel.site` for read-only DNS confirmation only. The read-only DNS inventory found `admin.taiyolabel.site A 160.251.174.201` with TTL `3600`, no AAAA answer, and no CNAME conflict. This approval does not authorize DNS changes, Nginx enablement, certificate issuance, external smoke, or LINE webhook registration.
 
+Loop 119 adds [domain_and_release_approval_record.md](domain_and_release_approval_record.md) and [dns_nginx_rollback_owner_checklist.md](dns_nginx_rollback_owner_checklist.md). All human owner / approver fields remain `unknown` / `pending`, so this sheet is still No-Go for actual enablement.
+
 ## No-Go Until Approved
 
 ```text
@@ -68,3 +75,14 @@ Do not proceed with:
 - external HTTP/HTTPS smoke.
 - LINE webhook registration.
 - LINE/OpenAI/Supabase real connections.
+
+Current blockers:
+
+- DNS owner unknown.
+- DNS rollback owner unknown.
+- Nginx enable approver unknown.
+- Certificate approver unknown.
+- LINE webhook approver unknown.
+- Maintenance window unknown.
+- Final Go / No-Go owner unknown.
+- Client-facing final hostname undecided.

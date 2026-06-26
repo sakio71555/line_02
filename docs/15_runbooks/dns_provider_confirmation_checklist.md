@@ -11,9 +11,11 @@ canonical_hostname=admin.taiyolabel.site
 base_domain=taiyolabel.site
 expected_vps_ipv4=160.251.174.201
 hostname_role=verification / admin management hostname, not the client final URL
-dns_provider=unknown until read-only NS inference
+dns_provider=dnsv.jp / GMO DNS inferred from NS, account owner unconfirmed
 domain_owner=unknown
+dns_change_owner=unknown
 dns_rollback_owner=unknown
+rollback_command_owner=unknown
 dns_query_status=read_only_non_txt_completed
 txt_query_status=not_fetched
 production_readiness=production_no_go
@@ -41,8 +43,9 @@ Fill only non-secret values.
 Canonical hostname: admin.taiyolabel.site
 Base domain: taiyolabel.site
 Expected VPS IPv4: 160.251.174.201
-DNS provider: unknown until read-only NS inference
+DNS provider: dnsv.jp / GMO DNS inferred from NS, account owner unconfirmed
 DNS account owner: unknown
+DNS change owner: unknown
 DNS rollback owner: unknown
 Approved A target: 160.251.174.201
 Approved AAAA target: none observed
@@ -54,6 +57,7 @@ TTL before change: host A 3600 / zone NS 86400 / zone SOA 86400
 TTL after change: n/a, no DNS change executed
 Rollback contact:
 Maintenance window:
+Final Go / No-Go owner: unknown
 Approval date: 2026-06-26
 Approver: Loop 118 retry prompt
 ```
@@ -104,14 +108,31 @@ inferred_dns_provider=dnsv.jp / GMO DNS
 
 DNS owner and rollback owner remain unknown. The inferred provider is based only on NS records and does not confirm account ownership.
 
+## Loop 119 Approval Owner Record
+
+Loop 119 adds owner / approver records but does not fill them with guessed values.
+
+Required fields still pending:
+
+- Domain owner.
+- DNS change owner.
+- DNS rollback owner.
+- Rollback command owner.
+- Maintenance window approver.
+- Final Go / No-Go owner.
+
 ## Go / No-Go
 
 Stay No-Go until:
 
 - DNS provider and account owner are confirmed.
+- DNS change owner is confirmed.
 - rollback owner is confirmed.
+- rollback command owner is confirmed.
 - DNS record plan is reviewed.
 - ACME method is approved.
+- maintenance window is approved.
+- final Go / No-Go owner is confirmed.
 - a later Loop explicitly authorizes DNS changes, Nginx enablement, HTTPS issuance, and external smoke.
 
 Current judgment:

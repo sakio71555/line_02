@@ -30,6 +30,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | Domain/DNS/HTTPS readiness | placeholder templateとread-only preflight helper追加済み。Loop 118で `admin.taiyolabel.site` を検証/管理用ホストとしてread-only DNS確認済み |
 | Real domain decision gate | Loop 117でdomain decision packet、DNS provider checklist、production domain approval sheetを追加。Loop 118でA record一致を確認したが、DNS owner、rollback owner、ACME method、Nginx enable approver、certificate approver、LINE webhook approverは未確定 |
 | Approved domain DNS inventory | `admin.taiyolabel.site A 160.251.174.201` が期待IPと一致。TXT未取得、DNS変更なし、Nginx reload/restartなし、certbotなし、external smokeなし |
+| Domain / release approval record | Loop 119でdomain owner、DNS change owner、DNS rollback owner、Nginx enable approver、Certificate approver、LINE webhook approver、External smoke approver、Maintenance window、Final Go/No-Go ownerの承認欄を追加。全て未確定のためNo-Go |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -57,6 +58,8 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - OpenAI real HTTP transport、本番接続、cost/rate limit運用、prompt logging policyが未完了。
 - VPS deploy、SSL issue、nginx reload、systemd service作成、external smokeが未完了。
 - production接続やsecret表示が必要になる。
+- DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、LINE webhook approver、Maintenance window、Final Go/No-Go ownerが未確定。
+- client-facing final hostnameがundecided。
 
 ## Auth/JWT
 
@@ -234,6 +237,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Loop 116では実ドメイン、DNS、HTTPS公開前のreadiness inventoryを追加した。canonical hostname、DNS provider、domain ownership、ACME method、certificate SAN、LINE webhook public URLは未決定のまま、placeholder-based HTTP/HTTPS examplesとread-only preflight helperだけを追加した。Nginx active config変更、reload/restart、certbot、DNS変更、external smokeは未実施。
 - Loop 117ではreal domain decision and DNS provider confirmation planとして、domain decision packet、DNS provider checklist、production domain approval sheetを追加した。候補は分類したがcanonical hostnameは `unknown` のまま維持し、DNS query、DNS変更、Nginx active config変更、reload/restart、certbot、external smoke、LINE webhook登録は未実施。
 - Loop 118では `admin.taiyolabel.site` を検証/管理用ホストとして承認し、TXTを除くread-only DNS confirmationを実施した。A recordは `160.251.174.201` と一致し、AAAA/CNAME/CAA/DSは未設定だった。NSから `dnsv.jp / GMO DNS` と推定したが、DNS ownerとrollback ownerは未確定。VPS read-only確認では `nginx -t` 成功、`sites-enabled` candidateなし、localhost API/Admin 200を確認した。Nginx reload/restart、certbot、DNS変更、external smoke、LINE/OpenAI/Supabase実接続は未実施。
+- Loop 119ではdomain and release approval recordとDNS/Nginx rollback owner checklistを追加した。`admin.taiyolabel.site` はreview/admin hostnameとして記録し、client-facing final hostnameはundecidedのまま。DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method、LINE webhook approver、Maintenance window、Final Go/No-Go ownerが未確定のため、actual enable、certbot、HTTPS、external smokeへ進めない。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。
@@ -248,6 +252,6 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventoryは追加済み。Loop 118時点ではA record一致まで確認済みだが、DNS owner、rollback owner、ACME method、certificate names、Nginx enable approver、certificate approver、LINE webhook approver、maintenance windowが未確定で、HTTPS発行、Nginx reload/restart、external smoke、LINE webhook登録は未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval recordは追加済み。Loop 119時点ではA record一致まで確認済みだが、DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method、LINE webhook approver、Maintenance window、Final Go/No-Go owner、client-facing final hostnameが未確定で、actual enable、HTTPS発行、Nginx reload/restart、external smoke、LINE webhook登録は未実施。
 
-この判定は、Loop 118時点でもcontrolled production enablementへ進むには追加Loopと人間承認が必要であることを示す。
+この判定は、Loop 119時点でもcontrolled production enablementへ進むには追加Loopと人間承認が必要であることを示す。

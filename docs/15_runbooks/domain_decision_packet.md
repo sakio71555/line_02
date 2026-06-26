@@ -12,16 +12,25 @@ canonical_hostname=admin.taiyolabel.site
 production_hostname=admin.taiyolabel.site
 base_domain=taiyolabel.site
 hostname_role=verification / admin management hostname, not the client final URL
+host_purpose=review/admin hostname
+client_facing_final_hostname=undecided
 expected_vps_ipv4=160.251.174.201
 admin_public_origin=https://admin.taiyolabel.site
 api_public_origin=https://admin.taiyolabel.site/api
-dns_provider=unknown until read-only NS inference
+dns_provider=dnsv.jp / GMO DNS inferred from NS, account owner unconfirmed
 domain_owner=unknown
+dns_change_owner=unknown
 dns_rollback_owner=unknown
 acme_method=undecided
 certificate_names=unknown
 line_webhook_public_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
 auth_callback_url=unknown
+nginx_enable_approver=unknown
+certificate_approver=unknown
+line_webhook_approver=unknown
+external_smoke_approver=unknown
+maintenance_window=unknown
+final_go_no_go_owner=unknown
 ```
 
 Loop 118 retry approves `admin.taiyolabel.site` / `taiyolabel.site` for read-only DNS confirmation only. This does not approve DNS changes, Nginx active config changes, HTTPS issuance, external HTTP/HTTPS smoke, LINE webhook registration, LINE/OpenAI/Supabase real connection, or `.env` changes.
@@ -83,6 +92,15 @@ inferred_dns_provider=dnsv.jp / GMO DNS
 
 Details are recorded in [approved_domain_dns_inventory.md](approved_domain_dns_inventory.md).
 
+## Loop 119 Approval Owner Record
+
+Loop 119 added the human ownership and rollback responsibility records:
+
+- [domain_and_release_approval_record.md](domain_and_release_approval_record.md)
+- [dns_nginx_rollback_owner_checklist.md](dns_nginx_rollback_owner_checklist.md)
+
+All human owner / approver fields remain `unknown` / `pending`. `admin.taiyolabel.site` is a review/admin hostname, and the client-facing final hostname is still undecided.
+
 ## Alternative Topology
 
 ```text
@@ -126,6 +144,7 @@ Before any public enablement Loop, fill the approval sheet:
 - Production hostname.
 - DNS provider.
 - DNS account owner.
+- DNS change owner.
 - DNS rollback owner.
 - A/AAAA target.
 - CAA/DNSSEC status.
@@ -137,6 +156,11 @@ Before any public enablement Loop, fill the approval sheet:
 - Auth callback URL, if Auth is enabled.
 - Maintenance window.
 - External smoke approver.
+- Nginx enable approver.
+- Certificate approver.
+- LINE webhook approver.
+- Rollback command owner.
+- Final Go / No-Go owner.
 
 ## Go / No-Go
 
@@ -153,4 +177,6 @@ Reasons:
 - DNS provider is inferred from NS as `dnsv.jp / GMO DNS`, but account ownership is not confirmed.
 - ACME method and certificate names are unknown.
 - Nginx enable approver, certificate approver, LINE webhook approver, and maintenance window are unknown.
+- Final Go / No-Go owner and rollback command owner are unknown.
+- Client-facing final hostname is undecided.
 - Nginx active config, reload/restart, certbot, DNS change, external smoke, and LINE webhook registration were not executed.

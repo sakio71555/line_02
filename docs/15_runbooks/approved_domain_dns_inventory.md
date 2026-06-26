@@ -80,13 +80,19 @@ The provider inference is based only on NS records. It does not confirm account 
 
 ```text
 DNS owner: unknown
+DNS change owner: unknown
 DNS rollback owner: unknown
 Nginx enable approver: unknown
 Certificate approver: unknown
 LINE webhook approver: unknown
+External smoke approver: unknown
 Maintenance window: unknown
 ACME method: undecided
+Final Go / No-Go owner: unknown
+Client-facing final hostname: undecided
 ```
+
+Loop 119 adds the approval owner record and rollback owner checklist, but these fields remain `unknown` / `pending` until a human fills them.
 
 ## VPS Read-only Confirmation
 
@@ -121,11 +127,16 @@ DNS inventory is sufficient to proceed to an approval-record Loop, but not suffi
 ## Remaining Risks
 
 - DNS owner is unknown.
+- DNS change owner is unknown.
 - DNS rollback owner is unknown.
 - ACME method is undecided.
 - Certificate approver is unknown.
 - Nginx enable approver is unknown.
 - LINE webhook approver is unknown.
+- External smoke approver is unknown.
+- Maintenance window is unknown.
+- Final Go / No-Go owner is unknown.
+- Client-facing final hostname is undecided.
 - External HTTPS smoke has not been run.
 - LINE/OpenAI/Supabase real connections remain out of scope.
 - Production readiness remains `production_no_go`.
