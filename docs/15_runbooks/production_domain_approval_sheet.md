@@ -30,6 +30,7 @@ CAA status: no CAA answer observed
 DS/DNSSEC status: no DS answer observed
 DNS TTL: host A 3600 / zone NS 86400 / zone SOA 86400
 ACME method: undecided
+ACME method approver: unknown
 Certificate names: unknown
 LINE webhook URL: https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
 Auth callback URL: unknown
@@ -40,6 +41,8 @@ Maintenance window: unknown
 External smoke approver: unknown
 Rollback command owner: unknown
 Final Go / No-Go owner: unknown
+Supabase staging approver: unknown
+Production secret injection approver: unknown
 Final approver: unknown
 Approval date: 2026-06-26
 ```
@@ -58,6 +61,8 @@ https://<production-host>/api/line/webhook/<webhookSecretPath>
 Loop 118 retry approved `admin.taiyolabel.site` / `taiyolabel.site` for read-only DNS confirmation only. The read-only DNS inventory found `admin.taiyolabel.site A 160.251.174.201` with TTL `3600`, no AAAA answer, and no CNAME conflict. This approval does not authorize DNS changes, Nginx enablement, certificate issuance, external smoke, or LINE webhook registration.
 
 Loop 119 adds [domain_and_release_approval_record.md](domain_and_release_approval_record.md) and [dns_nginx_rollback_owner_checklist.md](dns_nginx_rollback_owner_checklist.md). All human owner / approver fields remain `unknown` / `pending`, so this sheet is still No-Go for actual enablement.
+
+Loop 129-133 adds ACME selected-method planning, real-domain Nginx enable approval gate, LINE webhook production URL dry-run checklist, owner approval status matrix, and Supabase staging connection preflight plan. These are planning artifacts only; all approval fields above remain `unknown` / `pending`.
 
 ## No-Go Until Approved
 
@@ -82,7 +87,10 @@ Current blockers:
 - DNS rollback owner unknown.
 - Nginx enable approver unknown.
 - Certificate approver unknown.
+- ACME method approver unknown.
 - LINE webhook approver unknown.
 - Maintenance window unknown.
 - Final Go / No-Go owner unknown.
+- Supabase staging approver unknown.
+- Production secret injection approver unknown.
 - Client-facing final hostname undecided.

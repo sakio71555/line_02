@@ -360,6 +360,8 @@ Loop 127のようなlisten / server_name / default_server診断では、Nginx se
 
 Loop 128のようなcorrected app Nginx candidate remediationでは、repo templateとVPS candidateの差分を先に確認し、差分がdry-run用 `server_name amami-line-crm.invalid` だけならcandidate contentを変更せずに進めます。一時 `sites-enabled` symlink、`nginx -t`、reload、localhost Host header smoke、symlink削除、rollback `nginx -t`、rollback reload、post-rollback direct API/Admin smokeまで同じLoopで完了します。`/api/health` と主要Admin routeが `200` かつ `X-Amami-Line-Crm-Proxy` を返しても、real domain、`admin.taiyolabel.site` Host header、DNS、HTTPS/certbot、external smoke、LINE/OpenAI/Supabase実接続、production secret injectionは別Loopの明示承認まで行わず、`production_no_go` を維持します。
 
+Loop 129-133のようなPublic launch readiness bundleでは、ACME方式、real-domain Nginx enable、LINE webhook production URL、owner approvals、Supabase staging接続をまとめて整理しても、作業はdocs/runbook/static testに限定します。DNS変更、DNS provider API、TXT変更、certbot、ACME challenge、HTTPS、real-domain `server_name` 設定、Nginx reload/restart、external smoke、LINE webhook登録、Supabase接続、`.env` 表示・変更は行いません。すべての承認値が揃うまで `production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

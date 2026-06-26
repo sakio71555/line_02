@@ -74,6 +74,7 @@ No-Go if certificate owner, ACME method, private-key handling, or fallback plan 
 | copy-based active redeploy | `2a9a746940b5f7a707af4c042bb9225d3dea258b` | localhost-only review deployed | Evidence path: `/root/deploy-backups/amami-line-crm/loop122-20260626-190958`. Nginx reload/restart and external smoke were not run. |
 | corrected Nginx candidate reload smoke | `/api/health=404` | no-go | Loop 123 evidence path: `/root/deploy-backups/amami-line-crm/loop123-20260626-200424`. Temporary symlink was removed and rollback reload completed. |
 | Nginx server selection diagnosis | candidate appears in temp `nginx -T`; current active still `/api/health=404` | no-go | Loop 124 evidence path: `/root/deploy-backups/amami-line-crm/loop124-20260626-204631`. Reload/restart was not run and symlink was removed. |
+| corrected app candidate remediation | `.invalid` app candidate smoke success | dry-run only | Loop 128 evidence path: `/root/deploy-backups/amami-line-crm/loop128-20260626-235834`. `/api/health=200`, diagnostic header present, symlink removed, rollback reload completed. |
 | production start command | existing localhost-only boundary | partial | Public enablement still not approved. |
 | healthcheck | localhost `/health` and `/login` known | partial | External smoke is still not approved. |
 | LINE/OpenAI/Supabase gate state | real connections disabled/out of scope | pending | Must verify before any real enablement. |
@@ -107,8 +108,11 @@ Trigger rollback review immediately if any of the following occurs:
 - DNS rollback owner is unknown.
 - Nginx reload approver is unknown.
 - Certificate approver is unknown.
+- ACME method approver is unknown.
 - LINE webhook approver is unknown.
 - Maintenance window is unknown.
+- Supabase staging approver is unknown.
+- Production secret injection approver is unknown.
 - public production enablement is requested before DNS/Nginx/cert owners are approved.
 - external smoke or HTTPS is requested before an approved maintenance window and rollback owner exist.
 
@@ -138,3 +142,4 @@ Loop 125 executed a diagnostic-only Nginx probe reload smoke and rollback:
 - external HTTP/HTTPS smoke禁止。
 - LINE webhook設定変更禁止。
 - LINE/OpenAI/Supabase実接続禁止。
+- Supabase staging実接続禁止。

@@ -38,10 +38,13 @@ This document is an approval record template. It does not approve production rel
 | DNS rollback owner | unknown | pending |  | Must be reachable during the maintenance window. |
 | Nginx enable approver | unknown | pending |  | Required before `sites-enabled`, reload, or restart work. |
 | Certificate approver | unknown | pending |  | Required before certbot or certificate issuance. |
+| ACME method approver | unknown | pending |  | Required before HTTP-01 / DNS-01 decision. |
 | LINE webhook approver | unknown | pending |  | Required before LINE Developers webhook URL changes. |
 | External smoke approver | unknown | pending |  | Required before public HTTP/HTTPS smoke. |
 | Maintenance window approver | unknown | pending |  | Required before any public-facing change. |
 | Final Go / No-Go owner | unknown | pending |  | Required before moving from `production_no_go`. |
+| Supabase staging approver | unknown | pending |  | Required before Supabase staging real connection. |
+| Production secret injection approver | unknown | pending |  | Required before production secret injection. |
 
 ## Approval checklist
 
@@ -51,10 +54,13 @@ This document is an approval record template. It does not approve production rel
 - [ ] DNS rollback record confirmed
 - [ ] Nginx enable approver confirmed
 - [ ] Certificate approver confirmed
+- [ ] ACME method approver confirmed
 - [ ] ACME method selected
 - [ ] Maintenance window approved
 - [ ] External smoke approver confirmed
 - [ ] LINE webhook approver confirmed
+- [ ] Supabase staging approver confirmed
+- [ ] Production secret injection approver confirmed
 - [ ] Release commit approved
 - [ ] Rollback command owner confirmed
 - [ ] Final Go / No-Go owner confirmed
@@ -133,6 +139,43 @@ production_readiness=production_no_go
 
 The approval checklist above remains pending. The result is No-Go until live Nginx server selection/routing is diagnosed and the required owners approve real-domain work.
 
+## Loop 128 corrected app Nginx candidate remediation record
+
+Loop 128 proved the app candidate with the dry-run host only. It did not approve public production enablement.
+
+```text
+active_source=2a9a746940b5f7a707af4c042bb9225d3dea258b
+candidate_host=amami-line-crm.invalid
+approved_review_host=admin.taiyolabel.site
+approved_review_host_used_as_host_header=no
+evidence_path=/root/deploy-backups/amami-line-crm/loop128-20260626-235834
+normalized_matches_repo=true
+invalid_host_candidate_smoke=success
+app_api_health_status=200
+app_api_health_proxy_header=amami-line-crm
+sites_enabled_after=absent
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+The approval checklist above remains pending. The `.invalid` success does not authorize real-domain Nginx enablement, certbot/HTTPS, external smoke, or LINE webhook registration.
+
+## Loop 129-133 public launch readiness bundle record
+
+Loop 129-133 adds planning docs only:
+
+```text
+acme_method=undecided
+real_domain_enable_status=no_go
+line_webhook_production_url_status=no_go
+owner_approval_status=pending
+supabase_staging_status=no_go
+production_readiness=production_no_go
+```
+
+See [owner_approval_status_matrix.md](owner_approval_status_matrix.md) for the current owner matrix.
+
 ## No-Go status
 
 Current status: `production_no_go`
@@ -144,15 +187,18 @@ Reason:
 - DNS rollback owner is unknown.
 - Nginx enable approver is unknown.
 - Certificate approver is unknown.
+- ACME method approver is unknown.
 - LINE webhook approver is unknown.
 - External smoke approver is unknown.
 - Maintenance window is unknown.
 - Final Go / No-Go owner is unknown.
+- Supabase staging approver is unknown.
+- Production secret injection approver is unknown.
 - ACME method is undecided.
 - client-facing final hostname is undecided.
 - VPS latest-main alignment is complete for localhost-only review, but not for public production enablement.
 - Copy-based archive deploy is usable for localhost-only review only; public production enablement is still not approved.
-- Corrected Nginx candidate reload smoke returned `/api/health=404` and no diagnostic header, so live Nginx routing is still unresolved.
+- Corrected app candidate `.invalid` smoke succeeded in Loop 128, but public real-domain enablement is not approved.
 
 ## Hard boundary
 
@@ -170,6 +216,7 @@ Until all required approvals are recorded:
 - external HTTP/HTTPS smoke禁止。
 - LINE webhook設定変更禁止。
 - LINE/OpenAI/Supabase実接続禁止。
+- Supabase staging実接続禁止。
 - `.env` 作成・変更・表示禁止。
 
 ## Next evidence to collect
