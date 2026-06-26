@@ -110,3 +110,20 @@ Active copy-based redeploy requires a separate explicit loop. It must preserve a
 ```text
 production_readiness=production_no_go
 ```
+
+## Loop 122 Follow-Up
+
+Loop 122 used this compatibility patch for an active localhost-only copy-based redeploy.
+
+```text
+release_candidate=2a9a746940b5f7a707af4c042bb9225d3dea258b
+staging_path=/root/deploy-staging/amami-line-crm/loop122-extract-20260626-190958/source
+staging_install_lint_typecheck_test_integration_build=success
+active_source_after=2a9a746940b5f7a707af4c042bb9225d3dea258b
+active_deploy_updated=yes
+nginx_reload_restart=no
+external_smoke=no
+production_readiness=production_no_go
+```
+
+Public production enablement remains out of scope.

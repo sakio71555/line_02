@@ -348,6 +348,8 @@ Loop 121のようにcopy-based archive redeployを明示許可された場合で
 
 Loop 121.1のようにcopy-based VPS staging test互換性を直す場合は、active deployへ進まず、テスト・helper・runbookに限定して `.git` 不在、`.env*` 除外、fresh pnpm install、Node.js version差分を吸収します。`--check-config-only` はenv parseだけを確認し、psqlやDB接続は通常実行時だけ要求します。VPS stagingでinstall/lint/typecheck/test/test:integration/buildが通っても、active rsync、systemd restart、Nginx reload/restartは別Loopの明示承認まで行いません。
 
+Loop 122のようにcopy-based active localhost-only redeployが明示許可された場合でも、release archiveは `.env*` / `.git` / `node_modules` を含めず、VPS staging full validation後にだけactive rsyncへ進みます。active `.env*` はrsync excludeで保持し、restartは既存のlocalhost-only `amami-line-crm-api.service` / `amami-line-crm-admin.service` のみ許可します。Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は別Loopの明示承認まで行わず、production readinessは `production_no_go` のまま記録します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

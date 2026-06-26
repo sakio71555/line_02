@@ -156,6 +156,35 @@ No rollback was needed in Loop 121 because active deploy was not updated.
 
 If a future loop updates active source and then fails, restore from the recorded `active-source-before.tar` backup while preserving active `.env*` files, rerun localhost-only smoke, and do not touch Nginx.
 
+## Loop 122 Active Localhost Redeploy Result
+
+Loop 122 completed the active copy-based localhost-only redeploy after Loop 121.1 removed the staging test blocker.
+
+```text
+release_candidate=2a9a746940b5f7a707af4c042bb9225d3dea258b
+previous_active_source=176cb34fc6059ecabfb9826daacaabc2a437bebe
+active_source_after=2a9a746940b5f7a707af4c042bb9225d3dea258b
+archive_sha256=9ca1d4e5794e5741c0e4767cad69e0d45c95b102297f1d6e355bcb17d0d73939
+staging_path=/root/deploy-staging/amami-line-crm/loop122-extract-20260626-190958/source
+backup_evidence_path=/root/deploy-backups/amami-line-crm/loop122-20260626-190958
+active_deploy_updated=yes
+active_build=success
+service_restart=success
+nginx_reload_restart=no
+external_smoke=no
+production_readiness=production_no_go
+```
+
+Localhost smoke after restart:
+
+- API `/health`: `200`.
+- Admin `/login`: `200`.
+- Admin `/select-tenant`: `200`.
+- Admin `/customers`: `200`.
+- Admin `/alerts`: `200`.
+
+The active `.env*` filenames before and after rsync matched. Values were not displayed. Nginx `sites-enabled` app include stayed absent.
+
 ## Production Readiness
 
 ```text

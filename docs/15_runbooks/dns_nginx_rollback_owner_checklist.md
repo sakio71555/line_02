@@ -67,10 +67,11 @@ No-Go if certificate owner, ACME method, private-key handling, or fallback plan 
 
 | Item | Current value | Status | Notes |
 | --- | --- | --- | --- |
-| release commit | `5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db` | recorded / not deployed | Selected as release candidate, but not deployed to VPS because the release directory is copy-based without `.git`. |
+| release commit | `2a9a746940b5f7a707af4c042bb9225d3dea258b` | localhost-only review deployed | Loop 122 deployed this source to `/var/www/amami-line-crm` via copy-based archive after staging validation. |
 | rollback commit | `176cb34fc6059ecabfb9826daacaabc2a437bebe` | recorded | Loop 120 selected the last known localhost-only smoke source as rollback candidate. |
-| VPS deployed source | `176cb34fc6059ecabfb9826daacaabc2a437bebe` | recorded | Loop 120 confirmed before/after source stayed unchanged because fast-forward redeploy was not possible. |
+| VPS deployed source | `2a9a746940b5f7a707af4c042bb9225d3dea258b` | recorded | Loop 122 confirmed active source after copy-based localhost-only redeploy. |
 | copy-based archive attempt | `e1eeb2d7be37074258aa5aade48d7b03a1cd7ac1` | staged / not deployed | Loop 121 archive transferred and built in VPS staging, but full test failed before active deploy. |
+| copy-based active redeploy | `2a9a746940b5f7a707af4c042bb9225d3dea258b` | localhost-only review deployed | Evidence path: `/root/deploy-backups/amami-line-crm/loop122-20260626-190958`. Nginx reload/restart and external smoke were not run. |
 | production start command | existing localhost-only boundary | partial | Public enablement still not approved. |
 | healthcheck | localhost `/health` and `/login` known | partial | External smoke is still not approved. |
 | LINE/OpenAI/Supabase gate state | real connections disabled/out of scope | pending | Must verify before any real enablement. |
@@ -105,8 +106,8 @@ Trigger rollback review immediately if any of the following occurs:
 - Certificate approver is unknown.
 - LINE webhook approver is unknown.
 - Maintenance window is unknown.
-- VPS latest-main alignment is incomplete.
-- copy-based archive staging full test is failing.
+- public production enablement is requested before DNS/Nginx/cert owners are approved.
+- external smoke or HTTPS is requested before an approved maintenance window and rollback owner exist.
 
 ## Forbidden until approval
 

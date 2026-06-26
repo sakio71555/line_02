@@ -259,4 +259,25 @@ nginx_reload_restart=no
 
 VPS staging passed `install --frozen-lockfile`, `lint`, `typecheck`, `test`, `test:integration`, and `build`. This removes the Loop 121 staging test blocker, but it does not align the active VPS review source with latest main. Active copy-based redeploy still needs a separate explicit Go loop.
 
+## Loop 122 Active Copy-Based Localhost Redeploy
+
+Loop 122 aligned the active VPS localhost-only review source with latest main using a release archive.
+
+```text
+release_candidate=2a9a746940b5f7a707af4c042bb9225d3dea258b
+rollback_candidate=176cb34fc6059ecabfb9826daacaabc2a437bebe
+archive_sha256=9ca1d4e5794e5741c0e4767cad69e0d45c95b102297f1d6e355bcb17d0d73939
+staging_path=/root/deploy-staging/amami-line-crm/loop122-extract-20260626-190958/source
+backup_evidence_path=/root/deploy-backups/amami-line-crm/loop122-20260626-190958
+active_source_after=2a9a746940b5f7a707af4c042bb9225d3dea258b
+active_deploy_updated=yes
+service_restart=existing amami-line-crm-api/admin services
+localhost_smoke=api health and admin routes 200
+nginx_reload_restart=no
+external_smoke=no
+production_readiness=production_no_go
+```
+
+This is still a localhost-only review deployment. It does not approve public Nginx enablement, DNS, HTTPS, external smoke, LINE/OpenAI/Supabase real connections, or production secret injection.
+
 See [copy_based_release_staging_test_compatibility.md](copy_based_release_staging_test_compatibility.md).

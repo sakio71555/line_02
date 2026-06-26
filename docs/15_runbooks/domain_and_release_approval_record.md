@@ -93,6 +93,24 @@ no_go_reason=VPS staging full test failed before active deploy
 
 The approval checklist above remains pending.
 
+## Loop 122 active localhost-only release record
+
+Loop 122 updated the active VPS localhost-only review source, but it did not approve public production enablement.
+
+```text
+release_candidate_commit=2a9a746940b5f7a707af4c042bb9225d3dea258b
+rollback_candidate_commit=176cb34fc6059ecabfb9826daacaabc2a437bebe
+active_source_after=2a9a746940b5f7a707af4c042bb9225d3dea258b
+evidence_path=/root/deploy-backups/amami-line-crm/loop122-20260626-190958
+active_deploy_updated=yes
+localhost_smoke=success
+nginx_reload_restart=no
+external_smoke=no
+production_readiness=production_no_go
+```
+
+The approval checklist above remains pending.
+
 ## No-Go status
 
 Current status: `production_no_go`
@@ -110,8 +128,8 @@ Reason:
 - Final Go / No-Go owner is unknown.
 - ACME method is undecided.
 - client-facing final hostname is undecided.
-- VPS latest-main alignment is incomplete because the review release directory is not a git worktree.
-- Copy-based archive deploy is not yet usable because Loop 121 staging full test failed before active source update.
+- VPS latest-main alignment is complete for localhost-only review, but not for public production enablement.
+- Copy-based archive deploy is usable for localhost-only review only; public production enablement is still not approved.
 
 ## Hard boundary
 
