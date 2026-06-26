@@ -27,6 +27,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | Nginx include dry-run final gate | `sites-available` candidate配置済み。一時 `sites-enabled` symlinkでinclude tree全体の `nginx -t` 成功を確認後、symlink削除済み。reload/restart/certbot/DNS/public公開なし |
 | Nginx reload rollback dry-run | `amami-line-crm.invalid` のまま一時enable + reloadを実施し、Host header smokeで `/api/health` が `404` となったためNo-Go。symlink削除後に `nginx -t` とrollback reloadを実行済み |
 | Nginx Host header routing diagnosis | standalone localhost-only Nginx `127.0.0.1:18080` でcandidate route shapeを確認し、`/api/health` は `200`。diagnostic headerをcandidateへ追加。system Nginx reload/restart未実施 |
+| Domain/DNS/HTTPS readiness | canonical hostname、DNS provider、domain ownership、ACME method、certificate SAN、LINE webhook public URLは未決定。placeholder templateとread-only preflight helperのみ追加 |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -228,6 +229,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Loop 113では一時的に `/etc/nginx/sites-enabled/amami-line-crm.conf` symlinkを作成し、Nginx include tree全体で `nginx -t` 成功を確認した。確認後symlinkは削除済みで、Nginx reload/restart、certbot、DNS変更、public公開は未実施のまま。
 - Loop 114では `amami-line-crm.invalid` のまま一時的に `/etc/nginx/sites-enabled/amami-line-crm.conf` symlinkを作成し、`nginx -t` 後に `sudo systemctl reload nginx` を実行した。Host header smokeで `/api/health` が `404` となったためNo-Goとして扱い、symlink削除、`nginx -t`、rollback reloadを実行済み。実ドメイン、DNS、HTTPS/certbot、external smoke、LINE/OpenAI/Supabase実接続は未実施。
 - Loop 115では `127.0.0.1:18080` のstandalone localhost-only NginxでHost header routingを診断し、candidate route shapeでは `/api/health` が `200` になることを確認した。今後のserver block選択確認用に `X-Amami-Line-Crm-Proxy` diagnostic headerをcandidateへ追加したが、system Nginx reload/restart未実施、temporary symlink削除済み、real domain/DNS/HTTPS/public smokeは未実施。
+- Loop 116では実ドメイン、DNS、HTTPS公開前のreadiness inventoryを追加した。canonical hostname、DNS provider、domain ownership、ACME method、certificate SAN、LINE webhook public URLは未決定のまま、placeholder-based HTTP/HTTPS examplesとread-only preflight helperだけを追加した。Nginx active config変更、reload/restart、certbot、DNS変更、external smokeは未実施。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。
@@ -242,6 +244,6 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosisは追加済み。Loop 115のstandalone localhost-only確認ではcandidate route shapeは成立したが、system Nginxでdiagnostic header付きのreload smokeは未実施のため、real domain/SSL issue/production external smokeは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventoryは追加済み。Loop 116時点ではcanonical hostname、DNS provider、domain ownership、ACME method、certificate SAN、LINE webhook public URLが未決定で、real domain/SSL issue/production external smokeは未実施。
 
-この判定は、Loop 115時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。
+この判定は、Loop 116時点でもcontrolled production enablementへ進むには追加Loopが必要であることを示す。

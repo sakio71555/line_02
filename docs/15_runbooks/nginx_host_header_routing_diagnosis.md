@@ -155,8 +155,12 @@ Keep:
 production_no_go
 ```
 
+## Loop 116 Follow-up
+
+Loop 116 added the domain/DNS/HTTPS readiness inventory without changing active Nginx. It keeps canonical hostname, DNS provider, domain ownership, ACME method, certificate names, and LINE webhook public URL undecided. Use `docs/15_runbooks/domain_dns_https_readiness_checklist.md` before any real-domain enablement Loop.
+
 ## Next
 
-- Loop 116: Domain/DNS/HTTPS readiness checklist
-- Loop 117: real domain Nginx enable plan
-- Loop 118: LINE webhook production dry-run checklist
+- Loop 117: real domain decision and DNS provider confirmation plan
+- Loop 118: real domain Nginx enable plan
+- Loop 119: HTTPS issuance dry-run approval gate

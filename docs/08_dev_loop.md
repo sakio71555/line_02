@@ -334,6 +334,8 @@ Loop 114のようにactual enable + reload dry-runが明示許可された場合
 
 Loop 115のようなHost header routing diagnosisでは、system Nginx reload/restartを行わず、standalone localhost-only Nginxを `127.0.0.1:18080` に立ててcandidate route shapeを確認します。候補server blockに到達した証拠が必要な場合は、非secretのdiagnostic headerを使い、確認後はstandalone processとtemporary symlinkを必ず削除します。
 
+Loop 116のようなDomain/DNS/HTTPS readinessでは、実ドメインを決め打ちせず、canonical hostname、DNS provider、domain ownership、ACME method、certificate SAN、LINE webhook URL、cookie/CORS/forwarded header前提をdocsで整理します。placeholder-based templateとread-only preflight helperは追加してよいですが、DNS変更、Nginx active config変更、reload/restart、certbot、external smokeは別Loopの明示承認まで行いません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

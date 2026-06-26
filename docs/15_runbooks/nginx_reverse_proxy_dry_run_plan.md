@@ -330,8 +330,22 @@ Loop 115 records:
 - system Nginx reload/restart, real domain, DNS, HTTPS/certbot execution, public exposure, LINE/OpenAI/Supabase real connections, and permanent enablement were not performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 116 Confirmed
+
+Loop 116 records:
+
+- canonical Admin/API hostname is still undecided.
+- historical `admin.taiyolabel.site` / `api.taiyolabel.site` and single-host `/api/` routing are both treated as candidates until explicitly approved.
+- `_CHANGE_ME_` remains the safe repo-template placeholder.
+- `amami-line-crm.invalid` remains dry-run only and must not be used for public DNS.
+- placeholder HTTP bootstrap and HTTPS examples were added for future review.
+- read-only preflight helper was added; it does not perform HTTP requests or system changes.
+- VPS read-only inventory showed Nginx active, public 80/443 listeners, app localhost listeners on `127.0.0.1:3002` / `127.0.0.1:8788`, certbot installed, and no enabled amami-line-crm include.
+- real domain, DNS, HTTPS/certbot execution, public exposure, LINE/OpenAI/Supabase real connections, and permanent enablement were not performed.
+- production readiness remains `production_no_go`.
+
 ## Next
 
-- Loop 116: Domain/DNS/HTTPS readiness checklist
-- Loop 117: real domain Nginx enable plan
-- Loop 118: LINE webhook production dry-run checklist
+- Loop 117: real domain decision and DNS provider confirmation plan
+- Loop 118: real domain Nginx enable plan
+- Loop 119: HTTPS issuance dry-run approval gate
