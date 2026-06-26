@@ -249,6 +249,38 @@ production_readiness=production_no_go
 
 Interpretation: the probe appearing in `nginx -T` is not sufficient evidence that reload-time request routing reaches that server block. Next diagnosis should focus on listen/server_name/default_server or reload-applied config behavior before proxy mapping remediation.
 
+## Loop 127 Listen / Server Name Follow-up
+
+Loop 127 added the missing evidence:
+
+```text
+evidence_dir=/root/deploy-backups/amami-line-crm/loop127-20260626-224235
+nginx_service_status=active
+main_pid=426936
+port80_process=nginx
+active_default_server_count=4
+active_listen80_count=5
+nginx_T_probe_present=yes
+reload=completed
+after_reload_service_status=active
+journal_error_count_since_reload=0
+probe_h1_status=204
+probe_h1_header=X-Amami-Line-Crm-Probe: loop127
+probe_resolve_status=204
+probe_connect_to_status=204
+probe_access_log_lines=4
+probe_error_log_lines=0
+result=probe_reached
+probe_symlink_after=absent
+app_symlink_after=absent
+candidate_final_state=deleted
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+Interpretation: the minimal diagnostic server block can win server_name selection after reload when enabled with `listen 80`. The remaining issue is no longer basic Host header transport or reload reflection; the next Loop should inspect the existing app candidate placement/listen settings and re-test with the same dedicated-log approach.
+
 ## Production Readiness
 
 ```text
@@ -257,7 +289,7 @@ production_no_go
 
 Reasons:
 
-- Nginx server selection root cause is not fixed.
+- existing app candidate placement/listen remediation is not complete.
 - DNS owner and rollback owner are unknown.
 - Nginx enable approver is unknown.
 - Certificate approver is unknown.

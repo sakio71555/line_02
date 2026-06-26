@@ -154,6 +154,21 @@ Result:
 
 Interpretation: the Loop 123 failure should not be treated as a candidate proxy mapping bug yet. Live server selection itself remains unproven.
 
+## Loop 127 Listen / Server Name Follow-up
+
+Loop 127 repeated the probe diagnosis with stronger evidence:
+
+- Nginx service was active and port 80 was owned by Nginx.
+- active config before the probe used the default `_` server.
+- reload reflection showed the service stayed active, worker PIDs changed, and journal error count since reload was `0`.
+- the temporary probe used `server_name amami-line-crm.invalid` and a dedicated `access_log`.
+- after reload, `/__amami_probe` returned `204` with `X-Amami-Line-Crm-Probe: loop127`.
+- the probe access log recorded the three `/__amami_probe` requests and the `/api/health` catch-all request.
+- `result=probe_reached`.
+- probe symlink and candidate were deleted, `nginx -t` passed, and rollback reload completed.
+
+Interpretation: Loop 127 supersedes the Loop 125 `probe_not_reached` result. Basic port ownership, Host header transport, server_name selection, and reload reflection worked for a minimal probe. The next remediation should inspect the existing app candidate placement/listen behavior rather than moving to real domain, DNS, HTTPS/certbot, or external smoke.
+
 ## Recovery Command If A Symlink Is Ever Found
 
 Use only the app symlink path:
@@ -173,4 +188,4 @@ curl -sS -o /dev/null -w "admin /login %{http_code}\n" http://127.0.0.1:3002/log
 
 ## Next Gate
 
-Before another reload smoke or real-domain work, diagnose why the live Nginx server selection did not return the diagnostic header. Keep the test host `.invalid` until `/api/health` and Admin routes pass through the intended candidate after reload.
+Before real-domain work, remediate the existing app candidate placement/listen behavior and keep the test host `.invalid` until `/api/health` and Admin routes pass through the intended candidate after reload.

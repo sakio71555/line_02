@@ -187,6 +187,21 @@ server_selection=probe_not_reached
 
 The probe symlink and candidate were removed, rollback reload completed, and production readiness stayed `production_no_go`.
 
+## Loop 127 Listen / Server Name Result
+
+Loop 127 repeated the probe with dedicated logs and multiple curl variants:
+
+- `Host: amami-line-crm.invalid` was the only test Host.
+- real domain and `admin.taiyolabel.site` Host header were not used.
+- before the probe, active curl variants returned `404` through the existing default/catch-all behavior.
+- after enabling the probe and reloading, `-H`, `--resolve`, and `--connect-to` variants all returned `204`.
+- each successful probe response included `X-Amami-Line-Crm-Probe: loop127`.
+- the probe access log recorded the requests.
+- `/api/health` on the probe returned `404` with `X-Amami-Line-Crm-Probe: loop127-catchall`.
+- `result=probe_reached`.
+
+Interpretation: Host header transport and curl method are not the likely blocker. Continue with candidate placement/listen remediation before any real-domain, DNS, HTTPS/certbot, or external smoke work.
+
 ## Still Not Production
 
 Still not done:

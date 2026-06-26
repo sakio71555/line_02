@@ -379,6 +379,25 @@ Loop 125 records:
 - real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 127 Confirmed
+
+Loop 127 records:
+
+- Nginx service was active, MainPID was present, and port 80 was owned by Nginx.
+- active config before the probe had no Amami candidate and used the default `_` server/catch-all.
+- current active curl variants returned `404` before the probe was enabled.
+- temporary probe symlink plus `nginx -T` included `server_name amami-line-crm.invalid`, `/__amami_probe`, and dedicated probe logs.
+- `sudo systemctl reload nginx` was executed for the temporary probe.
+- reload reflection showed active service, unchanged master PID, changed worker PIDs, and no journal errors since reload.
+- `-H`, `--resolve`, and `--connect-to` curl variants all reached `/__amami_probe` with `204` and `X-Amami-Line-Crm-Probe: loop127`.
+- the dedicated probe access log recorded the requests.
+- `result=probe_reached`.
+- probe symlink and probe candidate were removed, rollback `nginx -t` and rollback reload completed.
+- real domain, `admin.taiyolabel.site` Host header, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
+- production readiness remains `production_no_go`.
+
+Interpretation: the next dry-run should focus on existing app candidate placement/listen remediation. Loop 127 does not authorize real domain, DNS, HTTPS/certbot, or external smoke.
+
 ## What Loop 116 Confirmed
 
 Loop 116 records:
@@ -395,6 +414,6 @@ Loop 116 records:
 
 ## Next
 
-- Loop 117: real domain decision and DNS provider confirmation plan
-- Loop 118: real domain Nginx enable plan
-- Loop 119: HTTPS issuance dry-run approval gate
+- Loop 128: candidate placement/listen remediation if probe reached
+- Loop 130: default_server/catch-all remediation if candidate still loses
+- Loop 131: ACME selected-method dry-run plan

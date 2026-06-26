@@ -161,6 +161,23 @@ Evidence path:
 
 The next Loop should diagnose live Nginx server selection before any real-domain work.
 
+## Loop 127 Follow-up
+
+Loop 127 diagnosed live Nginx selection with a dedicated probe:
+
+- real domain and `admin.taiyolabel.site` Host header were not used.
+- Nginx was active and owned port 80.
+- active default/catch-all behavior returned `404` for probe paths before enabling the probe.
+- temporary probe `nginx -T` inclusion was confirmed.
+- reload completed and worker PIDs changed.
+- `/__amami_probe` returned `204` with `X-Amami-Line-Crm-Probe: loop127`.
+- dedicated probe access log recorded the requests.
+- `result=probe_reached`.
+- probe symlink and candidate were removed and rollback reload completed.
+- production readiness remains `production_no_go`.
+
+This supersedes the earlier probe-not-reached evidence. The next reload-capable Loop should remediate or re-test the existing app candidate placement/listen behavior, still using `amami-line-crm.invalid`.
+
 ## Recovery Command If A Symlink Is Ever Found
 
 Use only the app symlink path:
@@ -181,5 +198,5 @@ curl -sS -o /dev/null -w '%{http_code}\n' http://127.0.0.1:3002/login
 
 ## Next
 
-- Loop 116: Domain/DNS/HTTPS readiness checklist
-- Loop 117: real domain Nginx enable plan
+- Loop 128: candidate placement/listen remediation if probe reached
+- Loop 130: default_server/catch-all remediation if candidate still loses

@@ -245,3 +245,46 @@ If `/__amami_probe` does not return `204` or the probe header is absent:
 - The next Loop should diagnose listen/server_name/default_server/reload-applied config behavior.
 
 Loop 125 fell into the second case.
+
+## Loop 127 Follow-up
+
+Loop 127 repeated this diagnosis with service/PID/listener checks, curl variants, reload reflection, and a dedicated probe `access_log` / `error_log`.
+
+Updated result:
+
+```txt
+evidence_dir=/root/deploy-backups/amami-line-crm/loop127-20260626-224235
+nginx_service_status=active
+main_pid=426936
+port80_process=nginx
+active_default_server_count=4
+active_listen80_count=5
+nginx_T_probe_present=yes
+reload=completed
+after_reload_service_status=active
+journal_error_count_since_reload=0
+probe_h1_status=204
+probe_h1_header=X-Amami-Line-Crm-Probe: loop127
+probe_resolve_status=204
+probe_resolve_header=X-Amami-Line-Crm-Probe: loop127
+probe_connect_to_status=204
+probe_connect_to_header=X-Amami-Line-Crm-Probe: loop127
+probe_api_health_status=404
+probe_api_health_header=X-Amami-Line-Crm-Probe: loop127-catchall
+probe_access_log_lines=4
+probe_error_log_lines=0
+result=probe_reached
+probe_symlink_after=absent
+app_symlink_after=absent
+candidate_final_state=deleted
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+Interpretation:
+
+- Loop 127 supersedes the Loop 125 `probe_not_reached` result.
+- Host header transport, `listen 80`, `server_name amami-line-crm.invalid`, and reload reflection worked for the minimal probe.
+- The next Loop should remediate or re-test the existing app candidate placement/listen behavior with the same dedicated-log evidence pattern.
+- Do not proceed to real domain, DNS, HTTPS/certbot, or external smoke from this result alone.
