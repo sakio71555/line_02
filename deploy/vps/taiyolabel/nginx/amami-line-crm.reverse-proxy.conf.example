@@ -9,6 +9,9 @@ server {
     server_name _CHANGE_ME_;
 
     client_max_body_size 10m;
+
+    # Temporary diagnostic marker for invalid-host dry-runs.
+    # Remove or explicitly approve this header before public production enablement.
     add_header X-Amami-Line-Crm-Proxy "amami-line-crm" always;
 
     location = /api/health {

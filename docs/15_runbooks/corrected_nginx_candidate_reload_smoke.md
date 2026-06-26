@@ -189,3 +189,33 @@ curl -sS -o /dev/null -w "admin /login %{http_code}\n" http://127.0.0.1:3002/log
 ## Next Gate
 
 Before real-domain work, remediate the existing app candidate placement/listen behavior and keep the test host `.invalid` until `/api/health` and Admin routes pass through the intended candidate after reload.
+
+## Loop 128 Superseding App Candidate Result
+
+Loop 128 re-tested the app candidate after Loop 127 proved named `.invalid` server block selection.
+
+```text
+evidence_dir=/root/deploy-backups/amami-line-crm/loop128-20260626-235834
+normalized_matches_repo=true
+candidate_change=none_candidate_already_matched_repo_template_except_server_name
+temporary_symlink=created
+sudo_nginx_t=success
+sudo_systemctl_reload_nginx=completed
+nginx_T_temporary_include=confirmed
+app_root_status=200
+app_login_status=200
+app_select_tenant_status=200
+app_customers_status=200
+app_alerts_status=200
+app_api_health_status=200
+app_api_health_proxy_header=amami-line-crm
+invalid_host_candidate_smoke=success
+sites_enabled_after=absent
+rollback_nginx_t=success
+rollback_reload=completed
+post_rollback_direct_api_health=200
+post_rollback_direct_admin_login=200
+production_readiness=production_no_go
+```
+
+This supersedes the Loop 123 `api_health_404` diagnosis for the `.invalid` app candidate path. It does not supersede the remaining real-domain, DNS, HTTPS/certbot, external smoke, owner approval, or production secret-injection gates.

@@ -230,3 +230,25 @@ Loop 116 added the domain/DNS/HTTPS readiness inventory without changing active 
 - Loop 117: real domain decision and DNS provider confirmation plan
 - Loop 118: real domain Nginx enable plan
 - Loop 119: HTTPS issuance dry-run approval gate
+
+## Loop 128 App Candidate Result
+
+Loop 128 completed the candidate placement/listen remediation gate for the `.invalid` app path:
+
+```text
+evidence_dir=/root/deploy-backups/amami-line-crm/loop128-20260626-235834
+test_host=amami-line-crm.invalid
+real_domain_used=no
+admin_taiyolabel_host_used=no
+normalized_matches_repo=true
+candidate_change=none_candidate_already_matched_repo_template_except_server_name
+app_api_health_status=200
+app_api_health_proxy_header=amami-line-crm
+invalid_host_candidate_smoke=success
+app_symlink_after=absent
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+Next work should move to ACME/HTTPS dry-run planning or owner approval records. Do not use this result as permission to enable the real domain or run external smoke.

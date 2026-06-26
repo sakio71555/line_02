@@ -417,3 +417,32 @@ Loop 116 records:
 - Loop 128: candidate placement/listen remediation if probe reached
 - Loop 130: default_server/catch-all remediation if candidate still loses
 - Loop 131: ACME selected-method dry-run plan
+
+## Loop 128 Corrected App Candidate Result
+
+Loop 128 compared the VPS app candidate against this repo template and confirmed only the dry-run host replacement differed:
+
+```text
+normalized_matches_repo=true
+diff=server_name _CHANGE_ME_ -> server_name amami-line-crm.invalid
+candidate_change=none_candidate_already_matched_repo_template_except_server_name
+```
+
+The temporary include + reload smoke then passed with only `Host: amami-line-crm.invalid`:
+
+```text
+app_root_status=200
+app_login_status=200
+app_select_tenant_status=200
+app_customers_status=200
+app_alerts_status=200
+app_api_health_status=200
+app_api_health_proxy_header=amami-line-crm
+invalid_host_candidate_smoke=success
+app_symlink_after=absent
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+This proves the dry-run app proxy mapping, not public production readiness.

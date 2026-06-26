@@ -300,3 +300,31 @@ Reasons:
 - HTTPS is not done.
 - external smoke is not done.
 - production secret injection is not done.
+
+## Loop 128 App Candidate Follow-up
+
+Loop 128 re-ran the existing app candidate with the same invalid-host boundary after Loop 127 proved server selection. The repo template and VPS candidate matched after normalizing only the dry-run server name.
+
+```text
+evidence_dir=/root/deploy-backups/amami-line-crm/loop128-20260626-235834
+normalized_matches_repo=true
+candidate_change=none_candidate_already_matched_repo_template_except_server_name
+nginx_t_with_symlink=success
+nginx_T_candidate_present=yes
+nginx_T_api_health_mapping_present=yes
+reload=completed
+app_root_status=200
+app_login_status=200
+app_select_tenant_status=200
+app_customers_status=200
+app_alerts_status=200
+app_api_health_status=200
+app_api_health_proxy_header=amami-line-crm
+invalid_host_candidate_smoke=success
+app_symlink_after=absent
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+Interpretation: the earlier live app-candidate failure is superseded for the `.invalid` dry-run path. Remaining blockers are approval and production-publication gates, not the localhost app proxy mapping.

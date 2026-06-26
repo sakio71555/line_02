@@ -288,3 +288,23 @@ Interpretation:
 - Host header transport, `listen 80`, `server_name amami-line-crm.invalid`, and reload reflection worked for the minimal probe.
 - The next Loop should remediate or re-test the existing app candidate placement/listen behavior with the same dedicated-log evidence pattern.
 - Do not proceed to real domain, DNS, HTTPS/certbot, or external smoke from this result alone.
+
+## Loop 128 App Candidate Follow-up
+
+Loop 128 re-tested the existing app candidate and confirmed the app route shape after reload:
+
+```txt
+evidence_dir=/root/deploy-backups/amami-line-crm/loop128-20260626-235834
+test_host=amami-line-crm.invalid
+normalized_matches_repo=true
+candidate_change=none_candidate_already_matched_repo_template_except_server_name
+app_api_health_status=200
+app_api_health_proxy_header=amami-line-crm
+invalid_host_candidate_smoke=success
+app_symlink_after=absent
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+Interpretation: Loop 128 is the app-candidate counterpart to the Loop 127 probe success. The `.invalid` app candidate now proves routing through the intended server block, but it remains a dry-run signal only.

@@ -291,3 +291,33 @@ Important evidence files:
 Because `result=probe_reached`, the next Loop may inspect candidate placement/listen settings or re-run a corrected app candidate with dedicated access logs.
 
 Do not proceed to real domain, DNS, HTTPS, certbot, or external smoke until the `.invalid` candidate path proves stable and owner approvals are complete.
+
+## Loop 128 App Candidate Follow-up
+
+Loop 128 re-tested the existing app candidate after Loop 127 proved that named `.invalid` server blocks can win selection after reload.
+
+Result:
+
+```txt
+evidence_dir=/root/deploy-backups/amami-line-crm/loop128-20260626-235834
+normalized_matches_repo=true
+candidate_change=none_candidate_already_matched_repo_template_except_server_name
+nginx_t_with_symlink=success
+nginx_T_candidate_present=yes
+nginx_T_api_health_mapping_present=yes
+reload=completed
+app_root_status=200
+app_login_status=200
+app_select_tenant_status=200
+app_customers_status=200
+app_alerts_status=200
+app_api_health_status=200
+app_api_health_proxy_header=amami-line-crm
+invalid_host_candidate_smoke=success
+app_symlink_after=absent
+rollback_nginx_t=success
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+Interpretation: the app candidate placement/listen/proxy shape works for `Host: amami-line-crm.invalid` after a controlled temporary include and reload. This does not approve real-domain enablement; owner approvals, ACME/HTTPS planning, external smoke, and production secret injection remain separate gates.
