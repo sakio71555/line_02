@@ -124,6 +124,20 @@ The corrected candidate still returned `404` for `/api/health` after system Ngin
 
 The result is No-Go for real domain, DNS, HTTPS/certbot, and external smoke.
 
+## Loop 124 Server Selection Follow-up
+
+Loop 124 diagnosed Nginx server selection without reload/restart:
+
+- `/etc/nginx/nginx.conf` includes `/etc/nginx/conf.d/*.conf` and `/etc/nginx/sites-enabled/*`.
+- `sites-available` is not directly included.
+- current active config does not include `amami-line-crm` because the symlink is absent.
+- temporary symlink + `nginx -T` did include the candidate, `amami-line-crm.invalid`, `127.0.0.1:3002`, `127.0.0.1:8788`, `X-Amami-Line-Crm-Proxy`, and `/api/health` mapping.
+- no reload/restart was run.
+- the temporary symlink was removed and final `nginx -t` passed.
+- current active curl without the symlink returned `/=200`, `/api/health=404`, `/login=404`, with diagnostic header absent.
+
+Interpretation: the candidate appears correctly in disk config when included. Loop 123's reload smoke still matched the current no-symlink active behavior, so live reload application/server selection remains the unresolved issue.
+
 ## Recovery Command If A Symlink Is Ever Found
 
 Use only the app symlink path:

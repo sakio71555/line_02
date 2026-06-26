@@ -154,6 +154,19 @@ Result:
 
 Interpretation: the standalone route shape is valid, but live system Nginx server selection or active routing is still not proven. Do not proceed to real domain, DNS, HTTPS/certbot, or external smoke until the live server-selection behavior is explained.
 
+## Loop 124 Follow-up
+
+Loop 124 inspected the system Nginx include tree without reload/restart:
+
+- `sites-enabled/*` is included by `nginx.conf`.
+- `conf.d/*.conf` is included by `nginx.conf`.
+- `sites-available` is not directly included.
+- the current active config has no amami candidate while the symlink is absent.
+- a temporary symlink makes the amami candidate appear in `nginx -T` with the expected invalid host, upstreams, diagnostic header, and `/api/health` mapping.
+- current active localhost curl with `Host: amami-line-crm.invalid` returns `/=200`, `/api/health=404`, and `/login=404` without the diagnostic header.
+
+This strengthens the hypothesis that Loop 123's reload smoke behaved like the no-symlink active default server, not like the included candidate.
+
 ## Still Not Production
 
 Still not done:

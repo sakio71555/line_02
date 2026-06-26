@@ -350,6 +350,21 @@ Loop 123 records:
 - real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 124 Confirmed
+
+Loop 124 records:
+
+- `sites-enabled/*` and `conf.d/*.conf` are included by `/etc/nginx/nginx.conf`.
+- `sites-available` is not directly included.
+- current active config does not include the amami candidate while `/etc/nginx/sites-enabled/amami-line-crm.conf` is absent.
+- temporary symlink plus `nginx -T` includes the candidate, `amami-line-crm.invalid`, Admin/API upstreams, `X-Amami-Line-Crm-Proxy`, and `/api/health` mapping.
+- no Nginx reload/restart was run.
+- temporary symlink was removed and final `sudo nginx -t` passed.
+- current active curl with `Host: amami-line-crm.invalid` returns `/=200`, `/api/health=404`, and `/login=404`, with diagnostic header absent.
+- the likely high-priority hypotheses are that Loop 123's reload did not apply the expected config or that the request was still captured by the default/catch-all server.
+- real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
+- production readiness remains `production_no_go`.
+
 ## What Loop 116 Confirmed
 
 Loop 116 records:
