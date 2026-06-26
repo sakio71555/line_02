@@ -32,6 +32,66 @@ production_readiness=production_no_go
 | Supabase staging approver | unknown | pending | staging real connection smoke |
 | Production secret injection approver | unknown | pending | production secret injection |
 
+## Owner approval gap matrix
+
+| Area | Required value | Current status | Required before | Owner / approver | Evidence required | No-Go if missing |
+|---|---|---|---|---|---|---|
+| Domain | Domain owner | unknown | DNS change | unknown | written approval | yes |
+| DNS | DNS change owner | unknown | A/CAA/TTL changes | unknown | DNS console access confirmation | yes |
+| DNS | DNS rollback owner | unknown | DNS cutover | unknown | rollback record + owner | yes |
+| Nginx | Enable approver | unknown | real-domain enable | unknown | written approval | yes |
+| TLS | Certificate approver | unknown | certbot/ACME | unknown | approval + SAN list | yes |
+| TLS | ACME method approver | unknown | HTTP-01/DNS-01 | unknown | method decision | yes |
+| LINE | Webhook approver | unknown | LINE webhook registration | unknown | LINE admin approval | yes |
+| Smoke | External smoke approver | unknown | public smoke | unknown | test window approval | yes |
+| Ops | Maintenance window | unknown | reload/cutover | unknown | scheduled window | yes |
+| Release | Final Go/No-Go owner | unknown | any public enable | unknown | explicit Go | yes |
+| Supabase | Staging approver | unknown | Supabase connection | unknown | staging project approval | yes |
+| Secrets | Secret injection approver | unknown | production env injection | unknown | secret owner approval | yes |
+| Hostname | Client-facing final hostname | undecided | client-facing publication | unknown | hostname decision | yes |
+
+## Human Intake Artifacts
+
+- Human approval intake form: [human_approval_intake_form.md](human_approval_intake_form.md)
+- Client / operations confirmation questions: [client_ops_confirmation_questions.md](client_ops_confirmation_questions.md)
+
+These files are intake templates only. They do not approve public enablement.
+
+## Minimal Go Conditions
+
+### Loop 135: ACME method decision after owner approval
+
+- ACME method approver is known.
+- Certificate approver is known.
+- DNS owner is known.
+- DNS rollback owner is known.
+
+### Loop 136: real-domain Nginx enable controlled smoke
+
+- Nginx enable approver is known.
+- Maintenance window is known.
+- External smoke approver is known.
+- DNS rollback owner is known.
+- `admin.taiyolabel.site` use is explicitly approved.
+- Rollback procedure is approved.
+
+### Loop 137: LINE webhook dry-run with approved HTTPS URL
+
+- LINE official account admin is known.
+- LINE webhook approver is known.
+- HTTPS URL is confirmed.
+- Webhook secret path policy is confirmed.
+- Real push remains disabled during dry-run.
+
+### Loop 138: Supabase staging secret injection checklist
+
+- Supabase staging project owner is known.
+- Staging project URL is prepared outside docs.
+- Secret injection owner is known.
+- Service role key non-display policy is approved.
+- RLS/migration reviewer is known.
+- Rollback to `in_memory` is approved.
+
 ## Still No-Go
 
 ```txt

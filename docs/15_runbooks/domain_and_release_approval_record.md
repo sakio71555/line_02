@@ -176,6 +176,21 @@ production_readiness=production_no_go
 
 See [owner_approval_status_matrix.md](owner_approval_status_matrix.md) for the current owner matrix.
 
+## Loop 134 owner approval values intake record
+
+Loop 134 adds human intake docs only:
+
+```text
+human_approval_intake_form=created
+client_ops_confirmation_questions=created
+owner_values_filled=no
+client_facing_final_hostname=undecided
+owner_approval_status=pending
+production_readiness=production_no_go
+```
+
+See [human_approval_intake_form.md](human_approval_intake_form.md) and [client_ops_confirmation_questions.md](client_ops_confirmation_questions.md). These docs do not approve DNS changes, real-domain Nginx enablement, certbot/HTTPS, external smoke, LINE webhook registration, Supabase connection, or production secret injection.
+
 ## No-Go status
 
 Current status: `production_no_go`

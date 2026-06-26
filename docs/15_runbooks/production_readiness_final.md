@@ -37,6 +37,8 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | Release commit alignment | Loop 120でrelease candidate `5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db` とrollback candidate `176cb34fc6059ecabfb9826daacaabc2a437bebe` を記録。VPS release dirはcopy-basedで `.git` がないためfast-forward-only redeployは未実施 |
 | Copy-based archive redeploy | Loop 121でrelease archiveを作成しVPS stagingへ転送。checksum、`.env*` 除外、install/lint/typecheck/buildは確認したが、staging full testが失敗したためactive deploy、systemd restart、Nginx reload/restartは未実施 |
 | Active localhost-only copy-based redeploy | Loop 122でrelease candidate `2a9a746940b5f7a707af4c042bb9225d3dea258b` をVPS active `/var/www/amami-line-crm` へ反映。staging full validation、active backup、`.env*` preservation、active build、existing service restart、localhost-only smokeは成功。Nginx reload/restart、DNS、certbot、HTTPS、external smokeは未実施 |
+| Public launch readiness bundle | Loop 129-133でACME方式選定dry-run、real-domain Nginx enable gate、LINE webhook URL dry-run、owner approval matrix、Supabase staging preflightを追加。すべてplanning/static testのみで、production readinessは `production_no_go` |
+| Owner approval values intake | Loop 134でhuman approval intake formとclient / operations confirmation questionsを追加。owner/approver valuesは未入力、client-facing final hostnameはundecided、DNS/Nginx/HTTPS/LINE/Supabase/secret injectionは未承認 |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -65,7 +67,9 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - VPS deploy、SSL issue、nginx reload、systemd service作成、external smokeが未完了。
 - production接続やsecret表示が必要になる。
 - DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、LINE webhook approver、Maintenance window、Final Go/No-Go ownerが未確定。
+- DNS change owner、ACME method approver、External smoke approver、Supabase staging approver、Production secret injection approverが未確定。
 - client-facing final hostnameがundecided。
+- Human approval intake formは整備済みだが、owner/approver valuesは未入力。
 
 ## Auth/JWT
 
@@ -258,6 +262,42 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Loop 131ではLINE webhook production URL dry-run checklistを追加した。candidate URLは `https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>` だが登録未承認で、LINE Developers変更、LINE API call、LINE本番送信は未実施。
 - Loop 132ではowner approval status matrixを追加し、Domain owner、DNS owner、Nginx enable approver、Certificate approver、ACME method approver、LINE webhook approver、External smoke approver、Maintenance window、Final Go/No-Go owner、Supabase staging approver、Production secret injection approverを `unknown / pending` のまま記録した。
 - Loop 133ではSupabase staging connection preflight planを追加した。`supabase_staging_status=no_go` のままで、Supabase接続、psql接続、migration apply、RLS変更、service role key表示、DB URL表示は未実施。
+- Loop 134ではhuman approval intake formとclient / operations confirmation questionsを追加した。owner/approver valuesは未入力で、Domain owner、DNS change owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method approver、LINE webhook approver、External smoke approver、Maintenance window、Final Go/No-Go owner、Supabase staging approver、Production secret injection approver、client-facing final hostnameは未確定のまま。DNS変更、certbot/HTTPS、Nginx reload/restart、external smoke、LINE/OpenAI/Supabase実接続、production secret injectionは未実施。
+
+## Loop 134 Minimal Go Conditions
+
+### Loop 135: ACME method decision after owner approval
+
+- ACME method approverが決まる。
+- Certificate approverが決まる。
+- DNS ownerが決まる。
+- DNS rollback ownerが決まる。
+
+### Loop 136: real-domain Nginx enable controlled smoke
+
+- Nginx enable approverが決まる。
+- Maintenance windowが決まる。
+- External smoke approverが決まる。
+- DNS rollback ownerが決まる。
+- `admin.taiyolabel.site` を使う明示承認がある。
+- rollback手順承認済み。
+
+### Loop 137: LINE webhook dry-run with approved HTTPS URL
+
+- LINE official account adminが決まる。
+- LINE webhook approverが決まる。
+- HTTPS URLが確定する。
+- Webhook secret path方針が決まる。
+- real pushはdisabledのまま確認する承認がある。
+
+### Loop 138: Supabase staging secret injection checklist
+
+- Supabase staging project ownerが決まる。
+- staging project URLが用意される。
+- secret injection ownerが決まる。
+- service role keyを表示しない運用が決まる。
+- RLS/migration確認者が決まる。
+- rollback to `in_memory` 方針が決まる。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。

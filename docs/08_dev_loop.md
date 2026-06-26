@@ -362,6 +362,8 @@ Loop 128のようなcorrected app Nginx candidate remediationでは、repo templ
 
 Loop 129-133のようなPublic launch readiness bundleでは、ACME方式、real-domain Nginx enable、LINE webhook production URL、owner approvals、Supabase staging接続をまとめて整理しても、作業はdocs/runbook/static testに限定します。DNS変更、DNS provider API、TXT変更、certbot、ACME challenge、HTTPS、real-domain `server_name` 設定、Nginx reload/restart、external smoke、LINE webhook登録、Supabase接続、`.env` 表示・変更は行いません。すべての承認値が揃うまで `production_no_go` を維持します。
 
+Loop 134のようなowner approval values intakeでは、承認者名や作業日時を推測で埋めません。`admin.taiyolabel.site` はreview/admin hostnameとして維持し、client-facing final hostnameは人間が決めるまで `undecided` のまま扱います。入力フォーム、確認質問、最小Go条件をdocs化するだけで、DNS変更、certbot/HTTPS、Nginx reload/restart、external smoke、LINE/OpenAI/Supabase実接続、production secret injectionへ進みません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

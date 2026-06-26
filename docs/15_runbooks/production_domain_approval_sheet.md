@@ -64,6 +64,14 @@ Loop 119 adds [domain_and_release_approval_record.md](domain_and_release_approva
 
 Loop 129-133 adds ACME selected-method planning, real-domain Nginx enable approval gate, LINE webhook production URL dry-run checklist, owner approval status matrix, and Supabase staging connection preflight plan. These are planning artifacts only; all approval fields above remain `unknown` / `pending`.
 
+Loop 134 adds [human_approval_intake_form.md](human_approval_intake_form.md) and [client_ops_confirmation_questions.md](client_ops_confirmation_questions.md). These are intake artifacts only. They do not fill owner values, approve DNS/Nginx/HTTPS/LINE/Supabase work, or change production readiness.
+
+## Human Intake Links
+
+- Owner approval status matrix: [owner_approval_status_matrix.md](owner_approval_status_matrix.md)
+- Human approval intake form: [human_approval_intake_form.md](human_approval_intake_form.md)
+- Client / operations confirmation questions: [client_ops_confirmation_questions.md](client_ops_confirmation_questions.md)
+
 ## No-Go Until Approved
 
 ```text
