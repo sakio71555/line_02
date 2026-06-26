@@ -14,6 +14,23 @@ It does not reload or restart Nginx.
 production_no_go
 ```
 
+## Loop 114 Follow-up
+
+Loop 114 did run an explicitly approved temporary enable + `sudo systemctl reload nginx` dry-run with `server_name amami-line-crm.invalid;`.
+
+Result:
+
+- temporary symlink was created and `sudo nginx -t` passed.
+- Nginx reload was executed.
+- Host header smoke returned `200` for `/`, but `404` for `/api/health`.
+- because `/api/health` did not return `200`, the result is No-Go.
+- the temporary symlink was removed.
+- post-remove `sudo nginx -t` passed.
+- rollback Nginx reload was executed.
+- `/etc/nginx/sites-enabled/amami-line-crm.conf` remains absent.
+- direct API `/health` and Admin `/login` remained `200` after rollback.
+- production readiness remains `production_no_go`.
+
 ## Current Assumptions
 
 - VPS host: `root@160.251.174.201`

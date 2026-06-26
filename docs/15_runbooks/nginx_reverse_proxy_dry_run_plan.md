@@ -296,9 +296,29 @@ Loop 113 records:
 - no Nginx reload/restart/certbot/DNS/public exposure was performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 114 Confirmed
+
+Loop 114 records:
+
+- local `git diff --check`, lint, typecheck, test, test:integration, and build passed before VPS reload work.
+- candidate file `/etc/nginx/sites-available/amami-line-crm.conf` remained present.
+- `/etc/nginx/sites-enabled/amami-line-crm.conf` was absent before dry-run.
+- temporary symlink `/etc/nginx/sites-enabled/amami-line-crm.conf` was created.
+- `sudo nginx -t` passed while included.
+- `sudo systemctl reload nginx` was executed with the temporary symlink.
+- Host header smoke used only `Host: amami-line-crm.invalid` on localhost.
+- `/api/health` through Nginx returned `404`, so the result is No-Go.
+- temporary symlink was removed.
+- post-remove `sudo nginx -t` passed.
+- rollback `sudo systemctl reload nginx` was executed.
+- API `/health` returned `200` and Admin `/login` returned `200` directly after rollback.
+- review ports `3002` / `8788` remained localhost-bound.
+- real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
+- production readiness remains `production_no_go`.
+
 ## Next
 
-- Loop 114: actual Nginx enable + reload final approval gate
-- Loop 115: Domain/DNS/HTTPS readiness checklist
-- Loop 116: LINE webhook production dry-run checklist
-- Loop 117: Supabase staging connection preflight
+- Loop 115: Nginx Host-header routing diagnosis
+- Loop 116: Domain/DNS/HTTPS readiness checklist
+- Loop 117: real domain Nginx enable plan
+- Loop 118: LINE webhook production dry-run checklist
