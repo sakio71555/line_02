@@ -114,6 +114,21 @@ Observed listeners:
 
 No Nginx active config change, reload, restart, certbot, or public smoke was performed.
 
+## Loop 120 Release Alignment Note
+
+Loop 120 confirmed the release provenance without changing DNS or public Nginx state.
+
+```text
+release_candidate_commit=5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db
+rollback_candidate_commit=176cb34fc6059ecabfb9826daacaabc2a437bebe
+vps_before_source=176cb34fc6059ecabfb9826daacaabc2a437bebe
+vps_after_source=176cb34fc6059ecabfb9826daacaabc2a437bebe
+evidence_path=/root/deploy-backups/amami-line-crm/loop120-20260626-174138
+fast_forward_attempted=no
+```
+
+The VPS review release directory is copy-based and has no `.git` worktree, so fast-forward-only redeploy did not proceed. DNS inventory remains unchanged.
+
 ## Go / No-Go
 
 ```text

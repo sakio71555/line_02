@@ -67,9 +67,9 @@ No-Go if certificate owner, ACME method, private-key handling, or fallback plan 
 
 | Item | Current value | Status | Notes |
 | --- | --- | --- | --- |
-| release commit | unknown | pending | Must be the exact deployed commit. |
-| rollback commit | unknown | pending | Must be preselected before release. |
-| VPS deployed source | unknown | pending | Must match reviewed commit and build. |
+| release commit | `5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db` | recorded / not deployed | Selected as release candidate, but not deployed to VPS because the release directory is copy-based without `.git`. |
+| rollback commit | `176cb34fc6059ecabfb9826daacaabc2a437bebe` | recorded | Loop 120 selected the last known localhost-only smoke source as rollback candidate. |
+| VPS deployed source | `176cb34fc6059ecabfb9826daacaabc2a437bebe` | recorded | Loop 120 confirmed before/after source stayed unchanged because fast-forward redeploy was not possible. |
 | production start command | existing localhost-only boundary | partial | Public enablement still not approved. |
 | healthcheck | localhost `/health` and `/login` known | partial | External smoke is still not approved. |
 | LINE/OpenAI/Supabase gate state | real connections disabled/out of scope | pending | Must verify before any real enablement. |
@@ -104,6 +104,7 @@ Trigger rollback review immediately if any of the following occurs:
 - Certificate approver is unknown.
 - LINE webhook approver is unknown.
 - Maintenance window is unknown.
+- VPS latest-main alignment is incomplete.
 
 ## Forbidden until approval
 

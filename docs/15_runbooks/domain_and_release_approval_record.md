@@ -59,6 +59,24 @@ This document is an approval record template. It does not approve production rel
 - [ ] Rollback command owner confirmed
 - [ ] Final Go / No-Go owner confirmed
 
+## Loop 120 release provenance record
+
+Loop 120 recorded the release and rollback candidate commits, but it did not approve public production enablement.
+
+```text
+release_candidate_commit=5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db
+rollback_candidate_commit=176cb34fc6059ecabfb9826daacaabc2a437bebe
+config_source_commit=5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db
+vps_before_source=176cb34fc6059ecabfb9826daacaabc2a437bebe
+vps_after_source=176cb34fc6059ecabfb9826daacaabc2a437bebe
+evidence_path=/root/deploy-backups/amami-line-crm/loop120-20260626-174138
+fast_forward_attempted=no
+restart_attempted=no
+no_go_reason=VPS release directory is copy-based without .git worktree
+```
+
+The release commit is selected for review provenance only. The approval checklist above remains pending.
+
 ## No-Go status
 
 Current status: `production_no_go`
@@ -76,6 +94,7 @@ Reason:
 - Final Go / No-Go owner is unknown.
 - ACME method is undecided.
 - client-facing final hostname is undecided.
+- VPS latest-main alignment is incomplete because the review release directory is not a git worktree.
 
 ## Hard boundary
 

@@ -342,6 +342,8 @@ Loop 118のようなapproved domain read-only DNS confirmationでは、承認済
 
 Loop 119のようなdomain owner / rollback owner approval recordでは、DNS owner、DNS change owner、DNS rollback owner、Nginx enable approver、Certificate approver、LINE webhook approver、External smoke approver、Maintenance window、Final Go/No-Go ownerを推測で埋めません。未回答のものは `unknown` / `pending` のまま記録し、rollback triggerとNo-Go条件だけをdocs化します。承認記録が揃うまでDNS変更、Nginx reload/restart、certbot、external smokeへ進みません。
 
+Loop 120のようなrelease commit alignmentでは、release candidate、rollback candidate、VPS deployed source、evidence pathを明示してからVPS review環境を確認します。VPS release directoryがgit worktreeでない場合は、勝手にarchive redeployやresetへ切り替えず、fast-forward-only前提を満たせないNo-Goとして記録します。source整合が未完了ならAdmin/API process restartも行わず、localhost-only smokeとproduction readiness `production_no_go` を残します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。
