@@ -70,6 +70,7 @@ No-Go if certificate owner, ACME method, private-key handling, or fallback plan 
 | release commit | `5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db` | recorded / not deployed | Selected as release candidate, but not deployed to VPS because the release directory is copy-based without `.git`. |
 | rollback commit | `176cb34fc6059ecabfb9826daacaabc2a437bebe` | recorded | Loop 120 selected the last known localhost-only smoke source as rollback candidate. |
 | VPS deployed source | `176cb34fc6059ecabfb9826daacaabc2a437bebe` | recorded | Loop 120 confirmed before/after source stayed unchanged because fast-forward redeploy was not possible. |
+| copy-based archive attempt | `e1eeb2d7be37074258aa5aade48d7b03a1cd7ac1` | staged / not deployed | Loop 121 archive transferred and built in VPS staging, but full test failed before active deploy. |
 | production start command | existing localhost-only boundary | partial | Public enablement still not approved. |
 | healthcheck | localhost `/health` and `/login` known | partial | External smoke is still not approved. |
 | LINE/OpenAI/Supabase gate state | real connections disabled/out of scope | pending | Must verify before any real enablement. |
@@ -105,6 +106,7 @@ Trigger rollback review immediately if any of the following occurs:
 - LINE webhook approver is unknown.
 - Maintenance window is unknown.
 - VPS latest-main alignment is incomplete.
+- copy-based archive staging full test is failing.
 
 ## Forbidden until approval
 

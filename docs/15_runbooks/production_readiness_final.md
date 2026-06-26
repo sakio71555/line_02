@@ -32,6 +32,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | Approved domain DNS inventory | `admin.taiyolabel.site A 160.251.174.201` が期待IPと一致。TXT未取得、DNS変更なし、Nginx reload/restartなし、certbotなし、external smokeなし |
 | Domain / release approval record | Loop 119でdomain owner、DNS change owner、DNS rollback owner、Nginx enable approver、Certificate approver、LINE webhook approver、External smoke approver、Maintenance window、Final Go/No-Go ownerの承認欄を追加。全て未確定のためNo-Go |
 | Release commit alignment | Loop 120でrelease candidate `5cd0c5f9f49c47f5dfc7bfbebba2c2c44fa343db` とrollback candidate `176cb34fc6059ecabfb9826daacaabc2a437bebe` を記録。VPS release dirはcopy-basedで `.git` がないためfast-forward-only redeployは未実施 |
+| Copy-based archive redeploy | Loop 121でrelease archiveを作成しVPS stagingへ転送。checksum、`.env*` 除外、install/lint/typecheck/buildは確認したが、staging full testが失敗したためactive deploy、systemd restart、Nginx reload/restartは未実施 |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -240,6 +241,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Loop 118では `admin.taiyolabel.site` を検証/管理用ホストとして承認し、TXTを除くread-only DNS confirmationを実施した。A recordは `160.251.174.201` と一致し、AAAA/CNAME/CAA/DSは未設定だった。NSから `dnsv.jp / GMO DNS` と推定したが、DNS ownerとrollback ownerは未確定。VPS read-only確認では `nginx -t` 成功、`sites-enabled` candidateなし、localhost API/Admin 200を確認した。Nginx reload/restart、certbot、DNS変更、external smoke、LINE/OpenAI/Supabase実接続は未実施。
 - Loop 119ではdomain and release approval recordとDNS/Nginx rollback owner checklistを追加した。`admin.taiyolabel.site` はreview/admin hostnameとして記録し、client-facing final hostnameはundecidedのまま。DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method、LINE webhook approver、Maintenance window、Final Go/No-Go ownerが未確定のため、actual enable、certbot、HTTPS、external smokeへ進めない。
 - Loop 120ではrelease candidateとrollback candidateを明示し、VPS localhost-only review環境のsource整合を監査した。VPS deployed sourceは `176cb34fc6059ecabfb9826daacaabc2a437bebe` のままで、release directoryがcopy-basedかつ `.git` なしだったため `git pull --ff-only origin main` は未実行。evidenceは `/root/deploy-backups/amami-line-crm/loop120-20260626-174138` に保存し、direct API `/health`、Admin `/login` / `/select-tenant` / `/customers` / `/alerts` は既存sourceで `200`。Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
+- Loop 121ではcopy-based release archiveをVPS stagingへ転送し、checksum一致、`.env*` 除外、install、lint、typecheck、buildを確認した。しかしfull `test` がcopy-based/no-env-template/Node.js 20 compatibilityで失敗したため、active source更新、systemd restart、Nginx reload/restartへ進まずNo-Goとした。active sourceは `176cb34fc6059ecabfb9826daacaabc2a437bebe` のまま。evidenceは `/root/deploy-backups/amami-line-crm/loop121-20260626-180347` に保存した。
 - selectedTenantIdのmissing/wrong/validを確認する。
 - productionでdev headerが拒否されることを確認する。
 - LINE/OpenAI flagsはoffのまま起動確認する。
@@ -254,6 +256,6 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment recordは追加済み。Loop 120時点ではrelease candidateとrollback candidateを選定したが、VPS latest-main alignmentはcopy-based release shapeのため未完了。DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method、LINE webhook approver、Maintenance window、Final Go/No-Go owner、client-facing final hostnameが未確定で、actual enable、HTTPS発行、Nginx reload/restart、external smoke、LINE webhook登録は未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attemptは追加済み。Loop 121時点でもVPS latest-main alignmentはstaging full test No-Goのため未完了。DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method、LINE webhook approver、Maintenance window、Final Go/No-Go owner、client-facing final hostnameが未確定で、actual enable、HTTPS発行、Nginx reload/restart、external smoke、LINE webhook登録は未実施。
 
-この判定は、Loop 120時点でもcontrolled production enablementへ進むには追加Loopと人間承認が必要であることを示す。
+この判定は、Loop 121時点でもcontrolled production enablementへ進むには追加Loopと人間承認が必要であることを示す。

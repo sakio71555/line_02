@@ -217,3 +217,27 @@ production_readiness=production_no_go
 
 Loop 120 keeps No-Go because latest main was not deployed to VPS, DNS/HTTPS/public smoke are not approved, and ownership/rollback/certificate/maintenance approvals are still unknown.
 
+## Loop 121 Copy-Based Archive Attempt
+
+Loop 121 explicitly tested the copy-based archive redeploy shape for the localhost-only review environment.
+
+```text
+release_candidate_commit=e1eeb2d7be37074258aa5aade48d7b03a1cd7ac1
+previous_vps_source=176cb34fc6059ecabfb9826daacaabc2a437bebe
+archive_sha256=f5ab2e23ef8de82a97c0b858b8099ea693474e3b90b4209892f137d85297f98e
+backup_path=/root/deploy-backups/amami-line-crm/loop121-20260626-180347
+staging_path=/root/deploy-staging/amami-line-crm/loop121-20260626-180347
+active_deploy_updated=no
+systemd_restart=no
+nginx_reload_restart=no
+```
+
+Result: No-Go. The archive transferred and built in VPS staging, but full `test` failed before active deploy. The active review source stayed on `176cb34fc6059ecabfb9826daacaabc2a437bebe`; no active rsync or service restart was performed.
+
+Known compatibility items before retry:
+
+- copy-based staging source has no `.git`, while dev-loop tests expect git context.
+- release archive excludes `.env*`, while staging env template tests expect `.env.staging.example`.
+- VPS Node.js 20.20.2 has no default global WebSocket, which affects Supabase client boundary tests.
+
+See [vps_copy_based_release_archive_redeploy.md](vps_copy_based_release_archive_redeploy.md).

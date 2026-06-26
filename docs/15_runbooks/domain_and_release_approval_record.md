@@ -77,6 +77,22 @@ no_go_reason=VPS release directory is copy-based without .git worktree
 
 The release commit is selected for review provenance only. The approval checklist above remains pending.
 
+## Loop 121 copy-based archive record
+
+Loop 121 created and transferred a copy-based release archive for staging validation, but it did not update the active VPS review source.
+
+```text
+release_candidate_commit=e1eeb2d7be37074258aa5aade48d7b03a1cd7ac1
+previous_vps_source=176cb34fc6059ecabfb9826daacaabc2a437bebe
+archive_sha256=f5ab2e23ef8de82a97c0b858b8099ea693474e3b90b4209892f137d85297f98e
+evidence_path=/root/deploy-backups/amami-line-crm/loop121-20260626-180347
+active_deploy_updated=no
+restart_attempted=no
+no_go_reason=VPS staging full test failed before active deploy
+```
+
+The approval checklist above remains pending.
+
 ## No-Go status
 
 Current status: `production_no_go`
@@ -95,6 +111,7 @@ Reason:
 - ACME method is undecided.
 - client-facing final hostname is undecided.
 - VPS latest-main alignment is incomplete because the review release directory is not a git worktree.
+- Copy-based archive deploy is not yet usable because Loop 121 staging full test failed before active source update.
 
 ## Hard boundary
 
