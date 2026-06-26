@@ -25,15 +25,19 @@ export function collectRepoContext(options = {}) {
   const repoRoot = options.repoRoot ?? findRepoRoot();
   const taskDocs = listLatestTaskDocs(repoRoot, 8);
   const latestLoopNumber = taskDocs.length > 0 ? taskDocs[0].loopNumber : null;
-  const branchStatus = runGit(repoRoot, ["status", "--short", "--branch"]);
+  const sourceIdentity = detectSourceIdentity(repoRoot);
+  const branchStatus =
+    tryRunGit(repoRoot, ["status", "--short", "--branch"]) ??
+    renderCopyBasedBranchStatus(sourceIdentity);
 
   return {
     repoRoot,
     generatedAt: new Date().toISOString(),
     pwd: repoRoot,
-    gitStatusShort: runGit(repoRoot, ["status", "--short"]),
+    sourceIdentity,
+    gitStatusShort: tryRunGit(repoRoot, ["status", "--short"]) ?? "",
     gitStatusBranch: branchStatus,
-    gitLogOneline: runGit(repoRoot, ["log", "--oneline", "-10"]),
+    gitLogOneline: tryRunGit(repoRoot, ["log", "--oneline", "-10"]) ?? renderCopyBasedLog(sourceIdentity),
     latestLoopNumber,
     latestTaskDocs: taskDocs,
     latestDevLogFile: findLatestDevLog(repoRoot),
@@ -82,6 +86,8 @@ ${context.gitLogOneline.trim()}
 
 - Latest loop number detected: ${context.latestLoopNumber ?? "unknown"}
 - Latest dev log file: ${context.latestDevLogFile ?? "none"}
+- Source type: ${context.sourceIdentity.type}
+- Source commit: ${context.sourceIdentity.commit ?? "unknown"}
 - Ahead state: ${context.aheadState ?? "not detected"}
 - Push warning: ${context.pushWarning}
 
@@ -109,6 +115,93 @@ function runGit(repoRoot, args) {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"]
   });
+}
+
+function tryRunGit(repoRoot, args) {
+  if (!hasGitMetadata(repoRoot)) {
+    return null;
+  }
+
+  try {
+    return runGit(repoRoot, args);
+  } catch {
+    return null;
+  }
+}
+
+function hasGitMetadata(repoRoot) {
+  return existsSync(join(repoRoot, ".git"));
+}
+
+function detectSourceIdentity(repoRoot) {
+  const gitCommit = tryRunGit(repoRoot, ["rev-parse", "HEAD"])?.trim();
+
+  if (gitCommit) {
+    return {
+      type: "git",
+      commit: gitCommit,
+      sourceFile: ".git"
+    };
+  }
+
+  const markerCandidates = [
+    join(repoRoot, ".deploy-source"),
+    join(repoRoot, ".deploy-manifest.txt"),
+    join(repoRoot, "release-manifest.txt"),
+    join(repoRoot, "..", "release-manifest.txt"),
+    join(repoRoot, "DEPLOYED_COMMIT")
+  ];
+
+  for (const file of markerCandidates) {
+    if (!existsSync(file)) {
+      continue;
+    }
+
+    const text = readFileSync(file, "utf8");
+    const commit = parseCommitFromMarker(text);
+
+    if (commit) {
+      return {
+        type: "copy_based",
+        commit,
+        sourceFile: file
+      };
+    }
+  }
+
+  return {
+    type: "copy_based",
+    commit: null,
+    sourceFile: null
+  };
+}
+
+function parseCommitFromMarker(text) {
+  const namedCommit = /(?:release_candidate_commit|release_candidate|deployed_commit|commit)=([0-9a-f]{7,40})/i.exec(
+    text
+  );
+
+  if (namedCommit) {
+    return namedCommit[1];
+  }
+
+  const bareCommit = /\b[0-9a-f]{40}\b/i.exec(text);
+  return bareCommit ? bareCommit[0] : null;
+}
+
+function renderCopyBasedBranchStatus(sourceIdentity) {
+  const suffix = sourceIdentity.commit ? ` ${sourceIdentity.commit.slice(0, 12)}` : "";
+  return `## copy-based-source${suffix}\n`;
+}
+
+function renderCopyBasedLog(sourceIdentity) {
+  if (sourceIdentity.commit) {
+    return `${sourceIdentity.commit.slice(0, 12)} copy-based source from ${
+      sourceIdentity.sourceFile ?? "source marker"
+    }\n`;
+  }
+
+  return "(git history unavailable in copy-based source)\n";
 }
 
 function listLatestTaskDocs(repoRoot, limit) {

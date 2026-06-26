@@ -117,6 +117,39 @@ Known compatibility issues:
 - archive excludes `.env*`, while `.env.staging.example` tests expect the tracked template.
 - VPS Node.js 20.20.2 has no default global WebSocket; Supabase client boundary tests need an approved Node/runtime compatibility path.
 
+## Loop 121.1 Compatibility Patch Result
+
+Loop 121.1 resolved the staging test compatibility issues without active deploy.
+
+```text
+patch_id=loop1211-20260626-185306
+archive_sha256=ca6d1283323db65dc1778b8045c3a009a5279c17459aafc70f2cdf0a04f22c4b
+staging_path=/root/deploy-staging/amami-line-crm/loop1211-20260626-185306
+active_source_before_after=176cb34fc6059ecabfb9826daacaabc2a437bebe
+active_deploy_updated=no
+systemd_restart=no
+nginx_reload_restart=no
+public_smoke=no
+```
+
+VPS staging passed:
+
+- `npx pnpm@10.12.1 install --frozen-lockfile`
+- `npx pnpm@10.12.1 lint`
+- `npx pnpm@10.12.1 typecheck`
+- `npx pnpm@10.12.1 test`
+- `npx pnpm@10.12.1 test:integration`
+- `npx pnpm@10.12.1 build`
+
+Compatibility notes:
+
+- dev-loop context collection now tolerates copy-based source without `.git`.
+- release archives still exclude `.env*`; tests use `deploy/vps/taiyolabel/env/staging-env-contract.example` when needed.
+- Supabase client boundary tests use a test-only WebSocket shim and still fail if code tries to open a real WebSocket.
+- `--check-config-only` helper modes parse env only and do not require psql or DB access.
+
+See [copy_based_release_staging_test_compatibility.md](copy_based_release_staging_test_compatibility.md).
+
 ## Rollback
 
 No rollback was needed in Loop 121 because active deploy was not updated.

@@ -51,6 +51,14 @@ function main() {
     const repoRoot = process.cwd();
     const envFile = args.env ?? ".env.staging";
     const config = loadStagingDatabaseConfig({ repoRoot, envFile });
+
+    if (args.checkConfigOnly) {
+      console.log("[ok] staging schema verification config parsed");
+      console.log("[info] psql version not checked in check-config-only mode");
+      console.log("[info] schema queries not executed in check-config-only mode");
+      return;
+    }
+
     const psqlPath = args.psql ?? resolvePsqlPath();
 
     if (!psqlPath) {
@@ -61,14 +69,6 @@ function main() {
 
     if (!version.ok) {
       throw new SafeConfigError("psql version check failed");
-    }
-
-    if (args.checkConfigOnly) {
-      console.log("[ok] staging schema verification config parsed");
-      console.log(`[ok] psql path: ${psqlPath}`);
-      console.log(`[ok] ${version.version}`);
-      console.log("[info] schema queries not executed in check-config-only mode");
-      return;
     }
 
     const context = {

@@ -10,6 +10,14 @@ export default defineConfig({
       {
         find: /^@amami-line-crm\/([^/]+)$/,
         replacement: `${root}packages/$1/src`
+      },
+      {
+        find: /^react$/,
+        replacement: `${root}apps/admin/node_modules/react`
+      },
+      {
+        find: /^react-dom\/server$/,
+        replacement: `${root}apps/admin/node_modules/react-dom/server`
       }
     ]
   },

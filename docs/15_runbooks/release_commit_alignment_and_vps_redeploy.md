@@ -241,3 +241,22 @@ Known compatibility items before retry:
 - VPS Node.js 20.20.2 has no default global WebSocket, which affects Supabase client boundary tests.
 
 See [vps_copy_based_release_archive_redeploy.md](vps_copy_based_release_archive_redeploy.md).
+
+## Loop 121.1 Copy-Based Staging Compatibility Retry
+
+Loop 121.1 tested a patched working-tree archive in VPS staging only.
+
+```text
+patch_id=loop1211-20260626-185306
+base_commit=86e2f45c8a6fb07f6b37e7c1f818614b71fd03ab
+archive_sha256=ca6d1283323db65dc1778b8045c3a009a5279c17459aafc70f2cdf0a04f22c4b
+staging_path=/root/deploy-staging/amami-line-crm/loop1211-20260626-185306
+active_source_before_after=176cb34fc6059ecabfb9826daacaabc2a437bebe
+active_deploy_updated=no
+systemd_restart=no
+nginx_reload_restart=no
+```
+
+VPS staging passed `install --frozen-lockfile`, `lint`, `typecheck`, `test`, `test:integration`, and `build`. This removes the Loop 121 staging test blocker, but it does not align the active VPS review source with latest main. Active copy-based redeploy still needs a separate explicit Go loop.
+
+See [copy_based_release_staging_test_compatibility.md](copy_based_release_staging_test_compatibility.md).

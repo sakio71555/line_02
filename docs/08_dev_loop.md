@@ -346,6 +346,8 @@ Loop 120のようなrelease commit alignmentでは、release candidate、rollbac
 
 Loop 121のようにcopy-based archive redeployを明示許可された場合でも、local archive作成、checksum、VPS staging展開、`.env*` 除外確認、staging install/lint/typecheck/test/build、active backup、active `.env*` preserve確認を通してからactive rsyncへ進みます。staging full testが落ちた場合はactive deploy、systemd restart、Nginx reload/restartへ進まず、No-Go理由とcompatibility課題をdocs/runbook/dev logへ残します。
 
+Loop 121.1のようにcopy-based VPS staging test互換性を直す場合は、active deployへ進まず、テスト・helper・runbookに限定して `.git` 不在、`.env*` 除外、fresh pnpm install、Node.js version差分を吸収します。`--check-config-only` はenv parseだけを確認し、psqlやDB接続は通常実行時だけ要求します。VPS stagingでinstall/lint/typecheck/test/test:integration/buildが通っても、active rsync、systemd restart、Nginx reload/restartは別Loopの明示承認まで行いません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

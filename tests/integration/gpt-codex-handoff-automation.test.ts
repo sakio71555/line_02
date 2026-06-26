@@ -43,7 +43,7 @@ describe("GPT-Codex handoff automation scaffold", () => {
 
     expect(output).toContain(contextPath);
     expect(context).toContain("# GPT-Codex Handoff Context");
-    expect(context).toContain("/Users/sakio/Desktop/PROJECT/amami-line-crm");
+    expect(context).toContain(repoRoot);
     expect(context).toContain("Latest loop number detected");
     expect(context).toContain("Push warning");
   });
@@ -71,7 +71,7 @@ describe("GPT-Codex handoff automation scaffold", () => {
     const prompt = readFileSync(promptPath, "utf8");
 
     expect(output).toContain(promptPath);
-    expect(prompt).toContain("/Users/sakio/Desktop/PROJECT/amami-line-crm");
+    expect(prompt).toContain(repoRoot);
     expect(prompt).toContain("Loop 073: Sample safe handoff");
     expect(prompt).toContain("git push は絶対に実行しない");
     expect(prompt).toContain("runtime/API/UI/DB変更禁止");

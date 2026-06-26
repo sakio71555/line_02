@@ -20,6 +20,8 @@ import {
   type SupabaseRepositoryClient
 } from "@amami-line-crm/db";
 
+import { installTestOnlyWebSocketShim } from "../helpers/test-only-websocket";
+
 const tenantId = "tenant_amamihome";
 const now = "2026-06-15T00:00:00.000Z";
 const fakeEnv: SupabaseEnv = {
@@ -28,6 +30,8 @@ const fakeEnv: SupabaseEnv = {
   SUPABASE_SERVICE_ROLE_KEY: "fake-service-role-key",
   SUPABASE_DB_URL: "postgresql://postgres:postgres@localhost:54322/postgres"
 };
+
+installTestOnlyWebSocketShim();
 
 afterEach(() => {
   vi.unstubAllGlobals();

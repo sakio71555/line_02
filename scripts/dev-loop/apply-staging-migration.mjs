@@ -21,12 +21,22 @@ function main() {
     const repoRoot = process.cwd();
     const envFile = args.env ?? ".env.staging";
     const migrationFile = args.migration;
+    const config = loadStagingDatabaseConfig({ repoRoot, envFile });
+
+    if (args.checkConfigOnly) {
+      console.log("[ok] staging migration config parsed");
+      if (migrationFile) {
+        console.log(`[ok] migration file: ${projectRelativePath(repoRoot, migrationFile)}`);
+      }
+      console.log("[info] psql version not checked in check-config-only mode");
+      console.log("[info] migration apply not executed in check-config-only mode");
+      return;
+    }
 
     if (!migrationFile) {
       throw new SafeConfigError("migration file is required");
     }
 
-    const config = loadStagingDatabaseConfig({ repoRoot, envFile });
     const psqlPath = args.psql ?? resolvePsqlPath();
 
     if (!psqlPath) {
@@ -41,15 +51,6 @@ function main() {
 
     const migrationPath = resolveProjectPath(repoRoot, migrationFile);
     const migrationRelativePath = projectRelativePath(repoRoot, migrationFile);
-
-    if (args.checkConfigOnly) {
-      console.log("[ok] staging migration config parsed");
-      console.log(`[ok] psql path: ${psqlPath}`);
-      console.log(`[ok] ${version.version}`);
-      console.log(`[ok] migration file: ${migrationRelativePath}`);
-      console.log("[info] migration apply not executed in check-config-only mode");
-      return;
-    }
 
     const result = runPsql({
       psqlPath,

@@ -5,14 +5,15 @@ import { describe, expect, it } from "vitest";
 
 const repoRoot = process.cwd();
 const envTemplatePath = join(repoRoot, ".env.staging.example");
+const archiveSafeEnvContractPath = "deploy/vps/taiyolabel/env/staging-env-contract.example";
 
 describe("Loop 074 staging env template", () => {
-  it("keeps the staging env example template in place", () => {
-    expect(existsSync(envTemplatePath)).toBe(true);
+  it("keeps a staging env contract in place", () => {
+    expect(hasStagingEnvContract()).toBe(true);
   });
 
   it("contains Supabase staging env names", () => {
-    const template = readText(".env.staging.example");
+    const template = readStagingEnvContract();
 
     expect(template).toContain("SUPABASE_URL=");
     expect(template).toContain("SUPABASE_ANON_KEY=");
@@ -23,7 +24,7 @@ describe("Loop 074 staging env template", () => {
   });
 
   it("contains LINE staging placeholders with real push disabled", () => {
-    const template = readText(".env.staging.example");
+    const template = readStagingEnvContract();
 
     expect(template).toContain("LINE_CHANNEL_SECRET=");
     expect(template).toContain("LINE_CHANNEL_ACCESS_TOKEN=");
@@ -33,7 +34,7 @@ describe("Loop 074 staging env template", () => {
   });
 
   it("contains OpenAI placeholders with mock provider default", () => {
-    const template = readText(".env.staging.example");
+    const template = readStagingEnvContract();
 
     expect(template).toContain("OPENAI_API_KEY=");
     expect(template).toContain("OPENAI_MODEL=");
@@ -42,14 +43,14 @@ describe("Loop 074 staging env template", () => {
   });
 
   it("contains runtime safety defaults", () => {
-    const template = readText(".env.staging.example");
+    const template = readStagingEnvContract();
 
     expect(template).toContain("APP_ENV=staging");
     expect(template).toContain("REPOSITORY_RUNTIME=in_memory");
   });
 
   it("does not include real-key-like values", () => {
-    const values = readEnvValues(".env.staging.example");
+    const values = readEnvValues(stagingEnvContractPath());
     const suspiciousPatterns = [
       /sk-[A-Za-z0-9_-]{10,}/,
       /eyJ[A-Za-z0-9_-]{20,}/,
@@ -73,6 +74,11 @@ describe("Loop 074 staging env template", () => {
     expect(gitignore).toContain("!.env.staging.example");
   });
 
+  it("keeps an archive-safe env contract outside dot-env filenames", () => {
+    expect(existsSync(join(repoRoot, archiveSafeEnvContractPath))).toBe(true);
+    expect(archiveSafeEnvContractPath).not.toMatch(/(^|\/)\.env/);
+  });
+
   it("links README to the staging env setup runbook", () => {
     const readme = readText("README.md");
 
@@ -88,6 +94,18 @@ describe("Loop 074 staging env template", () => {
 
 function readText(filePath: string): string {
   return readFileSync(join(repoRoot, filePath), "utf8");
+}
+
+function hasStagingEnvContract(): boolean {
+  return existsSync(envTemplatePath) || existsSync(join(repoRoot, archiveSafeEnvContractPath));
+}
+
+function stagingEnvContractPath(): string {
+  return existsSync(envTemplatePath) ? ".env.staging.example" : archiveSafeEnvContractPath;
+}
+
+function readStagingEnvContract(): string {
+  return readText(stagingEnvContractPath());
 }
 
 function readEnvValues(filePath: string): string[] {
