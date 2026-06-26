@@ -17,6 +17,15 @@ https_issue=not_executed
 external_smoke=not_executed
 ```
 
+Loop 117 follow-up:
+
+- Domain decision packet: [domain_decision_packet.md](domain_decision_packet.md)
+- DNS provider checklist: [dns_provider_confirmation_checklist.md](dns_provider_confirmation_checklist.md)
+- Production approval sheet: [production_domain_approval_sheet.md](production_domain_approval_sheet.md)
+- canonical hostname remains `unknown`
+- DNS provider remains `unknown`
+- DNS query remains skipped because no single canonical hostname is approved
+
 ## Hard Boundary
 
 Do not proceed to public exposure until a later Loop explicitly approves it.

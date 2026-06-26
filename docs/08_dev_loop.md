@@ -336,6 +336,8 @@ Loop 115のようなHost header routing diagnosisでは、system Nginx reload/re
 
 Loop 116のようなDomain/DNS/HTTPS readinessでは、実ドメインを決め打ちせず、canonical hostname、DNS provider、domain ownership、ACME method、certificate SAN、LINE webhook URL、cookie/CORS/forwarded header前提をdocsで整理します。placeholder-based templateとread-only preflight helperは追加してよいですが、DNS変更、Nginx active config変更、reload/restart、certbot、external smokeは別Loopの明示承認まで行いません。
 
+Loop 117のようなreal domain decision gateでは、候補ドメインを分類してもcanonical hostnameを勝手に決めません。DNS provider、domain owner、DNS rollback owner、LINE webhook public URL、Auth callback URLはapproval sheetで人間承認を待ち、承認前はDNS queryもskipできます。TXT query、DNS変更、Nginx active config変更、reload/restart、certbot、external smokeは後続Loopの明示承認まで行いません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

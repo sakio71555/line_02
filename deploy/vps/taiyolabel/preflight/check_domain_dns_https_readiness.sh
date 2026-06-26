@@ -4,15 +4,19 @@ set -eu
 DOMAIN=""
 HOSTNAME_TARGET=""
 EXPECTED_IP=""
+NO_DNS=0
 
 usage() {
   cat <<'USAGE'
 Usage:
   check_domain_dns_https_readiness.sh --domain example.com [--host example.com] [--expected-ip 203.0.113.10]
+  check_domain_dns_https_readiness.sh --no-dns
 
 Safe read-only checks only:
   - validates that placeholders are not used as real hostnames
   - prints DNS A/AAAA summaries when dig is available
+  - prints DNS NS summaries only when a concrete hostname is supplied
+  - can run with --no-dns while the production hostname is still undecided
   - prints local Nginx, listener, and certificate-tool availability summaries
   - does not perform HTTP requests or change system configuration
 USAGE
@@ -31,6 +35,10 @@ while [ "$#" -gt 0 ]; do
     --expected-ip)
       EXPECTED_IP="${2:-}"
       shift 2
+      ;;
+    --no-dns)
+      NO_DNS=1
+      shift
       ;;
     --help|-h)
       usage
@@ -70,33 +78,47 @@ check_name() {
 
 overall_status=0
 
-check_name "domain" "$DOMAIN" || overall_status=1
-
-if [ -n "$HOSTNAME_TARGET" ]; then
-  check_name "host" "$HOSTNAME_TARGET" || overall_status=1
-else
-  HOSTNAME_TARGET="$DOMAIN"
-  echo "INFO host not supplied; using domain for DNS summary"
-fi
-
-if command -v dig >/dev/null 2>&1; then
-  if ! is_placeholder "$HOSTNAME_TARGET"; then
-    echo "INFO DNS A records for ${HOSTNAME_TARGET}:"
-    dig +short A "$HOSTNAME_TARGET" || true
-    echo "INFO DNS AAAA records for ${HOSTNAME_TARGET}:"
-    dig +short AAAA "$HOSTNAME_TARGET" || true
-
-    if [ -n "$EXPECTED_IP" ]; then
-      if dig +short A "$HOSTNAME_TARGET" | grep -Fx "$EXPECTED_IP" >/dev/null 2>&1; then
-        echo "PASS expected IPv4 address is present"
-      else
-        echo "FAIL expected IPv4 address is not present"
-        overall_status=1
-      fi
-    fi
+if [ "$NO_DNS" -eq 1 ]; then
+  if [ -n "$DOMAIN" ] || [ -n "$HOSTNAME_TARGET" ] || [ -n "$EXPECTED_IP" ]; then
+    echo "FAIL --no-dns cannot be combined with --domain, --host, or --expected-ip"
+    overall_status=1
+  else
+    echo "INFO domain_unconfirmed=unknown"
+    echo "SKIP DNS summary because no canonical hostname is approved"
+    echo "INFO dns_provider_inferred=unknown"
   fi
 else
-  echo "SKIP dig is not available"
+  check_name "domain" "$DOMAIN" || overall_status=1
+
+  if [ -n "$HOSTNAME_TARGET" ]; then
+    check_name "host" "$HOSTNAME_TARGET" || overall_status=1
+  else
+    HOSTNAME_TARGET="$DOMAIN"
+    echo "INFO host not supplied; using domain for DNS summary"
+  fi
+
+  if command -v dig >/dev/null 2>&1; then
+    if ! is_placeholder "$HOSTNAME_TARGET"; then
+      echo "INFO DNS A records for ${HOSTNAME_TARGET}:"
+      dig +short A "$HOSTNAME_TARGET" || true
+      echo "INFO DNS AAAA records for ${HOSTNAME_TARGET}:"
+      dig +short AAAA "$HOSTNAME_TARGET" || true
+      echo "INFO DNS NS records for ${HOSTNAME_TARGET}:"
+      dig +short NS "$HOSTNAME_TARGET" || true
+      echo "INFO dns_provider_inferred=from_ns_records"
+
+      if [ -n "$EXPECTED_IP" ]; then
+        if dig +short A "$HOSTNAME_TARGET" | grep -Fx "$EXPECTED_IP" >/dev/null 2>&1; then
+          echo "PASS expected IPv4 address is present"
+        else
+          echo "FAIL expected IPv4 address is not present"
+          overall_status=1
+        fi
+      fi
+    fi
+  else
+    echo "SKIP dig is not available"
+  fi
 fi
 
 if command -v nginx >/dev/null 2>&1; then
