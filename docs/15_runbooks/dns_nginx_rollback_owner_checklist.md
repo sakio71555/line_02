@@ -112,6 +112,21 @@ Trigger rollback review immediately if any of the following occurs:
 - public production enablement is requested before DNS/Nginx/cert owners are approved.
 - external smoke or HTTPS is requested before an approved maintenance window and rollback owner exist.
 
+## Loop 125 Rollback Record
+
+Loop 125 executed a diagnostic-only Nginx probe reload smoke and rollback:
+
+- test Host: `amami-line-crm.invalid`.
+- real domain Host header: not used.
+- `admin.taiyolabel.site` Host header: not used.
+- probe candidate: `/etc/nginx/sites-available/amami-line-crm-probe.conf`.
+- probe symlink: `/etc/nginx/sites-enabled/amami-line-crm-probe.conf`.
+- evidence path: `/root/deploy-backups/amami-line-crm/loop125-20260626-213832`.
+- reload smoke result: `/__amami_probe=404`, probe header absent, `server_selection=probe_not_reached`.
+- cleanup result: probe symlink absent, app symlink absent, probe candidate deleted.
+- rollback result: `nginx -t` success and rollback reload completed.
+- production readiness remains `production_no_go`.
+
 ## Forbidden until approval
 
 - DNS変更禁止。

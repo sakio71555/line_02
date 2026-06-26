@@ -222,6 +222,33 @@ production_readiness=production_no_go
 
 Saved evidence is non-secret and summarized. No full `nginx -T` dump was saved.
 
+## Loop 125 Diagnostic Probe Follow-up
+
+Loop 125 used a separate diagnostic-only probe server block so that server selection could be checked without touching the existing candidate proxy mapping.
+
+Result:
+
+```text
+evidence_dir=/root/deploy-backups/amami-line-crm/loop125-20260626-213832
+test_host=amami-line-crm.invalid
+real_domain_used=no
+admin_taiyolabel_host_used=no
+nginx_T_probe_present=yes
+reload=completed
+probe_status=404
+probe_header=
+root_status=200
+api_health_status=404
+server_selection=probe_not_reached
+probe_symlink_after=absent
+app_symlink_after=absent
+candidate_final_state=deleted
+rollback_reload=completed
+production_readiness=production_no_go
+```
+
+Interpretation: the probe appearing in `nginx -T` is not sufficient evidence that reload-time request routing reaches that server block. Next diagnosis should focus on listen/server_name/default_server or reload-applied config behavior before proxy mapping remediation.
+
 ## Production Readiness
 
 ```text

@@ -167,6 +167,26 @@ Loop 124 inspected the system Nginx include tree without reload/restart:
 
 This strengthens the hypothesis that Loop 123's reload smoke behaved like the no-symlink active default server, not like the included candidate.
 
+## Loop 125 Diagnostic Probe Result
+
+Loop 125 used a minimal probe block with no upstream:
+
+- `server_name amami-line-crm.invalid`
+- `location = /__amami_probe`
+- `X-Amami-Line-Crm-Probe: loop125`
+
+The probe appeared in `nginx -T`, but reload smoke still returned:
+
+```text
+/__amami_probe = 404
+X-Amami-Line-Crm-Probe = absent
+/ = 200
+/api/health = 404
+server_selection=probe_not_reached
+```
+
+The probe symlink and candidate were removed, rollback reload completed, and production readiness stayed `production_no_go`.
+
 ## Still Not Production
 
 Still not done:

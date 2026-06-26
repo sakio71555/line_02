@@ -138,6 +138,22 @@ Loop 124 diagnosed Nginx server selection without reload/restart:
 
 Interpretation: the candidate appears correctly in disk config when included. Loop 123's reload smoke still matched the current no-symlink active behavior, so live reload application/server selection remains the unresolved issue.
 
+## Loop 125 Diagnostic Probe Follow-up
+
+Loop 125 then created a diagnostic-only server block for `amami-line-crm.invalid` with `/__amami_probe` and `X-Amami-Line-Crm-Probe`, avoiding upstream proxy entirely.
+
+Result:
+
+- `nginx -T` included the probe block, probe endpoint, and probe header.
+- `sudo systemctl reload nginx` completed.
+- `/__amami_probe` returned `404` and `X-Amami-Line-Crm-Probe` was absent.
+- `/` returned `200`.
+- `/api/health` returned `404`.
+- `server_selection=probe_not_reached`.
+- probe symlink was removed, probe candidate was deleted, `nginx -t` passed, and rollback reload completed.
+
+Interpretation: the Loop 123 failure should not be treated as a candidate proxy mapping bug yet. Live server selection itself remains unproven.
+
 ## Recovery Command If A Symlink Is Ever Found
 
 Use only the app symlink path:

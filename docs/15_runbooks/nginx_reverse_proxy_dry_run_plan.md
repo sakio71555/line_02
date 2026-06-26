@@ -365,6 +365,20 @@ Loop 124 records:
 - real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 125 Confirmed
+
+Loop 125 records:
+
+- a diagnostic-only probe server block was created for `amami-line-crm.invalid`.
+- the probe used no upstream and exposed only `/__amami_probe` plus `X-Amami-Line-Crm-Probe`.
+- temporary symlink plus `nginx -T` included the probe block.
+- reload smoke did not reach the probe: `/__amami_probe=404`, probe header absent, `/=200`, `/api/health=404`.
+- `server_selection=probe_not_reached`.
+- probe symlink and candidate were removed.
+- rollback `sudo nginx -t` and rollback `sudo systemctl reload nginx` completed.
+- real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
+- production readiness remains `production_no_go`.
+
 ## What Loop 116 Confirmed
 
 Loop 116 records:
