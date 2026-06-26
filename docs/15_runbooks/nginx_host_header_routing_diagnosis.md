@@ -136,6 +136,24 @@ Expected final state:
 - The temporary symlink was removed, final `sudo nginx -t` passed, and `127.0.0.1:18080` was absent after cleanup.
 - system Nginx reload/restart was not executed.
 
+## Loop 123 Follow-up
+
+Loop 123 used the corrected candidate in the system Nginx include path with a temporary symlink and reload. It still used only `Host: amami-line-crm.invalid`; `admin.taiyolabel.site` was not used as a Host header.
+
+Result:
+
+- `nginx -T` with the temporary include confirmed the candidate lines.
+- `sudo nginx -t` passed.
+- system Nginx reload completed in Loop 123.
+- `/` returned `200`, but `/api/health` returned `404`.
+- the `X-Amami-Line-Crm-Proxy` diagnostic header was absent on the `404` response.
+- cleanup trap removed the temporary symlink.
+- rollback `sudo nginx -t` and rollback reload completed.
+- direct API `/health` and Admin `/login` returned `200` after rollback.
+- production readiness remains `production_no_go`.
+
+Interpretation: the standalone route shape is valid, but live system Nginx server selection or active routing is still not proven. Do not proceed to real domain, DNS, HTTPS/certbot, or external smoke until the live server-selection behavior is explained.
+
 ## Still Not Production
 
 Still not done:

@@ -111,6 +111,28 @@ production_readiness=production_no_go
 
 The approval checklist above remains pending.
 
+## Loop 123 corrected Nginx candidate reload smoke record
+
+Loop 123 performed a corrected candidate reload smoke with the dry-run host only. It did not approve public production enablement.
+
+```text
+active_source=2a9a746940b5f7a707af4c042bb9225d3dea258b
+candidate_host=amami-line-crm.invalid
+approved_review_host=admin.taiyolabel.site
+approved_review_host_used_as_host_header=no
+evidence_path=/root/deploy-backups/amami-line-crm/loop123-20260626-200424
+temporary_symlink=created
+nginx_t=success
+nginx_reload=completed
+nginx_api_health=404
+diagnostic_header=absent_on_404_response
+sites_enabled_after=absent
+rollback_reload=completed_by_trap
+production_readiness=production_no_go
+```
+
+The approval checklist above remains pending. The result is No-Go until live Nginx server selection/routing is diagnosed and the required owners approve real-domain work.
+
 ## No-Go status
 
 Current status: `production_no_go`
@@ -130,6 +152,7 @@ Reason:
 - client-facing final hostname is undecided.
 - VPS latest-main alignment is complete for localhost-only review, but not for public production enablement.
 - Copy-based archive deploy is usable for localhost-only review only; public production enablement is still not approved.
+- Corrected Nginx candidate reload smoke returned `/api/health=404` and no diagnostic header, so live Nginx routing is still unresolved.
 
 ## Hard boundary
 

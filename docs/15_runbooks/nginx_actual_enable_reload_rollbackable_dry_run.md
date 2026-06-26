@@ -136,6 +136,31 @@ Loop 115 diagnosed the route shape without system Nginx reload/restart:
 
 The next reload-capable Loop should check the diagnostic header before considering real domain, DNS, HTTPS, or external smoke.
 
+## Loop 123 Follow-up
+
+Loop 123 retried the corrected candidate after Loop 122 aligned the active localhost-only review source to latest main:
+
+- active source was `2a9a746940b5f7a707af4c042bb9225d3dea258b`.
+- candidate still used `server_name amami-line-crm.invalid;`.
+- the approved review/admin hostname `admin.taiyolabel.site` was not used as a Host header.
+- temporary `/etc/nginx/sites-enabled/amami-line-crm.conf` symlink was created.
+- `sudo nginx -t` passed.
+- `sudo systemctl reload nginx` was executed.
+- localhost Host header smoke returned `/` as `200`, but `/api/health` as `404`.
+- `X-Amami-Line-Crm-Proxy` was absent on the `404` response.
+- cleanup trap removed the temporary symlink.
+- rollback `sudo nginx -t` and rollback reload completed.
+- direct API `/health` and Admin `/login` returned `200` after rollback.
+- production readiness remains `production_no_go`.
+
+Evidence path:
+
+```text
+/root/deploy-backups/amami-line-crm/loop123-20260626-200424
+```
+
+The next Loop should diagnose live Nginx server selection before any real-domain work.
+
 ## Recovery Command If A Symlink Is Ever Found
 
 Use only the app symlink path:

@@ -217,3 +217,25 @@ production_readiness=production_no_go
 ```
 
 Loop 122 aligned the localhost-only review source with latest main. It did not approve Nginx public enablement, DNS, HTTPS, external smoke, LINE/OpenAI/Supabase real connections, or production secret injection.
+
+## Loop 123 Reload Smoke Follow-up
+
+Loop 123 used the Loop 122 active source for a corrected Nginx candidate reload smoke:
+
+```text
+active_source=2a9a746940b5f7a707af4c042bb9225d3dea258b
+candidate_host=amami-line-crm.invalid
+evidence_path=/root/deploy-backups/amami-line-crm/loop123-20260626-200424
+temporary_symlink=created
+nginx_t=success
+nginx_reload=completed
+nginx_api_health=404
+diagnostic_header=absent_on_404_response
+sites_enabled_after=absent
+rollback_reload=completed_by_trap
+post_rollback_direct_api_health=200
+post_rollback_direct_admin_login=200
+production_readiness=production_no_go
+```
+
+The result remains No-Go for public enablement. The active app source is aligned and healthy on localhost, but live Nginx server selection or routing for the candidate still needs diagnosis.

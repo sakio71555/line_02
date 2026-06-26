@@ -350,6 +350,8 @@ Loop 121.1のようにcopy-based VPS staging test互換性を直す場合は、a
 
 Loop 122のようにcopy-based active localhost-only redeployが明示許可された場合でも、release archiveは `.env*` / `.git` / `node_modules` を含めず、VPS staging full validation後にだけactive rsyncへ進みます。active `.env*` はrsync excludeで保持し、restartは既存のlocalhost-only `amami-line-crm-api.service` / `amami-line-crm-admin.service` のみ許可します。Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は別Loopの明示承認まで行わず、production readinessは `production_no_go` のまま記録します。
 
+Loop 123のようにcorrected Nginx candidate reload smokeが明示許可された場合でも、Host headerは `amami-line-crm.invalid` に限定し、real domainや `admin.taiyolabel.site` は使いません。一時 `sites-enabled` symlink、`nginx -t`、reload、localhost Host header smoke、cleanup trap、rollback `nginx -t`、rollback reloadまで同じLoopで完了させます。`/api/health` が `200` でない、または `X-Amami-Line-Crm-Proxy` diagnostic headerが確認できない場合はNo-Goとして記録し、DNS、HTTPS/certbot、external smokeへ進みません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

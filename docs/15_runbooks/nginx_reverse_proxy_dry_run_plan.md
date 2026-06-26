@@ -330,6 +330,26 @@ Loop 115 records:
 - system Nginx reload/restart, real domain, DNS, HTTPS/certbot execution, public exposure, LINE/OpenAI/Supabase real connections, and permanent enablement were not performed.
 - production readiness remains `production_no_go`.
 
+## What Loop 123 Confirmed
+
+Loop 123 records:
+
+- active VPS source was `2a9a746940b5f7a707af4c042bb9225d3dea258b`.
+- candidate file `/etc/nginx/sites-available/amami-line-crm.conf` used `server_name amami-line-crm.invalid;`.
+- `admin.taiyolabel.site` was not used as a Host header.
+- temporary symlink `/etc/nginx/sites-enabled/amami-line-crm.conf` was created only for reload smoke.
+- `sudo nginx -t` passed.
+- `sudo systemctl reload nginx` was executed.
+- Host header smoke used only `Host: amami-line-crm.invalid` on localhost.
+- `/` returned `200`, but `/api/health` returned `404`.
+- `X-Amami-Line-Crm-Proxy` diagnostic header was absent on the `404` response.
+- result is No-Go because the live smoke did not prove the request reached the intended candidate server block.
+- cleanup trap removed the temporary symlink.
+- rollback `sudo nginx -t` and rollback `sudo systemctl reload nginx` completed.
+- direct API `/health` and Admin `/login` returned `200` after rollback.
+- real domain, DNS, certbot/HTTPS, external smoke, LINE/OpenAI/Supabase real connections, and permanent public enablement were not performed.
+- production readiness remains `production_no_go`.
+
 ## What Loop 116 Confirmed
 
 Loop 116 records:
