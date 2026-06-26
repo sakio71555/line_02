@@ -36,7 +36,7 @@ describe("Loop 117 production domain approval gate", () => {
     }
   });
 
-  it("keeps human approval fields explicit without choosing a hostname", () => {
+  it("keeps human approval fields explicit while allowing the approved verification hostname", () => {
     const approvalSheet = readText(approvalSheetPath);
     const combined = [readText(taskDocPath), readText(domainPacketPath), approvalSheet].join("\n");
 
@@ -44,10 +44,13 @@ describe("Loop 117 production domain approval gate", () => {
     expect(approvalSheet).toContain("DNS provider:");
     expect(approvalSheet).toContain("DNS rollback owner:");
     expect(approvalSheet).toContain("LINE webhook URL:");
-    expect(combined).toContain("canonical_hostname=unknown");
     expect(combined).toContain("production_readiness=production_no_go");
+    expect(combined).toContain("canonical_hostname=admin.taiyolabel.site");
+    expect(combined).toContain("hostname_role=verification / admin management hostname");
+    expect(combined).toContain("DNS account owner: unknown");
+    expect(combined).toContain("DNS rollback owner: unknown");
+    expect(combined).toContain("ACME method: undecided");
     expect(combined).not.toContain("canonical_hostname=amamihome.net");
-    expect(combined).not.toContain("canonical_hostname=admin.taiyolabel.site");
     expect(combined).not.toContain("canonical_hostname=api.taiyolabel.site");
   });
 

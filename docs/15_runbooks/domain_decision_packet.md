@@ -2,33 +2,36 @@
 
 ## Purpose
 
-Loop 117 keeps the project in a safe planning state before real DNS, HTTPS, LINE webhook registration, or public Nginx enablement. This packet summarizes the known domain candidates and records what a human must approve later.
+Loop 117 kept the project in a safe planning state before real DNS, HTTPS, LINE webhook registration, or public Nginx enablement. Loop 118 then approved `admin.taiyolabel.site` for read-only DNS confirmation only.
 
 ## Current Status
 
 ```text
 production_readiness=production_no_go
-canonical_hostname=unknown
-production_hostname=unknown
-admin_public_origin=unknown
-api_public_origin=unknown
-dns_provider=unknown
+canonical_hostname=admin.taiyolabel.site
+production_hostname=admin.taiyolabel.site
+base_domain=taiyolabel.site
+hostname_role=verification / admin management hostname, not the client final URL
+expected_vps_ipv4=160.251.174.201
+admin_public_origin=https://admin.taiyolabel.site
+api_public_origin=https://admin.taiyolabel.site/api
+dns_provider=unknown until read-only NS inference
 domain_owner=unknown
 dns_rollback_owner=unknown
-acme_method=unknown
+acme_method=undecided
 certificate_names=unknown
-line_webhook_public_url=unknown
+line_webhook_public_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
 auth_callback_url=unknown
 ```
 
-No DNS change, DNS provider API call, HTTPS issuance, Nginx active config change, Nginx reload/restart, external HTTP/HTTPS smoke, LINE/OpenAI/Supabase real connection, or `.env` change was performed in Loop 117.
+Loop 118 retry approves `admin.taiyolabel.site` / `taiyolabel.site` for read-only DNS confirmation only. This does not approve DNS changes, Nginx active config changes, HTTPS issuance, external HTTP/HTTPS smoke, LINE webhook registration, LINE/OpenAI/Supabase real connection, or `.env` changes.
 
 ## Candidate Hostname Inventory
 
 | candidate | classification | current evidence | decision status |
 | --- | --- | --- | --- |
 | `<production-host>` | placeholder for future approved host | Loop 115/116 single-host `/api/` routing shape works with placeholder templates | recommended topology target, not approved |
-| `admin.taiyolabel.site` | historical separate Admin host candidate | Loop 106-108 env/template/runbook references | ownership/DNS/provider unknown |
+| `admin.taiyolabel.site` | approved verification / admin management hostname | Loop 118 retry human approval for read-only DNS confirmation | DNS owner / rollback owner / provider confirmation pending |
 | `api.taiyolabel.site` | historical separate API host candidate | Loop 106-108 env/template/runbook references and old LINE webhook URL shape | ownership/DNS/provider unknown |
 | `amamihome.net` | official tenant/reference domain | tenant official domain and Amami Home knowledge URLs | not approved as Admin/API deployment host |
 | `amami-line-crm.invalid` | dry-run placeholder | Loop 112-115 local Host-header and Nginx dry-run evidence | never use for public DNS |
@@ -59,7 +62,26 @@ Why Option A is preferred for the next approval discussion:
 - A single certificate name is easier to reason about than separate Admin/API hosts.
 - It keeps cookie and forwarded-header review smaller.
 
-This is not final approval. The hostname, DNS provider, ownership, certificate names, and LINE webhook URL remain unknown.
+This is approval for read-only DNS confirmation only. DNS owner, rollback owner, certificate names, ACME method, Nginx enablement, and LINE webhook registration remain unapproved.
+
+## Loop 118 Read-only DNS Inventory
+
+Summary:
+
+```text
+dns_query_executed=yes_non_txt_only
+txt_query_executed=no
+a_record_match=yes
+a_record_expected=160.251.174.201
+a_record_actual=160.251.174.201
+aaaa_present=no
+cname_conflict=no
+caa_present=no
+ds_dnssec_present=no
+inferred_dns_provider=dnsv.jp / GMO DNS
+```
+
+Details are recorded in [approved_domain_dns_inventory.md](approved_domain_dns_inventory.md).
 
 ## Alternative Topology
 
@@ -126,9 +148,9 @@ production_no_go
 
 Reasons:
 
-- Canonical hostname is unknown.
-- DNS provider and domain ownership are unknown.
-- DNS records were not queried because multiple candidates exist and no canonical host is approved.
+- `admin.taiyolabel.site` is approved only as a verification / admin management hostname, not the client final URL.
+- Read-only DNS A record matches `160.251.174.201`, but DNS owner and rollback owner are still unknown.
+- DNS provider is inferred from NS as `dnsv.jp / GMO DNS`, but account ownership is not confirmed.
 - ACME method and certificate names are unknown.
-- LINE webhook public URL is unknown.
-- Nginx active config, reload/restart, certbot, DNS change, and external smoke were not executed.
+- Nginx enable approver, certificate approver, LINE webhook approver, and maintenance window are unknown.
+- Nginx active config, reload/restart, certbot, DNS change, external smoke, and LINE webhook registration were not executed.
