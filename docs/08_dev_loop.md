@@ -376,6 +376,8 @@ Loop 141のようなLINE webhook production dry-runでは、LINE Developers Cons
 
 Loop 142のようなLINE webhook registration manual gateでは、CodexはLINE Developers Consoleを操作しません。人間が `https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>` を登録するための手順、事前/事後チェック、secret非記録ルールだけをdocs/testで固定し、実 `webhookSecretPath`、LINE channel secret、LINE access token、LINE userId、request bodyは記録しません。登録後確認、LINE real push、OpenAI/Supabase本接続、production Go判断は別Loopに分け、`production_readiness=production_no_go` を維持します。
 
+Loop 143のようなLINE runtime secret injectionでは、secret実値はCodexに入力せず、operatorがCodex外terminalでroot-only helperへ非表示入力します。Codexはredacted key確認、EnvironmentFile path確認、API health、rollback結果だけを記録し、API direct healthが失敗した場合はdrop-inを外してrestartし、actual webhook dry-runやLINE Developers verificationへ進みません。secret/token/path値、request body、LINE userIdは記録せず、LINE real push/reply、OpenAI/Supabase本接続、production Go判断は別Loopに分けます。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

@@ -122,6 +122,26 @@ No-Go reasons:
 - OpenAI real API has not executed.
 - Production secret injection has not executed.
 
+## Loop 143 Runtime Secret Injection Update
+
+Loop 143 attempted to connect LINE runtime secrets to the API service through a root-only EnvironmentFile. The API service direct health failed after the drop-in, so the drop-in was removed and the API service recovered.
+
+```txt
+LINE_CHANNEL_SECRET configured; value not recorded
+LINE_CHANNEL_ACCESS_TOKEN configured; value not recorded
+LINE_WEBHOOK_SECRET_PATH configured; value not recorded
+LINE_REAL_PUSH_ENABLED=false
+api_direct_health_after_line_runtime=000
+dropin_removed=yes
+api_direct_health_after_rollback=200
+https_api_health_after_rollback=200
+actual_webhook_invalid_signature_dry_run_result=not_performed
+line_developers_verification_result=not_performed
+production_readiness=production_no_go
+```
+
+Do not use LINE Developers verification until the API can read the LINE runtime EnvironmentFile while keeping `/health` healthy.
+
 ## Next
 
 Proceed only through the next explicit Loop gate:

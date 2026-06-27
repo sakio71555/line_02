@@ -45,6 +45,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | HTTPS review checklist | Loop 140でHTTPS主要route、HTTP redirect、certificate summary、HSTS未設定、VPS read-only状態を確認。certbot再実行、Nginx reload/restart、LINE/OpenAI/Supabase実接続なし |
 | LINE webhook production dry-run | Loop 141でcandidate URL pattern、HTTPS API health、dummy webhook POST/GET/empty POSTの安全拒否を確認。実secret path未記録、LINE Developers Console未変更、LINE API未接続 |
 | LINE webhook registration manual gate | Loop 142で人間がLINE Developers Consoleへ登録するための手順、pre/post checklist、secret非記録ルールをdocs化。CodexによるLINE Console変更、Webhook usage toggle、LINE API call、real pushなし |
+| LINE runtime secret injection attempt | Loop 143でroot-only helperによりLINE runtime secretsをVPSへ入力したが、API EnvironmentFile接続後のdirect healthが失敗。drop-inをrollbackし、actual webhook dry-runとLINE Developers verificationは未実施 |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -568,6 +569,55 @@ Loop 142で実施していないこと:
 - API/Auth/RLS/runtime/migration/UI変更。
 - production Go decision。
 
+## Loop 143 LINE Runtime Secret Injection Attempt
+
+Loop 143では、VPSにroot-only secret入力helperを作成し、operatorがCodex外terminalでLINE runtime secretsを入力した。値そのものはCodex、docs、tests、commit、reportに記録していない。
+
+```txt
+helper_path=/root/bin/amami-line-set-line-runtime-secrets.sh
+line_runtime_env_file=/etc/amami-line-crm/line-runtime.env
+LINE_CHANNEL_SECRET configured; value not recorded
+LINE_CHANNEL_ACCESS_TOKEN configured; value not recorded
+LINE_WEBHOOK_SECRET_PATH configured; value not recorded
+LINE_REAL_PUSH_ENABLED=false
+dropin_path=/etc/systemd/system/amami-line-crm-api.service.d/20-line-runtime.conf
+dropin_added=yes
+api_service_restart_attempted=yes
+api_service_active_after_restart=active
+api_direct_health_after_line_runtime=000
+api_direct_health_after_line_runtime_result=failed
+dropin_removed=yes
+api_service_restart_after_rollback=success
+api_service_active_after_rollback=active
+api_direct_health_after_rollback=200
+https_api_health_after_rollback=200
+api_environment_files_after_rollback=/etc/amami-line-crm/api.env only
+actual_webhook_invalid_signature_dry_run_result=not_performed
+line_developers_verification_result=not_performed
+actual_webhookSecretPath=not_recorded
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+Loop 143で実施していないこと:
+
+- LINE API呼び出し。
+- LINE real push/reply。
+- actual webhook invalid-signature dry-run。
+- LINE Developers Console verification。
+- LINE secret/token/path値の表示または記録。
+- OpenAI実API。
+- Supabase実接続。
+- Supabase migration / RLS変更。
+- Nginx設定変更。
+- Nginx reload/restart。
+- certbot再実行。
+- DNS変更。
+- `.env` 作成・変更・表示。
+- private key内容表示。
+- API/Auth/RLS/runtime/migration/UI code変更。
+- production Go decision。
+
 ## Final Judgment
 
 `production_no_go`
@@ -577,6 +627,6 @@ Loop 142で実施していないこと:
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundle、HTTPS review checklist、LINE webhook production dry-run、LINE webhook registration manual gateは追加済み。Loop 141でcandidate webhook URLのdummy dry-runは通り、Loop 142でmanual gateは整ったが、LINE webhook登録、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundle、HTTPS review checklist、LINE webhook production dry-run、LINE webhook registration manual gate、LINE runtime secret injection attemptは追加済み。Loop 143でLINE runtime secretsはVPSへroot-only保存されたが、API EnvironmentFile接続後のhealthが失敗したためdrop-inはrollback済み。LINE webhook verification、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
 
-この判定は、Loop 142時点でもcontrolled production Goへ進むには人間によるLINE webhook登録、post-registration verification、LINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。
+この判定は、Loop 143時点でもcontrolled production Goへ進むにはLINE runtime EnvironmentFile failure diagnosis、post-registration verification、LINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。

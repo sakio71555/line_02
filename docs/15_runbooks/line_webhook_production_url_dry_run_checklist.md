@@ -174,3 +174,23 @@ Manual operator steps:
 6. Press Verify if needed.
 7. Check existing response, greeting, and auto-response settings.
 8. Do not perform real LINE send testing until a separate approval Loop.
+
+## Loop 143 Runtime Secret Injection No-Go
+
+LINE runtime secrets were entered outside Codex and confirmed by redacted key names only. The API service drop-in was then tested and rolled back because direct health failed.
+
+```txt
+LINE_CHANNEL_SECRET configured; value not recorded
+LINE_CHANNEL_ACCESS_TOKEN configured; value not recorded
+LINE_WEBHOOK_SECRET_PATH configured; value not recorded
+LINE_REAL_PUSH_ENABLED=false
+api_direct_health_after_line_runtime=000
+dropin_removed=yes
+api_direct_health_after_rollback=200
+https_api_health_after_rollback=200
+actual_webhook_invalid_signature_dry_run_result=not_performed
+line_developers_verification_result=not_performed
+production_readiness=production_no_go
+```
+
+Do not press LINE Developers Console Verify until a later Loop confirms the API stays healthy with the LINE runtime EnvironmentFile connected.

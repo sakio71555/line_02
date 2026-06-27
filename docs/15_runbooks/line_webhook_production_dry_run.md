@@ -149,11 +149,32 @@ production_readiness=production_no_go
 
 The human operator uses the real webhook secret path only in LINE Developers Console. It remains outside docs, tests, commits, terminal output, and reports.
 
+## Loop 143 Runtime Secret Injection Update
+
+Loop 143 created a root-only helper and the operator entered LINE runtime secrets outside Codex. Values were not recorded.
+
+```txt
+LINE_CHANNEL_SECRET configured; value not recorded
+LINE_CHANNEL_ACCESS_TOKEN configured; value not recorded
+LINE_WEBHOOK_SECRET_PATH configured; value not recorded
+LINE_REAL_PUSH_ENABLED=false
+dropin_added=yes
+api_direct_health_after_line_runtime=000
+dropin_removed=yes
+api_direct_health_after_rollback=200
+https_api_health_after_rollback=200
+actual_webhook_invalid_signature_dry_run_result=not_performed
+line_developers_verification_result=not_performed
+production_readiness=production_no_go
+```
+
+Because API direct health failed with the LINE runtime drop-in, webhook dry-run and LINE Developers verification remain blocked.
+
 ## Next
 
 Proceed only through the next explicit Loop gate:
 
-1. Loop 143: LINE webhook post-registration verification.
-2. Loop 144: Supabase staging secret injection checklist.
-3. Loop 145: OpenAI provider production gate.
-4. Loop 146: production Go/No-Go review.
+1. Loop 144: LINE runtime EnvironmentFile failure diagnosis.
+2. Loop 145: Supabase staging secret injection checklist.
+3. Loop 146: OpenAI provider production gate.
+4. Loop 147: production Go/No-Go review.
