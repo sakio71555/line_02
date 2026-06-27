@@ -308,6 +308,8 @@ Loop 145Aでは、VPSの `LINE_WEBHOOK_SECRET_PATH` を1セグメント値へ更
 
 Loop 146では、LINE公式アカウントからの実受信イベントsmokeを実施しました。`LineBotWebhook/2.0` のPOSTが200で届き、署名検証を通ったmessage/text eventがin-memoryのcustomer/messageとしてtenant scopedに保存され、Admin timelineから確認できました。LINE real push/reply、OpenAI/Supabase実接続、Nginx/DNS/certbot変更は未実施で、production readinessは `production_no_go` のままです。LINE Official Account側の自動応答は観測されましたが、アプリ側の送信ではなく、後でOFFにする方針です。詳細は [docs/11_codex_tasks/146_line_real_receive_event_smoke.md](docs/11_codex_tasks/146_line_real_receive_event_smoke.md) と [docs/15_runbooks/line_real_receive_event_smoke.md](docs/15_runbooks/line_real_receive_event_smoke.md) を参照してください。
 
+Loop 147-150では、Supabase persistence、OpenAI provider、LINE real reply/push、LINE Official Account自動応答、production Go/No-Goをfast laneで横断確認しました。Supabase repositories、OpenAI provider gate、LINE real push gateは存在しますが、deployed API startupへのruntime wiringが未完了のためsecret injectionや実接続へは進まず、`production_readiness=production_no_go` を維持しました。詳細は [docs/11_codex_tasks/147_150_production_integration_fast_lane.md](docs/11_codex_tasks/147_150_production_integration_fast_lane.md) と [docs/15_runbooks/production_integration_fast_lane.md](docs/15_runbooks/production_integration_fast_lane.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

@@ -384,6 +384,8 @@ Loop 145AのようなLINE webhook secret path remediationでは、`LINE_WEBHOOK_
 
 Loop 146のようなLINE real receive event smokeでは、LINE公式アカウントからユーザーが個人情報なしの1通だけを送信し、Codexはsanitized log、Nginx access log、Admin APIのtenant scoped保存結果だけを確認します。message body、LINE userId、webhook path値、tokenは記録しません。`LINE_REAL_PUSH_ENABLED=false` を維持し、LINE Official Account側の自動応答が出た場合はアプリ送信と区別して、後でOFFにする運用課題として記録します。
 
+Loop 147-150のようなproduction integration fast laneでは、Supabase/OpenAI/LINEの残ブロッカーを横断確認しても、runtime startup wiringが未完了ならsecret injectionや実接続へ進みません。SupabaseはAPI startupがrepository runtimeを安全に注入できること、OpenAIはreal HTTP transportとpaid-smoke承認、LINE real pushはreal client runtime wiringとOfficial Account自動応答OFF確認が先です。fast lane後も未達条件があれば `production_readiness=production_no_go` を維持し、次Loopはruntime wiring remediationに絞ります。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

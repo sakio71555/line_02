@@ -681,3 +681,51 @@ Loop 144で実施していないこと:
 - VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundle、HTTPS review checklist、LINE webhook production dry-run、LINE webhook registration manual gate、LINE runtime secret injection attempt、LINE webhook 404 route diagnosis、LINE webhook secret path remediation、LINE real receive event smokeは追加済み。Loop 146で実LINE受信は成功したが、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
 
 この判定は、Loop 146時点でもcontrolled production Goへ進むにはLINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。
+
+## Loop 147-150 Production Integration Fast Lane
+
+Loop 147-150では、Supabase persistence gate、OpenAI provider gate、LINE real reply/push controlled gate、LINE Official Account auto-response checklist、final production Go/No-Goを横断確認した。
+
+```txt
+production_integration_fast_lane=completed_as_no_go_review
+https_ready_for_review=true
+line_receive_ready=true
+supabase_ready=false
+openai_ready=false
+line_reply_push_ready=false
+official_account_auto_response_ready=false
+production_readiness=production_no_go
+```
+
+判定:
+
+- Supabase repositories and runtime bundle exist, but deployed API startup does not yet wire `REPOSITORY_RUNTIME=supabase` into `createApiApp()`.
+- OpenAI provider and gate exist, but deployed API startup still defaults to mock and real HTTP transport/runtime wiring is incomplete.
+- LINE real push gate and `RealLineClient` boundary exist, but deployed API startup still defaults to mock line client, so real reply/push smoke is not ready.
+- LINE Official Account auto-response OFF is still pending before real reply/push smoke.
+- Supabase/OpenAI/LINE secret helpers were not created in this Loop because runtime wiring must be remediated first.
+
+No-Go理由:
+
+```txt
+supabase_runtime_startup_wiring_incomplete=true
+openai_real_transport_runtime_wiring_incomplete=true
+line_real_client_runtime_wiring_incomplete=true
+official_account_auto_response_off_confirmed=false
+final_operator_go_approval=false
+production_readiness=production_no_go
+```
+
+未実施:
+
+- Supabase secret injection.
+- Supabase real connection.
+- OpenAI real API.
+- LINE real reply/push.
+- Nginx config change.
+- Nginx reload/restart.
+- DNS change.
+- certbot rerun.
+- production Go decision.
+
+次Loopは `Loop 151: production runtime wiring remediation plan` とする。

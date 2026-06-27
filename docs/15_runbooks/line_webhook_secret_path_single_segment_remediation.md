@@ -127,3 +127,17 @@ production_readiness=production_no_go
 ```
 
 The actual webhook path value, LINE userId, and message body are not recorded.
+
+## Loop 147-150 Follow-Up
+
+Loop 147-150 confirmed that webhook receiving remains good, but production integration is still No-Go:
+
+```txt
+line_receive_ready=true
+line_real_push_reply=not_performed
+line_real_push_enabled=false
+line_real_client_runtime_wiring_incomplete=true
+production_readiness=production_no_go
+```
+
+The next production-facing work should not change the webhook path. It should address runtime wiring for Supabase/OpenAI/LINE gates in small remediation Loops.

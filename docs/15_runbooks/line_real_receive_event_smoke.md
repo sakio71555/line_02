@@ -41,6 +41,13 @@ official_account_auto_response_observed=true
 
 The LINE Official Account automatic response is a LINE-side setting, not an app-side real push/reply. It should be turned off later before production operation.
 
+Before a future real reply/push smoke, the operator should confirm:
+
+- Response message: OFF.
+- AI response message: OFF.
+- Webhook: ON.
+- Test recipient and one-message text approved outside Codex.
+
 ## Real Receive Result
 
 ```txt
@@ -100,3 +107,5 @@ No-Go remains because LINE real reply/push is still disabled and untested, the c
 2. Loop 148: OpenAI provider production gate
 3. Loop 149: LINE real reply/push controlled gate
 4. Loop 150: production Go/No-Go review
+
+Loop 147-150 later confirmed that these gates are still No-Go until runtime wiring remediation is complete. See [Production Integration Fast Lane](production_integration_fast_lane.md).
