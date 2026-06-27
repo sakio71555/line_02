@@ -101,3 +101,26 @@ production_readiness=production_no_go
 ```
 
 The API service was returned to mock AI after the smoke. The root-only runtime env file remains on the VPS for operator-controlled future use, but the systemd drop-in is not attached.
+
+## Loop 163 Result
+
+```txt
+openai_runtime_env=configured; value not recorded
+openai_model=configured; value not recorded
+openai_diagnostic_smoke=performed_once
+openai_diagnostic_smoke_status=failed
+openai_diagnostic_error_classification=I_unknown_sanitized
+openai_key_replacement_smoke=performed_once
+openai_key_replacement_smoke_status=failed
+openai_key_replacement_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_environment_file_connection=temporary
+openai_systemd_dropin_present_final=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The operator replaced the API key outside Codex. The replacement value was not displayed or recorded. The API service was returned to mock AI after the follow-up smoke.

@@ -96,3 +96,25 @@ production_readiness=production_no_go
 ```
 
 Next operator action for OpenAI is not another paid retry. First diagnose the sanitized provider failure without recording secrets or raw response bodies, then decide whether a second approved smoke is necessary in a separate Loop.
+
+## Loop 163 Follow-up
+
+```txt
+openai_diagnostic_smoke=performed_once
+openai_diagnostic_smoke_status=failed
+openai_diagnostic_error_classification=I_unknown_sanitized
+openai_key_replacement_smoke=performed_once
+openai_key_replacement_smoke_status=failed
+openai_key_replacement_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_api_key_recorded=no
+openai_prompt_body_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+openai_ready=false
+line_real_push_enabled=false
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+The operator replaced the OpenAI API key outside Codex, but the follow-up smoke still failed with the same sanitized unknown classification. Next operator action is not another blind retry. Use a dedicated secret-safe remediation Loop.

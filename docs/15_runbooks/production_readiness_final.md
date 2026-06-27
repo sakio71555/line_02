@@ -50,6 +50,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | LINE webhook secret path remediation | Loop 145Aで`LINE_WEBHOOK_SECRET_PATH`を1セグメント値へ更新。direct/HTTPS healthは200、invalid-signature webhook POSTは401、LINE Developers verificationはsuccess。LINE real receive event smokeとLINE real push/replyは未実施 |
 | LINE real receive event smoke | Loop 146でWebhook ON後の実LINE message/text eventを受信。`LineBotWebhook/2.0` POSTは200、tenant scoped customer/message保存とAdmin timeline確認済み。LINE real push/replyは未実施 |
 | OpenAI controlled provider smoke | Loop 162で内部provider smoke commandを追加し、operator承認後に非顧客データで1回だけOpenAI real API smokeを実施。結果はsanitized `OpenAiProviderError` で失敗。response body/API key/model値/prompt本文は未記録。APIはmock AIへrollback済み |
+| OpenAI smoke failure diagnosis | Loop 163でsanitized diagnosticsを追加し、diagnostic smokeとAPI key差し替え後のfollow-up smokeを各1回だけ実施。どちらも `I_unknown_sanitized` で失敗し、response body/API key/model値/prompt本文は未記録。APIはmock AIへrollback済み |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -160,6 +161,8 @@ real OpenAI pathは以下がすべて必要です。
 Loop 103ではOpenAI API実呼び出しは未実施。
 
 Loop 162ではOpenAI provider境界の実API smokeを1回だけ実施したが、sanitized `OpenAiProviderError` で失敗した。response body、prompt本文、API key、model値は記録していない。API serviceのOpenAI EnvironmentFile drop-inは削除済みで、final runtimeはmock AIへ戻したため、production readinessは引き続き `production_no_go`。
+
+Loop 163ではOpenAI smoke失敗をsecret非表示で診断できるようsanitized status/code/type/classificationを追加した。diagnostic smokeとAPI key差し替え後のfollow-up smokeはいずれも `I_unknown_sanitized` で失敗し、response body、prompt本文、API key、model値は記録していない。API serviceのOpenAI EnvironmentFile drop-inは削除済みで、final runtimeはmock AIへ戻したため、production readinessは引き続き `production_no_go`。
 
 ## Staging Smoke
 

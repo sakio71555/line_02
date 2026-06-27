@@ -62,6 +62,28 @@ production_readiness=production_no_go
 
 The failure was intentionally recorded only as a sanitized error class. No retry was performed.
 
+## Loop 163 Result
+
+Loop 163 added sanitized status/code/type/classification diagnostics and ran an operator-approved diagnostic smoke. After the operator replaced the API key through the root-only helper, one additional key-replacement smoke was run.
+
+```txt
+openai_diagnostic_smoke=performed_once
+openai_diagnostic_smoke_status=failed
+openai_diagnostic_error_classification=I_unknown_sanitized
+openai_key_replacement_smoke=performed_once
+openai_key_replacement_smoke_status=failed
+openai_key_replacement_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The API service was returned to mock AI after both attempts. The next OpenAI step should diagnose the unknown sanitized failure without recording raw provider output.
+
 ## Final Runtime State
 
 ```txt

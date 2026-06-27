@@ -140,3 +140,31 @@ production_readiness=production_no_go
 ```
 
 Because the controlled smoke failed, OpenAI is still not ready for production. The next OpenAI Loop should diagnose the failure without recording secrets or raw provider responses.
+
+## Loop 163 Update
+
+Loop 163 added status-only OpenAI smoke diagnostics and deployed the patch to the VPS review runtime.
+
+```txt
+openai_provider_classification=A_real_provider_fully_wired_with_sanitized_failure_diagnostics
+provider_boundary_exists=true
+real_http_transport_wired=true
+runtime_ai_provider_switch=implemented
+api_default_provider=mock
+openai_diagnostic_smoke=performed_once
+openai_diagnostic_smoke_status=failed
+openai_diagnostic_error_class=OpenAiProviderError
+openai_diagnostic_error_classification=I_unknown_sanitized
+openai_key_replacement_smoke=performed_once
+openai_key_replacement_smoke_status=failed
+openai_key_replacement_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+Replacing the API key did not change the sanitized classification. Do not repeat paid smoke calls blindly; the next step should be a secret-safe unknown-error remediation Loop.

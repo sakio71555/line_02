@@ -96,3 +96,26 @@ production_readiness=production_no_go
 ```txt
 Loop 163: OpenAI smoke failure diagnosis without recording secrets
 ```
+
+## Loop 163 Follow-up
+
+Loop 163 improved sanitized diagnostics and reran operator-approved smoke checks without recording secrets.
+
+```txt
+openai_diagnostic_smoke=performed_once
+openai_diagnostic_smoke_status=failed
+openai_diagnostic_error_classification=I_unknown_sanitized
+openai_key_replacement_smoke=performed_once
+openai_key_replacement_smoke_status=failed
+openai_key_replacement_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The API service was returned to mock AI after each smoke. The root-only runtime env file remains operator-controlled on the VPS but is not attached to the API service.
