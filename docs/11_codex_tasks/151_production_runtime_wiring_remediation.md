@@ -122,6 +122,32 @@ line_real_push_reply=not_performed
 production_readiness=production_no_go
 ```
 
+## VPS Review Deploy Result
+
+Loop 151 was deployed to the active VPS review source only after local gates and VPS staging validation passed. This deploy did not change Nginx, DNS, certbot, secrets, migrations, RLS, LINE real push/reply, OpenAI real API, or Supabase real connection.
+
+```txt
+release_candidate=258e550f76464d8366725632e7dc6778b2ea3115
+archive_sha256=1afd05fef7b87886c5901c73122e4fe8fa9cbe7540cec81e10de7a99fd6b1053
+vps_staging_install=success
+vps_staging_lint=success
+vps_staging_typecheck=success
+vps_staging_test=success
+vps_staging_test_integration=success
+vps_staging_build=success
+active_deploy_updated=yes
+api_service=active
+admin_service=active
+api_direct_health=200
+https_api_health=200
+https_customers=200
+line_invalid_signature_dry_run=401
+runtime_data_backend=in_memory
+runtime_ai_provider=mock
+runtime_line_real_push_enabled=false
+production_readiness=production_no_go
+```
+
 ## Remaining No-Go Reasons
 
 - Supabase実接続のcontrolled smoke未実施。

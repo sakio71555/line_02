@@ -716,6 +716,40 @@ final_operator_go_approval=false
 production_readiness=production_no_go
 ```
 
+## Loop 151 Runtime Wiring and VPS Review Deploy
+
+Loop 151 implemented production runtime wiring and redeployed the active VPS review source after local and VPS staging validation.
+
+```txt
+release_candidate=258e550f76464d8366725632e7dc6778b2ea3115
+runtime_wiring_ready=true
+repository_runtime_switch=implemented
+ai_provider_runtime_switch=implemented
+line_client_runtime_switch=implemented
+default_data_backend=in_memory
+default_ai_provider=mock
+default_line_real_push_enabled=false
+vps_staging_validation=success
+active_deploy_updated=yes
+api_service=active
+admin_service=active
+api_direct_health=200
+https_api_health=200
+https_customers=200
+line_invalid_signature_dry_run=401
+nginx_change=no
+nginx_reload_restart=no
+dns_change=no
+certbot_change=no
+supabase_real_connection=no
+openai_real_api=no
+line_real_push_reply=no
+secret_values_displayed=no
+production_readiness=production_no_go
+```
+
+No-Go remains because Supabase real connection, OpenAI real API smoke, LINE real reply/push single-message smoke, Official Account auto-response OFF confirmation, and final operator Go/No-Go are still pending.
+
 未実施:
 
 - Supabase secret injection.

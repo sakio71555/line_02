@@ -129,16 +129,46 @@ npx pnpm@10.12.1 build
 
 ## VPS Status
 
-This Loop may be redeployed after local validation.
+Loop 151 was redeployed to the active VPS review source after local validation and VPS staging validation.
 
-If redeployed, preserve these safety boundaries:
+Safety boundaries preserved:
 
 - no Nginx config change
 - no Nginx reload/restart
 - no DNS/certbot change
 - keep `LINE_REAL_PUSH_ENABLED=false`
 - do not display env values
-- invalid-signature LINE dry-run must not return 2xx, 5xx, or 404
+- invalid-signature LINE dry-run did not return 2xx, 5xx, or 404
+
+```txt
+release_candidate=258e550f76464d8366725632e7dc6778b2ea3115
+archive_sha256=1afd05fef7b87886c5901c73122e4fe8fa9cbe7540cec81e10de7a99fd6b1053
+staging_validation=success
+active_deploy_updated=yes
+active_install=success
+active_build=success
+api_service=active
+admin_service=active
+api_direct_health=200
+admin_direct_login=200
+admin_direct_customers=200
+https_root=200
+https_api_health=200
+https_customers=200
+line_invalid_signature_dry_run=401
+runtime_data_backend=in_memory
+runtime_ai_provider=mock
+runtime_line_real_push_enabled=false
+nginx_change=no
+nginx_reload_restart=no
+dns_change=no
+certbot_change=no
+supabase_real_connection=no
+openai_real_api=no
+line_real_push_reply=no
+secret_values_displayed=no
+production_readiness=production_no_go
+```
 
 ## Readiness Flags
 
