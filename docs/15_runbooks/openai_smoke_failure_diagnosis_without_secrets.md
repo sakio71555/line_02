@@ -120,3 +120,23 @@ production_readiness=production_no_go
 ```
 
 The fallback did not change the sanitized classification. Do not perform another paid retry until request shape, provider transport, or runtime behavior has been remediated without recording raw provider output.
+
+## Loop 165 Follow-up
+
+Loop 165 added a raw Responses API diagnostic and provider-boundary-only smoke.
+
+```txt
+raw_responses_smoke_status=success
+raw_responses_http_status=200
+provider_boundary_smoke_status=failed
+provider_boundary_error_classification=I_unknown_sanitized
+provider_boundary_retry_performed=no
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+production_readiness=production_no_go
+```
+
+Raw API connectivity is available, but provider runtime readiness is still false.

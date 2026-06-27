@@ -192,3 +192,28 @@ production_readiness=production_no_go
 ```
 
 The next OpenAI Loop should remediate request-shape or provider transport behavior without recording raw upstream output.
+
+## Loop 165 Update
+
+Loop 165 added raw diagnostic smoke and provider-boundary-only smoke tooling, then deployed it to the VPS review runtime.
+
+```txt
+openai_provider_classification=B_raw_responses_api_reachable_provider_runtime_not_ready
+raw_responses_smoke_status=success
+raw_responses_http_status=200
+provider_boundary_smoke_status=failed
+provider_boundary_error_classification=I_unknown_sanitized
+provider_boundary_retry_performed=no
+provider_parse_classification_hardened=true
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+openai_api_connectivity_ready=true
+openai_provider_runtime_ready=false
+production_readiness=production_no_go
+```
+
+The next production gate is provider output contract remediation. Do not enable OpenAI steady-state runtime from the Loop 165 result alone.

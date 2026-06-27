@@ -165,3 +165,28 @@ production_readiness=production_no_go
 ```
 
 The model fallback did not resolve the smoke failure. The next OpenAI step is not another blind retry; use a secret-safe request-shape or provider transport remediation Loop.
+
+## Loop 165 Update
+
+Loop 165 performed exactly one raw Responses API diagnostic and one provider-boundary smoke.
+
+```txt
+raw_responses_smoke=performed_once
+raw_responses_smoke_status=success
+raw_responses_http_status=200
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=failed
+provider_boundary_error_classification=I_unknown_sanitized
+provider_boundary_retry_performed=no
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+openai_api_connectivity_ready=true
+openai_provider_runtime_ready=false
+production_readiness=production_no_go
+```
+
+Raw API connectivity is proven, but production provider readiness remains No-Go until provider output contract handling is remediated and reapproved.

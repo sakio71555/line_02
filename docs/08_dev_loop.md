@@ -408,6 +408,8 @@ Loop 161のようなOpenAI real API controlled smokeでは、`openai-runtime.env
 
 Loop 164のようにOpenAI model fallback smokeを行う場合でも、model値はdocs/test/final reportへ記録しません。記録できるのは `OPENAI_MODEL configured; value not recorded`、smoke status、sanitized error classification、rollback結果だけです。fallback後も失敗する場合は、追加の有料retryへ進まず、request-shape / provider transport remediationを別Loopに分けます。
 
+Loop 165のようなOpenAI request-shape / provider transport remediationでは、raw Responses API診断とprovider-boundary smokeを分離します。raw成功後にproviderだけを確認する場合は、raw診断を繰り返さないprovider-only CLIを使い、有料OpenAI呼び出しは承認された回数を超えません。raw response body、prompt本文、API key、model値は記録せず、最後は必ずOpenAI drop-inを外して `AI_PROVIDER=mock` と `production_no_go` へ戻します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

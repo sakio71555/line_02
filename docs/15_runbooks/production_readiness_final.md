@@ -1133,3 +1133,34 @@ Remaining No-Go reasons:
 - OpenAI controlled smoke has not succeeded.
 - LINE real reply/push has not been performed.
 - Final operator Go has not been recorded.
+
+## Loop 165 OpenAI Request Shape and Provider Transport Remediation
+
+Loop 165 proved raw Responses API connectivity but did not prove provider runtime readiness.
+
+```txt
+raw_responses_smoke=performed_once
+raw_responses_smoke_status=success
+raw_responses_http_status=200
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=failed
+provider_boundary_error_classification=I_unknown_sanitized
+provider_boundary_retry_performed=no
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_api_connectivity_ready=true
+openai_provider_runtime_ready=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+Remaining No-Go reasons:
+
+- OpenAI provider runtime smoke has not succeeded.
+- LINE real reply/push has not been performed.
+- Final operator Go has not been recorded.

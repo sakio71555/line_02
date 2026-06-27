@@ -104,3 +104,28 @@ Do not repeat paid smoke calls blindly. The next Loop should inspect request sha
 ```txt
 Loop 165: OpenAI request-shape/provider transport remediation
 ```
+
+## Loop 165 Follow-up
+
+Loop 165 separated raw Responses API diagnostics from provider-boundary smoke.
+
+```txt
+raw_responses_smoke=performed_once
+raw_responses_smoke_status=success
+raw_responses_http_status=200
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=failed
+provider_boundary_error_classification=I_unknown_sanitized
+provider_boundary_retry_performed=no
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+openai_api_connectivity_ready=true
+openai_provider_runtime_ready=false
+production_readiness=production_no_go
+```
+
+The next OpenAI step should remediate provider output contract/parse behavior without another blind paid retry.

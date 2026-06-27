@@ -139,3 +139,23 @@ production_readiness=production_no_go
 ```
 
 The model fallback smoke still failed. Do not move to LINE real reply/push until OpenAI readiness is either intentionally deferred as mock or remediated with a successful controlled smoke and separate operator approval.
+
+## Loop 165 Follow-up
+
+```txt
+raw_responses_smoke_status=success
+provider_boundary_smoke_status=failed
+provider_boundary_error_classification=I_unknown_sanitized
+provider_boundary_retry_performed=no
+openai_response_body_recorded=no
+openai_api_key_recorded=no
+openai_prompt_body_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+openai_api_connectivity_ready=true
+openai_provider_runtime_ready=false
+production_readiness=production_no_go
+```
+
+Next operator action is not LINE real reply/push yet. First decide whether to run a provider output contract remediation Loop and approve any future paid OpenAI smoke separately.

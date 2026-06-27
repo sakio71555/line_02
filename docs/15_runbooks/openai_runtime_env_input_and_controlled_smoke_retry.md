@@ -142,3 +142,20 @@ production_readiness=production_no_go
 ```
 
 The API service was returned to mock AI after the smoke. Further OpenAI calls require a separate approval and a remediation Loop.
+
+## Loop 165 Follow-up
+
+Loop 165 remediated the smoke tooling so raw diagnostic and provider smoke can be separated.
+
+```txt
+raw_diagnostic_script=scripts/smoke/openai-raw-responses-smoke.ts
+provider_boundary_only_script=scripts/smoke/openai-provider-boundary-smoke.ts
+raw_responses_smoke_status=success
+provider_boundary_smoke_status=failed
+provider_retry_performed=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+production_readiness=production_no_go
+```
+
+Do not rerun provider smoke until the next provider output contract remediation Loop.
