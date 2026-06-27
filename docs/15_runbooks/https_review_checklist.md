@@ -128,11 +128,31 @@ No-Go reasons:
 - OpenAI real API has not executed.
 - Production secret injection has not executed.
 
+## Loop 141 LINE Webhook Dry-run Update
+
+The HTTPS review URL was used for a LINE webhook candidate dry-run. The actual webhook secret path was not recorded.
+
+```txt
+candidate_line_webhook_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+actual_webhook_secret_path_recorded=no
+https_api_health=200
+dummy_invalid_signature_post_status=404
+dummy_get_status=404
+dummy_empty_post_status=404
+line_webhook_ready_for_registration=true
+line_webhook_registration=not_done
+line_api_call=not_done
+production_readiness=production_no_go
+https_ready_for_review=true
+```
+
+The LINE Developers Console was not changed.
+
 ## Next
 
 Proceed only through the next explicit Loop gate:
 
-1. Loop 141: LINE webhook production dry-run.
-2. Loop 142: Supabase staging secret injection checklist.
-3. Loop 143: OpenAI provider production gate.
-4. Loop 144: production Go/No-Go gate.
+1. Loop 142: LINE webhook registration manual gate.
+2. Loop 143: Supabase staging secret injection checklist.
+3. Loop 144: OpenAI provider production gate.
+4. Loop 145: production Go/No-Go gate.

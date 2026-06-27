@@ -372,6 +372,8 @@ Loop 137-139のようにreal-domain HTTP bootstrap、HTTP-01 certbot、HTTPS ena
 
 Loop 140のようなHTTPS review checklistでは、公開済みHTTPS URLの外部route、HTTP redirect、証明書summary、HSTS未設定、VPS read-only状態だけを短時間で確認します。certbot再実行、証明書更新、Nginx設定変更、Nginx reload/restart、LINE/OpenAI/Supabase実接続、production secret injectionは行わず、review可能でも `production_readiness=production_no_go` を維持します。
 
+Loop 141のようなLINE webhook production dry-runでは、LINE Developers Consoleを変更せず、candidate URL pattern、route境界、dummy HTTPS POST/GET/empty POSTが2xxや5xxにならないことだけを確認します。実 `webhookSecretPath`、LINE channel secret、LINE access tokenは記録せず、registration readyのdry-run gateが通ってもLINE本登録とreal pushは別Loopに分けます。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

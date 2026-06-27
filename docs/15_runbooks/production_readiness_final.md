@@ -43,6 +43,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | Approval docs finalization | Loop 136で承認値をdocsへ反映。`admin.taiyolabel.site` はreview/admin hostnameかつ現時点のfinal hostname。ACME方式は `HTTP-01`、fallbackは `DNS-01`。実作業・外部接続なし |
 | HTTP-01 HTTPS enable bundle | Loop 137-139で `admin.taiyolabel.site` のHTTP bootstrap、HTTP-01 certbot、HTTPS enable、external smokeを実施。`https_ready_for_review=true` だがLINE/OpenAI/Supabase/secret injection未完了のためNo-Go |
 | HTTPS review checklist | Loop 140でHTTPS主要route、HTTP redirect、certificate summary、HSTS未設定、VPS read-only状態を確認。certbot再実行、Nginx reload/restart、LINE/OpenAI/Supabase実接続なし |
+| LINE webhook production dry-run | Loop 141でcandidate URL pattern、HTTPS API health、dummy webhook POST/GET/empty POSTの安全拒否を確認。実secret path未記録、LINE Developers Console未変更、LINE API未接続 |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -455,6 +456,59 @@ Loop 140で実施していないこと:
 - API/Auth/RLS/runtime/migration/UI変更。
 - production Go decision。
 
+## Loop 141 LINE Webhook Production Dry-run
+
+Loop 141では、LINE Developers Consoleへ本番Webhook URLを登録する前に、candidate URL patternとHTTPS経由のdummy webhook拒否動作を確認した。
+
+```txt
+method=POST
+route=/api/line/webhook/:webhookSecret
+candidate_line_webhook_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+actual_webhook_secret_path_recorded=no
+signature_header=x-line-signature
+signature_verification=verifyLineSignature
+signature_body=raw request body
+unknown_webhook_path=404
+invalid_signature=401 for known path with configured channel secret
+https_api_health=200
+dummy_invalid_signature_post_status=404
+dummy_get_status=404
+dummy_empty_post_status=404
+dummy_invalid_signature_accepted_2xx=no
+dummy_invalid_signature_5xx=no
+line_webhook_ready_for_registration=true
+line_webhook_registration=not_done
+line_api_call=not_done
+line_real_push_status=disabled
+nginx_test=success
+sites_enabled=present
+api_direct_health=200
+admin_direct_login=200
+production_readiness=production_no_go
+https_ready_for_review=true
+```
+
+Loop 141で実施していないこと:
+
+- LINE Developers Console変更。
+- LINE webhook URL本登録。
+- LINE API呼び出し。
+- LINE本番送信。
+- LINE channel secret表示。
+- LINE access token表示。
+- OpenAI実API。
+- Supabase実接続。
+- Supabase migration / RLS変更。
+- production secret injection。
+- `.env` 作成・変更・表示。
+- private key内容表示。
+- DNS変更。
+- certbot再実行。
+- Nginx設定変更。
+- Nginx reload/restart。
+- API/Auth/RLS/runtime/migration/UI変更。
+- production Go decision。
+
 ## Final Judgment
 
 `production_no_go`
@@ -464,6 +518,6 @@ Loop 140で実施していないこと:
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundle、HTTPS review checklistは追加済み。Loop 140で `admin.taiyolabel.site` のHTTPSはreview可能と再確認したが、LINE webhook登録、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundle、HTTPS review checklist、LINE webhook production dry-runは追加済み。Loop 141でcandidate webhook URLのdummy dry-runは通ったが、LINE webhook登録、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
 
-この判定は、Loop 140時点でもcontrolled production Goへ進むにはLINE webhook、LINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。
+この判定は、Loop 141時点でもcontrolled production Goへ進むにはLINE webhook登録、LINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。
