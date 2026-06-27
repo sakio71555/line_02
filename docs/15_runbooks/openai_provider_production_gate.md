@@ -168,3 +168,27 @@ production_readiness=production_no_go
 ```
 
 Replacing the API key did not change the sanitized classification. Do not repeat paid smoke calls blindly; the next step should be a secret-safe unknown-error remediation Loop.
+
+## Loop 164 Update
+
+Loop 164 tried one approved model fallback smoke after the operator changed the configured model outside recorded output.
+
+```txt
+openai_provider_classification=A_real_provider_wired_but_model_fallback_smoke_failed
+provider_boundary_exists=true
+real_http_transport_wired=true
+runtime_ai_provider_switch=implemented
+api_default_provider=mock
+openai_model_fallback_smoke=performed_once
+openai_model_fallback_smoke_status=failed
+openai_model_fallback_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The next OpenAI Loop should remediate request-shape or provider transport behavior without recording raw upstream output.

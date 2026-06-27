@@ -96,3 +96,27 @@ production_readiness=production_no_go
 ```txt
 Loop 164: OpenAI smoke unknown error remediation
 ```
+
+## Loop 164 Follow-up
+
+Loop 164 used the operator-configured model fallback value without recording the value and ran one additional approved provider-level smoke.
+
+```txt
+openai_model_fallback_smoke=performed_once
+openai_model_fallback_smoke_status=failed
+openai_model_fallback_error_class=OpenAiProviderError
+openai_model_fallback_error_status=unavailable
+openai_model_fallback_error_code=unavailable
+openai_model_fallback_error_type=unavailable
+openai_model_fallback_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The fallback did not change the sanitized classification. Do not perform another paid retry until request shape, provider transport, or runtime behavior has been remediated without recording raw provider output.

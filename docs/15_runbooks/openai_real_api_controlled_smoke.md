@@ -142,3 +142,26 @@ After any future OpenAI smoke, return the API to `AI_PROVIDER=mock` unless there
 ```txt
 Loop 162: OpenAI runtime env input and controlled smoke retry
 ```
+
+## Loop 164 Update
+
+The operator changed the configured model outside Git and Codex output, then Loop 164 ran one approved provider-level smoke.
+
+```txt
+OPENAI_API_KEY configured; value not recorded
+OPENAI_MODEL configured; value not recorded
+openai_model_fallback_smoke=performed_once
+openai_model_fallback_smoke_status=failed
+openai_model_fallback_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The model fallback did not resolve the smoke failure. The next OpenAI step is not another blind retry; use a secret-safe request-shape or provider transport remediation Loop.

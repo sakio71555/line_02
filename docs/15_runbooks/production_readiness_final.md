@@ -1100,3 +1100,36 @@ production_readiness=production_no_go
 ```
 
 No OpenAI key, model value, prompt body, response body, LINE webhook path value, LINE user ID, LINE message body, Supabase endpoint value, DB URL, bearer token, or private key was recorded.
+
+## Loop 164 OpenAI Model Fallback Controlled Smoke
+
+Loop 164 performed exactly one approved OpenAI provider smoke after the operator changed the configured model value outside recorded output.
+
+```txt
+https_ready_for_review=true
+line_receive_ready=true
+official_account_auto_response_ready=true
+supabase_ready=true
+supabase_receive_persistence_ready=true
+openai_model_fallback_smoke=performed_once
+openai_model_fallback_smoke_status=failed
+openai_model_fallback_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+line_reply_push_ready=false
+openai_ready=false
+supabase_write_smoke=not_performed
+final_operator_go=not_performed
+production_readiness=production_no_go
+```
+
+Remaining No-Go reasons:
+
+- OpenAI controlled smoke has not succeeded.
+- LINE real reply/push has not been performed.
+- Final operator Go has not been recorded.

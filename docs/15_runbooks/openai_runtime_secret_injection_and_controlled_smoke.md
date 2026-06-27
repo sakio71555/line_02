@@ -124,3 +124,24 @@ production_readiness=production_no_go
 ```
 
 The operator replaced the API key outside Codex. The replacement value was not displayed or recorded. The API service was returned to mock AI after the follow-up smoke.
+
+## Loop 164 Result
+
+```txt
+OPENAI_API_KEY configured; value not recorded
+OPENAI_MODEL configured; value not recorded
+openai_model_fallback_smoke=performed_once
+openai_model_fallback_smoke_status=failed
+openai_model_fallback_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_environment_file_connection=temporary
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The operator-configured model value was not recorded. The API service was returned to mock AI after the smoke.

@@ -330,6 +330,8 @@ Loop 162ではOpenAI providerの内部smoke commandを追加し、operator入力
 
 Loop 163ではOpenAI smoke失敗をsecret非表示で診断できるよう、sanitized error status/code/type/classificationを追加しました。VPS review runtimeへ反映後、operator承認済みのdiagnostic smokeとAPI key差し替え後のfollow-up smokeを各1回だけ実施しましたが、どちらも `I_unknown_sanitized` で失敗しました。response body、prompt本文、API key、model値は記録せず、最終runtimeはmock AIへrollback済みです。詳細は [docs/11_codex_tasks/163_openai_smoke_failure_diagnosis_without_secrets.md](docs/11_codex_tasks/163_openai_smoke_failure_diagnosis_without_secrets.md) と [docs/15_runbooks/openai_smoke_failure_diagnosis_without_secrets.md](docs/15_runbooks/openai_smoke_failure_diagnosis_without_secrets.md) を参照してください。
 
+Loop 164ではoperatorがmodel fallback値を設定した後、1回だけOpenAI provider smokeを実施しました。結果は引き続き `I_unknown_sanitized` で失敗し、response body、prompt本文、API key、model値は記録せず、最終runtimeはmock AIへrollback済みです。詳細は [docs/11_codex_tasks/164_openai_model_fallback_controlled_smoke.md](docs/11_codex_tasks/164_openai_model_fallback_controlled_smoke.md) と [docs/15_runbooks/openai_model_fallback_controlled_smoke.md](docs/15_runbooks/openai_model_fallback_controlled_smoke.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

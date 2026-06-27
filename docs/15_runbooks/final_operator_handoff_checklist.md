@@ -118,3 +118,24 @@ production_readiness=production_no_go
 ```
 
 The operator replaced the OpenAI API key outside Codex, but the follow-up smoke still failed with the same sanitized unknown classification. Next operator action is not another blind retry. Use a dedicated secret-safe remediation Loop.
+
+## Loop 164 Follow-up
+
+```txt
+OPENAI_API_KEY configured; value not recorded
+OPENAI_MODEL configured; value not recorded
+openai_model_fallback_smoke=performed_once
+openai_model_fallback_smoke_status=failed
+openai_model_fallback_error_classification=I_unknown_sanitized
+openai_response_body_recorded=no
+openai_prompt_body_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The model fallback smoke still failed. Do not move to LINE real reply/push until OpenAI readiness is either intentionally deferred as mock or remediated with a successful controlled smoke and separate operator approval.
