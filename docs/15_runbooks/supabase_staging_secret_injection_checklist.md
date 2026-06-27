@@ -93,3 +93,20 @@ production_readiness=production_no_go
 ```
 
 The Supabase runtime should not be kept active until the DNS / connection preflight and read smoke are remediated. Secret values and concrete endpoints remain unrecorded.
+
+## Loop 153 Update
+
+The existing secret file was reused and checked without displaying values.
+
+```txt
+supabase_runtime_env_format_check=passed
+supabase_url_dns=failed; host not displayed
+supabase_db_url_dns=failed; host not displayed
+general_dns_example_com=success
+classification=A_supabase_url_dns_tcp_rest_connection_issue
+rollback_to_in_memory=completed
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+Next action should be endpoint re-entry or connection preflight with the operator, not migration/RLS/code changes.

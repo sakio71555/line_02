@@ -846,3 +846,39 @@ production_readiness=production_no_go
 - production readinessは `production_no_go`。
 
 次Loopでは、Supabase endpoint / DNS / connection preflightとread-smoke失敗原因をsecret値なしで切り分ける。
+
+## Loop 153 Supabase Read-Smoke Remediation
+
+Loop 153では、Loop 152のcustomers read smoke 500を再診断した。
+
+```txt
+supabase_runtime_env_format_check=passed
+supabase_url_dns=failed; host not displayed
+supabase_url_tcp_443=error; host not displayed
+supabase_rest_root_fetch=failed; error=TypeError
+supabase_db_url_dns=failed; host not displayed
+supabase_db_url_tcp_5432=error; host not displayed
+general_dns_example_com=success
+general_dns_github_com=success
+api_direct_health_supabase=200
+https_api_health_supabase=200
+runtime_data_backend_with_supabase=supabase
+api_admin_customers_no_header_supabase=401
+api_admin_customers_dev_header_supabase=500
+classification=A_supabase_url_dns_tcp_rest_connection_issue
+fix_applied=no
+write_smoke=not_performed
+rollback_to_in_memory=completed
+runtime_data_backend_after_rollback=in_memory
+line_invalid_signature_post_loop153=401
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+判定:
+
+- VPSの一般DNSは成功した。
+- 設定済みSupabase REST / DB hostはDNS/TCPで失敗した。
+- concrete host / URL / DB URL / key values are not recorded.
+- migration apply、RLS change、schema change、write smokeは未実施。
+- production readiness remains `production_no_go`。

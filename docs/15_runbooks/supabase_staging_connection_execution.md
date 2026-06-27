@@ -176,3 +176,27 @@ production_readiness=production_no_go
 ## Next
 
 Loop 153: Supabase staging DNS / connection preflight and read-smoke remediation.
+
+## Loop 153 Follow-Up
+
+Loop 153 re-ran the Supabase read-smoke diagnosis with redacted DNS / TCP / REST preflight.
+
+```txt
+supabase_url_dns=failed; host not displayed
+supabase_url_tcp_443=error; host not displayed
+supabase_rest_root_fetch=failed; error=TypeError
+supabase_db_url_dns=failed; host not displayed
+supabase_db_url_tcp_5432=error; host not displayed
+general_dns_example_com=success
+general_dns_github_com=success
+api_admin_customers_no_header_supabase=401
+api_admin_customers_dev_header_supabase=500
+classification=A_supabase_url_dns_tcp_rest_connection_issue
+fix_applied=no
+rollback_to_in_memory=completed
+line_invalid_signature_post_loop153=401
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+The blocker is now tracked as Supabase endpoint / DNS / connection preflight remediation. Concrete host values are not recorded.
