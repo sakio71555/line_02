@@ -57,3 +57,18 @@ Loop 151: production runtime wiring remediation plan
 Loop 152: Supabase runtime startup wiring
 Loop 153: Supabase staging secret injection and redacted health smoke
 ```
+
+## Loop 151 Update
+
+Runtime startup wiring is now implemented.
+
+```txt
+supabase_implementation_classification=C_runtime_switch_wired_real_connection_pending
+api_startup_reads_repository_runtime=true
+repository_runtime_switch=implemented
+default_data_backend=in_memory
+supabase_connected=no
+production_readiness=production_no_go
+```
+
+Secret injection is still not automatic. Before setting `REPOSITORY_RUNTIME` to `supabase` in an operator-managed environment, run a separate Supabase staging connection Loop with redacted env checks, rollback to `in_memory`, and dummy tenant data only.

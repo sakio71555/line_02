@@ -12,6 +12,7 @@
   "dependencies": {
     "@amami-line-crm/ai": "workspace:*",
     "@amami-line-crm/config": "workspace:*",
+    "@amami-line-crm/db": "workspace:*",
     "@amami-line-crm/domain": "workspace:*",
     "@amami-line-crm/line": "workspace:*",
     "@amami-line-crm/rag": "workspace:*",

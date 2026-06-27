@@ -139,6 +139,16 @@ export interface LineMessagingTransport {
   replyMessage?(request: LineMessagingReplyRequest): Promise<void>;
 }
 
+export interface LineMessagingFetchResponse {
+  ok: boolean;
+  text(): Promise<string>;
+}
+
+export type LineMessagingFetch = (
+  input: string,
+  init: RequestInit
+) => Promise<LineMessagingFetchResponse>;
+
 export interface RealLineClientConfig {
   channelAccessToken: string;
   transport: LineMessagingTransport;
@@ -150,6 +160,47 @@ export class LineMessagingApiError extends Error {
   constructor(message = "LINE Messaging API request failed.") {
     super(message);
     this.name = "LineMessagingApiError";
+  }
+}
+
+export class FetchLineMessagingTransport implements LineMessagingTransport {
+  private readonly fetchImplementation: LineMessagingFetch;
+
+  constructor(input: { fetch?: LineMessagingFetch } = {}) {
+    this.fetchImplementation = input.fetch ?? (fetch.bind(globalThis) as LineMessagingFetch);
+  }
+
+  async pushMessage(request: LineMessagingPushRequest): Promise<void> {
+    await this.postJson(request.endpoint, request.channelAccessToken, {
+      to: request.to,
+      messages: request.messages
+    });
+  }
+
+  async replyMessage(request: LineMessagingReplyRequest): Promise<void> {
+    await this.postJson(request.endpoint, request.channelAccessToken, {
+      replyToken: request.replyToken,
+      messages: request.messages
+    });
+  }
+
+  private async postJson(
+    endpoint: string,
+    channelAccessToken: string,
+    payload: Record<string, unknown>
+  ): Promise<void> {
+    const response = await this.fetchImplementation(endpoint, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${channelAccessToken}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new LineMessagingApiError();
+    }
   }
 }
 

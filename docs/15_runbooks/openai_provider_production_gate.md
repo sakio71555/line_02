@@ -55,3 +55,18 @@ Loop 151: production runtime wiring remediation plan
 Loop 154: OpenAI real transport runtime wiring
 Loop 155: OpenAI one-call controlled smoke
 ```
+
+## Loop 151 Update
+
+OpenAI runtime wiring and the server-side fetch transport boundary are now implemented.
+
+```txt
+openai_implementation_classification=C_runtime_switch_wired_real_api_smoke_pending
+ai_provider_runtime_switch=implemented
+real_http_transport_wired=true
+api_default_provider=mock
+openai_real_api_smoke=not_performed
+production_readiness=production_no_go
+```
+
+The next OpenAI Loop must still be a controlled real API smoke with explicit approval, redacted logs, draft-only output, and rollback to `AI_PROVIDER=mock`.

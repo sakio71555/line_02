@@ -35,9 +35,9 @@ final_operator_go_approval=false
 
 ## Current No-Go Reasons
 
-- Supabase runtime startup wiring is incomplete.
-- OpenAI real HTTP transport/runtime wiring is incomplete.
-- LINE real client runtime wiring is incomplete.
+- Supabase real connection smoke is pending.
+- OpenAI real API controlled smoke is pending.
+- LINE real reply/push single-message smoke is pending.
 - LINE Official Account auto-response OFF is pending.
 - Final operator Go approval is not recorded.
 
@@ -54,3 +54,18 @@ dns_change=no
 certbot_rerun=no
 go_promotion=no
 ```
+
+## Loop 151 Update
+
+```txt
+runtime_wiring_ready=true
+repository_runtime_switch=implemented
+ai_provider_runtime_switch=implemented
+line_client_runtime_switch=implemented
+supabase_ready=false
+openai_ready=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+Runtime wiring readiness does not promote the system. Final review still requires controlled Supabase, OpenAI, and LINE real-send evidence plus operator approval.

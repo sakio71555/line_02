@@ -150,6 +150,16 @@ export interface OpenAiResponsesTransportResponse {
   outputText?: string;
 }
 
+export interface OpenAiResponsesFetchResponse {
+  ok: boolean;
+  json(): Promise<unknown>;
+}
+
+export type OpenAiResponsesFetch = (
+  input: string,
+  init: RequestInit
+) => Promise<OpenAiResponsesFetchResponse>;
+
 export interface OpenAiResponsesTransport {
   createResponse(
     request: OpenAiResponsesRequest,
@@ -163,6 +173,38 @@ export class OpenAiProviderError extends Error {
   constructor() {
     super("OpenAI provider request failed.");
     this.name = "OpenAiProviderError";
+  }
+}
+
+export class FetchOpenAiResponsesTransport implements OpenAiResponsesTransport {
+  private readonly endpoint: string;
+  private readonly fetchImplementation: OpenAiResponsesFetch;
+
+  constructor(input: { endpoint?: string; fetch?: OpenAiResponsesFetch } = {}) {
+    this.endpoint = input.endpoint ?? "https://api.openai.com/v1/responses";
+    this.fetchImplementation = input.fetch ?? (fetch.bind(globalThis) as OpenAiResponsesFetch);
+  }
+
+  async createResponse(
+    request: OpenAiResponsesRequest,
+    options: OpenAiResponsesTransportOptions
+  ): Promise<OpenAiResponsesTransportResponse> {
+    const response = await this.fetchImplementation(this.endpoint, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${options.apiKey}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      throw new OpenAiProviderError();
+    }
+
+    const payload = await response.json();
+
+    return normalizeOpenAiResponsesPayload(payload);
   }
 }
 
@@ -472,6 +514,56 @@ function parseOpenAiJsonResponse(response: OpenAiResponsesTransportResponse): Re
   }
 
   return parsed;
+}
+
+function normalizeOpenAiResponsesPayload(payload: unknown): OpenAiResponsesTransportResponse {
+  if (!isRecord(payload)) {
+    throw new OpenAiProviderError();
+  }
+
+  const outputText = readOptionalString(payload.output_text) ?? readOptionalString(payload.outputText);
+
+  if (outputText) {
+    return { output_text: outputText };
+  }
+
+  const nestedOutputText = readOutputTextFromResponsesOutput(payload.output);
+
+  if (nestedOutputText) {
+    return { output_text: nestedOutputText };
+  }
+
+  throw new OpenAiProviderError();
+}
+
+function readOutputTextFromResponsesOutput(output: unknown): string | null {
+  if (!Array.isArray(output)) {
+    return null;
+  }
+
+  for (const item of output) {
+    if (!isRecord(item) || !Array.isArray(item.content)) {
+      continue;
+    }
+
+    for (const content of item.content) {
+      if (!isRecord(content)) {
+        continue;
+      }
+
+      const text = readOptionalString(content.text);
+
+      if (text) {
+        return text;
+      }
+    }
+  }
+
+  return null;
+}
+
+function readOptionalString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
 }
 
 function readRequiredString(record: Record<string, unknown>, key: string): string {

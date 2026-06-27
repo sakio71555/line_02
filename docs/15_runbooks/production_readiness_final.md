@@ -729,3 +729,51 @@ production_readiness=production_no_go
 - production Go decision.
 
 次Loopは `Loop 151: production runtime wiring remediation plan` とする。
+
+## Loop 151 Production Runtime Wiring Remediation
+
+Loop 151では、deployed API startupへ進めるためのruntime wiringを実装した。
+
+```txt
+runtime_wiring_ready=true
+repository_runtime_switch=implemented
+ai_provider_runtime_switch=implemented
+line_client_runtime_switch=implemented
+default_data_backend=in_memory
+default_ai_provider=mock
+default_line_real_push_enabled=false
+https_ready_for_review=true
+line_webhook_verify_success=true
+line_receive_ready=true
+supabase_ready=false
+openai_ready=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+実装内容:
+
+- API startupが `REPOSITORY_RUNTIME` を読み、in-memory / Supabase repository bundleを選択する。
+- API startupが `AI_PROVIDER` を読み、MockAiProvider / OpenAiProviderを選択する。
+- API startupが `LINE_REAL_PUSH_ENABLED` を読み、MockLineClient / RealLineClient境界を選択する。
+- `LINE_REAL_PUSH_ENABLED=false` では、access tokenが設定されていてもmock modeに留める。
+- `/health` は外部接続に依存しない。
+
+未実施:
+
+- Supabase real connection。
+- OpenAI real API smoke。
+- LINE real push/reply。
+- Nginx/DNS/certbot変更。
+- secret/token/path/LINE userId/message bodyの表示または記録。
+
+No-Go理由:
+
+```txt
+supabase_real_connection_smoke_pending=true
+openai_real_api_controlled_smoke_pending=true
+line_real_reply_push_single_message_smoke_pending=true
+official_account_auto_response_off_confirmed=false
+final_operator_go_approval=false
+production_readiness=production_no_go
+```

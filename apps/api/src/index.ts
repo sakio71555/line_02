@@ -2,7 +2,6 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
 import {
-  createMockAiProvider,
   type AiConversationTurn,
   type AiProvider,
   type AiRagAnswerSource
@@ -80,6 +79,11 @@ import {
 import { resolveSelectedTenantIdTransport } from "./admin/selected-tenant-transport";
 import type { SupabaseAuthClientLike } from "./admin/supabase-auth-session-verifier";
 import type { AdminTenantContext } from "./admin/tenant-context";
+import {
+  createRuntimeAiProvider,
+  createRuntimeLineClient,
+  createRuntimeRepositories
+} from "./runtime-wiring";
 
 export interface ApiAppDependencies {
   alertRepository?: AlertRepository;
@@ -117,34 +121,64 @@ const defaultCustomerRepository = new InMemoryCustomerRepository();
 const defaultMessageRepository = new InMemoryMessageRepository();
 const defaultLineClient = new MockLineClient();
 const defaultStaffNotifier = new MockStaffNotifier();
-const defaultAiProvider = createMockAiProvider();
 const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository([]);
+
+function shouldCreateRuntimeRepositories(dependencies: ApiAppDependencies): boolean {
+  return (
+    !dependencies.customerRepository &&
+    !dependencies.messageRepository &&
+    !dependencies.alertRepository &&
+    !dependencies.knowledgePageRepository
+  );
+}
 
 export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   const api = new Hono();
+  const env = dependencies.env ?? process.env;
+  const config = loadAppConfig(env);
+  const runtimeRepositories = dependencies.customerMessageRepositories
+    ? dependencies.customerMessageRepositories
+    : shouldCreateRuntimeRepositories(dependencies)
+      ? createRuntimeRepositories({
+          config,
+          env
+        })
+      : undefined;
+  const runtimeLineClient =
+    dependencies.lineClientMode === undefined
+      ? createRuntimeLineClient({
+          config,
+          env
+        })
+      : undefined;
   const alertRepository =
     dependencies.alertRepository ??
-    dependencies.customerMessageRepositories?.alertRepository ??
+    runtimeRepositories?.alertRepository ??
     defaultAlertRepository;
   const customerRepository =
     dependencies.customerRepository ??
-    dependencies.customerMessageRepositories?.customerRepository ??
+    runtimeRepositories?.customerRepository ??
     defaultCustomerRepository;
   const messageRepository =
     dependencies.messageRepository ??
-    dependencies.customerMessageRepositories?.messageRepository ??
+    runtimeRepositories?.messageRepository ??
     defaultMessageRepository;
-  const lineClient = dependencies.lineClient ?? defaultLineClient;
+  const lineClient = dependencies.lineClient ?? runtimeLineClient?.lineClient ?? defaultLineClient;
   const staffNotifier = dependencies.staffNotifier ?? defaultStaffNotifier;
-  const aiProvider = dependencies.aiProvider ?? defaultAiProvider;
+  const aiProvider =
+    dependencies.aiProvider ??
+    createRuntimeAiProvider({
+      config,
+      env
+    });
   const knowledgePageRepository =
     dependencies.knowledgePageRepository ??
-    dependencies.customerMessageRepositories?.knowledgePageRepository ??
+    runtimeRepositories?.knowledgePageRepository ??
     defaultKnowledgePageRepository;
   const authenticatedSelectedTenantId = dependencies.authenticatedSelectedTenantId;
   const now = dependencies.now;
-  const env = dependencies.env ?? process.env;
-  const lineClientMode = dependencies.lineClientMode ?? inferLineClientMode(env);
+  const lineClientMode =
+    dependencies.lineClientMode ?? runtimeLineClient?.lineClientMode ?? inferLineClientMode(env);
   const linePushIdempotencyStore =
     dependencies.linePushIdempotencyStore ?? new InMemoryLinePushIdempotencyStore();
   const adminAuthRuntime =
@@ -160,11 +194,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       : undefined);
 
   api.get("/health", (c) => {
-    const config = loadAppConfig(env);
     return c.json({
       ok: true,
       tenant_id: config.tenant.id,
       tenant_slug: config.tenant.slug,
+      runtime: {
+        data_backend: config.runtime.dataBackend,
+        ai_provider: config.runtime.aiProvider,
+        line_real_push_enabled: config.line.realPushEnabled
+      },
       external_connections: "disabled"
     });
   });

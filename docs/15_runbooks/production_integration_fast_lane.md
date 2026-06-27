@@ -131,3 +131,29 @@ go_promotion=no
 ## Next
 
 Loop 151: production runtime wiring remediation plan
+
+## Loop 151 Update
+
+Loop 151 implemented the runtime startup wiring that this fast lane identified as missing.
+
+```txt
+runtime_wiring_ready=true
+repository_runtime_switch=implemented
+ai_provider_runtime_switch=implemented
+line_client_runtime_switch=implemented
+default_data_backend=in_memory
+default_ai_provider=mock
+default_line_real_push_enabled=false
+supabase_connected=no
+openai_real_api_smoke=not_performed
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+Updated No-Go reasons:
+
+- Supabase real connection smoke is still pending.
+- OpenAI real API controlled smoke is still pending.
+- LINE real reply/push single-message smoke is still pending.
+- LINE Official Account auto-response OFF is still pending.
+- Final Go/No-Go approval is not complete.

@@ -66,6 +66,9 @@ importers:
       '@amami-line-crm/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@amami-line-crm/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@amami-line-crm/domain':
         specifier: workspace:*
         version: link:../../packages/domain

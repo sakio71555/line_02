@@ -69,3 +69,17 @@ Loop 151: production runtime wiring remediation plan
 Loop 156: LINE real client runtime wiring
 Loop 157: LINE one-message controlled smoke
 ```
+
+## Loop 151 Update
+
+LINE real client runtime wiring and the server-side fetch transport boundary are now implemented.
+
+```txt
+line_client_runtime_switch=implemented
+real_line_client_runtime_wiring_incomplete=false
+default_line_real_push_enabled=false
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+Even after wiring, real reply/push remains disabled by default. A later Loop must confirm Official Account auto-response OFF, approve exactly one recipient/message, enable the required flags only for the smoke window, and then roll back to disabled.
