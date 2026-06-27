@@ -174,3 +174,29 @@ No-Go reasons:
 - Supabase real connection has not executed.
 - OpenAI real API has not executed.
 - Production secret injection has not executed.
+
+## Loop 140 HTTPS Review Update
+
+The follow-up HTTPS review confirmed the public review URL remained reachable without rerunning certbot or reloading Nginx.
+
+```txt
+https_root=200
+https_login=200
+https_select_tenant=200
+https_customers=200
+https_alerts=200
+https_api_health=200
+http_root_redirect=302 https://admin.taiyolabel.site/
+http_login_redirect=302 https://admin.taiyolabel.site/login
+certificate_subject=CN=admin.taiyolabel.site
+certificate_issuer=Let's Encrypt YE1
+certificate_not_before=Jun 27 03:56:29 2026 GMT
+certificate_not_after=Sep 25 03:56:28 2026 GMT
+hsts_enabled=no
+certbot_rerun=no
+nginx_reload_restart=no
+private_key_content_displayed=no
+private_key_path_recorded=no
+production_readiness=production_no_go
+https_ready_for_review=true
+```

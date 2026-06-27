@@ -56,8 +56,8 @@ production_readiness=production_no_go
 
 ## Required Before Registration
 
-- HTTPS enabled.
-- External HTTPS smoke completed.
+- HTTPS enabled and reviewed.
+- External HTTPS smoke completed and reviewed.
 - LINE webhook approver recorded.
 - LINE channel secret injected through approved secret handling.
 - Webhook secret path confirmed.
@@ -90,8 +90,6 @@ production_readiness=production_no_go
 Reasons:
 
 - Candidate URL is approved for future dry-run planning only, not registered.
-- HTTPS not enabled.
-- External smoke not completed.
 - LINE channel secret not injected.
 - LINE real push disabled.
 
@@ -109,3 +107,17 @@ production_readiness=production_no_go
 ```
 
 Do not put the real webhook secret path in docs. Do not register the URL in LINE Developers until the dedicated LINE dry-run Loop is approved.
+
+## Loop 140 HTTPS Review Update
+
+The review/admin URL is HTTPS-reachable, but LINE registration remains No-Go.
+
+```txt
+candidate_line_webhook_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+https_ready_for_review=true
+https_api_health=200
+LINE webhook is not registered
+line_webhook_registration=not_done
+line_api_call=not_done
+production_readiness=production_no_go
+```

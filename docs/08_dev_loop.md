@@ -370,6 +370,8 @@ Loop 136のようなapproval docs finalizationでは、返答済み承認値をr
 
 Loop 137-139のようにreal-domain HTTP bootstrap、HTTP-01 certbot、HTTPS enableが明示承認された場合でも、実メールアドレスやprivate keyはdocs/test/final reportへ記録しません。HTTP/HTTPS smoke、certificate summary、rollback evidence、HSTS未有効、`https_ready_for_review=true` は記録しますが、LINE webhook登録、LINE real push、Supabase実接続、OpenAI実API、production secret injectionが残る限り `production_readiness=production_no_go` を維持します。
 
+Loop 140のようなHTTPS review checklistでは、公開済みHTTPS URLの外部route、HTTP redirect、証明書summary、HSTS未設定、VPS read-only状態だけを短時間で確認します。certbot再実行、証明書更新、Nginx設定変更、Nginx reload/restart、LINE/OpenAI/Supabase実接続、production secret injectionは行わず、review可能でも `production_readiness=production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

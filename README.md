@@ -294,6 +294,8 @@ Loop 136では返答済みの承認値をdocsへ反映し、`admin.taiyolabel.si
 
 Loop 137-139では、承認済みの `admin.taiyolabel.site` に対してHTTP bootstrap、HTTP-01 certbot、HTTPS enable、外部HTTP/HTTPS smokeを実行し、`https_ready_for_review=true` を記録しました。LINE webhook登録、LINE real push、Supabase実接続、OpenAI実API、production secret injectionは未実施のため、production readinessは `production_no_go` のままです。詳細は [docs/11_codex_tasks/137_139_http01_https_enable_bundle.md](docs/11_codex_tasks/137_139_http01_https_enable_bundle.md) と [docs/15_runbooks/http01_https_enable_and_rollback.md](docs/15_runbooks/http01_https_enable_and_rollback.md) を参照してください。
 
+Loop 140では `https://admin.taiyolabel.site` のHTTPS review checklistを実施しました。HTTPS主要route、HTTPからHTTPSへのredirect、証明書情報、HSTS未設定、VPS read-only状態を確認し、certbot再実行、Nginx reload/restart、LINE/OpenAI/Supabase実接続は行っていません。詳細は [docs/11_codex_tasks/140_https_review_checklist.md](docs/11_codex_tasks/140_https_review_checklist.md) と [docs/15_runbooks/https_review_checklist.md](docs/15_runbooks/https_review_checklist.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。
