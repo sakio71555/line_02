@@ -137,3 +137,31 @@ production_readiness=production_no_go
 ## Next
 
 Proceed to a separate real-domain HTTP-01 bootstrap controlled smoke Loop only after the execution gate is rechecked. This document does not execute certbot, Nginx reload/restart, HTTPS enablement, external smoke, LINE webhook registration, or Supabase connection.
+
+## Loop 137-139 Execution Update
+
+HTTP-01 was executed successfully after owner approval.
+
+```txt
+acme_method=HTTP-01
+certbot_http01_executed=yes
+certbot_http01_result=success
+certificate_path=/etc/letsencrypt/live/admin.taiyolabel.site/fullchain.pem
+certificate_subject=CN=admin.taiyolabel.site
+certificate_issuer=Let's Encrypt YE1
+certificate_not_before=Jun 27 03:56:29 2026 GMT
+certificate_not_after=Sep 25 03:56:28 2026 GMT
+https_ready_for_review=true
+production_readiness=production_no_go
+Project owner email configured; value not recorded
+```
+
+DNS-01 remains the documented fallback only. It was not executed.
+
+Remaining No-Go reasons:
+
+- LINE webhook is not registered.
+- LINE real push is not approved.
+- Supabase real connection has not executed.
+- OpenAI real API has not executed.
+- Production secret injection has not executed.

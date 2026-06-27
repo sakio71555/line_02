@@ -93,3 +93,36 @@ Before a future controlled smoke, record:
 ## Next
 
 Proceed only in a separate controlled smoke Loop that rechecks git status, DNS, active VPS source, candidate backup, rollback owner, maintenance window, and `production_no_go` before any Nginx enable/reload.
+
+## Loop 137-139 Execution Update
+
+The separate execution Loop was approved and completed for `admin.taiyolabel.site`.
+
+```txt
+real_domain_http_enable=success
+nginx_reload_http=success
+http_root=200
+http_login=200
+http_customers=200
+http_alerts=200
+http_api_health=200
+http_acme_probe=200
+nginx_reload_https=success
+https_root=200
+https_login=200
+https_customers=200
+https_alerts=200
+https_api_health=200
+http_redirect=302 https://admin.taiyolabel.site/login
+hsts_enabled=no
+https_ready_for_review=true
+production_readiness=production_no_go
+```
+
+Still not performed:
+
+- LINE webhook registration.
+- LINE real push.
+- OpenAI real API.
+- Supabase real connection.
+- Production secret injection.

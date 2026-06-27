@@ -351,6 +351,61 @@ Loop 136で実施していないこと:
 - production secret injection。
 - `.env` 作成・変更・表示。
 
+## Loop 137-139 HTTP-01 HTTPS Enable Bundle
+
+Loop 137-139では、承認済みの `admin.taiyolabel.site` に対してHTTP bootstrap、HTTP-01 certbot、HTTPS enable、external smokeを実施した。
+
+```txt
+http_bootstrap=success
+http_root=200
+http_login=200
+http_customers=200
+http_alerts=200
+http_api_health=200
+http_acme_probe=200
+certbot_http01_result=success
+certificate_path=/etc/letsencrypt/live/admin.taiyolabel.site/fullchain.pem
+certificate_subject=CN=admin.taiyolabel.site
+certificate_issuer=Let's Encrypt YE1
+certificate_not_before=Jun 27 03:56:29 2026 GMT
+certificate_not_after=Sep 25 03:56:28 2026 GMT
+https_root=200
+https_login=200
+https_customers=200
+https_alerts=200
+https_api_health=200
+http_redirect=302 https://admin.taiyolabel.site/login
+hsts_enabled=no
+https_ready_for_review=true
+production_readiness=production_no_go
+Project owner email configured; value not recorded
+```
+
+Evidence:
+
+```txt
+evidence_dir=/root/deploy-backups/amami-line-crm/loop137-139-20260627-135350
+rollback_executed=no
+```
+
+Loop 137-139で実施していないこと:
+
+- DNS変更。
+- TXT取得。
+- DNS-01。
+- wildcard証明書。
+- firewall変更。
+- LINE webhook登録。
+- LINE real push。
+- OpenAI実API。
+- Supabase実接続。
+- Supabase migration / RLS変更。
+- production secret injection。
+- `.env` 作成・変更・表示。
+- private key内容表示。
+- API/Auth/RLS/runtime/migration/UI変更。
+- production Go decision。
+
 ## Final Judgment
 
 `production_no_go`
@@ -360,6 +415,6 @@ Loop 136で実施していないこと:
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalizationは追加済み。Loop 128で `.invalid` app candidateのAdmin/API proxy smokeは成功し、Loop 136で承認値とHTTP-01方針は記録済みだが、actual real-domain enable、certbot/HTTPS発行、external smoke、LINE webhook登録、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundleは追加済み。Loop 137-139で `admin.taiyolabel.site` のHTTPSはreview可能になったが、LINE webhook登録、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
 
-この判定は、Loop 136時点でもcontrolled production enablementへ進むにはreal-domain enable gate、HTTP-01 execution gate、certbot/HTTPS gate、external smoke、LINE webhook、Supabase staging、production secret injection、追加Loop、人間承認が必要であることを示す。
+この判定は、Loop 137-139時点でもcontrolled production Goへ進むにはLINE webhook、LINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。
