@@ -76,3 +76,23 @@ production_readiness=production_no_go
 ```
 
 Next operator action for OpenAI is to provide the runtime env through the root-only helper in a dedicated Loop, then approve exactly one non-customer controlled smoke. Until then the API stays on mock AI.
+
+## Loop 162 Follow-up
+
+```txt
+openai_runtime_env=present; values not recorded
+openai_real_api_smoke=performed_once
+openai_real_api_smoke_status=failed
+openai_smoke_error_class=OpenAiProviderError
+openai_response_body_recorded=no
+openai_api_key_recorded=no
+openai_prompt_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+openai_ready=false
+line_real_push_enabled=false
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+Next operator action for OpenAI is not another paid retry. First diagnose the sanitized provider failure without recording secrets or raw response bodies, then decide whether a second approved smoke is necessary in a separate Loop.

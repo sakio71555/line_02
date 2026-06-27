@@ -115,3 +115,28 @@ production_readiness=production_no_go
 ```
 
 The available external AI routes still depend on customer timeline or tenant RAG source context. A future real API smoke should use operator-provided runtime env plus a safe non-customer provider-level smoke path, or explicitly approved dummy-only data.
+
+## Loop 162 Update
+
+Loop 162 added the safe non-customer provider-level smoke command and deployed it to the VPS review runtime.
+
+```txt
+openai_provider_classification=A_real_provider_fully_wired_and_safe_local_internal_smoke_added
+provider_boundary_exists=true
+real_http_transport_wired=true
+runtime_ai_provider_switch=implemented
+api_default_provider=mock
+openai_smoke_command_added=true
+openai_real_api_smoke=performed_once
+openai_real_api_smoke_status=failed
+openai_smoke_error_class=OpenAiProviderError
+openai_response_body_recorded=no
+openai_prompt_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_systemd_dropin_present_final=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+Because the controlled smoke failed, OpenAI is still not ready for production. The next OpenAI Loop should diagnose the failure without recording secrets or raw provider responses.

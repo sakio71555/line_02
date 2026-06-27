@@ -169,6 +169,8 @@ Loop 096では、RLS staging apply後に `SET LOCAL ROLE authenticated` と `req
 
 Loop 103 production readiness final gateでは、Goに必要な条件とNo-Go条件をrunbookとtestで機械的に確認します。OpenAI real API、LINE real push、production Auth runtimeのような外部接続境界は、複数flag、tenant settings、authenticated staff、selectedTenantId再検証、draft-only/no auto-send、secret非表示を満たすまで本接続しません。未実装が残る場合は `production_no_go` として記録します。
 
+OpenAI real API smokeは、public HTTP routeではなく内部commandで実施します。operatorがroot-only helperでruntime envを入力し、`OPENAI_REAL_API_SMOKE_APPROVED=YES` がある場合だけ、固定の非顧客promptで1回だけ実行します。API key、model値、prompt本文、response本文は記録せず、成功/失敗にかかわらずAPI serviceのOpenAI `EnvironmentFile` drop-inを外してmock AIへ戻します。失敗時はretryせず、次Loopでsecret非表示の診断計画を立てます。
+
 Loop 097では、実Supabase Auth/JWT接続へ進む前にconnection planとrunbookを作ります。`Authorization: Bearer` からSupabase Auth `user.id`、`staff_users.auth_user_id`、active staff / membership、`selectedTenantId` 再検証、RLS `auth.uid()` へつなぐ順序を整理し、実Auth user作成やreal verifier接続は後続Loopへ分けます。詳細は [docs/11_codex_tasks/097_supabase_auth_jwt_connection_plan.md](11_codex_tasks/097_supabase_auth_jwt_connection_plan.md) を参照してください。
 
 Loop 098では、Supabase Auth real verifier境界だけを追加します。`SupabaseAuthSessionVerifier` はfake Supabase auth clientで検証し、token/secret redaction、`session_expired` mapping、production fake verifier default禁止を固定します。実Supabase Auth接続、Auth user作成、staging real Auth smoke、Admin UI selectedTenantId保存は後続Loopへ分けます。詳細は [docs/11_codex_tasks/098_supabase_auth_real_verifier_boundary.md](11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照してください。

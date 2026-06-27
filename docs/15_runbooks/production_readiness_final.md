@@ -49,6 +49,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | LINE webhook 404 route diagnosis | Loop 144でLINE runtime EnvironmentFile接続後のhealth復旧を確認。actual webhook invalid-signatureは404で、`LINE_WEBHOOK_SECRET_PATH` が1セグメントrouteに一致しないshapeと診断。LINE Developers verification未実施 |
 | LINE webhook secret path remediation | Loop 145Aで`LINE_WEBHOOK_SECRET_PATH`を1セグメント値へ更新。direct/HTTPS healthは200、invalid-signature webhook POSTは401、LINE Developers verificationはsuccess。LINE real receive event smokeとLINE real push/replyは未実施 |
 | LINE real receive event smoke | Loop 146でWebhook ON後の実LINE message/text eventを受信。`LineBotWebhook/2.0` POSTは200、tenant scoped customer/message保存とAdmin timeline確認済み。LINE real push/replyは未実施 |
+| OpenAI controlled provider smoke | Loop 162で内部provider smoke commandを追加し、operator承認後に非顧客データで1回だけOpenAI real API smokeを実施。結果はsanitized `OpenAiProviderError` で失敗。response body/API key/model値/prompt本文は未記録。APIはmock AIへrollback済み |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -77,6 +78,7 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - HTTPS review URL is reachable, but LINE webhook registration, LINE real push, Supabase real connection, OpenAI real API, and production secret injection are not complete.
 - production接続やsecret表示が必要になる。
 - LINE real receive event smokeは成功したが、LINE real push/reply、安全な送信先smoke、永続audit/idempotency storeが未完了。
+- OpenAI controlled provider smokeは実施済みだが失敗しており、`openai_ready=false` のまま。
 - Supabase real connectionが未実施。
 - production secret injectionが未実施。
 
@@ -156,6 +158,8 @@ real OpenAI pathは以下がすべて必要です。
 - auto-sendなし
 
 Loop 103ではOpenAI API実呼び出しは未実施。
+
+Loop 162ではOpenAI provider境界の実API smokeを1回だけ実施したが、sanitized `OpenAiProviderError` で失敗した。response body、prompt本文、API key、model値は記録していない。API serviceのOpenAI EnvironmentFile drop-inは削除済みで、final runtimeはmock AIへ戻したため、production readinessは引き続き `production_no_go`。
 
 ## Staging Smoke
 

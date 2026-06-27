@@ -81,3 +81,23 @@ production_readiness=production_no_go
 ```
 
 OpenAI runtime env was not present on the VPS, so no EnvironmentFile was connected and no real OpenAI request was sent. Final runtime stayed on `AI_PROVIDER=mock`.
+
+## Loop 162 Result
+
+```txt
+openai_runtime_env=configured; value not recorded
+openai_model=configured; value not recorded
+openai_real_api_smoke=performed_once
+openai_real_api_smoke_status=failed
+openai_smoke_error_class=OpenAiProviderError
+openai_response_body_recorded=no
+openai_prompt_recorded=no
+openai_api_key_recorded=no
+openai_model_value_recorded=no
+openai_environment_file_connection=temporary
+openai_systemd_dropin_present_final=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The API service was returned to mock AI after the smoke. The root-only runtime env file remains on the VPS for operator-controlled future use, but the systemd drop-in is not attached.
