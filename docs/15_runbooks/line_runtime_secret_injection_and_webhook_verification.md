@@ -145,3 +145,22 @@ production_readiness=production_no_go
 ```
 
 Do not proceed to LINE Developers verification until `LINE_WEBHOOK_SECRET_PATH` is replaced with a one-segment URL-safe value or the API route is explicitly redesigned.
+
+## Loop 145A Update
+
+Loop 145A replaced `LINE_WEBHOOK_SECRET_PATH` with a one-segment value. The actual value is not recorded.
+
+```txt
+format_check=passed
+LINE_WEBHOOK_SECRET_PATH: single-segment; value not displayed
+api_restart=success
+direct_health_http_code=200
+https_api_health_http_code=200
+direct_api_prefixed_invalid_signature=401
+https_api_prefixed_invalid_signature=401
+line_developers_verification_result=success
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+LINE Developers Console verification succeeded after the operator updated the URL. LINE real push/reply and LINE real receive event smoke were not performed in this Loop.

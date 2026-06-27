@@ -117,3 +117,19 @@ Loop 145B: API wildcard webhook route plan
 ```
 
 Use this only if multi-segment webhook paths are required. It needs explicit API route design and tests first.
+
+## Loop 145A Update
+
+Loop 145A followed the recommended remediation path.
+
+```txt
+LINE_WEBHOOK_SECRET_PATH: single-segment; value not displayed
+direct_api_prefixed_invalid_signature=401
+direct_non_api_prefixed_invalid_signature=404
+https_api_prefixed_invalid_signature=401
+line_developers_verification_result=success
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+The actual webhook secret path value is not recorded.
