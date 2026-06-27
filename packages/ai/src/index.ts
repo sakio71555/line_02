@@ -664,7 +664,7 @@ function readRequiredString(record: Record<string, unknown>, key: string): strin
   const value = record[key];
 
   if (typeof value !== "string" || !value.trim()) {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
   }
 
   return value.trim();
@@ -674,7 +674,7 @@ function readStringArray(record: Record<string, unknown>, key: string): string[]
   const value = record[key];
 
   if (!Array.isArray(value)) {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
   }
 
   return value.filter((item): item is string => typeof item === "string").map((item) => item.trim());
@@ -684,7 +684,7 @@ function readBoolean(record: Record<string, unknown>, key: string): boolean {
   const value = record[key];
 
   if (typeof value !== "boolean") {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
   }
 
   return value;
@@ -694,7 +694,7 @@ function readRecommendedResponseMode(record: Record<string, unknown>): AiRecomme
   const value = record.recommended_response_mode;
 
   if (!isRecommendedResponseMode(value)) {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
   }
 
   return value;

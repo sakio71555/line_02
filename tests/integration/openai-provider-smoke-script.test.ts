@@ -191,6 +191,34 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.stdout).not.toContain("request body");
   });
 
+  it("classifies provider response field mismatches as response parse bugs", async () => {
+    const malformedProviderBody = JSON.stringify({
+      summary: "wrong shape should not print"
+    });
+    const openAiFetch = vi.fn<OpenAiResponsesFetch>(async () => ({
+      ok: true,
+      status: 200,
+      async json() {
+        return {
+          output_text: malformedProviderBody
+        };
+      }
+    }));
+
+    const result = await runOpenAiProviderBoundarySmokeCli({
+      env: approvedEnv(),
+      openAiFetch
+    });
+
+    expect(openAiFetch).toHaveBeenCalledTimes(1);
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("openai_provider_smoke=failed");
+    expect(result.stdout).toContain("response_received=true");
+    expect(result.stdout).toContain("provider_error_classification=G_response_parse_bug");
+    expect(result.stdout).not.toContain("wrong shape");
+    expect(result.stdout).not.toContain("private-openai-key");
+  });
+
   it("can run the provider boundary smoke without repeating raw diagnostic smoke", async () => {
     const openAiFetch = vi.fn<OpenAiResponsesFetch>(async () => ({
       ok: true,

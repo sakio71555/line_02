@@ -138,7 +138,7 @@ export async function runOpenAiProviderBoundarySmoke(
       provider: "openai",
       modelConfigured: true,
       requestSent,
-      responseReceived: false,
+      responseReceived: diagnostics.errorClassification === "G_response_parse_bug",
       responseBodyRecorded: false,
       promptBodyRecorded: false,
       apiKeyRecorded: false,
