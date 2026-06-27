@@ -129,3 +129,21 @@ Supabase staging read-only readiness is now true for the review environment. Pro
 ## Next
 
 Loop 156: LINE Official Account auto-response OFF verification.
+
+## Loop 156 Follow-Up
+
+Loop 156 confirmed the Supabase-backed runtime can receive a real LINE message and keep the read smoke valid after an API service restart.
+
+```txt
+official_account_auto_response_ready=true
+line_receive_ready=true
+repository_runtime_after_restart=supabase
+customers_safe_header_after_restart=200
+supabase_messages_after_restart_status=200
+supabase_messages_after_restart_tenant_scoped=true
+supabase_receive_persistence_ready=true
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+No message body, LINE userId, webhook path value, Supabase endpoint, DB URL, or key value is recorded.

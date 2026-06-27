@@ -83,3 +83,20 @@ production_readiness=production_no_go
 ```
 
 Even after wiring, real reply/push remains disabled by default. A later Loop must confirm Official Account auto-response OFF, approve exactly one recipient/message, enable the required flags only for the smoke window, and then roll back to disabled.
+
+## Loop 156 Update
+
+Official Account auto-response OFF was confirmed for normal response messages before the Supabase-backed receive persistence smoke. The account UI did not expose a separate AI response message setting.
+
+```txt
+official_account_response_message=off
+official_account_ai_response_message=not_available_in_manager_screen
+official_account_auto_response_ready=true
+line_test_auto_reply_observed=false
+line_real_push_enabled=false
+line_real_push_reply=not_performed
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+The real reply/push path is still disabled. A later Loop must explicitly approve one recipient/message, enable the required flags only for the smoke window, and roll back to disabled.

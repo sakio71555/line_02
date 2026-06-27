@@ -969,3 +969,52 @@ production_readiness=production_no_go
 - write smoke、OpenAI real API、LINE real push/replyは未実施。
 - LINE Official Account auto-response OFF is not confirmed.
 - production readiness remains `production_no_go`。
+
+## Loop 156 LINE Auto-response OFF and Supabase Receive Persistence Smoke
+
+Loop 156では、LINE Official AccountのWebhook ONと応答メッセージOFFをoperatorが確認し、実LINE受信1通をSupabase-backed runtimeで保存・read smoke・API restart後read smokeまで確認した。
+
+```txt
+webhook_usage=on
+official_account_response_message=off
+official_account_ai_response_message=not_available_in_manager_screen
+official_account_auto_response_ready=true
+line_test_sent_by_operator=true
+line_test_auto_reply_observed=false
+webhook_post_200_recent_count=7
+webhook_post_5xx_recent_count=0
+signature_verification_result=success_inferred_from_webhook_200_and_saved_message
+event_type_received=message
+message_type_received=text
+repository_runtime_final=supabase
+api_direct_health_after_event=200
+https_api_health_after_event=200
+customers_no_header_after_event=401
+customers_safe_header_after_event=200
+supabase_messages_after_event_status=200
+supabase_messages_after_event_tenant_scoped=true
+api_restart_performed=yes
+api_service_after_restart=active
+api_direct_health_after_restart=200
+https_api_health_after_restart=200
+customers_no_header_after_restart=401
+customers_safe_header_after_restart=200
+supabase_messages_after_restart_status=200
+supabase_messages_after_restart_tenant_scoped=true
+line_invalid_signature_loop156=401
+supabase_receive_persistence_ready=true
+line_real_push_enabled=false
+line_real_push_reply=not_performed
+openai_ready=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+判定:
+
+- LINE receive and Supabase receive persistence are ready for review.
+- Concrete endpoint values, DB URL, key values, LINE webhook path values, LINE userIds, message bodies, and response body rows are not recorded.
+- LINE real push/replyは未実施。
+- OpenAI real APIは未実施。
+- Supabase write smokeは未実施。
+- production readiness remains `production_no_go`。

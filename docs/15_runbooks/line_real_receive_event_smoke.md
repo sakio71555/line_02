@@ -109,3 +109,30 @@ No-Go remains because LINE real reply/push is still disabled and untested, the c
 4. Loop 150: production Go/No-Go review
 
 Loop 147-150 later confirmed that these gates are still No-Go until runtime wiring remediation is complete. See [Production Integration Fast Lane](production_integration_fast_lane.md).
+
+## Loop 156 Follow-Up
+
+Loop 156 repeated the real receive smoke after Supabase runtime connection and Official Account auto-response OFF confirmation.
+
+```txt
+webhook_usage=on
+official_account_response_message=off
+official_account_ai_response_message=not_available_in_manager_screen
+official_account_auto_response_ready=true
+line_test_auto_reply_observed=false
+line_real_receive_event_smoke=success
+signature_verification_result=success_inferred_from_webhook_200_and_saved_message
+event_type_received=message
+message_type_received=text
+repository_runtime_final=supabase
+customers_safe_header_after_event=200
+supabase_messages_after_event_status=200
+api_restart_performed=yes
+customers_safe_header_after_restart=200
+supabase_messages_after_restart_status=200
+supabase_receive_persistence_ready=true
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+The message body, LINE userId, webhook path value, and response rows are not recorded.
