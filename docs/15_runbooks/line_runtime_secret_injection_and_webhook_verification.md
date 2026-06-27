@@ -117,3 +117,31 @@ No-Go reasons:
 2. Loop 145: Supabase staging secret injection checklist.
 3. Loop 146: OpenAI provider production gate.
 4. Loop 147: production Go/No-Go review.
+
+## Loop 144 Update
+
+Loop 144 reconnected the LINE runtime EnvironmentFile and confirmed the API stayed healthy.
+
+```txt
+environmentfile_connected=yes
+api_service=active
+direct_health=200
+https_api_health=200
+process_env_line_keys=present
+LINE_CHANNEL_SECRET configured; value not recorded
+LINE_CHANNEL_ACCESS_TOKEN configured; value not recorded
+LINE_WEBHOOK_SECRET_PATH configured; value not recorded
+LINE_REAL_PUSH_ENABLED=false
+```
+
+The follow-up actual webhook invalid-signature dry-run still returned `404`.
+
+```txt
+actual_webhook_invalid_signature_dry_run_result=404
+classification=B_API_route_path_mismatch
+root_cause=LINE_WEBHOOK_SECRET_PATH_contains_slash_and_does_not_match_single_segment_route
+line_developers_verification_result=not_performed
+production_readiness=production_no_go
+```
+
+Do not proceed to LINE Developers verification until `LINE_WEBHOOK_SECRET_PATH` is replaced with a one-segment URL-safe value or the API route is explicitly redesigned.

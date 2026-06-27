@@ -378,6 +378,8 @@ Loop 142のようなLINE webhook registration manual gateでは、CodexはLINE D
 
 Loop 143のようなLINE runtime secret injectionでは、secret実値はCodexに入力せず、operatorがCodex外terminalでroot-only helperへ非表示入力します。Codexはredacted key確認、EnvironmentFile path確認、API health、rollback結果だけを記録し、API direct healthが失敗した場合はdrop-inを外してrestartし、actual webhook dry-runやLINE Developers verificationへ進みません。secret/token/path値、request body、LINE userIdは記録せず、LINE real push/reply、OpenAI/Supabase本接続、production Go判断は別Loopに分けます。
 
+Loop 144のようなLINE webhook route診断では、actual `webhookSecretPath` をCodexへ渡さず、process env keyのredacted確認、direct/HTTPS route matrix、path shape診断だけで切り分けます。direct APIでも404ならNginx修正へ飛ばず、route到達可否と `LINE_WEBHOOK_SECRET_PATH` が1セグメントURL pathとして安全かを確認します。secret/token/path値は記録せず、LINE Developers verificationやLINE real push/replyは、invalid-signatureが安全側statusになるまで実施しません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。
