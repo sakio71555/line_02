@@ -1,4 +1,9 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  createClient,
+  type SupabaseClient,
+  type WebSocketLikeConstructor
+} from "@supabase/supabase-js";
+import WebSocket from "ws";
 
 import type { SupabaseConfig } from "./config";
 
@@ -6,11 +11,16 @@ type MaybeBrowserGlobal = typeof globalThis & {
   window?: unknown;
 };
 
+const webSocketTransport = WebSocket as unknown as WebSocketLikeConstructor;
+
 const serverSideClientOptions = {
   auth: {
     autoRefreshToken: false,
     detectSessionInUrl: false,
     persistSession: false
+  },
+  realtime: {
+    transport: webSocketTransport
   }
 } as const;
 

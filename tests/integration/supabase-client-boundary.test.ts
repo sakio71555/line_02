@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { installTestOnlyWebSocketShim } from "../helpers/test-only-websocket";
 import {
   createSupabaseAnonServerClient,
   createSupabaseServiceRoleServerClient,
@@ -16,8 +15,6 @@ const fakeEnv: SupabaseEnv = {
   SUPABASE_SERVICE_ROLE_KEY: "fake-service-role-key",
   SUPABASE_DB_URL: "postgresql://postgres:postgres@localhost:54322/postgres"
 };
-
-installTestOnlyWebSocketShim();
 
 describe("Supabase client boundary", () => {
   it("does not validate env when the db package is imported", async () => {
