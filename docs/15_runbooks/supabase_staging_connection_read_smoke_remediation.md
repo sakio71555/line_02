@@ -195,3 +195,29 @@ production_readiness=production_no_go
 ## Next
 
 Loop 154: Supabase staging endpoint re-entry and connection preflight.
+
+## Loop 154 Follow-Up
+
+Loop 154 rotated the Supabase staging runtime env through a root-only helper and re-ran redacted preflight before connecting API runtime.
+
+```txt
+operator_secret_entry=completed_outside_codex
+supabase_runtime_env_format_check=passed
+supabase_rest_host_dns=failed; host not displayed; error=ENOTFOUND
+supabase_rest_tcp=error; host not displayed
+supabase_db_host_dns=failed; host not displayed; error=ENOTFOUND
+supabase_db_tcp=error; host not displayed
+general_dns_example_com=success
+general_dns_github_com=success
+supabase_rest_root_status=skipped_due_rest_dns_tcp_failure
+psql_metadata_status=skipped_due_db_dns_tcp_failure
+repository_runtime_switch_attempted=no
+customers_read_smoke_status=skipped_due_rest_dns_tcp_failure
+final_runtime=in_memory
+line_invalid_signature_post_loop154=401
+classification=C_endpoint_still_dns_tcp_failed
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+The blocker remains Supabase endpoint DNS/TCP reachability from the VPS. Concrete host values are not recorded.

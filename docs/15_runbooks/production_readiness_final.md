@@ -882,3 +882,39 @@ production_readiness=production_no_go
 - concrete host / URL / DB URL / key values are not recorded.
 - migration apply、RLS change、schema change、write smokeは未実施。
 - production readiness remains `production_no_go`。
+
+## Loop 154 Supabase Endpoint Re-entry Preflight
+
+Loop 154では、Supabase staging endpoint valuesをoperatorがCodex外terminalで再入力し、API runtime接続前にredacted DNS/TCP preflightを行った。
+
+```txt
+operator_secret_entry=completed_outside_codex
+supabase_runtime_env_values_recorded=no
+supabase_runtime_env_format_check=passed
+supabase_rest_host_dns=failed; host not displayed; error=ENOTFOUND
+supabase_rest_tcp=error; host not displayed
+supabase_db_host_dns=failed; host not displayed; error=ENOTFOUND
+supabase_db_tcp=error; host not displayed
+general_dns_example_com=success
+general_dns_github_com=success
+supabase_rest_root_status=skipped_due_rest_dns_tcp_failure
+psql_metadata_status=skipped_due_db_dns_tcp_failure
+repository_runtime_switch_attempted=no
+customers_read_smoke_status=skipped_due_rest_dns_tcp_failure
+write_smoke=not_performed
+final_runtime=in_memory
+api_direct_health_final=200
+https_api_health_final=200
+line_invalid_signature_post_loop154=401
+classification=C_endpoint_still_dns_tcp_failed
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+判定:
+
+- Re-entry後もSupabase REST / DB hostはVPSからDNS/TCPで到達できなかった。
+- REST status、DB metadata、runtime connection、customers read smokeは安全条件未達のためskipした。
+- host / URL / DB URL / key values are not recorded.
+- migration apply、RLS change、schema change、write smokeは未実施。
+- production readiness remains `production_no_go`。

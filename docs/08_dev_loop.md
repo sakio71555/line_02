@@ -392,6 +392,8 @@ Loop 152のようなSupabase staging connection executionでは、operator入力
 
 Loop 153のようなSupabase staging read-smoke remediationでは、VPSの一般DNSとSupabase host DNS/TCP/RESTを分けて確認し、host値は記録しません。Supabase hostが解決しない場合は、repository queryやRLSの修正へ飛ばず、分類Aとして `in_memory` へrollbackし、endpoint再入力や接続preflightを次Loopへ分けます。
 
+Loop 154のようなSupabase endpoint re-entry Loopでは、operatorがCodex外terminalでstaging valuesを再入力しても、REST DNS/TCPが通るまでSupabase runtimeへ接続しません。host値、URL、DB URL、keysは記録せず、REST/DB DNS/TCPが失敗した場合はREST status、DB metadata、customers read smoke、write smokeをskipし、`in_memory` と `production_readiness=production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

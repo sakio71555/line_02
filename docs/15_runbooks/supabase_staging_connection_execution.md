@@ -200,3 +200,24 @@ production_readiness=production_no_go
 ```
 
 The blocker is now tracked as Supabase endpoint / DNS / connection preflight remediation. Concrete host values are not recorded.
+
+## Loop 154 Follow-Up
+
+Loop 154 re-entered Supabase staging endpoint values through a root-only helper and checked connectivity before runtime connection.
+
+```txt
+operator_secret_entry=completed_outside_codex
+supabase_runtime_env_values_recorded=no
+supabase_runtime_env_format_check=passed
+supabase_rest_host_dns=failed; host not displayed; error=ENOTFOUND
+supabase_rest_tcp=error; host not displayed
+supabase_db_host_dns=failed; host not displayed; error=ENOTFOUND
+supabase_db_tcp=error; host not displayed
+repository_runtime_switch_attempted=no
+final_runtime=in_memory
+classification=C_endpoint_still_dns_tcp_failed
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+REST status, DB metadata, customers read smoke, and write smoke were skipped because REST DNS/TCP did not pass.
