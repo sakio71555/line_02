@@ -382,6 +382,8 @@ Loop 144のようなLINE webhook route診断では、actual `webhookSecretPath` 
 
 Loop 145AのようなLINE webhook secret path remediationでは、`LINE_WEBHOOK_SECRET_PATH` を1セグメント値へ更新しても実値は記録しません。VPS側のformat check、API restart、direct/HTTPS health、invalid-signature `401` を確認してから、人間がLINE Developers ConsoleでVerifyします。Verify成功後も、LINE real receive event smoke、LINE real push/reply、OpenAI/Supabase実接続、production Go判断は別Loopに分け、`production_readiness=production_no_go` を維持します。
 
+Loop 146のようなLINE real receive event smokeでは、LINE公式アカウントからユーザーが個人情報なしの1通だけを送信し、Codexはsanitized log、Nginx access log、Admin APIのtenant scoped保存結果だけを確認します。message body、LINE userId、webhook path値、tokenは記録しません。`LINE_REAL_PUSH_ENABLED=false` を維持し、LINE Official Account側の自動応答が出た場合はアプリ送信と区別して、後でOFFにする運用課題として記録します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

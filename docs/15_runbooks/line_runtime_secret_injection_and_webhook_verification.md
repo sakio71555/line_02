@@ -164,3 +164,23 @@ production_readiness=production_no_go
 ```
 
 LINE Developers Console verification succeeded after the operator updated the URL. LINE real push/reply and LINE real receive event smoke were not performed in this Loop.
+
+## Loop 146 Update
+
+Loop 146 confirmed a real inbound LINE message event reached the API and was saved in the current in-memory runtime.
+
+```txt
+line_real_receive_event_smoke=success
+linebot_webhook_post_status=200
+signature_verification_result=success
+event_type_received=message
+message_type_received=text
+current_runtime_storage_mode=in_memory
+customer_saved=true
+message_saved=true
+LINE_REAL_PUSH_ENABLED=false configured; value not displayed
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+The LINE Official Account automatic response was observed, but it was not sent by this application. It should be turned off later before production operation.

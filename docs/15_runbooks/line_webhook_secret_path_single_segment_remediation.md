@@ -108,3 +108,22 @@ LINE Developers Console verification is now successful, but production remains N
 2. Loop 147: Supabase staging secret injection checklist
 3. Loop 148: OpenAI provider production gate
 4. Loop 149: production Go/No-Go review
+
+## Loop 146 Update
+
+Loop 146 confirmed the real receive path.
+
+```txt
+webhook_usage=on_by_operator
+line_real_receive_event_smoke=success
+linebot_webhook_post_status=200
+signature_verification_result=success
+event_type_received=message
+message_type_received=text
+customer_saved=true
+message_saved=true
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+The actual webhook path value, LINE userId, and message body are not recorded.

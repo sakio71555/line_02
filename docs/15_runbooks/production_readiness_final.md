@@ -48,6 +48,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | LINE runtime secret injection attempt | Loop 143でroot-only helperによりLINE runtime secretsをVPSへ入力したが、API EnvironmentFile接続後のdirect healthが失敗。drop-inをrollbackし、actual webhook dry-runとLINE Developers verificationは未実施 |
 | LINE webhook 404 route diagnosis | Loop 144でLINE runtime EnvironmentFile接続後のhealth復旧を確認。actual webhook invalid-signatureは404で、`LINE_WEBHOOK_SECRET_PATH` が1セグメントrouteに一致しないshapeと診断。LINE Developers verification未実施 |
 | LINE webhook secret path remediation | Loop 145Aで`LINE_WEBHOOK_SECRET_PATH`を1セグメント値へ更新。direct/HTTPS healthは200、invalid-signature webhook POSTは401、LINE Developers verificationはsuccess。LINE real receive event smokeとLINE real push/replyは未実施 |
+| LINE real receive event smoke | Loop 146でWebhook ON後の実LINE message/text eventを受信。`LineBotWebhook/2.0` POSTは200、tenant scoped customer/message保存とAdmin timeline確認済み。LINE real push/replyは未実施 |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -75,7 +76,7 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - OpenAI real HTTP transport、本番接続、cost/rate limit運用、prompt logging policyが未完了。
 - HTTPS review URL is reachable, but LINE webhook registration, LINE real push, Supabase real connection, OpenAI real API, and production secret injection are not complete.
 - production接続やsecret表示が必要になる。
-- LINE Developers verificationは成功したが、LINE real receive event smokeとLINE real push/replyが未実施。
+- LINE real receive event smokeは成功したが、LINE real push/reply、安全な送信先smoke、永続audit/idempotency storeが未完了。
 - Supabase real connectionが未実施。
 - production secret injectionが未実施。
 
@@ -677,6 +678,6 @@ Loop 144で実施していないこと:
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundle、HTTPS review checklist、LINE webhook production dry-run、LINE webhook registration manual gate、LINE runtime secret injection attempt、LINE webhook 404 route diagnosis、LINE webhook secret path remediationは追加済み。Loop 145AでLINE Developers verificationは成功したが、LINE real receive event smoke、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalization、HTTP-01 HTTPS enable bundle、HTTPS review checklist、LINE webhook production dry-run、LINE webhook registration manual gate、LINE runtime secret injection attempt、LINE webhook 404 route diagnosis、LINE webhook secret path remediation、LINE real receive event smokeは追加済み。Loop 146で実LINE受信は成功したが、LINE real push、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
 
-この判定は、Loop 145A時点でもcontrolled production Goへ進むにはLINE real receive event smoke、LINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。
+この判定は、Loop 146時点でもcontrolled production Goへ進むにはLINE real push、Supabase staging、production secret injection、OpenAI実API、追加Loop、人間承認が必要であることを示す。
