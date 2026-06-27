@@ -8,14 +8,32 @@ import {
   type OpenAiResponsesFetch
 } from "@amami-line-crm/ai";
 
-const APPROVAL_ENV_NAME = "OPENAI_REAL_API_SMOKE_APPROVED";
+import {
+  formatOpenAiRawResponsesSmokeResult,
+  runOpenAiRawResponsesSmoke,
+  type OpenAiRawResponsesSmokeResult
+} from "./openai-raw-responses-smoke";
+
 const DEFAULT_TIMEOUT_MS = 15_000;
 const SMOKE_TENANT_ID = "tenant_amamihome";
 const SMOKE_CUSTOMER_ID = "openai_internal_smoke";
+const PROVIDER_SMOKE_CONTENT = [
+  "Non-personal",
+  "internal",
+  "OpenAI",
+  "smoke",
+  "test.",
+  "Return",
+  "a",
+  "concise",
+  "staff",
+  "draft",
+  "only."
+].join(" ");
 
 export type OpenAiProviderSmokeStatus = "success" | "failed" | "not_performed";
 
-export interface OpenAiProviderSmokeResult {
+export interface OpenAiProviderBoundarySmokeResult {
   status: OpenAiProviderSmokeStatus;
   provider: "openai" | "not_openai";
   modelConfigured: boolean;
@@ -32,6 +50,13 @@ export interface OpenAiProviderSmokeResult {
   errorClassification?: OpenAiProviderErrorClassification | "success";
 }
 
+export interface OpenAiProviderSmokeResult {
+  raw: OpenAiRawResponsesSmokeResult;
+  provider: OpenAiProviderBoundarySmokeResult | { status: "skipped"; reason: string };
+  finalStatus: "success" | "failed" | "not_performed";
+  finalClassification?: OpenAiProviderErrorClassification | "success";
+}
+
 export interface OpenAiProviderSmokeInput {
   env?: NodeJS.ProcessEnv;
   openAiFetch?: OpenAiResponsesFetch;
@@ -44,14 +69,14 @@ export interface OpenAiProviderSmokeCliResult {
   stderr: string;
 }
 
-export async function runOpenAiProviderSmoke(
+export async function runOpenAiProviderBoundarySmoke(
   input: OpenAiProviderSmokeInput = {}
-): Promise<OpenAiProviderSmokeResult> {
+): Promise<OpenAiProviderBoundarySmokeResult> {
   const env = input.env ?? process.env;
   const provider = env.AI_PROVIDER?.trim().toLowerCase();
   const apiKey = env.OPENAI_API_KEY?.trim();
   const model = env.OPENAI_MODEL?.trim();
-  const approval = env[APPROVAL_ENV_NAME]?.trim();
+  const approval = env.OPENAI_REAL_API_SMOKE_APPROVED?.trim();
 
   if (provider !== "openai") {
     return notPerformed("ai_provider_not_openai", "not_openai", Boolean(model));
@@ -88,8 +113,7 @@ export async function runOpenAiProviderSmoke(
       conversation: [
         {
           role: "system",
-          content:
-            "Non-personal internal OpenAI smoke test. Return a concise staff draft only.",
+          content: PROVIDER_SMOKE_CONTENT,
           created_at: "2026-06-28T00:00:00.000Z"
         }
       ]
@@ -103,7 +127,8 @@ export async function runOpenAiProviderSmoke(
       responseReceived: true,
       responseBodyRecorded: false,
       promptBodyRecorded: false,
-      apiKeyRecorded: false
+      apiKeyRecorded: false,
+      errorClassification: "success"
     };
   } catch (error) {
     const diagnostics = classifyOpenAiSmokeError(error);
@@ -126,9 +151,65 @@ export async function runOpenAiProviderSmoke(
   }
 }
 
+export async function runOpenAiProviderSmoke(
+  input: OpenAiProviderSmokeInput = {}
+): Promise<OpenAiProviderSmokeResult> {
+  const raw = await runOpenAiRawResponsesSmoke(input);
+
+  if (raw.status !== "success") {
+    return {
+      raw,
+      provider: {
+        status: "skipped",
+        reason: "raw_smoke_failed"
+      },
+      finalStatus: raw.status === "not_performed" ? "not_performed" : "failed",
+      finalClassification:
+        raw.errorClassification === "success" ? undefined : raw.errorClassification
+    };
+  }
+
+  const provider = await runOpenAiProviderBoundarySmoke(input);
+
+  return {
+    raw,
+    provider,
+    finalStatus: provider.status === "success" ? "success" : "failed",
+    finalClassification:
+      provider.errorClassification === "success" ? "success" : provider.errorClassification
+  };
+}
+
 export function formatOpenAiProviderSmokeResult(result: OpenAiProviderSmokeResult): string {
   const lines = [
-    `openai_smoke=${result.status}`,
+    formatOpenAiRawResponsesSmokeResult(result.raw).trimEnd(),
+    formatOpenAiProviderBoundarySmokeResult(result.provider).trimEnd(),
+    `openai_smoke_final=${result.finalStatus}`
+  ];
+
+  if (result.finalClassification) {
+    lines.push(`error_classification=${result.finalClassification}`);
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+export function formatOpenAiProviderBoundarySmokeResult(
+  result: OpenAiProviderSmokeResult["provider"]
+): string {
+  if (result.status === "skipped") {
+    return [
+      "openai_provider_smoke=skipped",
+      `reason=${result.reason}`,
+      "request_sent=false",
+      "response_body_recorded=false",
+      "prompt_body_recorded=false",
+      "api_key_recorded=false"
+    ].join("\n") + "\n";
+  }
+
+  const lines = [
+    `openai_provider_smoke=${result.status}`,
     `provider=${result.provider}`,
     result.modelConfigured ? "model=configured; value not displayed" : "model=not_configured",
     `request_sent=${result.requestSent ? "true" : "false"}`,
@@ -160,7 +241,7 @@ export function formatOpenAiProviderSmokeResult(result: OpenAiProviderSmokeResul
   }
 
   if (result.errorClassification) {
-    lines.push(`error_classification=${result.errorClassification}`);
+    lines.push(`provider_error_classification=${result.errorClassification}`);
   }
 
   return `${lines.join("\n")}\n`;
@@ -211,17 +292,29 @@ export async function runOpenAiProviderSmokeCli(
   const result = await runOpenAiProviderSmoke(input);
 
   return {
-    exitCode: result.status === "success" ? 0 : 1,
+    exitCode: result.finalStatus === "success" ? 0 : 1,
     stdout: formatOpenAiProviderSmokeResult(result),
+    stderr: ""
+  };
+}
+
+export async function runOpenAiProviderBoundarySmokeCli(
+  input: OpenAiProviderSmokeInput = {}
+): Promise<OpenAiProviderSmokeCliResult> {
+  const result = await runOpenAiProviderBoundarySmoke(input);
+
+  return {
+    exitCode: result.status === "success" ? 0 : 1,
+    stdout: formatOpenAiProviderBoundarySmokeResult(result),
     stderr: ""
   };
 }
 
 function notPerformed(
   reason: string,
-  provider: OpenAiProviderSmokeResult["provider"],
+  provider: OpenAiProviderBoundarySmokeResult["provider"],
   modelConfigured: boolean
-): OpenAiProviderSmokeResult {
+): OpenAiProviderBoundarySmokeResult {
   return {
     status: "not_performed",
     provider,
@@ -261,7 +354,7 @@ function sanitizeErrorClass(error: unknown): string {
   }
 
   if (error instanceof Error && error.name.trim()) {
-    return error.name.trim();
+    return error.name.trim().replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 80);
   }
 
   return "UnknownError";
@@ -277,19 +370,29 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   void main().catch(() => {
     process.stdout.write(
       formatOpenAiProviderSmokeResult({
-        status: "failed",
-        provider: "openai",
-        modelConfigured: false,
-        requestSent: false,
-        responseReceived: false,
-        responseBodyRecorded: false,
-        promptBodyRecorded: false,
-        apiKeyRecorded: false,
-        errorClass: "UnhandledSmokeError",
-        errorStatus: "unavailable",
-        errorCode: "unavailable",
-        errorType: "unavailable",
-        errorClassification: "I_unknown_sanitized"
+        raw: {
+          status: "failed",
+          endpoint: "responses",
+          modelConfigured: false,
+          requestSent: false,
+          responseReceived: false,
+          responseBodyRecorded: false,
+          promptBodyRecorded: false,
+          apiKeyRecorded: false,
+          httpStatus: "unavailable",
+          timeout: false,
+          errorClass: "UnhandledRawSmokeError",
+          errorStatus: "unavailable",
+          errorCode: "unavailable",
+          errorType: "unavailable",
+          errorClassification: "I_unknown_sanitized"
+        },
+        provider: {
+          status: "skipped",
+          reason: "raw_smoke_failed"
+        },
+        finalStatus: "failed",
+        finalClassification: "I_unknown_sanitized"
       })
     );
     process.exitCode = 1;

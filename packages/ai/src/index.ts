@@ -134,6 +134,8 @@ export interface OpenAiResponsesRequest {
   model: string;
   input: OpenAiResponsesMessage[];
   metadata: Record<string, string>;
+  max_output_tokens: number;
+  store: false;
   text: {
     format: {
       type: "json_object";
@@ -547,6 +549,8 @@ function createOpenAiResponsesRequest(input: {
       }
     ],
     metadata,
+    max_output_tokens: 800,
+    store: false,
     text: {
       format: {
         type: "json_object"

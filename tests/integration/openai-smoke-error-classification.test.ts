@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { OpenAiResponsesFetch } from "@amami-line-crm/ai";
 
-import { runOpenAiProviderSmokeCli } from "../../scripts/smoke/openai-provider-smoke";
+import { runOpenAiRawResponsesSmokeCli } from "../../scripts/smoke/openai-raw-responses-smoke";
 
 const approvedEnv = {
   AI_PROVIDER: "openai",
@@ -11,9 +11,9 @@ const approvedEnv = {
   OPENAI_REAL_API_SMOKE_APPROVED: "YES"
 };
 
-describe("Loop 163 OpenAI smoke sanitized error classification", () => {
+describe("Loop 165 OpenAI raw smoke sanitized error classification", () => {
   it("classifies 401/403 as auth or key rejected without leaking raw error fields", async () => {
-    const result = await runFailedSmoke({
+    const result = await runFailedRawSmoke({
       status: 403,
       code: "invalid_api_key",
       type: "authentication_error",
@@ -28,8 +28,8 @@ describe("Loop 163 OpenAI smoke sanitized error classification", () => {
     expect(result.stdout).not.toContain("raw message");
   });
 
-  it("classifies model-looking 404 as model missing or invalid", async () => {
-    const result = await runFailedSmoke({
+  it("classifies 404 as model missing or invalid", async () => {
+    const result = await runFailedRawSmoke({
       status: 404,
       code: "model_not_found",
       type: "invalid_request_error",
@@ -44,7 +44,7 @@ describe("Loop 163 OpenAI smoke sanitized error classification", () => {
   });
 
   it("classifies 429 as quota billing or project access", async () => {
-    const result = await runFailedSmoke({
+    const result = await runFailedRawSmoke({
       status: 429,
       code: "insufficient_quota",
       type: "rate_limit_error",
@@ -58,8 +58,8 @@ describe("Loop 163 OpenAI smoke sanitized error classification", () => {
     expect(result.stdout).not.toContain("billing detail");
   });
 
-  it("classifies request validation errors as request shape or provider mapping bugs", async () => {
-    const result = await runFailedSmoke({
+  it("classifies request validation errors as request shape or mapping bugs", async () => {
+    const result = await runFailedRawSmoke({
       status: 400,
       code: "invalid_request_error",
       type: "invalid_request_error",
@@ -73,18 +73,34 @@ describe("Loop 163 OpenAI smoke sanitized error classification", () => {
     expect(result.stdout).not.toContain("request body");
   });
 
+  it("classifies upstream 5xx as network or timeout", async () => {
+    const result = await runFailedRawSmoke({
+      status: 503,
+      code: "server_error",
+      type: "server_error",
+      message: "raw upstream detail must not print"
+    });
+
+    expect(result.stdout).toContain("error_status=503");
+    expect(result.stdout).toContain("error_code=server_error");
+    expect(result.stdout).toContain("error_type=server_error");
+    expect(result.stdout).toContain("error_classification=E_network_or_timeout");
+    expect(result.stdout).not.toContain("raw upstream detail");
+  });
+
   it("classifies thrown transport failures as network or timeout", async () => {
     const openAiFetch = vi.fn<OpenAiResponsesFetch>(async () => {
       throw new Error("network failure with private-openai-key must not print");
     });
 
-    const result = await runOpenAiProviderSmokeCli({
+    const result = await runOpenAiRawResponsesSmokeCli({
       env: approvedEnv,
       openAiFetch
     });
 
     expect(result.exitCode).toBe(1);
-    expect(result.stdout).toContain("openai_smoke=failed");
+    expect(result.stdout).toContain("openai_raw_smoke=failed");
+    expect(result.stdout).toContain("http_status=unavailable");
     expect(result.stdout).toContain("error_status=unavailable");
     expect(result.stdout).toContain("error_code=unavailable");
     expect(result.stdout).toContain("error_type=unavailable");
@@ -94,7 +110,7 @@ describe("Loop 163 OpenAI smoke sanitized error classification", () => {
   });
 });
 
-async function runFailedSmoke(input: {
+async function runFailedRawSmoke(input: {
   status: number;
   code: string;
   type: string;
@@ -114,14 +130,14 @@ async function runFailedSmoke(input: {
     }
   }));
 
-  const result = await runOpenAiProviderSmokeCli({
+  const result = await runOpenAiRawResponsesSmokeCli({
     env: approvedEnv,
     openAiFetch
   });
 
   expect(openAiFetch).toHaveBeenCalledTimes(1);
   expect(result.exitCode).toBe(1);
-  expect(result.stdout).toContain("openai_smoke=failed");
+  expect(result.stdout).toContain("openai_raw_smoke=failed");
   expect(result.stdout).toContain("request_sent=true");
   expect(result.stdout).toContain("response_body_recorded=false");
   expect(result.stdout).toContain("prompt_body_recorded=false");
