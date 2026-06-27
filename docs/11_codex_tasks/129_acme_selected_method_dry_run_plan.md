@@ -116,4 +116,5 @@ Static tests verify:
 ## Next
 
 - Loop 134: owner approval values intake.
-- Loop 135: ACME method decision after owner approval.
+- Loop 135: client-facing approval request package.
+- Loop 136: ACME method decision after client approval.

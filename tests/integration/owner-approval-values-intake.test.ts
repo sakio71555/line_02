@@ -80,21 +80,25 @@ describe("Loop 134 owner approval values intake docs", () => {
     const combined = readCombined([paths.loop134Task, paths.ownerMatrix, paths.readiness]);
 
     for (const expected of [
-      "Loop 135: ACME method decision after owner approval",
+      "Loop 135: client-facing approval request package",
+      "Client / operations team gets a readable request package",
+      "`admin.taiyolabel.site` is explained as a review/admin hostname",
+      "No public or external action is performed",
+      "Loop 136: ACME method decision after client approval",
       "ACME method approver is known",
       "Certificate approver is known",
       "DNS owner is known",
       "DNS rollback owner is known",
-      "Loop 136: real-domain Nginx enable controlled smoke",
+      "Loop 137: real-domain Nginx enable controlled smoke",
       "Nginx enable approver is known",
       "Maintenance window is known",
       "External smoke approver is known",
       "`admin.taiyolabel.site` use is explicitly approved",
-      "Loop 137: LINE webhook dry-run with approved HTTPS URL",
+      "Loop 138: LINE webhook dry-run with approved HTTPS URL",
       "LINE official account admin is known",
       "HTTPS URL is confirmed",
       "Real push remains disabled during dry-run",
-      "Loop 138: Supabase staging secret injection checklist",
+      "Loop 139: Supabase staging secret injection checklist",
       "Service role key non-display policy is approved",
       "Rollback to `in_memory` is approved"
     ]) {

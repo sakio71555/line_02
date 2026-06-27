@@ -364,6 +364,8 @@ Loop 129-133のようなPublic launch readiness bundleでは、ACME方式、real
 
 Loop 134のようなowner approval values intakeでは、承認者名や作業日時を推測で埋めません。`admin.taiyolabel.site` はreview/admin hostnameとして維持し、client-facing final hostnameは人間が決めるまで `undecided` のまま扱います。入力フォーム、確認質問、最小Go条件をdocs化するだけで、DNS変更、certbot/HTTPS、Nginx reload/restart、external smoke、LINE/OpenAI/Supabase実接続、production secret injectionへ進みません。
 
+Loop 135のようなclient-facing approval request packageでは、技術者向けrunbookをそのまま送らず、クライアント/運用者が回答しやすい説明と返信フォームへ整理します。`admin.taiyolabel.site` で何を確認するのか、DNS/HTTPS/Nginx/LINE/Supabaseで何の承認が必要かを説明しますが、承認値を推測で埋めず、DNS変更、certbot/HTTPS、Nginx reload/restart、external smoke、LINE/OpenAI/Supabase実接続は行いません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

@@ -88,14 +88,21 @@ Questions cover:
 
 ## Minimal Go Conditions
 
-### Loop 135: ACME method decision after owner approval
+### Loop 135: client-facing approval request package
+
+- Client / operations team gets a readable request package.
+- `admin.taiyolabel.site` is explained as a review/admin hostname.
+- DNS / HTTPS / LINE / Supabase approval questions are presented in a reply form.
+- No public or external action is performed.
+
+### Loop 136: ACME method decision after client approval
 
 - ACME method approver is known.
 - Certificate approver is known.
 - DNS owner is known.
 - DNS rollback owner is known.
 
-### Loop 136: real-domain Nginx enable controlled smoke
+### Loop 137: real-domain Nginx enable controlled smoke
 
 - Nginx enable approver is known.
 - Maintenance window is known.
@@ -104,7 +111,7 @@ Questions cover:
 - `admin.taiyolabel.site` use is explicitly approved.
 - Rollback procedure is approved.
 
-### Loop 137: LINE webhook dry-run with approved HTTPS URL
+### Loop 138: LINE webhook dry-run with approved HTTPS URL
 
 - LINE official account admin is known.
 - LINE webhook approver is known.
@@ -112,7 +119,7 @@ Questions cover:
 - Webhook secret path policy is confirmed.
 - Real push remains disabled during dry-run.
 
-### Loop 138: Supabase staging secret injection checklist
+### Loop 139: Supabase staging secret injection checklist
 
 - Supabase staging project owner is known.
 - Staging project URL is prepared outside docs.
@@ -146,8 +153,8 @@ production_readiness=production_no_go
 
 ## Next Loop Candidates
 
-1. Loop 135: ACME method decision after owner approval.
-2. Loop 136: real-domain Nginx enable controlled smoke.
-3. Loop 137: LINE webhook dry-run with approved HTTPS URL.
-4. Loop 138: Supabase staging secret injection checklist.
-5. Loop 139: production launch checklist finalization.
+1. Loop 135: client-facing approval request package.
+2. Loop 136: ACME method decision after client approval.
+3. Loop 137: real-domain Nginx enable controlled smoke.
+4. Loop 138: LINE webhook dry-run with approved HTTPS URL.
+5. Loop 139: Supabase staging secret injection checklist.

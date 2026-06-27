@@ -191,6 +191,20 @@ production_readiness=production_no_go
 
 See [human_approval_intake_form.md](human_approval_intake_form.md) and [client_ops_confirmation_questions.md](client_ops_confirmation_questions.md). These docs do not approve DNS changes, real-domain Nginx enablement, certbot/HTTPS, external smoke, LINE webhook registration, Supabase connection, or production secret injection.
 
+## Loop 135 client-facing approval request package record
+
+Loop 135 adds a client-facing request package only:
+
+```text
+client_facing_approval_request_package=created
+review_admin_hostname=admin.taiyolabel.site
+client_facing_final_hostname=undecided
+owner_values_filled=no
+production_readiness=production_no_go
+```
+
+See [client_facing_approval_request_package.md](client_facing_approval_request_package.md). This package explains what to confirm on `admin.taiyolabel.site` and asks for DNS/HTTPS/Nginx/LINE/Supabase approvals in a reply form. It does not approve DNS changes, certbot/HTTPS, Nginx reload/restart, external smoke, LINE webhook registration, Supabase connection, or production secret injection.
+
 ## No-Go status
 
 Current status: `production_no_go`

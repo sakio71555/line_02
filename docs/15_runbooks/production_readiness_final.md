@@ -39,6 +39,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | Active localhost-only copy-based redeploy | Loop 122でrelease candidate `2a9a746940b5f7a707af4c042bb9225d3dea258b` をVPS active `/var/www/amami-line-crm` へ反映。staging full validation、active backup、`.env*` preservation、active build、existing service restart、localhost-only smokeは成功。Nginx reload/restart、DNS、certbot、HTTPS、external smokeは未実施 |
 | Public launch readiness bundle | Loop 129-133でACME方式選定dry-run、real-domain Nginx enable gate、LINE webhook URL dry-run、owner approval matrix、Supabase staging preflightを追加。すべてplanning/static testのみで、production readinessは `production_no_go` |
 | Owner approval values intake | Loop 134でhuman approval intake formとclient / operations confirmation questionsを追加。owner/approver valuesは未入力、client-facing final hostnameはundecided、DNS/Nginx/HTTPS/LINE/Supabase/secret injectionは未承認 |
+| Client-facing approval request package | Loop 135でクライアント/運用者向けの承認依頼パッケージを追加。`admin.taiyolabel.site` で確認する内容、DNS/HTTPS/LINE/Supabaseの承認事項、返信フォームを整理。実作業・外部接続なし |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -266,14 +267,21 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 
 ## Loop 134 Minimal Go Conditions
 
-### Loop 135: ACME method decision after owner approval
+### Loop 135: client-facing approval request package
+
+- クライアント/運用者に送れる承認依頼パッケージがある。
+- `admin.taiyolabel.site` がreview/admin hostnameであることを説明する。
+- DNS / HTTPS / LINE / Supabase の承認事項を返信フォームにする。
+- public/external actionは実行しない。
+
+### Loop 136: ACME method decision after client approval
 
 - ACME method approverが決まる。
 - Certificate approverが決まる。
 - DNS ownerが決まる。
 - DNS rollback ownerが決まる。
 
-### Loop 136: real-domain Nginx enable controlled smoke
+### Loop 137: real-domain Nginx enable controlled smoke
 
 - Nginx enable approverが決まる。
 - Maintenance windowが決まる。
@@ -282,7 +290,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - `admin.taiyolabel.site` を使う明示承認がある。
 - rollback手順承認済み。
 
-### Loop 137: LINE webhook dry-run with approved HTTPS URL
+### Loop 138: LINE webhook dry-run with approved HTTPS URL
 
 - LINE official account adminが決まる。
 - LINE webhook approverが決まる。
@@ -290,7 +298,7 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Webhook secret path方針が決まる。
 - real pushはdisabledのまま確認する承認がある。
 
-### Loop 138: Supabase staging secret injection checklist
+### Loop 139: Supabase staging secret injection checklist
 
 - Supabase staging project ownerが決まる。
 - staging project URLが用意される。
