@@ -1060,3 +1060,36 @@ go_promotion=no
 - OpenAI API key, model value, paid-smoke approval, LINE one-message approval, and final operator Go remain pending.
 - Secret values, webhook path values, LINE userIds, message bodies, Supabase endpoint values, DB URLs, bearer tokens, and private keys are not recorded.
 - Nginx, DNS, certbot, RLS, migration, and Supabase write paths were not changed.
+
+## Loop 161 OpenAI Controlled Smoke Readiness Check
+
+Loop 161 checked the VPS runtime and OpenAI smoke prerequisites without connecting OpenAI runtime.
+
+```txt
+openai_provider_classification=B_real_provider_wired_but_no_safe_external_smoke_route
+provider_boundary_exists=true
+real_http_transport_wired=true
+runtime_ai_provider_switch=implemented
+api_default_provider=mock
+startup_openai_call=false
+openai_helper_status=exists
+openai_runtime_env=absent
+openai_format_check=skipped_absent
+openai_environment_file_connection=skipped_absent
+openai_real_api_smoke=not_performed
+openai_real_api_smoke_reason=openai_runtime_env_absent_pending_human_input
+openai_response_body_recorded=no
+openai_api_key_recorded=no
+api_direct_health_loop161_final=200
+https_api_health_loop161_final=200
+customers_no_header_loop161=401
+line_invalid_signature_loop161=401
+repository_runtime_final=supabase
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+No OpenAI key, model value, prompt body, response body, LINE webhook path value, LINE user ID, LINE message body, Supabase endpoint value, DB URL, bearer token, or private key was recorded.

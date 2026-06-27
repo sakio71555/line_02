@@ -142,3 +142,23 @@ certbot_rerun=no
 ```txt
 Loop 161: OpenAI real API controlled smoke
 ```
+
+## Loop 161 Follow-up
+
+```txt
+openai_provider_classification=B_real_provider_wired_but_no_safe_external_smoke_route
+openai_helper_status=exists
+openai_runtime_env=absent
+openai_format_check=skipped_absent
+openai_environment_file_connection=skipped_absent
+openai_real_api_smoke=not_performed
+openai_real_api_smoke_reason=openai_runtime_env_absent_pending_human_input
+openai_response_body_recorded=no
+openai_api_key_recorded=no
+openai_ready=false
+line_real_push_enabled=false
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+Loop 161 did not connect OpenAI runtime and did not call OpenAI. The final API runtime stayed on mock AI with Supabase repositories and LINE real push disabled.

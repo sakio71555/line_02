@@ -90,3 +90,28 @@ production_readiness=production_no_go
 ```
 
 No OpenAI API key value, model value, request body, response body, or billing detail is recorded. The next OpenAI step remains a dedicated controlled smoke Loop with explicit operator approval.
+
+## Loop 161 Update
+
+Loop 161 rechecked the production OpenAI boundary and VPS runtime state.
+
+```txt
+openai_provider_classification=B_real_provider_wired_but_no_safe_external_smoke_route
+provider_boundary_exists=true
+real_http_transport_wired=true
+runtime_ai_provider_switch=implemented
+api_default_provider=mock
+startup_openai_call=false
+openai_helper_status=exists
+openai_runtime_env=absent
+openai_format_check=skipped_absent
+openai_environment_file_connection=skipped_absent
+openai_real_api_smoke=not_performed
+openai_real_api_smoke_reason=openai_runtime_env_absent_pending_human_input
+openai_response_body_recorded=no
+openai_api_key_recorded=no
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The available external AI routes still depend on customer timeline or tenant RAG source context. A future real API smoke should use operator-provided runtime env plus a safe non-customer provider-level smoke path, or explicitly approved dummy-only data.

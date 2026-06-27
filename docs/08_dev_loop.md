@@ -400,6 +400,8 @@ Loop 156のようなLINE Official Account auto-response OFF and Supabase receive
 
 Loop 157-160のようなunattended fast laneでは、人間入力、secret、外部課金承認、LINE real send承認が必要なものは待たずに `pending_human_input` / `not_performed` として記録します。OpenAI providerやLINE real reply/pushの実装境界とhelperを確認しても、OpenAI実API、LINE real push/reply、LINE real push有効化、Supabase write smoke、Nginx/DNS/certbot変更、final Go判断は実施しません。operator handoff checklistを作り、`production_readiness=production_no_go` を維持します。
 
+Loop 161のようなOpenAI real API controlled smokeでは、`openai-runtime.env` と明示的なone-call smoke approvalが揃っていない場合、OpenAI APIへ接続せず `not_performed` として記録します。既存routeが顧客timelineやLINE message bodyを含む場合は、専用の安全なprovider-level smoke routeがない限り実API smokeを行いません。実施後も原則 `AI_PROVIDER=mock` へ戻し、`production_readiness=production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

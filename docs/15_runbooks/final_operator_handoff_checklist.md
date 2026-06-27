@@ -61,4 +61,18 @@ production_readiness=production_no_go
 
 ## Secret Rule
 
-Do not record secrets, webhook path values, LINE userId values, message bodies, Supabase endpoint values, DB URLs, OpenAI keys, or bearer tokens.
+Do not record secrets, webhook path values, LINE user identifier values, message bodies, Supabase endpoint values, DB URLs, OpenAI keys, or bearer tokens.
+
+## Loop 161 Follow-up
+
+```txt
+openai_runtime_env=absent
+openai_real_api_smoke=not_performed
+openai_real_api_smoke_reason=openai_runtime_env_absent_pending_human_input
+openai_ready=false
+line_real_push_enabled=false
+line_real_push_reply=not_performed
+production_readiness=production_no_go
+```
+
+Next operator action for OpenAI is to provide the runtime env through the root-only helper in a dedicated Loop, then approve exactly one non-customer controlled smoke. Until then the API stays on mock AI.

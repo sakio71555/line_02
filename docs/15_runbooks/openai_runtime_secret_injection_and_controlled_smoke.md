@@ -64,3 +64,20 @@ openai_real_api_smoke_status=success_or_failure_code_only
 ```txt
 Loop 161: OpenAI real API controlled smoke
 ```
+
+## Loop 161 Result
+
+```txt
+openai_helper_status=exists
+openai_runtime_env=absent
+openai_format_check=skipped_absent
+openai_environment_file_connection=skipped_absent
+openai_real_api_smoke=not_performed
+openai_real_api_smoke_reason=openai_runtime_env_absent_pending_human_input
+openai_response_body_recorded=no
+openai_api_key_recorded=no
+openai_ready=false
+production_readiness=production_no_go
+```
+
+OpenAI runtime env was not present on the VPS, so no EnvironmentFile was connected and no real OpenAI request was sent. Final runtime stayed on `AI_PROVIDER=mock`.
