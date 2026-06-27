@@ -133,11 +133,27 @@ No-Go reasons:
 - OpenAI real API has not executed.
 - Production secret injection has not executed.
 
+## Loop 142 Manual Gate Update
+
+Loop 142 adds the manual registration gate for a human operator. Codex still does not register the URL.
+
+```txt
+candidate_line_webhook_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+actual_webhook_secret_path_recorded=no
+line_webhook_registration=manual_only_not_done_by_codex
+line_developers_console_change_by_codex=no
+line_webhook_usage_toggle_by_codex=no
+line_real_push_status=disabled
+production_readiness=production_no_go
+```
+
+The human operator uses the real webhook secret path only in LINE Developers Console. It remains outside docs, tests, commits, terminal output, and reports.
+
 ## Next
 
 Proceed only through the next explicit Loop gate:
 
-1. Loop 142: LINE webhook registration manual gate.
-2. Loop 143: Supabase staging secret injection checklist.
-3. Loop 144: OpenAI provider production gate.
-4. Loop 145: production Go/No-Go review.
+1. Loop 143: LINE webhook post-registration verification.
+2. Loop 144: Supabase staging secret injection checklist.
+3. Loop 145: OpenAI provider production gate.
+4. Loop 146: production Go/No-Go review.

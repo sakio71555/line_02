@@ -146,3 +146,31 @@ production_readiness=production_no_go
 ```
 
 `line_webhook_ready_for_registration=true` only means the dummy dry-run gate passed. Registration in LINE Developers Console remains a separate manual gate.
+
+## Loop 142 Manual Registration Gate
+
+The dedicated manual gate is documented in [line_webhook_registration_manual_gate.md](line_webhook_registration_manual_gate.md).
+
+```txt
+candidate_line_webhook_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+actual_webhook_secret_path_recorded=no
+webhook_secret_path_real_value_managed_outside_docs=true
+line_webhook_registration=manual_only_not_done_by_codex
+line_developers_console_change_by_codex=no
+line_webhook_registration_by_codex=no
+line_webhook_usage_toggle_by_codex=no
+line_api_call=no
+line_real_push=no
+production_readiness=production_no_go
+```
+
+Manual operator steps:
+
+1. Open LINE Developers Console.
+2. Select the target Provider and Messaging API Channel.
+3. Open Messaging API settings.
+4. Register the candidate URL pattern in the Webhook URL field.
+5. Turn Webhook usage ON.
+6. Press Verify if needed.
+7. Check existing response, greeting, and auto-response settings.
+8. Do not perform real LINE send testing until a separate approval Loop.
