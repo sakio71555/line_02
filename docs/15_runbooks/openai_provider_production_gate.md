@@ -70,3 +70,23 @@ production_readiness=production_no_go
 ```
 
 The next OpenAI Loop must still be a controlled real API smoke with explicit approval, redacted logs, draft-only output, and rollback to `AI_PROVIDER=mock`.
+
+## Loop 157-160 Update
+
+Loop 157-160 confirmed the current OpenAI implementation from code and VPS runtime state.
+
+```txt
+openai_implementation_classification=A_real_provider_fully_wired_but_not_smoke_tested
+provider_boundary_exists=true
+real_http_transport_wired=true
+runtime_ai_provider_switch=implemented
+api_default_provider=mock
+openai_runtime_env=absent
+openai_runtime_helper=/root/bin/amami-line-set-openai-runtime-secrets.sh
+openai_real_api_smoke=not_performed
+openai_real_api_smoke_reason=pending_human_input_or_missing_approval
+openai_ready=false
+production_readiness=production_no_go
+```
+
+No OpenAI API key value, model value, request body, response body, or billing detail is recorded. The next OpenAI step remains a dedicated controlled smoke Loop with explicit operator approval.

@@ -1018,3 +1018,45 @@ production_readiness=production_no_go
 - OpenAI real APIは未実施。
 - Supabase write smokeは未実施。
 - production readiness remains `production_no_go`。
+
+## Loop 157-160 OpenAI / LINE Reply Gate and Final Go-NoGo Packet
+
+Loop 157-160では、人間入力待ちで止まらず、OpenAI provider gate、LINE real reply/push gate、final Go/No-Go review、operator handoff packageを整理した。
+
+```txt
+openai_implementation_classification=A_real_provider_fully_wired_but_not_smoke_tested
+openai_runtime_helper=/root/bin/amami-line-set-openai-runtime-secrets.sh
+openai_runtime_env=absent
+openai_real_api_smoke=not_performed
+openai_real_api_smoke_reason=pending_human_input_or_missing_approval
+line_reply_push_classification=A_real_line_client_fully_wired_but_disabled_by_flag
+line_real_push_enabled=false
+line_real_push_enable_helper=/root/bin/amami-line-set-line-real-push-flag.sh
+line_real_push_disable_helper=/root/bin/amami-line-disable-line-real-push.sh
+line_real_push_reply=not_performed
+line_real_push_reply_reason=pending_human_input_or_missing_approval
+api_direct_health_loop157_start=200
+https_api_health_loop157_start=200
+customers_no_header_loop157=401
+customers_with_tenant_loop157=200
+customers_with_tenant_loop157_tenant_scoped=true
+line_invalid_signature_loop157=401
+https_ready_for_review=true
+line_receive_ready=true
+official_account_auto_response_ready=true
+supabase_ready=true
+supabase_receive_persistence_ready=true
+openai_ready=false
+line_reply_push_ready=false
+supabase_write_smoke=not_performed
+final_operator_go=not_performed
+production_readiness=production_no_go
+go_promotion=no
+```
+
+判定:
+
+- OpenAI provider and LINE real client are wired, but both remain disabled or unapproved for real external actions.
+- OpenAI API key, model value, paid-smoke approval, LINE one-message approval, and final operator Go remain pending.
+- Secret values, webhook path values, LINE userIds, message bodies, Supabase endpoint values, DB URLs, bearer tokens, and private keys are not recorded.
+- Nginx, DNS, certbot, RLS, migration, and Supabase write paths were not changed.

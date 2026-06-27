@@ -100,3 +100,23 @@ production_readiness=production_no_go
 ```
 
 The real reply/push path is still disabled. A later Loop must explicitly approve one recipient/message, enable the required flags only for the smoke window, and roll back to disabled.
+
+## Loop 157-160 Update
+
+Loop 157-160 confirmed the current LINE real reply/push implementation from code and VPS runtime state.
+
+```txt
+line_reply_push_classification=A_real_line_client_fully_wired_but_disabled_by_flag
+real_line_client_boundary_exists=true
+line_client_runtime_switch=implemented
+line_real_push_enabled=false
+line_real_push_enable_helper=/root/bin/amami-line-set-line-real-push-flag.sh
+line_real_push_disable_helper=/root/bin/amami-line-disable-line-real-push.sh
+line_real_push_reply=not_performed
+line_real_push_reply_reason=pending_human_input_or_missing_approval
+line_reply_push_ready=false
+line_invalid_signature_loop157=401
+production_readiness=production_no_go
+```
+
+No LINE token, channel secret, webhook path value, LINE userId, message body, or full LINE API response is recorded. The next LINE send step must be a dedicated one-message controlled smoke Loop with explicit operator approval.

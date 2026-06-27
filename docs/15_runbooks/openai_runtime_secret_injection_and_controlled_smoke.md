@@ -1,0 +1,66 @@
+# OpenAI Runtime Secret Injection and Controlled Smoke
+
+## Purpose
+
+Provide the operator handoff for enabling OpenAI real API runtime later.
+
+Loop 157-160 created the helper but did not run an OpenAI real API call.
+
+## Current State
+
+```txt
+openai_runtime_env=absent
+openai_runtime_helper=/root/bin/amami-line-set-openai-runtime-secrets.sh
+openai_real_api_smoke=not_performed
+openai_ready=false
+production_readiness=production_no_go
+```
+
+## Required Human Inputs
+
+- OpenAI API key.
+- OpenAI model name.
+- Explicit approval for one paid smoke call.
+
+Do not paste values into docs, Git, chat, screenshots, or dev logs.
+
+## Operator Steps
+
+1. SSH to the VPS in a terminal controlled by the operator.
+2. Run `/root/bin/amami-line-set-openai-runtime-secrets.sh`.
+3. Enter the requested values without recording them.
+4. Decide whether one paid smoke call is approved.
+5. Restart the API only in a later Loop that explicitly authorizes OpenAI runtime connection.
+6. Run exactly one controlled smoke using dummy or non-personal data.
+7. If any failure occurs, return to `AI_PROVIDER=mock`.
+
+## No-Go Conditions
+
+- Missing OpenAI API key.
+- Missing OpenAI model.
+- Paid smoke not approved.
+- Any request would include real customer content.
+- Any output would record the full OpenAI response or secret values.
+
+## Allowed Result Recording
+
+```txt
+openai_runtime_env=configured; value not recorded
+openai_model=configured; value not recorded
+openai_real_api_smoke=performed_once
+openai_real_api_smoke_status=success_or_failure_code_only
+```
+
+## Disallowed Result Recording
+
+- API key values.
+- Authorization headers.
+- Full prompts containing customer data.
+- Full OpenAI response text.
+- Billing details.
+
+## Next
+
+```txt
+Loop 161: OpenAI real API controlled smoke
+```

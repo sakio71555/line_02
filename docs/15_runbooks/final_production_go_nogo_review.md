@@ -83,3 +83,25 @@ production_readiness=production_no_go
 Supabase runtime health reached 200 after the Node.js 20 WebSocket transport fix, but admin customers read smoke returned 500. The runtime was rolled back to `in_memory`, and production remains No-Go. Secret values, concrete Supabase endpoints, DB URLs, LINE webhook path values, LINE userIds, and message bodies are not recorded.
 
 Runtime wiring readiness does not promote the system. Final review still requires controlled Supabase, OpenAI, and LINE real-send evidence plus operator approval.
+
+## Loop 157-160 Update
+
+Loop 157-160 reviewed the remaining production gates without waiting for human input.
+
+```txt
+https_ready_for_review=true
+line_receive_ready=true
+official_account_auto_response_ready=true
+supabase_ready=true
+supabase_receive_persistence_ready=true
+openai_ready=false
+line_reply_push_ready=false
+openai_real_api_smoke=not_performed
+line_real_push_reply=not_performed
+supabase_write_smoke=not_performed
+final_operator_go=not_performed
+production_readiness=production_no_go
+go_promotion=no
+```
+
+No-Go remains because OpenAI real API smoke, LINE real reply/push smoke, Supabase write smoke, and final operator Go are not complete.
