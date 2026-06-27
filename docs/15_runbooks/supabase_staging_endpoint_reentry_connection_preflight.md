@@ -174,3 +174,26 @@ production_readiness=production_no_go
 ## Next
 
 Loop 155: Supabase staging endpoint value verification with owner-provided non-secret diagnosis.
+
+## Loop 155 Follow-Up
+
+Loop 155 confirmed the Supabase staging project became active and re-ran the non-secret verification path.
+
+```txt
+dashboard_status=active
+supabase_rest_host_dns=success; host not displayed
+supabase_rest_tcp=success; host not displayed
+supabase_db_host_dns=success; host not displayed
+supabase_db_tcp=success; host not displayed
+supabase_rest_root_status=200
+runtime_connection_performed=yes
+repository_runtime_final=supabase
+customers_no_header_status=401
+customers_dev_header_status=200
+customers_body_recorded=no
+line_invalid_signature_loop155=401
+supabase_ready=true
+production_readiness=production_no_go
+```
+
+Concrete host values, endpoint values, DB URL, key values, LINE webhook path values, LINE userIds, message bodies, and response body rows are still not recorded.

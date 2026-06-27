@@ -918,3 +918,54 @@ production_readiness=production_no_go
 - host / URL / DB URL / key values are not recorded.
 - migration apply、RLS change、schema change、write smokeは未実施。
 - production readiness remains `production_no_go`。
+
+## Loop 155 Supabase Endpoint Value Verification
+
+Loop 155では、operator確認でSupabase staging projectがactiveになった後、secret値とhost値を記録せずにendpoint形状、REST/DB DNS/TCP、REST table preflight、Supabase runtime read-only smokeを確認した。
+
+```txt
+dashboard_status=active
+supabase_runtime_env_values_recorded=no
+supabase_url_shape=expected
+supabase_url_parse=ok
+supabase_url_protocol=https
+supabase_url_hostname_suffix_kind=supabase.co
+supabase_db_url_shape=expected
+supabase_db_url_parse=ok
+supabase_db_url_protocol=postgresql
+supabase_db_url_hostname_suffix_kind=supabase.co
+supabase_anon_key_present=true
+supabase_service_role_key_present=true
+supabase_service_role_rest_auth_accepted=true
+supabase_rest_host_dns=success; host not displayed
+supabase_rest_tcp=success; host not displayed
+supabase_db_host_dns=success; host not displayed
+supabase_db_tcp=success; host not displayed
+supabase_rest_root_status=200
+supabase_rest_table_customers_status=206
+supabase_rest_table_messages_status=206
+supabase_rest_table_alerts_status=206
+supabase_rest_table_knowledge_pages_status=206
+supabase_rest_table_staff_users_status=206
+supabase_rest_table_staff_tenant_memberships_status=206
+runtime_connection_performed=yes
+repository_runtime_final=supabase
+api_direct_health_supabase=200
+https_api_health_supabase=200
+customers_no_header_status=401
+customers_dev_header_status=200
+customers_body_recorded=no
+line_invalid_signature_loop155=401
+rollback_performed=no
+write_smoke=not_performed
+supabase_ready=true
+production_readiness=production_no_go
+```
+
+判定:
+
+- Supabase staging read-only readiness is now true for the VPS review environment.
+- Concrete endpoint values, DB URL, key values, LINE webhook path values, LINE userIds, message bodies, and response body rows are not recorded.
+- write smoke、OpenAI real API、LINE real push/replyは未実施。
+- LINE Official Account auto-response OFF is not confirmed.
+- production readiness remains `production_no_go`。

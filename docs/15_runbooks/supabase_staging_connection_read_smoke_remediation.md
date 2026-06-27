@@ -221,3 +221,23 @@ production_readiness=production_no_go
 ```
 
 The blocker remains Supabase endpoint DNS/TCP reachability from the VPS. Concrete host values are not recorded.
+
+## Loop 155 Follow-Up
+
+Loop 155 resolved the endpoint reachability blocker after operator-provided values were available and the Supabase staging project was active.
+
+```txt
+supabase_rest_host_dns=success; host not displayed
+supabase_rest_tcp=success; host not displayed
+supabase_db_host_dns=success; host not displayed
+supabase_db_tcp=success; host not displayed
+runtime_connection_performed=yes
+repository_runtime_final=supabase
+customers_no_header_status=401
+customers_dev_header_status=200
+customers_body_recorded=no
+supabase_ready=true
+production_readiness=production_no_go
+```
+
+The previous DNS/TCP blocker is no longer the active blocker for staging read-only smoke. Remaining No-Go items are Supabase write smoke, OpenAI real API smoke, LINE real push/reply smoke, LINE Official Account auto-response OFF confirmation, and final operator Go/No-Go.

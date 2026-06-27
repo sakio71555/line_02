@@ -394,6 +394,8 @@ Loop 153のようなSupabase staging read-smoke remediationでは、VPSの一般
 
 Loop 154のようなSupabase endpoint re-entry Loopでは、operatorがCodex外terminalでstaging valuesを再入力しても、REST DNS/TCPが通るまでSupabase runtimeへ接続しません。host値、URL、DB URL、keysは記録せず、REST/DB DNS/TCPが失敗した場合はREST status、DB metadata、customers read smoke、write smokeをskipし、`in_memory` と `production_readiness=production_no_go` を維持します。
 
+Loop 155のようなSupabase endpoint value verification Loopでは、operator確認でSupabase projectがactiveになった後に限り、secret値とhost値を記録しない形状診断、REST/DB DNS/TCP、REST table preflight、runtime read-only smokeへ進みます。customers read smokeがtenant scopedで200になっても、write smoke、OpenAI実API、LINE real push/reply、LINE Official Account自動応答OFF確認、final Go判断は別Loopに分け、`production_readiness=production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。
