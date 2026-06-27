@@ -15,9 +15,13 @@ A=160.251.174.201
 AAAA=no answer
 CAA=no answer
 NS=dnsv.jp / GMO DNS inferred
-DNS owner=unknown
-DNS rollback owner=unknown
-ACME method=undecided
+DNS owner=Project owner / requestor
+DNS change owner=Project owner / requestor
+DNS rollback owner=Project owner / requestor
+ACME method=HTTP-01
+Fallback ACME method=DNS-01 if HTTP-01 fails or operational blockers appear
+Certificate target hostname=admin.taiyolabel.site
+Wildcard certificate=not required
 production_readiness=production_no_go
 ```
 
@@ -35,12 +39,12 @@ HTTP-01 requires:
 Current status:
 
 ```txt
-http_01_status=no_go
-nginx_enable_approver=unknown
-dns_rollback_owner=unknown
-maintenance_window=unknown
-external_smoke=not_approved
-real_domain_enable=not_approved
+http_01_status=selected_for_future_gate
+nginx_enable_approver=Project owner / requestor
+dns_rollback_owner=Project owner / requestor
+maintenance_window=now / approved by Project owner
+external_smoke_approver=Project owner / requestor
+real_domain_enable_approver=Project owner / requestor
 ```
 
 ## DNS-01 Readiness
@@ -57,32 +61,54 @@ DNS-01 requires:
 Current status:
 
 ```txt
-dns_01_status=no_go
-dns_owner=unknown
-dns_provider_access=unconfirmed
-dns_rollback_owner=unknown
-dns_api_token_policy=undecided
-manual_renewal_policy=undecided
-txt_record_change_approval=not_approved
+dns_01_status=fallback_only
+dns_owner=Project owner / requestor
+dns_provider_access=not_used_for_HTTP_01
+dns_rollback_owner=Project owner / requestor
+dns_api_token_policy=not_used_for_HTTP_01
+manual_renewal_policy=not_used_for_HTTP_01
+txt_record_change_approval=only_if_DNS_01_fallback_is_approved_later
 ```
 
 ## Decision
 
 ```txt
-acme_method=undecided
-recommended_method=undecided
+acme_method=HTTP-01
+recommended_method=HTTP-01
+fallback_method=DNS-01 if HTTP-01 fails or operational blockers appear
+certificate_target=admin.taiyolabel.site
+wildcard_certificate=not_required
 ```
 
 Reason:
 
-- DNS owner unknown.
-- DNS rollback owner unknown.
-- Nginx enable approver unknown.
-- Certificate approver unknown.
-- ACME method approver unknown.
-- Maintenance window unknown.
+- Single subdomain `admin.taiyolabel.site` does not require a wildcard certificate.
+- DNS TXT record addition is not required for the preferred path.
+- The setup is simpler for this review/admin hostname.
+- HTTP-01 is suitable for confirming HTTPS on the review/admin environment.
 
-## Forbidden Until Approval
+HTTP-01 Go conditions:
+
+- A record points to the VPS.
+- Port 80 is reachable.
+- Real-domain HTTP Nginx server block can be enabled.
+- `/.well-known/acme-challenge/` route is available.
+- Nginx enable approver is confirmed.
+- Certificate approver is confirmed.
+- Maintenance window is approved.
+- Rollback owner is confirmed.
+- External smoke approver is confirmed.
+
+DNS-01 fallback conditions:
+
+- HTTP-01 challenge fails.
+- Port 80 cannot be used.
+- Wildcard certificate becomes required.
+- Nginx public enable must be delayed.
+- DNS TXT workflow is approved.
+- DNS API or manual TXT owner is confirmed.
+
+## Forbidden Until Separate Execution Loop
 
 - DNS changes.
 - DNS provider API calls.
@@ -102,10 +128,12 @@ Reason:
 ## Go / No-Go
 
 ```txt
-acme_dry_run_status=no_go
+acme_method_decision_status=recorded
+http_01_execution_status=not_executed
+dns_01_fallback_status=documented
 production_readiness=production_no_go
 ```
 
 ## Next
 
-Collect owner approvals first. Then decide between HTTP-01 and DNS-01 in a separate Loop.
+Proceed to a separate real-domain HTTP-01 bootstrap controlled smoke Loop only after the execution gate is rechecked. This document does not execute certbot, Nginx reload/restart, HTTPS enablement, external smoke, LINE webhook registration, or Supabase connection.

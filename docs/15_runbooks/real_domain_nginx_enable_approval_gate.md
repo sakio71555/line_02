@@ -18,13 +18,13 @@ This is documentation only. The repo placeholder template remains placeholder-ba
 
 | Approval | Current status | Required before |
 | --- | --- | --- |
-| DNS owner | unknown / pending | DNS change or ACME selection |
-| DNS rollback owner | unknown / pending | Any DNS or real-domain enablement |
-| Nginx enable approver | unknown / pending | `sites-enabled` or reload |
-| Certificate approver | unknown / pending | certbot or certificate issuance |
-| External smoke approver | unknown / pending | public HTTP/HTTPS smoke |
-| Maintenance window approver | unknown / pending | public-facing change |
-| Final Go / No-Go owner | unknown / pending | production readiness change |
+| DNS owner | Project owner / requestor | DNS change or ACME selection |
+| DNS rollback owner | Project owner / requestor | Any DNS or real-domain enablement |
+| Nginx enable approver | Project owner / requestor | `sites-enabled` or reload |
+| Certificate approver | Project owner / requestor | certbot or certificate issuance |
+| External smoke approver | Project owner / requestor | public HTTP/HTTPS smoke |
+| Maintenance window approver | now / approved by Project owner | public-facing change |
+| Final Go / No-Go owner | Project owner / requestor | production readiness change |
 
 ## Required Technical Checks
 
@@ -48,23 +48,25 @@ external_smoke_plan=required
 ```txt
 approved_review_admin_host=admin.taiyolabel.site
 host_purpose=review/admin hostname
-client_facing_final_hostname=undecided
+client_facing_final_hostname=admin.taiyolabel.site
+separate_final_hostname=no
+acme_method=HTTP-01
 real_domain_enable_status=no_go
 production_readiness=production_no_go
 ```
 
 No-Go reasons:
 
-- DNS owner unknown.
-- DNS rollback owner unknown.
-- Nginx enable approver unknown.
-- Certificate approver unknown.
-- External smoke approver unknown.
-- Maintenance window unknown.
-- ACME method undecided.
-- Client-facing final hostname undecided.
+- Real-domain Nginx controlled smoke has not executed.
+- HTTP-01 challenge has not been tested.
+- Certificate has not been issued.
+- HTTPS has not been verified.
+- External smoke has not completed.
+- LINE webhook has not been registered.
+- Supabase staging has not connected.
+- Production secret injection has not completed.
 
-## Forbidden Until Approved
+## Forbidden Until Separate Execution Loop
 
 - Set `server_name admin.taiyolabel.site` in active Nginx.
 - Keep `/etc/nginx/sites-enabled/amami-line-crm.conf` enabled.
@@ -90,4 +92,4 @@ Before a future controlled smoke, record:
 
 ## Next
 
-Proceed only after owner approvals are recorded.
+Proceed only in a separate controlled smoke Loop that rechecks git status, DNS, active VPS source, candidate backup, rollback owner, maintenance window, and `production_no_go` before any Nginx enable/reload.

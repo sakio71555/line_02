@@ -11,9 +11,35 @@ It is a request package only. It does not approve production launch, DNS changes
 ```txt
 review_admin_hostname=admin.taiyolabel.site
 review_admin_hostname_purpose=internal review and admin operation confirmation
-client_facing_final_hostname=undecided
+client_facing_final_hostname=admin.taiyolabel.site
+separate_final_hostname=no
+owner_approval_status=approved_values_recorded
+acme_method=HTTP-01
 production_readiness=production_no_go
 ```
+
+## Returned Approval Values
+
+Loop 136 records the returned owner approvals:
+
+```txt
+review_admin_hostname=admin.taiyolabel.site
+client_facing_final_hostname=admin.taiyolabel.site
+separate_final_hostname=no
+dns_owner=Project owner / requestor
+dns_rollback_owner=Project owner / requestor
+nginx_enable_approver=Project owner / requestor
+certificate_approver=Project owner / requestor
+acme_method_approver=Project owner / requestor
+acme_method=HTTP-01
+fallback_acme_method=DNS-01 if HTTP-01 fails
+line_webhook_approver=Project owner / requestor
+supabase_staging_approver=Project owner / requestor
+final_go_no_go_owner=Project owner / requestor
+production_readiness=production_no_go
+```
+
+The approvals allow future gated planning for real-domain enablement, HTTP-01 certificate issuance, LINE webhook dry-run, and Supabase staging preflight. They do not execute or authorize automatic production launch in this Loop.
 
 ## What To Review On `admin.taiyolabel.site`
 
@@ -29,8 +55,8 @@ Please use it to confirm:
 
 Important boundaries:
 
-- `admin.taiyolabel.site` is not yet confirmed as the client-facing final public hostname.
-- It is not yet an approved production launch URL.
+- `admin.taiyolabel.site` is now approved as the review/admin hostname and the current final hostname.
+- It is still not an approved production launch URL until later gates pass.
 - It does not by itself approve DNS changes, HTTPS certificate issuance, LINE webhook registration, or Supabase production/staging connection.
 
 ## Approval Areas
@@ -111,7 +137,7 @@ Please answer:
 - Who approves RLS / migration verification?
 - Who approves rollback to `in_memory` if staging checks fail?
 
-No Supabase connection, migration apply, RLS change, DB URL use, or service-role key injection will be performed until these are approved.
+No Supabase connection, migration apply, RLS change, DB URL use, or service-role key injection will be performed until a separate execution Loop is approved.
 
 ## Reply Form
 
@@ -189,16 +215,17 @@ Notes:
 
 ## Minimum Required Before Next Public Work
 
-The next public-launch decision loop can only proceed after:
+Loop 136 recorded the returned approvals. The next execution Loop must still recheck:
 
-- `admin.taiyolabel.site` review/admin use is explicitly approved or rejected.
-- Client-facing final hostname remains intentionally undecided or is assigned an owner.
-- DNS owner and DNS rollback owner are known.
-- Certificate approver and ACME method approver are known.
-- Nginx enable approver and maintenance window are known.
-- LINE webhook approver is known.
-- Supabase staging approver and secret handling owner are known.
-- Final Go / No-Go owner is known.
+- `admin.taiyolabel.site` is the approved review/admin hostname and current final hostname.
+- Separate final hostname is intentionally not planned now.
+- DNS owner, DNS change owner, and DNS rollback owner are still reachable.
+- Certificate approver and ACME method approver are still available.
+- Nginx enable approver and maintenance window remain valid.
+- External smoke approver is still available.
+- LINE webhook approver is known, but webhook registration is not done.
+- Supabase staging approver and secret handling owner are known, but staging connection is not done.
+- Final Go / No-Go owner remains `Project owner / requestor`.
 
 ## Current No-Go
 
@@ -208,7 +235,11 @@ production_readiness=production_no_go
 
 Reasons:
 
-- Owner / approver values are not yet returned.
-- Client-facing final hostname is still undecided.
-- ACME method is still undecided.
-- DNS / HTTPS / Nginx / LINE / Supabase / secret injection approvals are missing.
+- Real-domain Nginx enable has not executed.
+- certbot has not executed.
+- HTTPS is not enabled.
+- External smoke has not executed.
+- LINE webhook is not registered.
+- Supabase real connection has not executed.
+- Production secret injection has not executed.
+- OpenAI real API has not executed.

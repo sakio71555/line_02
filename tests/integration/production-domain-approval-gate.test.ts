@@ -47,9 +47,12 @@ describe("Loop 117 production domain approval gate", () => {
     expect(combined).toContain("production_readiness=production_no_go");
     expect(combined).toContain("canonical_hostname=admin.taiyolabel.site");
     expect(combined).toContain("hostname_role=verification / admin management hostname");
-    expect(combined).toContain("DNS account owner: unknown");
-    expect(combined).toContain("DNS rollback owner: unknown");
-    expect(combined).toContain("ACME method: undecided");
+    expect(combined).toContain("domain_ownership=unknown");
+    expect(combined).toContain("dns_rollback_owner=unknown");
+    expect(combined).toContain("acme_method=undecided");
+    expect(approvalSheet).toContain("DNS account owner: Project owner / requestor");
+    expect(approvalSheet).toContain("DNS rollback owner: Project owner / requestor");
+    expect(approvalSheet).toContain("ACME method: HTTP-01");
     expect(combined).not.toContain("canonical_hostname=amamihome.net");
     expect(combined).not.toContain("canonical_hostname=api.taiyolabel.site");
   });

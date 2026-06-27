@@ -10,8 +10,11 @@ Do not write secrets, `.env` values, private keys, LINE user IDs, real customer 
 
 ```txt
 review_admin_hostname=admin.taiyolabel.site
-client_facing_final_hostname=undecided
-owner_approval_status=pending
+client_facing_final_hostname=admin.taiyolabel.site
+separate_final_hostname=no
+owner_approval_status=approved_values_recorded
+acme_method=HTTP-01
+acme_fallback=DNS-01 if HTTP-01 fails
 production_readiness=production_no_go
 ```
 
@@ -20,23 +23,23 @@ production_readiness=production_no_go
 - Review/admin hostname:
   `admin.taiyolabel.site`
 - Client-facing final hostname:
-  `undecided`
+  `admin.taiyolabel.site`
 - Is `admin.taiyolabel.site` acceptable as temporary review/admin URL?
-  - [ ] yes
+  - [x] yes
   - [ ] no
 - Final hostname decision owner:
-  `unknown`
+  `Project owner / requestor`
 
 ## 2. DNS
 
 - DNS provider:
-  `unknown`
+  `dnsv.jp / GMO DNS inferred`
 - DNS account owner:
-  `unknown`
+  `Project owner / requestor`
 - DNS change owner:
-  `unknown`
+  `Project owner / requestor`
 - DNS rollback owner:
-  `unknown`
+  `Project owner / requestor`
 - Current A record:
   `160.251.174.201`
 - AAAA policy:
@@ -48,37 +51,37 @@ production_readiness=production_no_go
 - DNS rollback record:
   `unknown`
 - DNS change approval:
-  - [ ] approved
+  - [x] approved
   - [ ] not approved
 
 ## 3. Nginx
 
 - Nginx enable approver:
-  `unknown`
+  `Project owner / requestor`
 - Real-domain enable approval:
-  - [ ] approved
+  - [x] approved for future gated Loop
   - [ ] not approved
 - Maintenance window:
-  `unknown`
+  `now / approved by Project owner`
 - Rollback executor:
-  `unknown`
+  `Project owner / requestor`
 - External smoke approver:
-  `unknown`
+  `Project owner / requestor`
 
 ## 4. HTTPS / ACME
 
 - Certificate approver:
-  `unknown`
+  `Project owner / requestor`
 - ACME method:
-  - [ ] HTTP-01
+  - [x] HTTP-01
   - [ ] DNS-01
   - [ ] undecided
 - Certificate SAN:
-  `unknown`
+  `admin.taiyolabel.site`
 - Private key owner:
-  `unknown`
+  `server-side certificate owner, value not recorded`
 - Renewal owner:
-  `unknown`
+  `Project owner / requestor`
 - CAA approval:
   - [ ] approved
   - [ ] not approved
@@ -86,13 +89,13 @@ production_readiness=production_no_go
 ## 5. LINE
 
 - LINE official account admin:
-  `unknown`
+  `Project owner / requestor`
 - LINE webhook approver:
-  `unknown`
+  `Project owner / requestor`
 - Candidate webhook URL:
   `https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>`
 - Webhook registration approval:
-  - [ ] approved
+  - [x] approved for future dry-run planning
   - [ ] not approved
 - Real push approval:
   - [ ] approved
@@ -101,28 +104,28 @@ production_readiness=production_no_go
 ## 6. Supabase
 
 - Supabase staging project owner:
-  `unknown`
+  `Project owner / requestor`
 - Supabase staging approver:
-  `unknown`
+  `Project owner / requestor`
 - Service role secret owner:
-  `unknown`
+  `Project owner / requestor`
 - DB URL owner:
-  `unknown`
+  `Project owner / requestor`
 - RLS/migration approver:
-  `unknown`
+  `Project owner / requestor`
 - Staging connection approval:
-  - [ ] approved
+  - [x] approved for future staging preflight planning
   - [ ] not approved
 
 ## 7. Final decision
 
 - Final Go/No-Go owner:
-  `unknown`
+  `Project owner / requestor`
 - Final status:
   - [ ] Go
-  - [ ] No-Go
+  - [x] No-Go until real-domain smoke, HTTPS, LINE webhook, and Supabase staging gates pass
 - Notes:
-  `unknown`
+  `production_no_go maintained`
 
 ## Safety Boundary
 

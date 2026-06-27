@@ -26,7 +26,8 @@ tenant_id_source=webhookSecret path resolved by app config
 
 ```txt
 candidate_line_webhook_url=https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
-candidate_url_status=not_approved_for_registration
+candidate_url_status=approved_for_future_dry_run_planning_not_registered
+line_webhook_approver=Project owner / requestor
 ```
 
 This candidate URL is a planning value only.
@@ -81,14 +82,15 @@ production_readiness=production_no_go
 
 ```txt
 line_webhook_production_url_status=no_go
+line_webhook_approver=Project owner / requestor
+line_webhook_registration=not_done
 production_readiness=production_no_go
 ```
 
 Reasons:
 
-- Candidate URL is not approved for registration.
+- Candidate URL is approved for future dry-run planning only, not registered.
 - HTTPS not enabled.
 - External smoke not completed.
-- LINE webhook approver unknown.
 - LINE channel secret not injected.
 - LINE real push disabled.

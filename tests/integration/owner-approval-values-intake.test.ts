@@ -26,25 +26,20 @@ describe("Loop 134 owner approval values intake docs", () => {
     }
   });
 
-  it("keeps the approved review/admin hostname while leaving client-facing hostname undecided", () => {
-    const combined = readCombined([
-      paths.loop134Task,
-      paths.intakeForm,
-      paths.questions,
-      paths.ownerMatrix,
-      paths.approvalSheet,
-      paths.readiness
-    ]);
+  it("keeps the Loop 134 intake history and records the later Loop 136 final hostname decision", () => {
+    const loop134Task = readText(resolve(paths.loop134Task));
+    const combined = readCombined([paths.intakeForm, paths.ownerMatrix, paths.approvalSheet, paths.readiness]);
 
+    expect(loop134Task).toContain("client_facing_final_hostname=undecided");
     expect(combined).toContain("review_admin_hostname=admin.taiyolabel.site");
     expect(combined).toContain("approved_review_admin_host=admin.taiyolabel.site");
     expect(combined).toContain("admin.taiyolabel.site");
-    expect(combined).toContain("client_facing_final_hostname=undecided");
-    expect(combined).toContain("Client-facing final hostname: undecided");
-    expect(combined).not.toContain("client_facing_final_hostname=admin.taiyolabel.site");
+    expect(combined).toContain("client_facing_final_hostname=admin.taiyolabel.site");
+    expect(combined).toContain("Client-facing final hostname: admin.taiyolabel.site");
+    expect(combined).toContain("separate_final_hostname=no");
   });
 
-  it("keeps all required approval owners unknown or pending", () => {
+  it("keeps the original intake unknowns while recording Loop 136 approved owner values", () => {
     const combined = readCombined([paths.loop134Task, paths.intakeForm, paths.ownerMatrix, paths.approvalRecord, paths.approvalSheet]);
 
     for (const expected of [
@@ -64,16 +59,17 @@ describe("Loop 134 owner approval values intake docs", () => {
       expect(combined).toContain(expected);
     }
 
-    expect(combined).toContain("Domain owner | unknown | pending");
-    expect(combined).toContain("DNS change owner | unknown | pending");
-    expect(combined).toContain("DNS rollback owner | unknown | pending");
-    expect(combined).toContain("Nginx enable approver | unknown | pending");
-    expect(combined).toContain("Certificate approver | unknown | pending");
-    expect(combined).toContain("ACME method approver | unknown | pending");
-    expect(combined).toContain("LINE webhook approver | unknown | pending");
-    expect(combined).toContain("Supabase staging approver | unknown | pending");
-    expect(combined).toContain("Production secret injection approver | unknown | pending");
-    expect(combined).toContain("owner_approval_status=pending");
+    expect(readText(resolve(paths.loop134Task))).toContain("values remain `unknown / pending`");
+    expect(combined).toContain("Domain owner | Project owner / requestor | recorded");
+    expect(combined).toContain("DNS change owner | Project owner / requestor | recorded");
+    expect(combined).toContain("DNS rollback owner | Project owner / requestor | recorded");
+    expect(combined).toContain("Nginx enable approver | Project owner / requestor | recorded");
+    expect(combined).toContain("Certificate approver | Project owner / requestor | recorded");
+    expect(combined).toContain("ACME method approver | Project owner / requestor | recorded");
+    expect(combined).toContain("LINE webhook approver | Project owner / requestor | recorded");
+    expect(combined).toContain("Supabase staging approver | Project owner / requestor | recorded");
+    expect(combined).toContain("Production secret injection approver | Project owner / requestor | recorded");
+    expect(combined).toContain("owner_approval_status=approved_values_recorded");
   });
 
   it("defines minimal Go conditions for Loop 135 through Loop 138", () => {

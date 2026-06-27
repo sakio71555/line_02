@@ -11,9 +11,11 @@ This runbook does not connect to Supabase, run psql, apply migrations, change RL
 ```txt
 supabase_runtime=disconnected
 repository=in_memory
-supabase_real_connection=not_allowed
+supabase_real_connection=approved_for_future_staging_preflight_not_performed
 service_role_key_injected=no
 db_url_injected=no
+supabase_staging_approver=Project owner / requestor
+production_secret_injection_approver=Project owner / requestor
 production_readiness=production_no_go
 ```
 
@@ -62,15 +64,19 @@ service_role_secret_injection_owner
 
 ```txt
 supabase_staging_status=no_go
+supabase_staging_approver=Project owner / requestor
+production_secret_injection_approver=Project owner / requestor
+supabase_real_connection=not_performed
+secret_injection=not_performed
 production_readiness=production_no_go
 ```
 
 Reasons:
 
-- staging Supabase project unknown.
+- staging preflight is approved for future planning, but no real connection has been performed.
 - secret injection not done.
 - RLS/migration apply state unconfirmed.
-- backup/rollback undefined.
+- backup/rollback must be confirmed again before execution.
 
 ## Next
 

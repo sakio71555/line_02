@@ -40,6 +40,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | Public launch readiness bundle | Loop 129-133でACME方式選定dry-run、real-domain Nginx enable gate、LINE webhook URL dry-run、owner approval matrix、Supabase staging preflightを追加。すべてplanning/static testのみで、production readinessは `production_no_go` |
 | Owner approval values intake | Loop 134でhuman approval intake formとclient / operations confirmation questionsを追加。owner/approver valuesは未入力、client-facing final hostnameはundecided、DNS/Nginx/HTTPS/LINE/Supabase/secret injectionは未承認 |
 | Client-facing approval request package | Loop 135でクライアント/運用者向けの承認依頼パッケージを追加。`admin.taiyolabel.site` で確認する内容、DNS/HTTPS/LINE/Supabaseの承認事項、返信フォームを整理。実作業・外部接続なし |
+| Approval docs finalization | Loop 136で承認値をdocsへ反映。`admin.taiyolabel.site` はreview/admin hostnameかつ現時点のfinal hostname。ACME方式は `HTTP-01`、fallbackは `DNS-01`。実作業・外部接続なし |
 | production deploy/smoke | 未実施 |
 
 ## Go Conditions
@@ -67,10 +68,13 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - OpenAI real HTTP transport、本番接続、cost/rate limit運用、prompt logging policyが未完了。
 - VPS deploy、SSL issue、nginx reload、systemd service作成、external smokeが未完了。
 - production接続やsecret表示が必要になる。
-- DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、LINE webhook approver、Maintenance window、Final Go/No-Go ownerが未確定。
-- DNS change owner、ACME method approver、External smoke approver、Supabase staging approver、Production secret injection approverが未確定。
-- client-facing final hostnameがundecided。
-- Human approval intake formは整備済みだが、owner/approver valuesは未入力。
+- real-domain Nginx controlled smokeが未実施。
+- certbot / HTTP-01 challengeが未実施。
+- HTTPSが未有効化。
+- external smokeが未実施。
+- LINE webhook登録が未実施。
+- Supabase real connectionが未実施。
+- production secret injectionが未実施。
 
 ## Auth/JWT
 
@@ -311,6 +315,42 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - LINE/OpenAI flagsはoffのまま起動確認する。
 - real enablementは別Loopの明示許可で行う。
 
+## Loop 136 Approval Values Finalization
+
+Loop 136では、以下をdocsへ反映した。
+
+```txt
+review_admin_hostname=admin.taiyolabel.site
+client_facing_final_hostname=admin.taiyolabel.site
+separate_final_hostname=no
+dns_owner=Project owner / requestor
+dns_change_owner=Project owner / requestor
+dns_rollback_owner=Project owner / requestor
+nginx_enable_approver=Project owner / requestor
+certificate_approver=Project owner / requestor
+acme_method_approver=Project owner / requestor
+acme_method=HTTP-01
+fallback_acme_method=DNS-01 if HTTP-01 fails
+line_webhook_approver=Project owner / requestor
+external_smoke_approver=Project owner / requestor
+maintenance_window=now / approved by Project owner
+final_go_no_go_owner=Project owner / requestor
+supabase_staging_approver=Project owner / requestor
+production_secret_injection_approver=Project owner / requestor
+```
+
+Loop 136で実施していないこと:
+
+- DNS変更。
+- certbot / ACME challenge / certificate issuance / HTTPS。
+- Nginx active config変更、`sites-enabled`変更、reload/restart。
+- external HTTP/HTTPS smoke。
+- LINE webhook登録、LINE API、本番LINE送信。
+- OpenAI実API。
+- Supabase実接続、migration、RLS変更。
+- production secret injection。
+- `.env` 作成・変更・表示。
+
 ## Final Judgment
 
 `production_no_go`
@@ -320,6 +360,6 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Admin UIのsession境界はfake auth clientで検証済みだが、実Supabase Auth client注入とreal login/session/token smokeが未完了。
 - LINE本送信はgate済みだが、実送信UI、実transport、安全なrecipient smoke、永続audit/idempotency storeが未完了。
 - OpenAI real API gateとfake transport境界は追加済みだが、実HTTP transport、本番接続、cost/rate limit運用は未完了。
-- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundleは追加済み。Loop 128で `.invalid` app candidateのAdmin/API proxy smokeは成功し、Loop 129-133でACME/Nginx/LINE/owner/Supabase preflight plansを整備したが、DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method approver、LINE webhook approver、Supabase staging approver、Production secret injection approver、Maintenance window、Final Go/No-Go owner、client-facing final hostnameは未確定で、actual real-domain enable、HTTPS発行、external smoke、LINE webhook登録、Supabase staging接続、production secret injectionは未実施。
+- VPS deployment plan/templates、production start/port boundary、dry preflight command pack、localhost-only review配置、Nginx include dry-run final gate、Nginx reload rollback dry-run、Host header routing diagnosis、Domain/DNS/HTTPS readiness inventory、approved domain DNS inventory、domain/release approval record、release commit alignment record、copy-based archive deploy attempt、copy-based staging test compatibility patch、active localhost-only copy-based redeploy、corrected Nginx candidate reload smoke、Nginx server selection diagnosis、diagnostic probe server block reload smoke、listen/server_name/default_server diagnosis、corrected app Nginx candidate proxy remediation、public launch readiness bundle、approval docs finalizationは追加済み。Loop 128で `.invalid` app candidateのAdmin/API proxy smokeは成功し、Loop 136で承認値とHTTP-01方針は記録済みだが、actual real-domain enable、certbot/HTTPS発行、external smoke、LINE webhook登録、Supabase staging接続、production secret injection、OpenAI実APIは未実施。
 
-この判定は、Loop 129-133時点でもcontrolled production enablementへ進むにはowner approvals、ACME method decision、real-domain enable gate、external smoke、production secret injection、Supabase staging approval、追加Loop、人間承認が必要であることを示す。
+この判定は、Loop 136時点でもcontrolled production enablementへ進むにはreal-domain enable gate、HTTP-01 execution gate、certbot/HTTPS gate、external smoke、LINE webhook、Supabase staging、production secret injection、追加Loop、人間承認が必要であることを示す。

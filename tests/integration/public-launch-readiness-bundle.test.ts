@@ -43,13 +43,13 @@ describe("Loop 129-133 public launch readiness bundle docs", () => {
     }
   });
 
-  it("keeps ACME method undecided and both challenge methods in No-Go planning state", () => {
+  it("keeps the Loop 129 ACME method history while recording the later Loop 136 approval", () => {
     const combined = readCombined([paths.loop129Task, paths.loop129Runbook, paths.readiness, paths.devLog]);
 
     expect(combined).toContain("acme_method=undecided");
-    expect(combined).toContain("recommended_method=undecided");
+    expect(combined).toContain("acme_method=HTTP-01");
     expect(combined).toContain("http_01_status=no_go");
-    expect(combined).toContain("dns_01_status=no_go");
+    expect(combined).toContain("dns_01_fallback_status=documented");
     expect(combined).toContain("DNS owner unknown");
     expect(combined).toContain("DNS rollback owner unknown");
     expect(combined).toContain("Nginx enable approver unknown");

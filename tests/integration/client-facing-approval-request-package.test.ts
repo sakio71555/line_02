@@ -22,15 +22,16 @@ describe("Loop 135 client-facing approval request package docs", () => {
     expect(existsSync(resolve(paths.packageDoc))).toBe(true);
   });
 
-  it("explains admin.taiyolabel.site as review/admin hostname, not final client-facing hostname", () => {
+  it("keeps the Loop 135 request history and records the later Loop 136 final hostname decision", () => {
     const combined = readCombined([paths.loop135Task, paths.packageDoc, paths.ownerMatrix, paths.readiness]);
 
     expect(combined).toContain("review_admin_hostname=admin.taiyolabel.site");
     expect(combined).toContain("review_admin_hostname_purpose=internal review and admin operation confirmation");
     expect(combined).toContain("What To Review On `admin.taiyolabel.site`");
     expect(combined).toContain("client_facing_final_hostname=undecided");
-    expect(combined).toContain("It is not yet an approved production launch URL");
-    expect(combined).not.toContain("client_facing_final_hostname=admin.taiyolabel.site");
+    expect(combined).toContain("client_facing_final_hostname=admin.taiyolabel.site");
+    expect(combined).toContain("separate_final_hostname=no");
+    expect(combined).toContain("It is still not an approved production launch URL until later gates pass");
   });
 
   it("summarizes required approvals for DNS, HTTPS, Nginx, LINE, and Supabase", () => {
