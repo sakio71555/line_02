@@ -2,10 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { OpenAiResponsesFetch } from "@amami-line-crm/ai";
 
-import {
-  runOpenAiProviderSmoke,
-  runOpenAiProviderSmokeCli
-} from "../../scripts/smoke/openai-provider-smoke";
+import { runOpenAiProviderSmokeCli } from "../../scripts/smoke/openai-provider-smoke";
 
 describe("Loop 162 OpenAI provider smoke command", () => {
   it("fails fast when OPENAI_API_KEY is missing", async () => {
@@ -22,6 +19,7 @@ describe("Loop 162 OpenAI provider smoke command", () => {
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toContain("openai_smoke=not_performed");
     expect(result.stdout).toContain("reason=openai_api_key_missing");
+    expect(result.stdout).toContain("request_sent=false");
     expect(openAiFetch).not.toHaveBeenCalled();
   });
 
@@ -39,6 +37,7 @@ describe("Loop 162 OpenAI provider smoke command", () => {
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toContain("openai_smoke=not_performed");
     expect(result.stdout).toContain("reason=openai_model_missing");
+    expect(result.stdout).toContain("request_sent=false");
     expect(result.stdout).not.toContain("private-openai-key");
     expect(openAiFetch).not.toHaveBeenCalled();
   });
@@ -58,6 +57,7 @@ describe("Loop 162 OpenAI provider smoke command", () => {
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toContain("openai_smoke=not_performed");
     expect(result.stdout).toContain("reason=openai_real_api_smoke_not_approved");
+    expect(result.stdout).toContain("request_sent=false");
     expect(result.stdout).not.toContain("private-openai-key");
     expect(openAiFetch).not.toHaveBeenCalled();
   });
@@ -93,8 +93,10 @@ describe("Loop 162 OpenAI provider smoke command", () => {
     expect(openAiFetch).toHaveBeenCalledTimes(1);
     expect(result.stdout).toContain("openai_smoke=success");
     expect(result.stdout).toContain("provider=openai");
+    expect(result.stdout).toContain("request_sent=true");
     expect(result.stdout).toContain("response_received=true");
     expect(result.stdout).toContain("response_body_recorded=false");
+    expect(result.stdout).toContain("prompt_body_recorded=false");
     expect(result.stdout).toContain("api_key_recorded=false");
     expect(result.stdout).not.toContain("private-openai-key");
     expect(result.stdout).not.toContain(rawResponseBody);
@@ -103,14 +105,19 @@ describe("Loop 162 OpenAI provider smoke command", () => {
   it("sanitizes provider failures and does not print request secrets", async () => {
     const openAiFetch = vi.fn<OpenAiResponsesFetch>(async () => ({
       ok: false,
+      status: 401,
       async json() {
         return {
-          error: "private-openai-key should not be printed"
+          error: {
+            code: "invalid_api_key",
+            type: "authentication_error",
+            message: "private-openai-key should not be printed"
+          }
         };
       }
     }));
 
-    const result = await runOpenAiProviderSmoke({
+    const result = await runOpenAiProviderSmokeCli({
       env: {
         AI_PROVIDER: "openai",
         OPENAI_API_KEY: "private-openai-key",
@@ -121,13 +128,18 @@ describe("Loop 162 OpenAI provider smoke command", () => {
     });
 
     expect(openAiFetch).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({
-      status: "failed",
-      provider: "openai",
-      errorClass: "OpenAiProviderError",
-      responseBodyRecorded: false,
-      apiKeyRecorded: false
-    });
-    expect(JSON.stringify(result)).not.toContain("private-openai-key");
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("openai_smoke=failed");
+    expect(result.stdout).toContain("request_sent=true");
+    expect(result.stdout).toContain("error_class=OpenAiProviderError");
+    expect(result.stdout).toContain("error_status=401");
+    expect(result.stdout).toContain("error_code=invalid_api_key");
+    expect(result.stdout).toContain("error_type=authentication_error");
+    expect(result.stdout).toContain("error_classification=C_auth_or_key_rejected");
+    expect(result.stdout).toContain("response_body_recorded=false");
+    expect(result.stdout).toContain("prompt_body_recorded=false");
+    expect(result.stdout).toContain("api_key_recorded=false");
+    expect(result.stdout).not.toContain("private-openai-key");
+    expect(result.stdout).not.toContain("Authorization");
   });
 });

@@ -152,6 +152,7 @@ export interface OpenAiResponsesTransportResponse {
 
 export interface OpenAiResponsesFetchResponse {
   ok: boolean;
+  status?: number;
   json(): Promise<unknown>;
 }
 
@@ -169,11 +170,76 @@ export interface OpenAiResponsesTransport {
 
 export class OpenAiProviderError extends Error {
   readonly code = "openai_provider_failed";
+  readonly status: number | null;
+  readonly providerCode: string | null;
+  readonly providerType: string | null;
+  readonly classification: OpenAiProviderErrorClassification;
 
-  constructor() {
+  constructor(input: OpenAiProviderErrorInput = {}) {
     super("OpenAI provider request failed.");
     this.name = "OpenAiProviderError";
+    this.status = input.status ?? null;
+    this.providerCode = sanitizeOpenAiErrorToken(input.providerCode);
+    this.providerType = sanitizeOpenAiErrorToken(input.providerType);
+    this.classification =
+      input.classification ??
+      classifyOpenAiProviderError({
+        status: this.status,
+        providerCode: this.providerCode,
+        providerType: this.providerType
+      });
   }
+}
+
+export type OpenAiProviderErrorClassification =
+  | "A_env_missing_or_malformed"
+  | "B_model_missing_or_invalid"
+  | "C_auth_or_key_rejected"
+  | "D_quota_or_billing_or_project_access"
+  | "E_network_or_timeout"
+  | "F_request_shape_or_provider_mapping_bug"
+  | "G_response_parse_bug"
+  | "H_provider_transport_bug"
+  | "I_unknown_sanitized";
+
+export interface OpenAiProviderErrorInput {
+  status?: number | null;
+  providerCode?: string | null;
+  providerType?: string | null;
+  classification?: OpenAiProviderErrorClassification;
+}
+
+export interface OpenAiProviderErrorClassificationInput {
+  status?: number | null;
+  providerCode?: string | null;
+  providerType?: string | null;
+}
+
+export function classifyOpenAiProviderError(
+  input: OpenAiProviderErrorClassificationInput
+): OpenAiProviderErrorClassification {
+  const status = typeof input.status === "number" ? input.status : null;
+  const providerCode = input.providerCode?.toLowerCase() ?? "";
+  const providerType = input.providerType?.toLowerCase() ?? "";
+  const combined = `${providerCode} ${providerType}`;
+
+  if (status === 401 || status === 403) {
+    return "C_auth_or_key_rejected";
+  }
+
+  if (status === 404 && combined.includes("model")) {
+    return "B_model_missing_or_invalid";
+  }
+
+  if (status === 429) {
+    return "D_quota_or_billing_or_project_access";
+  }
+
+  if (status === 400 || combined.includes("invalid_request")) {
+    return "F_request_shape_or_provider_mapping_bug";
+  }
+
+  return "I_unknown_sanitized";
 }
 
 export class FetchOpenAiResponsesTransport implements OpenAiResponsesTransport {
@@ -189,20 +255,38 @@ export class FetchOpenAiResponsesTransport implements OpenAiResponsesTransport {
     request: OpenAiResponsesRequest,
     options: OpenAiResponsesTransportOptions
   ): Promise<OpenAiResponsesTransportResponse> {
-    const response = await this.fetchImplementation(this.endpoint, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${options.apiKey}`,
-        "content-type": "application/json"
-      },
-      body: JSON.stringify(request)
-    });
+    let response: OpenAiResponsesFetchResponse;
 
-    if (!response.ok) {
-      throw new OpenAiProviderError();
+    try {
+      response = await this.fetchImplementation(this.endpoint, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${options.apiKey}`,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify(request)
+      });
+    } catch {
+      throw new OpenAiProviderError({ classification: "E_network_or_timeout" });
     }
 
-    const payload = await response.json();
+    if (!response.ok) {
+      const providerError = await readSanitizedOpenAiProviderError(response);
+
+      throw new OpenAiProviderError({
+        status: response.status ?? null,
+        providerCode: providerError.providerCode,
+        providerType: providerError.providerType
+      });
+    }
+
+    let payload: unknown;
+
+    try {
+      payload = await response.json();
+    } catch {
+      throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    }
 
     return normalizeOpenAiResponsesPayload(payload);
   }
@@ -302,8 +386,8 @@ export class OpenAiProvider implements AiProvider {
         recommended_response_mode: readRecommendedResponseMode(parsed),
         provider: "openai"
       };
-    } catch {
-      throw new OpenAiProviderError();
+    } catch (error) {
+      throw preserveOpenAiProviderError(error);
     }
   }
 
@@ -334,8 +418,8 @@ export class OpenAiProvider implements AiProvider {
         should_handoff: readBoolean(parsed, "should_handoff"),
         provider: "openai"
       };
-    } catch {
-      throw new OpenAiProviderError();
+    } catch (error) {
+      throw preserveOpenAiProviderError(error);
     }
   }
 
@@ -366,8 +450,8 @@ export class OpenAiProvider implements AiProvider {
         recommended_response_mode: readRecommendedResponseMode(parsed),
         provider: "openai"
       };
-    } catch {
-      throw new OpenAiProviderError();
+    } catch (error) {
+      throw preserveOpenAiProviderError(error);
     }
   }
 }
@@ -504,13 +588,19 @@ function parseOpenAiJsonResponse(response: OpenAiResponsesTransportResponse): Re
   const output = response.output_text ?? response.outputText;
 
   if (!output) {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
   }
 
-  const parsed: unknown = JSON.parse(output);
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(output);
+  } catch {
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+  }
 
   if (!isRecord(parsed)) {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
   }
 
   return parsed;
@@ -518,7 +608,7 @@ function parseOpenAiJsonResponse(response: OpenAiResponsesTransportResponse): Re
 
 function normalizeOpenAiResponsesPayload(payload: unknown): OpenAiResponsesTransportResponse {
   if (!isRecord(payload)) {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
   }
 
   const outputText = readOptionalString(payload.output_text) ?? readOptionalString(payload.outputText);
@@ -533,7 +623,7 @@ function normalizeOpenAiResponsesPayload(payload: unknown): OpenAiResponsesTrans
     return { output_text: nestedOutputText };
   }
 
-  throw new OpenAiProviderError();
+  throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
 }
 
 function readOutputTextFromResponsesOutput(output: unknown): string | null {
@@ -620,7 +710,7 @@ function requireNonEmptyOpenAiConfig(value: string): string {
   const normalized = readNonEmptyString(value);
 
   if (!normalized) {
-    throw new OpenAiProviderError();
+    throw new OpenAiProviderError({ classification: "A_env_missing_or_malformed" });
   }
 
   return normalized;
@@ -660,4 +750,47 @@ function openAiGateFailure(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function preserveOpenAiProviderError(error: unknown): OpenAiProviderError {
+  if (error instanceof OpenAiProviderError) {
+    return error;
+  }
+
+  return new OpenAiProviderError({ classification: "H_provider_transport_bug" });
+}
+
+async function readSanitizedOpenAiProviderError(
+  response: OpenAiResponsesFetchResponse
+): Promise<{ providerCode: string | null; providerType: string | null }> {
+  try {
+    const payload = await response.json();
+
+    if (!isRecord(payload) || !isRecord(payload.error)) {
+      return { providerCode: null, providerType: null };
+    }
+
+    return {
+      providerCode: readOptionalString(payload.error.code),
+      providerType: readOptionalString(payload.error.type)
+    };
+  } catch {
+    return { providerCode: null, providerType: null };
+  }
+}
+
+function sanitizeOpenAiErrorToken(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  const sanitized = normalized.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 80);
+
+  return sanitized || null;
 }

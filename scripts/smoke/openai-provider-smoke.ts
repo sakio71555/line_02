@@ -4,6 +4,7 @@ import {
   FetchOpenAiResponsesTransport,
   OpenAiProvider,
   OpenAiProviderError,
+  type OpenAiProviderErrorClassification,
   type OpenAiResponsesFetch
 } from "@amami-line-crm/ai";
 
@@ -18,12 +19,17 @@ export interface OpenAiProviderSmokeResult {
   status: OpenAiProviderSmokeStatus;
   provider: "openai" | "not_openai";
   modelConfigured: boolean;
+  requestSent: boolean;
   responseReceived: boolean;
   responseBodyRecorded: false;
-  promptRecorded: false;
+  promptBodyRecorded: false;
   apiKeyRecorded: false;
   reason?: string;
   errorClass?: string;
+  errorStatus?: string;
+  errorCode?: string;
+  errorType?: string;
+  errorClassification?: OpenAiProviderErrorClassification | "success";
 }
 
 export interface OpenAiProviderSmokeInput {
@@ -63,6 +69,8 @@ export async function runOpenAiProviderSmoke(
     return notPerformed("openai_real_api_smoke_not_approved", "openai", true);
   }
 
+  let requestSent = false;
+
   try {
     const providerBoundary = new OpenAiProvider({
       apiKey,
@@ -71,6 +79,8 @@ export async function runOpenAiProviderSmoke(
         fetch: input.openAiFetch ?? createTimeoutFetch(input.timeoutMs ?? DEFAULT_TIMEOUT_MS)
       })
     });
+
+    requestSent = true;
 
     await providerBoundary.draftReply({
       tenant_id: SMOKE_TENANT_ID,
@@ -89,21 +99,29 @@ export async function runOpenAiProviderSmoke(
       status: "success",
       provider: "openai",
       modelConfigured: true,
+      requestSent: true,
       responseReceived: true,
       responseBodyRecorded: false,
-      promptRecorded: false,
+      promptBodyRecorded: false,
       apiKeyRecorded: false
     };
   } catch (error) {
+    const diagnostics = classifyOpenAiSmokeError(error);
+
     return {
       status: "failed",
       provider: "openai",
       modelConfigured: true,
+      requestSent,
       responseReceived: false,
       responseBodyRecorded: false,
-      promptRecorded: false,
+      promptBodyRecorded: false,
       apiKeyRecorded: false,
-      errorClass: sanitizeErrorClass(error)
+      errorClass: diagnostics.errorClass,
+      errorStatus: diagnostics.errorStatus,
+      errorCode: diagnostics.errorCode,
+      errorType: diagnostics.errorType,
+      errorClassification: diagnostics.errorClassification
     };
   }
 }
@@ -113,8 +131,10 @@ export function formatOpenAiProviderSmokeResult(result: OpenAiProviderSmokeResul
     `openai_smoke=${result.status}`,
     `provider=${result.provider}`,
     result.modelConfigured ? "model=configured; value not displayed" : "model=not_configured",
+    `request_sent=${result.requestSent ? "true" : "false"}`,
     `response_received=${result.responseReceived ? "true" : "false"}`,
     "response_body_recorded=false",
+    "prompt_body_recorded=false",
     "prompt_recorded=false",
     "api_key_recorded=false"
   ];
@@ -127,7 +147,62 @@ export function formatOpenAiProviderSmokeResult(result: OpenAiProviderSmokeResul
     lines.push(`error_class=${result.errorClass}`);
   }
 
+  if (result.errorStatus) {
+    lines.push(`error_status=${result.errorStatus}`);
+  }
+
+  if (result.errorCode) {
+    lines.push(`error_code=${result.errorCode}`);
+  }
+
+  if (result.errorType) {
+    lines.push(`error_type=${result.errorType}`);
+  }
+
+  if (result.errorClassification) {
+    lines.push(`error_classification=${result.errorClassification}`);
+  }
+
   return `${lines.join("\n")}\n`;
+}
+
+export function classifyOpenAiSmokeError(error: unknown): {
+  errorClass: string;
+  errorStatus: string;
+  errorCode: string;
+  errorType: string;
+  errorClassification: OpenAiProviderErrorClassification;
+} {
+  if (error instanceof OpenAiProviderError) {
+    return {
+      errorClass: "OpenAiProviderError",
+      errorStatus: error.status === null ? "unavailable" : String(error.status),
+      errorCode: error.providerCode ?? "unavailable",
+      errorType: error.providerType ?? "unavailable",
+      errorClassification: error.classification
+    };
+  }
+
+  if (error instanceof Error && error.name.trim()) {
+    return {
+      errorClass: sanitizeErrorClass(error),
+      errorStatus: "unavailable",
+      errorCode: "unavailable",
+      errorType: "unavailable",
+      errorClassification:
+        error.name === "AbortError" || error.name === "TimeoutError"
+          ? "E_network_or_timeout"
+          : "I_unknown_sanitized"
+    };
+  }
+
+  return {
+    errorClass: "UnknownError",
+    errorStatus: "unavailable",
+    errorCode: "unavailable",
+    errorType: "unavailable",
+    errorClassification: "I_unknown_sanitized"
+  };
 }
 
 export async function runOpenAiProviderSmokeCli(
@@ -151,9 +226,10 @@ function notPerformed(
     status: "not_performed",
     provider,
     modelConfigured,
+    requestSent: false,
     responseReceived: false,
     responseBodyRecorded: false,
-    promptRecorded: false,
+    promptBodyRecorded: false,
     apiKeyRecorded: false,
     reason
   };
@@ -204,11 +280,16 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         status: "failed",
         provider: "openai",
         modelConfigured: false,
+        requestSent: false,
         responseReceived: false,
         responseBodyRecorded: false,
-        promptRecorded: false,
+        promptBodyRecorded: false,
         apiKeyRecorded: false,
-        errorClass: "UnhandledSmokeError"
+        errorClass: "UnhandledSmokeError",
+        errorStatus: "unavailable",
+        errorCode: "unavailable",
+        errorType: "unavailable",
+        errorClassification: "I_unknown_sanitized"
       })
     );
     process.exitCode = 1;
