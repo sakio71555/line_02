@@ -157,3 +157,18 @@ Updated No-Go reasons:
 - LINE real reply/push single-message smoke is still pending.
 - LINE Official Account auto-response OFF is still pending.
 - Final Go/No-Go approval is not complete.
+
+## Loop 152 Update
+
+Supabase staging connection was attempted after runtime wiring was added.
+
+```txt
+supabase_runtime_startup_ready=true
+supabase_read_smoke_ready=false
+supabase_ready=false
+current_runtime_after_loop=in_memory
+write_smoke=not_performed
+production_readiness=production_no_go
+```
+
+The fast-lane Supabase blocker changed from startup wiring incomplete to read-smoke / connection preflight remediation required.

@@ -68,4 +68,18 @@ line_reply_push_ready=false
 production_readiness=production_no_go
 ```
 
+## Loop 152 Supabase Staging Connection Result
+
+```txt
+supabase_runtime_startup_ready=true
+supabase_read_smoke_ready=false
+supabase_ready=false
+current_runtime_after_loop=in_memory
+write_smoke=not_performed
+line_invalid_signature_after_supabase=401
+production_readiness=production_no_go
+```
+
+Supabase runtime health reached 200 after the Node.js 20 WebSocket transport fix, but admin customers read smoke returned 500. The runtime was rolled back to `in_memory`, and production remains No-Go. Secret values, concrete Supabase endpoints, DB URLs, LINE webhook path values, LINE userIds, and message bodies are not recorded.
+
 Runtime wiring readiness does not promote the system. Final review still requires controlled Supabase, OpenAI, and LINE real-send evidence plus operator approval.

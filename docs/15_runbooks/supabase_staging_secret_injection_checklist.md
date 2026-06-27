@@ -72,3 +72,24 @@ production_readiness=production_no_go
 ```
 
 Secret injection is still not automatic. Before setting `REPOSITORY_RUNTIME` to `supabase` in an operator-managed environment, run a separate Supabase staging connection Loop with redacted env checks, rollback to `in_memory`, and dummy tenant data only.
+
+## Loop 152 Update
+
+Supabase staging secret was entered by the operator outside Codex and the runtime switch was attempted on the VPS review environment.
+
+```txt
+operator_secret_entry=completed_outside_codex
+supabase_runtime_env_file=present_root_only
+supabase_runtime_env_values_recorded=no
+repository_runtime_switch_attempted=REPOSITORY_RUNTIME=supabase
+node20_supabase_client_transport_fix=implemented
+api_direct_health_with_supabase=200
+https_api_health_with_supabase=200
+api_direct_admin_customers_with_supabase=500
+write_smoke=not_performed
+rollback_to_in_memory=completed
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+The Supabase runtime should not be kept active until the DNS / connection preflight and read smoke are remediated. Secret values and concrete endpoints remain unrecorded.

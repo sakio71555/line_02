@@ -203,3 +203,26 @@ If runtime wiring causes startup failure:
 ## Next
 
 Loop 152 candidate: Supabase staging connection execution.
+
+## Loop 152 Update
+
+Supabase runtime wiring was exercised on the VPS review environment with operator-managed secrets.
+
+```txt
+repository_runtime_switch_attempted=REPOSITORY_RUNTIME=supabase
+initial_failure_cause=Node.js 20 WebSocket transport missing
+node20_supabase_client_transport_fix=implemented
+vps_staging_validation_after_fix=success
+api_direct_health_with_supabase=200
+https_api_health_with_supabase=200
+runtime_data_backend_with_supabase=supabase
+api_direct_admin_customers_with_supabase=500
+write_smoke=not_performed
+rollback_to_in_memory=completed
+runtime_data_backend_after_rollback=in_memory
+line_invalid_signature_after_supabase=401
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+The runtime wiring remains useful, but Supabase runtime is not active after Loop 152 because the read smoke failed. Endpoint details and secret values were not recorded.

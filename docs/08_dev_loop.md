@@ -388,6 +388,8 @@ Loop 147-150のようなproduction integration fast laneでは、Supabase/OpenAI
 
 Loop 151のようなproduction runtime wiring remediationでは、API startupに `REPOSITORY_RUNTIME`、`AI_PROVIDER`、`LINE_REAL_PUSH_ENABLED` を接続しても、defaultは `in_memory` / `mock` / LINE real push disabledに維持します。runtime factoryはrequired env不足をsecret値なしでfail-fastさせ、`/health` は外部接続に依存させません。wiring完了後もSupabase実接続、OpenAI real API、LINE real push/reply、Official Account自動応答OFF確認は別Loopへ分け、`production_readiness=production_no_go` を維持します。
 
+Loop 152のようなSupabase staging connection executionでは、operator入力済みsecretをroot-only EnvironmentFileとして扱い、値は表示・記録しません。`REPOSITORY_RUNTIME=supabase` でhealthが通っても、read smokeが500や接続/DNS preflight失敗になった場合はwrite smokeへ進まず、即時 `in_memory` へrollbackします。Supabase endpoint詳細、DB URL、service role key、anon keyはdocs/test/reportへ残さず、`supabase_ready=false` と `production_readiness=production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

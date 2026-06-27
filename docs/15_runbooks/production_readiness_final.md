@@ -811,3 +811,38 @@ official_account_auto_response_off_confirmed=false
 final_operator_go_approval=false
 production_readiness=production_no_go
 ```
+
+## Loop 152 Supabase Staging Connection Execution
+
+Loop 152では、VPS review環境でSupabase staging runtimeを一時接続し、起動確認とread smokeを実施した。
+
+```txt
+operator_secret_entry=completed_outside_codex
+supabase_runtime_env_values_recorded=no
+repository_runtime_switch_attempted=REPOSITORY_RUNTIME=supabase
+initial_failure_cause=Node.js 20 WebSocket transport missing
+node20_supabase_client_transport_fix=implemented
+vps_staging_validation_after_fix=success
+api_direct_health_with_supabase=200
+https_api_health_with_supabase=200
+runtime_data_backend_with_supabase=supabase
+api_direct_admin_customers_with_supabase=500
+supabase_rest_read_preflight=failed_dns_or_connection
+supabase_rest_read_preflight_details_recorded=no
+write_smoke=not_performed
+rollback_to_in_memory=completed
+runtime_data_backend_after_rollback=in_memory
+line_invalid_signature_after_supabase=401
+supabase_ready=false
+production_readiness=production_no_go
+```
+
+判定:
+
+- Supabase runtime startupはNode.js 20対応後に通った。
+- Supabase read smokeは未達。
+- write smokeは未実施。
+- 現在のruntimeは `in_memory`。
+- production readinessは `production_no_go`。
+
+次Loopでは、Supabase endpoint / DNS / connection preflightとread-smoke失敗原因をsecret値なしで切り分ける。
