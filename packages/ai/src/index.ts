@@ -84,6 +84,16 @@ export const OPENAI_MODEL_ENV_NAME = "OPENAI_MODEL";
 export type AiProviderMode = "mock" | "openai";
 export type OpenAiRealApiRequestKind = "summary" | "reply_draft" | "rag_answer_draft";
 
+export const OPENAI_DRAFT_REPLY_REQUIRED_FIELDS = [
+  "draft_body",
+  "next_questions",
+  "risk_flags",
+  "recommended_response_mode",
+  "should_handoff"
+] as const;
+
+export type OpenAiDraftReplyRequiredField = (typeof OPENAI_DRAFT_REPLY_REQUIRED_FIELDS)[number];
+
 export interface TenantAiSettingsForOpenAiGate {
   tenant_id: string;
   provider: string;
@@ -180,6 +190,8 @@ export class OpenAiProviderError extends Error {
   readonly jsonContractParseSuccess: boolean | null;
   readonly jsonContractSchemaValid: boolean | null;
   readonly parseStage: OpenAiProviderParseStage | null;
+  readonly schemaMissingFields: readonly string[];
+  readonly schemaInvalidFields: readonly string[];
 
   constructor(input: OpenAiProviderErrorInput = {}) {
     super("OpenAI provider request failed.");
@@ -191,6 +203,8 @@ export class OpenAiProviderError extends Error {
     this.jsonContractParseSuccess = input.jsonContractParseSuccess ?? null;
     this.jsonContractSchemaValid = input.jsonContractSchemaValid ?? null;
     this.parseStage = input.parseStage ?? null;
+    this.schemaMissingFields = sanitizeOpenAiSchemaFieldNames(input.schemaMissingFields);
+    this.schemaInvalidFields = sanitizeOpenAiSchemaFieldNames(input.schemaInvalidFields);
     this.classification =
       input.classification ??
       classifyOpenAiProviderError({
@@ -217,6 +231,7 @@ export type OpenAiProviderParseStage =
   | "json_parse"
   | "schema_validation"
   | "provider_mapping"
+  | "none"
   | "unknown";
 
 export interface OpenAiProviderErrorInput {
@@ -228,6 +243,8 @@ export interface OpenAiProviderErrorInput {
   jsonContractParseSuccess?: boolean | null;
   jsonContractSchemaValid?: boolean | null;
   parseStage?: OpenAiProviderParseStage | null;
+  schemaMissingFields?: readonly string[] | null;
+  schemaInvalidFields?: readonly string[] | null;
 }
 
 export interface OpenAiProviderErrorClassificationInput {
@@ -421,8 +438,7 @@ export class OpenAiProvider implements AiProvider {
           tenant_id: input.tenant_id,
           customer_id: input.customer_id,
           prompt: buildConversationPrompt({
-            instruction:
-              "担当者が確認して送る返信下書きを短く作り、draft_body, next_questions, risk_flags, recommended_response_mode, should_handoff を含むJSON objectだけを返してください。Markdownや説明文は付けないでください。",
+            instruction: buildDraftReplyJsonInstruction(),
             conversation: input.conversation,
             ...(input.staff_context ? { staffContext: input.staff_context } : {})
           })
@@ -430,6 +446,7 @@ export class OpenAiProvider implements AiProvider {
         { apiKey: this.apiKey }
       );
       const parsed = parseOpenAiJsonResponse(result);
+      validateOpenAiDraftReplyContract(parsed);
 
       return {
         draft_body: readRequiredString(parsed, "draft_body"),
@@ -591,6 +608,16 @@ function buildConversationPrompt(input: {
   return `${input.instruction}${context}\n\n会話:\n${turns}`;
 }
 
+function buildDraftReplyJsonInstruction(): string {
+  return [
+    "担当者が確認して送る住宅相談CRM用の返信下書きを短く作成してください。",
+    "返答はJSON objectだけにしてください。Markdown、code fence、前後の説明文、自然文のみの回答は禁止です。",
+    "field名は次の5つだけを完全一致で含めてください: draft_body, next_questions, risk_flags, recommended_response_mode, should_handoff。",
+    "draft_bodyは空でないstring、next_questionsはstring配列、risk_flagsはstring配列、recommended_response_modeはbot_auto/human_required/human_active/emergency/closedのいずれか、should_handoffはbooleanです。",
+    "見積金額、土地価格、建売在庫、補助金可否、契約条件、保証判断は断定せず、必要なら担当者確認へ誘導してください。"
+  ].join("\n");
+}
+
 function buildRagPrompt(input: AiRagAnswerDraftInput): string {
   const sources = input.sources
     .map(
@@ -666,6 +693,107 @@ export function parseOpenAiJsonContractText(output: string): Record<string, unkn
     jsonContractParseSuccess: false,
     jsonContractSchemaValid: false,
     parseStage: "json_parse"
+  });
+}
+
+export function validateOpenAiDraftReplyContract(record: Record<string, unknown>): void {
+  const missing: string[] = [];
+  const invalid: string[] = [];
+
+  validateStringField(record, "draft_body", missing, invalid);
+  validateStringArrayField(record, "next_questions", missing, invalid);
+  validateStringArrayField(record, "risk_flags", missing, invalid);
+  validateRecommendedResponseModeField(record, "recommended_response_mode", missing, invalid);
+  validateBooleanField(record, "should_handoff", missing, invalid);
+
+  if (missing.length > 0 || invalid.length > 0) {
+    throw createOpenAiSchemaValidationError({
+      missingFields: missing,
+      invalidFields: invalid
+    });
+  }
+}
+
+function validateStringField(
+  record: Record<string, unknown>,
+  key: OpenAiDraftReplyRequiredField,
+  missing: string[],
+  invalid: string[]
+): void {
+  if (!Object.prototype.hasOwnProperty.call(record, key)) {
+    missing.push(key);
+    return;
+  }
+
+  const value = record[key];
+
+  if (typeof value !== "string" || !value.trim()) {
+    invalid.push(key);
+  }
+}
+
+function validateStringArrayField(
+  record: Record<string, unknown>,
+  key: OpenAiDraftReplyRequiredField,
+  missing: string[],
+  invalid: string[]
+): void {
+  if (!Object.prototype.hasOwnProperty.call(record, key)) {
+    missing.push(key);
+    return;
+  }
+
+  const value = record[key];
+
+  if (!Array.isArray(value) || !value.every((item) => typeof item === "string")) {
+    invalid.push(key);
+  }
+}
+
+function validateRecommendedResponseModeField(
+  record: Record<string, unknown>,
+  key: OpenAiDraftReplyRequiredField,
+  missing: string[],
+  invalid: string[]
+): void {
+  if (!Object.prototype.hasOwnProperty.call(record, key)) {
+    missing.push(key);
+    return;
+  }
+
+  if (!isRecommendedResponseMode(record[key])) {
+    invalid.push(key);
+  }
+}
+
+function validateBooleanField(
+  record: Record<string, unknown>,
+  key: OpenAiDraftReplyRequiredField,
+  missing: string[],
+  invalid: string[]
+): void {
+  if (!Object.prototype.hasOwnProperty.call(record, key)) {
+    missing.push(key);
+    return;
+  }
+
+  if (typeof record[key] !== "boolean") {
+    invalid.push(key);
+  }
+}
+
+function createOpenAiSchemaValidationError(input: {
+  missingFields: readonly string[];
+  invalidFields: readonly string[];
+}): OpenAiProviderError {
+  return new OpenAiProviderError({
+    classification: "G_response_parse_bug",
+    providerOutputTextExtracted: true,
+    jsonContractParseSuccess: true,
+    jsonContractSchemaValid: false,
+    parseStage: "schema_validation",
+    schemaMissingFields: input.missingFields,
+    schemaInvalidFields: input.invalidFields
   });
 }
 
@@ -1019,4 +1147,16 @@ function sanitizeOpenAiErrorToken(value: string | null | undefined): string | nu
   const sanitized = normalized.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 80);
 
   return sanitized || null;
+}
+
+function sanitizeOpenAiSchemaFieldNames(values: readonly string[] | null | undefined): string[] {
+  if (!values) {
+    return [];
+  }
+
+  const fieldNames = values
+    .map((value) => value.trim().replace(/[^A-Za-z0-9_]/g, "_").slice(0, 80))
+    .filter((value) => value.length > 0);
+
+  return [...new Set(fieldNames)];
 }

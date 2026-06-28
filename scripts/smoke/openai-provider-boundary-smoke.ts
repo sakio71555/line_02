@@ -27,6 +27,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
         responseBodyRecorded: false,
         promptBodyRecorded: false,
         apiKeyRecorded: false,
+        schemaMissingFields: [],
+        schemaInvalidFields: [],
         errorClass: "UnhandledProviderSmokeError",
         errorStatus: "unavailable",
         errorCode: "unavailable",

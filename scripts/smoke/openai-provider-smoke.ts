@@ -47,6 +47,8 @@ export interface OpenAiProviderBoundarySmokeResult {
   responseBodyRecorded: false;
   promptBodyRecorded: false;
   apiKeyRecorded: false;
+  schemaMissingFields: readonly string[];
+  schemaInvalidFields: readonly string[];
   reason?: string;
   errorClass?: string;
   errorStatus?: string;
@@ -133,10 +135,12 @@ export async function runOpenAiProviderBoundarySmoke(
       providerOutputTextExtracted: true,
       jsonContractParseSuccess: true,
       jsonContractSchemaValid: true,
-      parseStage: "provider_mapping",
+      parseStage: "none",
       responseBodyRecorded: false,
       promptBodyRecorded: false,
       apiKeyRecorded: false,
+      schemaMissingFields: [],
+      schemaInvalidFields: [],
       errorClassification: "success"
     };
   } catch (error) {
@@ -155,6 +159,8 @@ export async function runOpenAiProviderBoundarySmoke(
       responseBodyRecorded: false,
       promptBodyRecorded: false,
       apiKeyRecorded: false,
+      schemaMissingFields: diagnostics.schemaMissingFields,
+      schemaInvalidFields: diagnostics.schemaInvalidFields,
       errorClass: diagnostics.errorClass,
       errorStatus: diagnostics.errorStatus,
       errorCode: diagnostics.errorCode,
@@ -219,6 +225,8 @@ export function formatOpenAiProviderBoundarySmokeResult(
       "json_contract_parse_success=false",
       "json_contract_schema_valid=false",
       "parse_stage=unknown",
+      "schema_missing_fields=none",
+      "schema_invalid_fields=none",
       "response_body_recorded=false",
       "prompt_body_recorded=false",
       "model_value_recorded=false",
@@ -236,6 +244,8 @@ export function formatOpenAiProviderBoundarySmokeResult(
     `json_contract_parse_success=${result.jsonContractParseSuccess ? "true" : "false"}`,
     `json_contract_schema_valid=${result.jsonContractSchemaValid ? "true" : "false"}`,
     `parse_stage=${result.parseStage}`,
+    `schema_missing_fields=${formatSchemaFieldList(result.schemaMissingFields)}`,
+    `schema_invalid_fields=${formatSchemaFieldList(result.schemaInvalidFields)}`,
     "response_body_recorded=false",
     "prompt_body_recorded=false",
     "prompt_recorded=false",
@@ -281,6 +291,8 @@ export function classifyOpenAiSmokeError(error: unknown): {
   jsonContractParseSuccess: boolean;
   jsonContractSchemaValid: boolean;
   parseStage: OpenAiProviderParseStage;
+  schemaMissingFields: readonly string[];
+  schemaInvalidFields: readonly string[];
 } {
   if (error instanceof OpenAiProviderError) {
     return {
@@ -292,7 +304,9 @@ export function classifyOpenAiSmokeError(error: unknown): {
       providerOutputTextExtracted: error.providerOutputTextExtracted === true,
       jsonContractParseSuccess: error.jsonContractParseSuccess === true,
       jsonContractSchemaValid: error.jsonContractSchemaValid === true,
-      parseStage: error.parseStage ?? "unknown"
+      parseStage: error.parseStage ?? "unknown",
+      schemaMissingFields: error.schemaMissingFields,
+      schemaInvalidFields: error.schemaInvalidFields
     };
   }
 
@@ -309,7 +323,9 @@ export function classifyOpenAiSmokeError(error: unknown): {
       providerOutputTextExtracted: false,
       jsonContractParseSuccess: false,
       jsonContractSchemaValid: false,
-      parseStage: "unknown"
+      parseStage: "unknown",
+      schemaMissingFields: [],
+      schemaInvalidFields: []
     };
   }
 
@@ -322,7 +338,9 @@ export function classifyOpenAiSmokeError(error: unknown): {
     providerOutputTextExtracted: false,
     jsonContractParseSuccess: false,
     jsonContractSchemaValid: false,
-    parseStage: "unknown"
+    parseStage: "unknown",
+    schemaMissingFields: [],
+    schemaInvalidFields: []
   };
 }
 
@@ -368,8 +386,14 @@ function notPerformed(
     responseBodyRecorded: false,
     promptBodyRecorded: false,
     apiKeyRecorded: false,
+    schemaMissingFields: [],
+    schemaInvalidFields: [],
     reason
   };
+}
+
+function formatSchemaFieldList(fields: readonly string[]): string {
+  return fields.length > 0 ? fields.join(",") : "none";
 }
 
 function createTimeoutFetch(timeoutMs: number): OpenAiResponsesFetch {
