@@ -155,3 +155,27 @@ model_value_recorded=no
 ```
 
 Next focus: extracted provider text must satisfy the JSON output contract.
+
+## Loop 167 Follow-up
+
+Loop 167 remediated extracted-text JSON parsing and performed one provider-boundary smoke. The raw diagnostic smoke was not rerun.
+
+```txt
+raw_diagnostic_rerun=no
+provider_boundary_smoke=performed_once
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=false
+parse_stage=schema_validation
+classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The remaining blocker is method-specific schema validation, not API key replacement, raw API connectivity, or JSON parsing.

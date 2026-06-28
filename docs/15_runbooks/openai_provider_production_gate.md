@@ -232,3 +232,29 @@ production_readiness=production_no_go
 ```
 
 The next OpenAI Loop should fix output instructions/parser expectations without recording raw provider output.
+
+## Loop 167 Update
+
+OpenAI provider production gate remains closed.
+
+```txt
+provider_json_parser_remediation=applied
+raw_diagnostic_rerun=no
+provider_boundary_smoke=performed_once
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=false
+parse_stage=schema_validation
+classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+The gate may not move to Go until a later Loop proves schema validation success, keeps secrets out of logs/docs, and separately validates LINE real reply/push.

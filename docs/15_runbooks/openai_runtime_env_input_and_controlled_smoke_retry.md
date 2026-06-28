@@ -172,3 +172,28 @@ openai_systemd_dropin_present_final=false
 ai_provider_final=mock
 production_readiness=production_no_go
 ```
+
+## Loop 167 Follow-up
+
+The root-only OpenAI runtime env remains smoke-only. Loop 167 attached it temporarily, ran one provider-boundary smoke, then removed the drop-in and returned the API to mock AI.
+
+```txt
+raw_diagnostic_rerun=no
+provider_boundary_smoke=performed_once
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=false
+parse_stage=schema_validation
+classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+Do not attach the OpenAI runtime env for steady-state production until schema validation succeeds in a separately approved Loop.

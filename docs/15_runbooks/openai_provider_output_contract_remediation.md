@@ -111,3 +111,25 @@ Next work should focus on:
 ```txt
 Loop 167: OpenAI provider JSON output contract remediation
 ```
+
+## Loop 167 Follow-up
+
+Loop 167 improved JSON parsing for extracted provider text and ran provider-boundary smoke once.
+
+```txt
+provider_boundary_smoke=performed_once
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=false
+parse_stage=schema_validation
+classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The remaining failure is no longer text extraction or JSON parsing. It is method-specific schema validation.

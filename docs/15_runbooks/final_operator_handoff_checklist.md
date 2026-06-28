@@ -174,3 +174,27 @@ production_readiness=production_no_go
 ```
 
 Operator-facing Go/No-Go should continue to treat OpenAI as No-Go until the JSON output contract smoke succeeds and rollback to mock is verified again.
+
+## Loop 167 Follow-up
+
+OpenAI remains No-Go for production use.
+
+```txt
+provider_boundary_smoke=performed_once
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=false
+parse_stage=schema_validation
+classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+Operator-facing Go/No-Go should continue to block production until OpenAI schema validation succeeds, LINE real reply/push is explicitly smoked, and final Go is recorded.

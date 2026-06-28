@@ -147,3 +147,24 @@ production_readiness=production_no_go
 ```
 
 Next focus: OpenAI provider JSON output contract remediation.
+
+## Loop 167 Follow-up
+
+OpenAI provider JSON parsing now succeeds, but schema validation still fails.
+
+```txt
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=false
+parse_stage=schema_validation
+classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+openai_ready=false
+production_readiness=production_no_go
+```
+
+Do not treat model fallback as the remaining blocker unless a later smoke reclassifies the failure.

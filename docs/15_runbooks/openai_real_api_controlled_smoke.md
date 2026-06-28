@@ -202,3 +202,27 @@ provider_boundary_error_classification=G_response_parse_bug
 openai_ready=false
 production_readiness=production_no_go
 ```
+
+## Loop 167 Update
+
+Loop 167 did not rerun the raw diagnostic. It ran one provider-boundary smoke and confirmed JSON parsing now succeeds, while schema validation still fails.
+
+```txt
+raw_diagnostic_rerun=no
+provider_boundary_smoke=performed_once
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=false
+parse_stage=schema_validation
+classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+OpenAI real API connectivity is still known from the prior raw diagnostic, but provider production readiness remains closed until schema validation succeeds.
