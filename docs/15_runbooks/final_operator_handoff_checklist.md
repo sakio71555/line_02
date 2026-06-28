@@ -850,3 +850,80 @@ https_line_invalid_signature_loop183_r2=401
 ```txt
 Loop 184: production stabilization closeout with OpenAI runtime
 ```
+
+## Loop 184 Production Stabilization Closeout Handoff
+
+### 1. Current Production State
+
+```txt
+closeout_status=complete
+production_readiness_status=go
+activation_mode=line_and_openai_runtime
+monitoring_status=healthy
+rollback_recommended=false
+handoff_complete=true
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+```
+
+### 2. What Is Live
+
+- HTTPS Admin route.
+- LINE webhook receive route.
+- Supabase persistence.
+- LINE real push runtime is enabled.
+- OpenAI runtime is enabled.
+- Admin UI remains the staff operation surface.
+- AI output must remain staff-reviewed and is not automatically sent to LINE by this closeout.
+
+### 3. What Was Intentionally Not Changed
+
+```txt
+additional_line_send_performed=false
+OpenAI real API smoke=not performed
+nginx_dns_certbot_changes=none
+supabase_schema_rls_changes=none
+runtime_changes_performed=false
+```
+
+### 4. Daily Check
+
+- API direct health.
+- HTTPS API health.
+- Admin page.
+- Admin API no-header rejection.
+- LINE invalid-signature rejection.
+- Sanitized journal summary.
+- OpenAI error summary.
+- LINE send/webhook error summary.
+- Nginx error summary.
+- Disk, memory, and load.
+
+### 5. Incident Response
+
+- LINE send issue: consider LINE only rollback in a separate approved Loop.
+- Webhook issue: verify invalid-signature rejection and route health before any runtime change.
+- Supabase issue: avoid schema/RLS changes in an incident monitoring Loop.
+- OpenAI issue: consider OpenAI only rollback in a separate approved Loop.
+- API service down: restore API health first, then re-check Admin and webhook safety.
+- Admin service down: keep API receive path separate and restore Admin route health.
+
+### 6. Immediate Rollback Cards
+
+- Disable LINE only.
+- Disable OpenAI only.
+- Safe mode.
+
+Use [production_quick_rollback_card.md](production_quick_rollback_card.md) for target states. Every rollback requires explicit approval and a separate Loop.
+
+### 7. Future Changes
+
+Future runtime changes, LINE sends, OpenAI smoke, Nginx/DNS/certbot changes, Supabase schema/RLS changes, and production feature work require a new explicit Loop.
+
+### 8. Next Candidate
+
+```txt
+Loop 185: post-production backlog triage
+```

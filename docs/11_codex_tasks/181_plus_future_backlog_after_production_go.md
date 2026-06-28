@@ -2,13 +2,16 @@
 
 ## Purpose
 
-List future work after line-only production closeout.
+List future work after production closeout.
 
-This is a backlog record only. None of these items are implemented in Loop 180.
+This is a backlog record only. None of these items are implemented in Loop 180 or Loop 184.
 
 ## Backlog Candidates
 
-- OpenAI runtime activation as a separate explicit Loop.
+- Post-production backlog triage.
+- Production monitoring automation.
+- OpenAI runtime activation as a separate explicit Loop remains the pattern for any future OpenAI runtime change.
+- OpenAI usage/cost dashboard.
 - Authenticated staff route improvement.
 - Admin auth UX hardening.
 - Production alerting.
@@ -16,9 +19,9 @@ This is a backlog record only. None of these items are implemented in Loop 180.
 - User-facing operation manual.
 - Additional tenant onboarding.
 - Proper audit log.
-- Monitoring automation.
 - Operator dashboard for daily checks.
 - Incident follow-up template.
+- Customer-facing QA.
 
 ## Safety Rules
 
@@ -30,10 +33,12 @@ This is a backlog record only. None of these items are implemented in Loop 180.
 ## Suggested Next Loop
 
 ```txt
-Loop 181: OpenAI runtime activation planning
+Loop 185: post-production backlog triage
 ```
 
 ## Loop 181 Follow-up
+
+Loop 181: OpenAI runtime activation planning
 
 Loop 181 creates the OpenAI runtime activation plan only. It does not enable OpenAI runtime, call the OpenAI real API, or change LINE runtime.
 
@@ -42,3 +47,20 @@ Next explicit candidate:
 ```txt
 Loop 182: OpenAI runtime activation with explicit approval
 ```
+
+## Loop 184 Follow-up
+
+Loop 184 completed production stabilization closeout with OpenAI runtime enabled.
+
+```txt
+production_readiness_status=go
+activation_mode=line_and_openai_runtime
+monitoring_status=healthy
+rollback_recommended=false
+handoff_complete=true
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+```
+
+Future work should be triaged from an operations perspective and kept in small explicit Loops.
