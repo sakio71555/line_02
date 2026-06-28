@@ -414,6 +414,8 @@ Loop 174では、最終Go判断前のreadiness packetを追加しました。HTT
 
 Loop 175では、final production Go/No-Go reviewを実施しました。HTTPS、LINE receive、Official Account response settings、Supabase receive persistence、OpenAI provider controlled smoke、LINE reply/push、security/safetyはreview-readyですが、operator tokenが `FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO` のため `final_operator_go=false`、`go_ready_but_operator_go_pending=true`、`production_readiness=production_no_go` を維持しています。runtime activation、LINE追加送信、OpenAI再実行、Nginx/DNS/certbot変更は行っていません。詳細はLoop 175 task docとfinal Go/No-Go review runbookを参照してください。
 
+Loop 176では、operator final Go approval and runtime activation planningを追加しました。現runtimeは `REPOSITORY_RUNTIME=supabase` / `LINE_REAL_PUSH_ENABLED=false` / `AI_PROVIDER=mock` / OpenAI drop-in absentのまま維持し、LINE real push final enable、OpenAI runtime final enable、combined activation、rollback、first-hour monitoringを別Loopで実施する計画として整理しました。`FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO` と `production_readiness=production_no_go` は維持しています。詳細はLoop 176 task docとoperator final activation planning runbookを参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

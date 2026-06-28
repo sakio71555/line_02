@@ -454,3 +454,46 @@ Use this only after a future explicit production activation Loop.
 6. Supabase read/write errors.
 7. No secret logging.
 8. Rollback owner availability.
+
+## Loop 176 Operator Final Activation Planning
+
+### 1. Decision Tokens
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO
+ALLOW_RUNTIME_ACTIVATION_CHANGES=NO
+ALLOW_LINE_REAL_PUSH_ENABLED_FINAL_TRUE=NO
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=NO
+ALLOW_NGINX_DNS_CERTBOT_CHANGES=NO
+```
+
+### 2. Current Runtime State
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=false
+AI_PROVIDER=mock
+OpenAI drop-in absent
+production_readiness=production_no_go
+runtime_activation_changes=not_performed
+```
+
+### 3. Activation Options
+
+- Safe Mode: keep the current state.
+- LINE real push final activation: future explicit approval only, with rollback helper ready.
+- OpenAI runtime final activation: future explicit approval only, with drop-in rollback ready.
+- Combined activation: avoid unless explicitly approved; activate one subsystem at a time.
+
+### 4. Monitoring and Rollback
+
+- Confirm API direct health, HTTPS health, Admin routes, no-header Admin API rejection, and invalid-signature rejection.
+- Keep secret values, webhook path values, LINE identifiers, reply tokens, exact message bodies, OpenAI model values, provider responses, Supabase endpoints, and DB URLs out of logs and docs.
+- Roll back LINE by restoring `LINE_REAL_PUSH_ENABLED=false`.
+- Roll back OpenAI by removing the runtime drop-in and confirming `AI_PROVIDER=mock`.
+
+### 5. Next Decision
+
+```txt
+Loop 177: explicit production activation with operator approval
+```

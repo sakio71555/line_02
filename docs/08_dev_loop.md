@@ -430,6 +430,8 @@ Loop 174のようなfinal pre-Go readiness packetでは、HTTPS/LINE/Supabase/Op
 
 Loop 175のようなfinal production Go/No-Go reviewでは、operator tokenを正として判定します。`FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO` の場合は、すべての主要ready flagがtrueでも `final_operator_go=false`、`go_ready_but_operator_go_pending=true`、`production_readiness=production_no_go` を維持します。このLoopではruntime activation、LINE real push final enable、OpenAI final enable、Nginx/DNS/certbot変更を行わず、rollback checklistとfirst-hour monitoring checklistの完成だけに絞ります。
 
+Loop 176のようなoperator final Go approval and runtime activation planningでは、最終承認がまだ `NO` の状態で、activation optionだけをdocs化します。`LINE_REAL_PUSH_ENABLED=false`、`AI_PROVIDER=mock`、OpenAI drop-in absentを維持し、LINE real push final enable、OpenAI runtime final enable、combined activation、rollback、first-hour monitoringを次Loop以降の明示承認事項として分離します。計画docsを作ってもruntime activationは行わず、`production_readiness=production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。
