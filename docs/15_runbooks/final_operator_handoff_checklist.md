@@ -497,3 +497,52 @@ runtime_activation_changes=not_performed
 ```txt
 Loop 177: explicit production activation with operator approval
 ```
+
+## Loop 177 Explicit Activation Handoff
+
+### 1. Operator Tokens
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO
+ALLOW_RUNTIME_ACTIVATION_CHANGES=NO
+ACTIVATION_MODE=review_only
+ALLOW_LINE_REAL_PUSH_ENABLED_FINAL_TRUE=NO
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=NO
+ALLOW_NGINX_DNS_CERTBOT_CHANGES=NO
+ALLOW_SUPABASE_SCHEMA_OR_RLS_CHANGES=NO
+ALLOW_ADDITIONAL_LINE_SEND_SMOKE=NO
+```
+
+### 2. Decision
+
+```txt
+activation_performed=false
+activation_result=not_performed
+runtime_activation_changes=not_performed
+rollback_performed=false
+production_readiness=production_no_go
+```
+
+### 3. Final Runtime State
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=false
+AI_PROVIDER=mock
+OpenAI drop-in absent
+Nginx/DNS/certbot changes=none
+Supabase schema/RLS changes=none
+```
+
+### 4. Safety
+
+- Additional LINE send was not performed.
+- OpenAI real API was not performed.
+- API restart was not performed.
+- No secret values, webhook path values, LINE identifiers, reply tokens, message bodies, OpenAI model values, provider responses, Supabase endpoints, DB URLs, bearer tokens, or private keys were recorded.
+
+### 5. Next Decision
+
+```txt
+Loop 178: production activation approval retry
+```

@@ -160,3 +160,32 @@ nginx_dns_certbot_changes=not_performed
 ```txt
 Loop 177: explicit production activation with operator approval
 ```
+
+## Loop 177 Decision Update
+
+Loop 177 evaluated the explicit operator tokens. They remained in the safe `NO` state, so runtime activation was not performed.
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO
+ALLOW_RUNTIME_ACTIVATION_CHANGES=NO
+ACTIVATION_MODE=review_only
+ALLOW_LINE_REAL_PUSH_ENABLED_FINAL_TRUE=NO
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=NO
+ALLOW_NGINX_DNS_CERTBOT_CHANGES=NO
+ALLOW_SUPABASE_SCHEMA_OR_RLS_CHANGES=NO
+ALLOW_ADDITIONAL_LINE_SEND_SMOKE=NO
+activation_performed=false
+activation_result=not_performed
+runtime_activation_changes=not_performed
+rollback_performed=false
+production_readiness=production_no_go
+```
+
+Final runtime remained:
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=false
+AI_PROVIDER=mock
+OpenAI drop-in absent
+```
