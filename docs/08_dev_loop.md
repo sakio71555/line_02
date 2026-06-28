@@ -177,6 +177,8 @@ OpenAI providerのschema修正Loopでは、既存 `AiProvider` / `MockAiProvider
 
 LINE real reply/pushの実送信Loopへ進む前には、必ずplanning Loopでreply/pushどちらを使うか、target選定、one-message-only、retry禁止、broadcast/multicast/group/room禁止、rollback、secret非記録ルールを固定します。planning Loopでは `LINE_REAL_PUSH_ENABLED=false` を維持し、送信本文やLINE userIdをdocs/final reportへ記録しません。実送信は次Loopでoperatorの明示承認後に1通だけ行い、終了後は必ずdisable helperで `LINE_REAL_PUSH_ENABLED=false` へ戻します。
 
+Loop 170のようなLINE real reply/push single-message controlled smokeでは、operator approval tokenがすべて `YES` でない限り、target選定、`LINE_REAL_PUSH_ENABLED` の一時有効化、API restart、実送信を行いません。未成立時は `human_gate_not_satisfied`、`line_send_result=not_performed`、`line_reply_push_ready=false` としてdocs/test/dev logへ残し、health/no-header/invalid-signatureなどのsanitized preflightだけで終了します。
+
 Loop 097では、実Supabase Auth/JWT接続へ進む前にconnection planとrunbookを作ります。`Authorization: Bearer` からSupabase Auth `user.id`、`staff_users.auth_user_id`、active staff / membership、`selectedTenantId` 再検証、RLS `auth.uid()` へつなぐ順序を整理し、実Auth user作成やreal verifier接続は後続Loopへ分けます。詳細は [docs/11_codex_tasks/097_supabase_auth_jwt_connection_plan.md](11_codex_tasks/097_supabase_auth_jwt_connection_plan.md) を参照してください。
 
 Loop 098では、Supabase Auth real verifier境界だけを追加します。`SupabaseAuthSessionVerifier` はfake Supabase auth clientで検証し、token/secret redaction、`session_expired` mapping、production fake verifier default禁止を固定します。実Supabase Auth接続、Auth user作成、staging real Auth smoke、Admin UI selectedTenantId保存は後続Loopへ分けます。詳細は [docs/11_codex_tasks/098_supabase_auth_real_verifier_boundary.md](11_codex_tasks/098_supabase_auth_real_verifier_boundary.md) を参照してください。

@@ -252,3 +252,36 @@ production_readiness=production_no_go
 ```
 
 Before Loop 170, the operator must confirm Webhook ON, response message OFF, AI response message OFF or unavailable, one fresh test LINE message, one real LINE reply/push smoke approval, and no retry / no bulk / no broadcast.
+
+## Loop 170 Follow-up
+
+LINE real reply/push remains not performed because the required human approval gate was not satisfied.
+
+```txt
+human_approval_gate_satisfied=false
+human_gate_not_satisfied=true
+preferred_smoke_mode=push
+execution_path=existing_staff_reply_route
+target_user_selected=false
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+retry_performed=false
+bulk_send_performed=false
+multicast_performed=false
+broadcast_performed=false
+group_send_performed=false
+room_send_performed=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+AI_PROVIDER=mock
+OpenAI systemd drop-in absent
+production_readiness=production_no_go
+```
+
+Operator-facing next action is to decide whether to repeat a dedicated human approval gate for exactly one controlled LINE reply/push smoke. Do not send until all approval tokens are explicitly confirmed.

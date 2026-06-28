@@ -144,3 +144,27 @@ production_readiness=production_no_go
 ```
 
 Loop 170 may only send one controlled message after the operator confirms Webhook ON, response message OFF, AI response message OFF or unavailable, a fresh test LINE message, explicit one-message approval, and no retry / no bulk / no broadcast.
+
+## Loop 170 Update
+
+Loop 170 evaluated that gate and stopped before target selection or real send.
+
+```txt
+LINE_OFFICIAL_ACCOUNT_WEBHOOK_ON_CONFIRMED=NO
+LINE_OFFICIAL_ACCOUNT_AUTO_RESPONSE_OFF_CONFIRMED=NO
+LINE_OFFICIAL_ACCOUNT_AI_RESPONSE_OFF_CONFIRMED=NO
+OPERATOR_FRESH_TEST_LINE_MESSAGE_SENT=NO
+LINE_REAL_ONE_MESSAGE_SMOKE_APPROVED=NO
+NO_RETRY_NO_BULK_NO_BROADCAST_ACK=NO
+human_approval_gate_satisfied=false
+human_gate_not_satisfied=true
+target_user_selected=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+The next real-send attempt must repeat the human approval gate in a dedicated Loop.

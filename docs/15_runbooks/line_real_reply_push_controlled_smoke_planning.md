@@ -212,3 +212,29 @@ line_reply_push_plan_ready=true
 ```txt
 Loop 170: LINE real reply/push single-message controlled smoke
 ```
+
+## Loop 170 Update
+
+Loop 170 did not perform the real send because the human approval gate was not satisfied.
+
+```txt
+human_approval_gate_satisfied=false
+human_gate_not_satisfied=true
+preferred_smoke_mode=push
+execution_path=existing_staff_reply_route
+target_user_selected=false
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body=fixed non-personal smoke text; value not recorded
+outgoing_message_body_recorded=false
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+No LINE token, channel secret, webhook path value, LINE user identifier, reply token, or message body was recorded.

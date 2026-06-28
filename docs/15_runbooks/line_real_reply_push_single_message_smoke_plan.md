@@ -92,3 +92,41 @@ production_readiness=production_no_go
 ```
 
 Loop 170 must stop if target selection requires displaying a LINE userId, replyToken, webhook path value, or message body.
+
+## Loop 170 Controlled Smoke Result
+
+Loop 170 stopped before real delivery because the approval tokens were not all `YES`.
+
+```txt
+human_approval_gate_satisfied=false
+human_gate_not_satisfied=true
+preferred_smoke_mode=push
+execution_path=existing_staff_reply_route
+one_message_only=true
+retry_allowed=false
+bulk_send_allowed=false
+multicast_allowed=false
+broadcast_allowed=false
+group_send_allowed=false
+room_send_allowed=false
+target_user_selected=false
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+retry_performed=false
+bulk_send_performed=false
+multicast_performed=false
+broadcast_performed=false
+group_send_performed=false
+room_send_performed=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+No lock directory or send attempt was created because the Loop never entered the approved smoke window.

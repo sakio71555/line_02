@@ -54,6 +54,7 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | production deploy/smoke | 未実施 |
 | OpenAI provider schema-specific readiness | Loop 168でprovider-boundary smokeが成功し、schema validationも成功。ただしAPI runtimeは `AI_PROVIDER=mock` へ戻しており、OpenAI常時有効化は未実施 |
 | LINE real reply/push planning | Loop 169でpush優先のone-message smoke planを追加。`LINE_REAL_PUSH_ENABLED=false`、実送信なし、`line_reply_push_ready=false`、`line_reply_push_plan_ready=true` |
+| LINE real reply/push controlled smoke | Loop 170でhuman approval gateを確認。承認tokenがすべて `YES` ではなかったため実送信なし。`LINE_REAL_PUSH_ENABLED=false`、`line_send_result=not_performed`、`line_reply_push_ready=false` |
 
 ## Go Conditions
 
@@ -188,6 +189,47 @@ production_readiness=production_no_go
 ```
 
 Loop 170 may proceed only after explicit human approval for exactly one message, with retry, bulk, multicast, broadcast, group, and room send prohibited.
+
+## LINE Real Reply/Push Loop 170 Result
+
+Loop 170 did not send because the human approval gate was not satisfied.
+
+```txt
+human_approval_gate_satisfied=false
+human_gate_not_satisfied=true
+preferred_smoke_mode=push
+execution_path=existing_staff_reply_route
+target_user_selected=false
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body=fixed non-personal smoke text; value not recorded
+outgoing_message_body_recorded=false
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+retry_performed=false
+bulk_send_performed=false
+multicast_performed=false
+broadcast_performed=false
+group_send_performed=false
+room_send_performed=false
+duplicate_send_detected=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+api_direct_health_loop170=200
+https_api_health_loop170=200
+customers_no_header_loop170=401
+line_invalid_signature_loop170=401
+AI_PROVIDER=mock
+OPENAI_REAL_API_ENABLED=false
+OpenAI systemd drop-in absent
+LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+No LINE token, channel secret, webhook path value, LINE user identifier, reply token, inbound body, outbound body, Supabase secret, OpenAI key, model value, prompt body, or response body is recorded.
 
 ## Staging Smoke
 
