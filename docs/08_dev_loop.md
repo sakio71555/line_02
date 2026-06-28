@@ -458,6 +458,8 @@ Loop 188のようなproduction backup automation planでは、backup対象、ret
 
 Loop 189のようなbackup inventory dry-run scriptでは、read-only scriptでGit/repo/docs、VPS deploy backup、runtime config path、monitoring/rollback helper、Supabase backup strategyを棚卸しします。backup archive作成、DB export、Supabase CLI/API backup、secret file copy、`.env` 表示、cron/systemd timer作成、retention削除、runtime変更、LINE追加送信、OpenAI API、Nginx reload/restart、DNS/certbot、Supabase schema/RLS/writeは行いません。script outputとdocsには `backup_job_created=false`、`db_export_performed=false`、`secret_file_copied=false`、`env_values_displayed=false`、`timer_created=false`、`secrets_recorded=false` を残し、production readiness: Goを維持します。
 
+Loop 190のようなbackup retention dry-run proposalでは、deploy backup artifactsをmetadataだけでkeep/reviewに分類し、削除候補は初期値 `delete_candidate_count=0` に留めます。`keep_latest_policy=5`、`delete_performed=false`、`retention_enforced=false`、`restore_viability_check_required_before_deletion=true` をdocs/test/outputで固定し、backup作成、DB export、secret表示、timer作成、runtime変更、LINE追加送信、OpenAI API、Nginx/DNS/certbot、Supabase schema/RLS/writeは行いません。実際の削除やretention enforcementは、restore viability checkと明示承認を含む別Loopに分けます。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

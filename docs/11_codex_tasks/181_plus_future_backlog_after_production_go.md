@@ -198,3 +198,45 @@ Next explicit candidate:
 ```txt
 Loop 190: backup retention dry-run proposal
 ```
+
+## Loop 190 Follow-up
+
+Loop 190 adds and executes the backup retention dry-run proposal so deploy backup artifacts can be classified without deleting anything.
+
+```txt
+backup retention dry-run=done
+script_path=scripts/backup/backup-retention-dry-run.ts
+vps_retention_dry_run_performed=true
+backup_retention_dry_run=completed
+backup_dir_exists=true
+backup_artifact_count=24
+keep_latest_policy=5
+keep_count=5
+review_count=19
+delete_candidate_count=0
+delete_performed=false
+retention_enforced=false
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+timer_created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Supabase export performed=false
+production readiness: Go
+```
+
+Remaining P0 implementation:
+
+- Supabase backup method selection.
+- optional backup creation dry-run.
+- optional restore drill in non-production.
+- optional timer/notification install after backup method approval.
+
+Next explicit candidate:
+
+```txt
+Loop 191: Supabase backup method selection
+```

@@ -258,6 +258,42 @@ supabase_export_performed=false
 
 P0 operations base now has monitoring dry-run, OpenAI usage/cost plan, backup automation plan, and backup inventory dry-run in place. Optional timer/notification install, backup creation dry-run, and Supabase backup method selection remain separate future Loops.
 
+## Loop 190 Backup Retention Dry-Run Follow-up
+
+Loop 190 adds the read-only backup retention dry-run proposal for the current production state.
+
+```txt
+backup retention dry-run=done
+script_path=scripts/backup/backup-retention-dry-run.ts
+vps_retention_dry_run_performed=true
+backup_retention_dry_run=completed
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+backup_dir_exists=true
+backup_artifact_count=24
+keep_latest_policy=5
+keep_count=5
+review_count=19
+delete_candidate_count=0
+delete_performed=false
+retention_enforced=false
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+timer_created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+supabase_export_performed=false
+```
+
+P0 operations base now has monitoring dry-run, OpenAI usage/cost plan, backup automation plan, backup inventory dry-run, and backup retention dry-run in place. Supabase backup method selection, optional backup creation dry-run, restore drill, and timer/notification install remain separate future Loops.
+
 ## Safety Boundary
 
 - Secret values were not displayed or recorded.
@@ -274,5 +310,5 @@ P0 operations base now has monitoring dry-run, OpenAI usage/cost plan, backup au
 ## Next Loop
 
 ```txt
-Loop 189: backup inventory dry-run script
+Loop 191: Supabase backup method selection
 ```

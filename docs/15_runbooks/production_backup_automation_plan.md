@@ -229,10 +229,10 @@ Loop 193: restore drill in non-production
 ## 14. Next Loop Proposal
 
 ```txt
-Loop 189: backup inventory dry-run script
+Loop 191: Supabase backup method selection
 ```
 
-That Loop should inventory paths, counts, and sizes only. It must not create backups, delete backups, copy secrets, export the database, install timers, or change runtime.
+Loop 189 inventory and Loop 190 retention dry-run are complete. The next safe backup step is choosing a Supabase backup method. It must not export production data or display secret values without a separate explicit approval Loop.
 
 ## 15. Loop 189 Follow-up
 
@@ -257,3 +257,35 @@ production_readiness=production_go
 ```
 
 The next safe backup step remains a no-delete retention dry-run proposal. Actual backup creation, database export, timer installation, retention deletion, and remote storage setup still require separate explicit Loops.
+
+## 16. Loop 190 Follow-up
+
+Loop 190 added and executed the read-only backup retention dry-run proposal.
+
+```txt
+backup retention dry-run=done
+script_path=scripts/backup/backup-retention-dry-run.ts
+vps_retention_dry_run_performed=true
+backup_retention_dry_run=completed
+backup_dir_exists=true
+backup_artifact_count=24
+keep_latest_policy=5
+keep_count=5
+review_count=19
+delete_candidate_count=0
+delete_performed=false
+retention_enforced=false
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+supabase_export_performed=false
+timer_created=false
+secrets_recorded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+production_readiness=production_go
+```
+
+Actual deletion, retention enforcement, backup creation, database export, timer installation, and remote storage setup still require separate explicit Loops. Any future deletion must be preceded by a restore viability check.

@@ -139,7 +139,36 @@ production_readiness=production_go
 ## 9. Next Safe Step
 
 ```txt
-Loop 190: backup retention dry-run proposal
+Loop 191: Supabase backup method selection
 ```
 
-Loop 190 should remain no-delete and no-backup-creation unless separately approved.
+Loop 190 backup retention dry-run is complete. It remained no-delete and no-backup-creation.
+
+## 10. Loop 190 Follow-up
+
+```txt
+backup retention dry-run=done
+script_path=scripts/backup/backup-retention-dry-run.ts
+vps_retention_dry_run_performed=true
+backup_retention_dry_run=completed
+backup_dir_exists=true
+backup_artifact_count=24
+keep_latest_policy=5
+keep_count=5
+review_count=19
+delete_candidate_count=0
+delete_performed=false
+retention_enforced=false
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+supabase_export_performed=false
+timer_created=false
+secrets_recorded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+```
+
+Actual retention enforcement and deletion remain blocked until a future explicit approval Loop with a restore viability check.

@@ -1946,3 +1946,42 @@ openai_api_performed=false
 ```
 
 The script inventories repo/docs, deploy backup counts, runtime config path existence, helper path existence, and backup strategy docs. It does not create backups, export data, copy secrets, install timers, change runtime, send LINE messages, call OpenAI, or change Nginx/DNS/certbot/Supabase schema.
+
+## Loop 190 Backup Retention Dry-Run Proposal
+
+Loop 190 keeps production readiness Go and adds a read-only backup retention dry-run proposal.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+backup retention dry-run=done
+script_path=scripts/backup/backup-retention-dry-run.ts
+vps_retention_dry_run_performed=true
+backup_retention_dry_run=completed
+api_direct_health_loop190_backup_retention=200
+https_api_health_loop190_backup_retention=200
+https_admin_root_loop190_backup_retention=200
+https_admin_customers_loop190_backup_retention=200
+https_admin_api_no_header_customers_loop190_backup_retention=401
+https_line_invalid_signature_loop190_backup_retention=401
+backup_dir_exists=true
+backup_artifact_count=24
+keep_latest_policy=5
+keep_count=5
+review_count=19
+delete_candidate_count=0
+delete_performed=false
+retention_enforced=false
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+supabase_export_performed=false
+timer_created=false
+secrets_recorded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+```
+
+The script classifies deploy backup artifacts into keep/review buckets only. It does not delete backups, enforce retention, create backups, export data, copy secrets, install timers, change runtime, send LINE messages, call OpenAI, or change Nginx/DNS/certbot/Supabase schema. Future deletion requires explicit approval and restore viability checks.
