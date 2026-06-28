@@ -63,3 +63,32 @@ line_real_push_reply=not_performed
 reason=pending_human_input_or_missing_approval
 production_readiness=production_no_go
 ```
+
+## Loop 169 Planning Update
+
+Loop 169 keeps this smoke as a later action and records the concrete plan.
+
+```txt
+preferred_smoke_mode=push
+recommended_target_selection=operator_sends_fresh_test_message_before_smoke
+recommended_execution_path=existing_staff_reply_route
+target_user_selected=false
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body=fixed non-personal smoke text; value not recorded
+outgoing_message_body_recorded=false
+one_message_only=true
+retry_allowed=false
+bulk_send_allowed=false
+multicast_allowed=false
+broadcast_allowed=false
+group_send_allowed=false
+room_send_allowed=false
+LINE_REAL_PUSH_ENABLED=false
+line_real_reply_push_performed=false
+line_reply_push_ready=false
+line_reply_push_plan_ready=true
+production_readiness=production_no_go
+```
+
+Loop 170 must stop if target selection requires displaying a LINE userId, replyToken, webhook path value, or message body.

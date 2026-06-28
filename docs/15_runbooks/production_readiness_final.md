@@ -52,6 +52,8 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 | OpenAI controlled provider smoke | Loop 162で内部provider smoke commandを追加し、operator承認後に非顧客データで1回だけOpenAI real API smokeを実施。結果はsanitized `OpenAiProviderError` で失敗。response body/API key/model値/prompt本文は未記録。APIはmock AIへrollback済み |
 | OpenAI smoke failure diagnosis | Loop 163でsanitized diagnosticsを追加し、diagnostic smokeとAPI key差し替え後のfollow-up smokeを各1回だけ実施。どちらも `I_unknown_sanitized` で失敗し、response body/API key/model値/prompt本文は未記録。APIはmock AIへrollback済み |
 | production deploy/smoke | 未実施 |
+| OpenAI provider schema-specific readiness | Loop 168でprovider-boundary smokeが成功し、schema validationも成功。ただしAPI runtimeは `AI_PROVIDER=mock` へ戻しており、OpenAI常時有効化は未実施 |
+| LINE real reply/push planning | Loop 169でpush優先のone-message smoke planを追加。`LINE_REAL_PUSH_ENABLED=false`、実送信なし、`line_reply_push_ready=false`、`line_reply_push_plan_ready=true` |
 
 ## Go Conditions
 
@@ -82,6 +84,7 @@ controlled production enablementへ進むには、少なくとも以下が必要
 - OpenAI controlled provider smokeは実施済みだが失敗しており、`openai_ready=false` のまま。
 - Supabase real connectionが未実施。
 - production secret injectionが未実施。
+- LINE real reply/pushはLoop 169でplanのみ完了。one-message controlled smokeとrollback確認は未実施。
 
 ## Auth/JWT
 
@@ -163,6 +166,28 @@ Loop 103ではOpenAI API実呼び出しは未実施。
 Loop 162ではOpenAI provider境界の実API smokeを1回だけ実施したが、sanitized `OpenAiProviderError` で失敗した。response body、prompt本文、API key、model値は記録していない。API serviceのOpenAI EnvironmentFile drop-inは削除済みで、final runtimeはmock AIへ戻したため、production readinessは引き続き `production_no_go`。
 
 Loop 163ではOpenAI smoke失敗をsecret非表示で診断できるようsanitized status/code/type/classificationを追加した。diagnostic smokeとAPI key差し替え後のfollow-up smokeはいずれも `I_unknown_sanitized` で失敗し、response body、prompt本文、API key、model値は記録していない。API serviceのOpenAI EnvironmentFile drop-inは削除済みで、final runtimeはmock AIへ戻したため、production readinessは引き続き `production_no_go`。
+
+Loop 168ではOpenAI provider-boundary smokeが成功し、schema validationも成功した。ただしAPI serviceのOpenAI EnvironmentFile drop-inは削除済みで、final runtimeは `AI_PROVIDER=mock` のまま維持している。OpenAI provider境界はreadyだが、常時有効化は別のoperator decisionが必要。
+
+## LINE Real Reply/Push Controlled Smoke Plan
+
+Loop 169では実送信を行わず、次Loopのone-message controlled smoke planだけを固定した。
+
+```txt
+outbound_implementation_classification=A_real_line_push_client_fully_wired_but_disabled_by_flag
+preferred_smoke_mode=push
+recommended_target_selection=operator_sends_fresh_test_message_before_smoke
+recommended_execution_path=existing_staff_reply_route
+LINE_REAL_PUSH_ENABLED=false
+target_user_id_recorded=false
+outgoing_message_body_recorded=false
+line_real_reply_push_performed=false
+line_reply_push_ready=false
+line_reply_push_plan_ready=true
+production_readiness=production_no_go
+```
+
+Loop 170 may proceed only after explicit human approval for exactly one message, with retry, bulk, multicast, broadcast, group, and room send prohibited.
 
 ## Staging Smoke
 

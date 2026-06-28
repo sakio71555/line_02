@@ -225,3 +225,30 @@ production_readiness=production_no_go
 ```
 
 Operator-facing Go/No-Go should now focus on LINE real reply/push controlled smoke and final Go. Do not enable OpenAI permanently without a separate production runtime decision.
+
+## Loop 169 Follow-up
+
+LINE real reply/push is planned but still not performed.
+
+```txt
+outbound_implementation_classification=A_real_line_push_client_fully_wired_but_disabled_by_flag
+preferred_smoke_mode=push
+recommended_target_selection=operator_sends_fresh_test_message_before_smoke
+recommended_execution_path=existing_staff_reply_route
+line_real_push_enable_helper_status=exists
+line_real_push_disable_helper_status=exists
+LINE_CHANNEL_ACCESS_TOKEN configured; value not recorded
+LINE_CHANNEL_SECRET configured; value not recorded
+LINE_WEBHOOK_SECRET_PATH configured; value not recorded
+LINE_REAL_PUSH_ENABLED=false
+target_user_id_recorded=false
+outgoing_message_body_recorded=false
+line_real_reply_push_performed=false
+line_reply_push_ready=false
+line_reply_push_plan_ready=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in absent
+production_readiness=production_no_go
+```
+
+Before Loop 170, the operator must confirm Webhook ON, response message OFF, AI response message OFF or unavailable, one fresh test LINE message, one real LINE reply/push smoke approval, and no retry / no bulk / no broadcast.

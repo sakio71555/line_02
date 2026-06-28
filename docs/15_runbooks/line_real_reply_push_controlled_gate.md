@@ -120,3 +120,27 @@ production_readiness=production_no_go
 ```
 
 No LINE token, channel secret, webhook path value, LINE userId, message body, or full LINE API response is recorded. The next LINE send step must be a dedicated one-message controlled smoke Loop with explicit operator approval.
+
+## Loop 169 Update
+
+Loop 169 reviewed the current outbound implementation and prepared the next one-message smoke without sending anything.
+
+```txt
+outbound_implementation_classification=A_real_line_push_client_fully_wired_but_disabled_by_flag
+preferred_smoke_mode=push
+recommended_target_selection=operator_sends_fresh_test_message_before_smoke
+recommended_execution_path=existing_staff_reply_route
+line_real_push_enable_helper=/root/bin/amami-line-set-line-real-push-flag.sh
+line_real_push_enable_helper_status=exists
+line_real_push_disable_helper=/root/bin/amami-line-disable-line-real-push.sh
+line_real_push_disable_helper_status=exists
+LINE_REAL_PUSH_ENABLED=false
+target_user_id_recorded=false
+outgoing_message_body_recorded=false
+line_real_reply_push_performed=false
+line_reply_push_ready=false
+line_reply_push_plan_ready=true
+production_readiness=production_no_go
+```
+
+Loop 170 may only send one controlled message after the operator confirms Webhook ON, response message OFF, AI response message OFF or unavailable, a fresh test LINE message, explicit one-message approval, and no retry / no bulk / no broadcast.
