@@ -170,3 +170,19 @@ Before any OpenAI runtime activation:
 ```txt
 Loop 181: OpenAI runtime activation planning
 ```
+
+## Loop 181 OpenAI Planning Follow-up
+
+Loop 181 keeps production line-only runtime unchanged and records OpenAI activation as a future explicit approval item.
+
+```txt
+activation_mode=line_only
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+OpenAI runtime activation not performed
+openai_real_api_performed=false
+line_send_performed=false
+```
+
+Production readiness remains Go for line-only operations. OpenAI runtime planning is recorded in the Loop 181 dedicated runbook.

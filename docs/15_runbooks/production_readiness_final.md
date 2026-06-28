@@ -1710,3 +1710,29 @@ https_line_invalid_signature_loop180_closeout=401
 ```
 
 Daily monitoring, weekly monitoring, incident response, and quick rollback are recorded in [production_stabilization_and_operator_handoff_closeout.md](production_stabilization_and_operator_handoff_closeout.md), [production_monitoring_schedule.md](production_monitoring_schedule.md), and [production_quick_rollback_card.md](production_quick_rollback_card.md).
+
+## Loop 181 OpenAI Runtime Activation Planning
+
+Loop 181 is planning-only for future OpenAI runtime activation.
+
+```txt
+activation_mode=line_only
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+OpenAI runtime activation not performed
+openai_real_api_performed=false
+line_send_performed=false
+nginx_dns_certbot_changes=none
+supabase_schema_rls_changes=none
+```
+
+OpenAI runtime env was checked with redacted output only:
+
+```txt
+openai-runtime.env=exists
+OPENAI_API_KEY configured; value not recorded
+OPENAI_MODEL configured; value not recorded
+```
+
+Production readiness remains Go for line-only operations. OpenAI activation remains a future explicit Loop with separate approval tokens, rollback, monitoring, and risk controls. It does not change the line-only production state.

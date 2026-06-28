@@ -32,3 +32,13 @@ This is a backlog record only. None of these items are implemented in Loop 180.
 ```txt
 Loop 181: OpenAI runtime activation planning
 ```
+
+## Loop 181 Follow-up
+
+Loop 181 creates the OpenAI runtime activation plan only. It does not enable OpenAI runtime, call the OpenAI real API, or change LINE runtime.
+
+Next explicit candidate:
+
+```txt
+Loop 182: OpenAI runtime activation with explicit approval
+```
