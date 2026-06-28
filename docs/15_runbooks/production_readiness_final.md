@@ -1589,3 +1589,38 @@ https_admin_customers_loop177_final=200
 https_admin_api_no_header_customers_loop177_final=401
 https_line_invalid_signature_loop177_final=401
 ```
+
+## Loop 178 Line-Only Production Activation
+
+Current readiness after Loop 178 is Go for line-only production activation.
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=YES
+ACTIVATION_MODE=line_only
+runtime_activation_changes=performed
+activation_result=success
+rollback_performed=false
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+Nginx/DNS/certbot changes=none
+Supabase schema/RLS changes=none
+additional_line_send_performed=false
+openai_real_api_performed=false
+```
+
+Loop 178 verification:
+
+```txt
+api_direct_health_loop178_line_activated=200
+https_api_health_loop178_line_activated=200
+api_direct_health_loop178_final=200
+https_api_health_loop178_final=200
+https_admin_root_loop178_final=200
+https_admin_customers_loop178_final=200
+https_admin_api_no_header_customers_loop178_final=401
+https_line_invalid_signature_loop178_final=401
+```
+
+OpenAI runtime remains a separate explicit approval item. No additional LINE send was performed during Loop 178.

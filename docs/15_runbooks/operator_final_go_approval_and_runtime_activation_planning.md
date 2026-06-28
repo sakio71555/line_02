@@ -189,3 +189,28 @@ LINE_REAL_PUSH_ENABLED=false
 AI_PROVIDER=mock
 OpenAI drop-in absent
 ```
+
+## Loop 178 Outcome
+
+Loop 178 executed Option B only: LINE real push final activation.
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=YES
+ALLOW_RUNTIME_ACTIVATION_CHANGES=YES
+ACTIVATION_MODE=line_only
+ALLOW_LINE_REAL_PUSH_ENABLED_FINAL_TRUE=YES
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=NO
+line_real_push_final_activation=performed
+openai_runtime_final_activation=not_performed
+runtime_activation_changes=performed
+rollback_performed=false
+```
+
+Final runtime after Loop 178:
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+```

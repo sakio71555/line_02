@@ -294,3 +294,37 @@ go_promotion=no
 ```
 
 No-Go remained because OpenAI real API smoke, LINE real reply/push smoke, Supabase write smoke, and final operator Go were not complete.
+
+## Loop 178 Line-Only Production Activation
+
+Loop 178 recorded explicit operator approval and activated only LINE real push.
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=YES
+ACTIVATION_MODE=line_only
+runtime_activation_changes=performed
+activation_result=success
+rollback_performed=false
+```
+
+Current operational readiness is Go for the approved line-only runtime state. OpenAI runtime remains disabled, and Nginx/DNS/certbot plus Supabase schema/RLS remained unchanged.
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+additional_line_send_performed=false
+openai_real_api_performed=false
+```
+
+Final Loop 178 checks:
+
+```txt
+api_direct_health_loop178_final=200
+https_api_health_loop178_final=200
+https_admin_root_loop178_final=200
+https_admin_customers_loop178_final=200
+https_admin_api_no_header_customers_loop178_final=401
+https_line_invalid_signature_loop178_final=401
+```

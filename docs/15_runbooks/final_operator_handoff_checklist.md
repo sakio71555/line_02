@@ -546,3 +546,57 @@ Supabase schema/RLS changes=none
 ```txt
 Loop 178: production activation approval retry
 ```
+
+## Loop 178 Line-Only Activation Handoff
+
+### 1. Operator Tokens
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=YES
+ALLOW_RUNTIME_ACTIVATION_CHANGES=YES
+ACTIVATION_MODE=line_only
+ALLOW_LINE_REAL_PUSH_ENABLED_FINAL_TRUE=YES
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=NO
+ALLOW_NGINX_DNS_CERTBOT_CHANGES=NO
+ALLOW_SUPABASE_SCHEMA_OR_RLS_CHANGES=NO
+ALLOW_ADDITIONAL_LINE_SEND_SMOKE=NO
+```
+
+### 2. Decision
+
+```txt
+activation_result=success
+runtime_activation_changes=performed
+line_real_push_final_enable=performed
+rollback_performed=false
+```
+
+### 3. Final Runtime State
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+Nginx/DNS/certbot changes=none
+Supabase schema/RLS changes=none
+additional_line_send_performed=false
+openai_real_api_performed=false
+```
+
+### 4. Final Checks
+
+```txt
+api_direct_health_loop178_final=200
+https_api_health_loop178_final=200
+https_admin_root_loop178_final=200
+https_admin_customers_loop178_final=200
+https_admin_api_no_header_customers_loop178_final=401
+https_line_invalid_signature_loop178_final=401
+```
+
+### 5. Next Operational Checkpoint
+
+```txt
+Loop 179: first-hour production monitoring
+```

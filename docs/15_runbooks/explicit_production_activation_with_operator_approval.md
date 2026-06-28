@@ -118,3 +118,34 @@ If a future activation Loop fails:
 ```txt
 Loop 178: production activation approval retry
 ```
+
+## Loop 178 Line-Only Activation Result
+
+Loop 178 supplied explicit `YES` approvals for line-only activation and left OpenAI/Nginx/Supabase changes out of scope.
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=YES
+ALLOW_RUNTIME_ACTIVATION_CHANGES=YES
+ACTIVATION_MODE=line_only
+ALLOW_LINE_REAL_PUSH_ENABLED_FINAL_TRUE=YES
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=NO
+ALLOW_NGINX_DNS_CERTBOT_CHANGES=NO
+ALLOW_SUPABASE_SCHEMA_OR_RLS_CHANGES=NO
+ALLOW_ADDITIONAL_LINE_SEND_SMOKE=NO
+activation_result=success
+runtime_activation_changes=performed
+rollback_performed=false
+```
+
+Final runtime after Loop 178:
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+Nginx/DNS/certbot changes=none
+Supabase schema/RLS changes=none
+additional_line_send_performed=false
+openai_real_api_performed=false
+```
