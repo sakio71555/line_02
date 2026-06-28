@@ -1,0 +1,144 @@
+# Post-Production Backlog Triage
+
+## Purpose
+
+This runbook turns the post-production backlog into safe, small follow-up Loops after the line and OpenAI runtime closeout.
+
+It is a planning and operations document only. It does not authorize runtime changes, LINE sends, OpenAI calls, Supabase schema/RLS changes, backup jobs, Nginx changes, DNS changes, or certbot execution.
+
+## Current Production Baseline
+
+```txt
+production_readiness=production_go
+activation_mode=line_and_openai_runtime
+monitoring_status=healthy
+rollback_recommended=false
+handoff_complete=true
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+```
+
+## Loop 185 Read-Only Evidence
+
+```txt
+api_direct_health_loop185_backlog_triage=200
+https_api_health_loop185_backlog_triage=200
+https_admin_root_loop185_backlog_triage=200
+https_admin_customers_loop185_backlog_triage=200
+https_admin_api_no_header_customers_loop185_backlog_triage=401
+https_line_invalid_signature_loop185_backlog_triage=401
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI real API smoke=not performed
+supabase_schema_rls_changes=none
+nginx_dns_certbot_changes=none
+secrets_recorded=false
+```
+
+## Priority Matrix
+
+| Priority | Backlog item | Why now | Risk if delayed | Suggested next Loop |
+| --- | --- | --- | --- | --- |
+| P0 | 1. 運用監視の自動化 | The system is live and manual checks can be missed. | Incident detection may be late. | Loop 186: production monitoring automation dry-run |
+| P0 | 2. OpenAI usage / cost monitoring | OpenAI runtime is enabled. | Cost, latency, or provider errors may drift unnoticed. | Loop 187: OpenAI usage and cost monitoring plan |
+| P0 | 5. backup automation | Production data and deploy artifacts need recoverability. | Restore may be slow or unproven. | Loop 190: production backup automation plan |
+| P1 | 3. authenticated staff route改善 | Staff actions should move toward authenticated production paths. | Internal CLI dependence and auth gaps remain. | Loop 188: authenticated staff reply route production auth remediation plan |
+| P1 | 4. 管理画面の認証UX強化 | Operators need clear login, tenant, and permission feedback. | Misoperation and support burden can grow. | Loop 189: admin auth UX hardening plan |
+| P1 | 6. audit log | Production actions need accountability. | Investigation and compliance become harder. | Loop 191: audit log design plan |
+| P1 | 7. operator manual | Non-developer operators need a simple daily guide. | Operators may rely on developer runbooks. | Loop 192: operator manual first draft |
+| P2 | 8. multi-tenant onboarding | Needed before adding companies beyond the initial tenant. | Expansion may create tenant/channel/knowledge confusion. | Loop 193: multi-tenant onboarding plan |
+
+## Backlog Item Details
+
+### 1. 運用監視の自動化
+
+- Goal: Automate the existing daily health and safety checks.
+- Current state: Daily/weekly schedule exists; automation is not implemented.
+- Implementation boundary: dry-run first; no runtime changes, no outbound LINE, no OpenAI call.
+- Validation: health status, Admin no-header `401`, invalid-signature rejection, sanitized journal/Nginx/resource summary.
+- No-Go conditions: secret output, webhook suffix output, noisy false positives, or external calls beyond approved health checks.
+
+### 2. OpenAI usage / cost monitoring
+
+- Goal: Observe OpenAI usage, cost, error class, latency, and AI draft quality.
+- Current state: OpenAI runtime is enabled; usage/cost automation is not implemented.
+- Implementation boundary: start with manual checklist and secret-safe dashboard review.
+- Validation: sanitized provider error summary and no prompt/response capture.
+- No-Go conditions: key/model values, prompts, responses, or paid calls are recorded without approval.
+
+### 3. authenticated staff route改善
+
+- Goal: Use production authenticated staff context for staff actions.
+- Current state: route requirements are known; auth must not be relaxed.
+- Implementation boundary: plan before code; preserve production dev-header rejection.
+- Validation: tenant boundary tests, permission tests, no-header rejection, no LINE send in tests.
+- No-Go conditions: dev header accepted in production, tenant crossing, weak auth, or token logging.
+
+### 4. 管理画面の認証UX強化
+
+- Goal: Make login, selected tenant, role, permission state, and session expiry obvious to operators.
+- Current state: placeholder pages exist; production UX hardening remains.
+- Implementation boundary: UI plan first; do not change API/auth runtime in the same Loop.
+- Validation: UI static tests, mobile checks, no token display.
+- No-Go conditions: token exposure, unclear permission state, or unsafe send affordance.
+
+### 5. backup automation
+
+- Goal: Make Supabase data, deploy artifacts, and operational docs recoverable.
+- Current state: GitHub and deploy backup history exist; automated DB backup/restore drill is not finalized.
+- Implementation boundary: plan retention and restore before creating jobs.
+- Validation: non-production restore rehearsal and secret-safe backup logs.
+- No-Go conditions: DB URL/key output, unbounded retention, or untested restore.
+
+### 6. audit log
+
+- Goal: Track staff actions, AI actions, permission denials, tenant changes, sends, and rollback actions.
+- Current state: explicit audit log table/flow is not implemented.
+- Implementation boundary: schema plan before migration; do not store message bodies or identifiers by default.
+- Validation: tenant-scoped audit query tests and sensitive field exclusion tests.
+- No-Go conditions: body capture, identifier capture, secret capture, or cross-tenant reads.
+
+### 7. operator manual
+
+- Goal: Provide a beginner-friendly manual for daily operations.
+- Current state: technical runbooks exist; a concise operator manual is still needed.
+- Implementation boundary: docs-only first draft.
+- Validation: operator walkthrough and no secret/customer data review.
+- No-Go conditions: unsafe command instructions, unclear rollback request path, or AI auto-send implication.
+
+### 8. multi-tenant onboarding
+
+- Goal: Prepare safe onboarding for future tenants.
+- Current state: tenant isolation exists; production begins with one tenant.
+- Implementation boundary: checklist and fake-tenant dry-run before real onboarding.
+- Validation: tenant isolation tests, separate LINE channel policy, knowledge separation checks.
+- No-Go conditions: shared LINE channel confusion, staff membership mistakes, knowledge mixing, or manual DB edits without review.
+
+## Recommended Sequence
+
+1. Loop 186: production monitoring automation dry-run.
+2. Loop 187: OpenAI usage and cost monitoring plan.
+3. Loop 190: production backup automation plan.
+4. Loop 188: authenticated staff reply route production auth remediation plan.
+5. Loop 189: admin auth UX hardening plan.
+6. Loop 191: audit log design plan.
+7. Loop 192: operator manual first draft.
+8. Loop 193: multi-tenant onboarding plan.
+
+## Shared Safety Rules
+
+- Keep every item in a separate small Loop.
+- Keep production readiness Go unless a future incident or approved rollback changes it.
+- Do not display env values or secret files.
+- Do not record webhook suffixes, LINE identifiers, reply tokens, message bodies, OpenAI model values, prompts, responses, Supabase endpoints, or DB URLs.
+- Do not send additional LINE messages during planning Loops.
+- Do not call OpenAI during planning Loops.
+- Do not change Nginx, DNS, certbot, Supabase schema/RLS, or runtime flags during planning Loops.
+
+## Next Loop
+
+```txt
+Loop 186: production monitoring automation dry-run
+```

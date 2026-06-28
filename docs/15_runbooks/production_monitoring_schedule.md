@@ -101,3 +101,22 @@ runtime_changes_performed=false
 additional_line_send_performed=false
 OpenAI real API smoke=not performed
 ```
+
+## Loop 185 Monitoring Automation Backlog
+
+Loop 185 classified production monitoring automation as P0.
+
+Next monitoring Loop:
+
+```txt
+Loop 186: production monitoring automation dry-run
+```
+
+The dry-run must keep these boundaries:
+
+- No runtime change.
+- No additional LINE send.
+- No OpenAI API call.
+- No Nginx/DNS/certbot change.
+- No Supabase schema/RLS change.
+- No secret, webhook suffix, LINE identifier, message body, OpenAI response, Supabase endpoint, or DB URL output.

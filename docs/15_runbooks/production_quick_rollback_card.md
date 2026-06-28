@@ -101,3 +101,7 @@ https_line_invalid_signature=401_or_400_or_403
 2. Record whether rollback succeeded.
 3. Keep exact secret values out of docs and final reports.
 4. Open a separate incident follow-up Loop.
+
+## Loop 185 Backlog Note
+
+Loop 185 did not execute rollback. It kept rollback targets unchanged and classified future monitoring, OpenAI usage/cost, backup, staff auth, auth UX, audit log, operator manual, and multi-tenant onboarding work into separate follow-up Loops.
