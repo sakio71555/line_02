@@ -24,6 +24,30 @@ line_reply_push_plan_ready=true
 production_readiness=production_no_go
 ```
 
+## Loop 173 Update
+
+The LINE one-message readiness smoke later succeeded through the internal CLI, after the authenticated staff route diagnosis.
+
+```txt
+execution_path=internal_cli_smoke_command
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+line_send_attempted_once=true
+line_send_result=success
+retry_performed=false
+bulk_multicast_broadcast_group_room=false
+send_attempt_lock_present=true
+send_attempt_count=1
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=true
+production_readiness=production_no_go
+```
+
+Final operator Go remains separate.
+
 ## Loop 172 Diagnosis Update
 
 Loop 172 keeps the existing route strict and prepares a private internal dry-run path for the next one-message smoke.

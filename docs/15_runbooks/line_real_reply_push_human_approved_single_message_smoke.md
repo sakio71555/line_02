@@ -134,6 +134,27 @@ production_readiness=production_no_go
 Loop 172: LINE send failure diagnosis without retry
 ```
 
+## Loop 173 Follow-up
+
+The eventual LINE one-message smoke was completed through a VPS-internal CLI, not through a weakened staff route.
+
+```txt
+execution_path=internal_cli_smoke_command
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+line_send_attempted_once=true
+line_send_result=success
+retry_performed=false
+bulk_multicast_broadcast_group_room=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=true
+production_readiness=production_no_go
+```
+
+No additional LINE send is authorized by this runbook.
+
 ## Loop 172 Diagnosis Update
 
 Loop 172 confirmed that the Loop 171 stop was caused by the authenticated staff route not being available in the live review runtime, not by a LINE API send failure. No retry was performed.

@@ -15,6 +15,28 @@ line_reply_push_ready=false
 production_readiness=production_no_go
 ```
 
+## Loop 173 Execution Result
+
+The internal CLI one-message smoke succeeded once and is now locked against duplicate execution.
+
+```txt
+execution_path=internal_cli_smoke_command
+one_message_only=true
+line_send_attempted_once=true
+line_send_result=success
+retry_performed=false
+bulk_multicast_broadcast_group_room=false
+send_attempt_lock_present=true
+send_attempt_count=1
+duplicate_send_detected=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=true
+production_readiness=production_no_go
+```
+
+This plan must not be reused for another LINE send.
+
 ## Preconditions
 
 - LINE Official Account Webhook is ON.

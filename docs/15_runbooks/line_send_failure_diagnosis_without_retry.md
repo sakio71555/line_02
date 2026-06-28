@@ -129,3 +129,23 @@ production_readiness=production_no_go
 ```txt
 Loop 173: LINE real push internal CLI one-message controlled smoke
 ```
+
+## Loop 173 Follow-up
+
+Loop 173 completed the internal CLI one-message smoke without relaxing staff auth or adding a public route.
+
+```txt
+internal_cli_script=scripts/smoke/line-real-push-single-message-smoke.ts
+line_send_attempted_once=true
+line_send_result=success
+retry_performed=false
+bulk_multicast_broadcast_group_room=false
+send_attempt_lock_present=true
+send_attempt_count=1
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=true
+production_readiness=production_no_go
+```
+
+Do not repeat the send from this runbook. The next action is a separate final production Go/No-Go review.

@@ -1404,3 +1404,59 @@ Remaining No-Go reasons:
 - The internal CLI path currently supports dry-run/preflight only.
 - A future send Loop must add or invoke one-send lock enforcement and roll back to `LINE_REAL_PUSH_ENABLED=false`.
 - Final operator Go has not been recorded.
+
+## Loop 173 LINE Internal CLI One-Message Controlled Smoke
+
+Loop 173 added a send-capable VPS-internal CLI and used it for exactly one LINE real push smoke after dry-run and one-send lock checks.
+
+```txt
+internal_cli_script=scripts/smoke/line-real-push-single-message-smoke.ts
+internal_cli_default_mode=dry_run
+internal_cli_execute_mode_implemented=true
+execution_path=internal_cli_smoke_command
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body=fixed non-personal smoke text; value not recorded
+outgoing_message_body_recorded=false
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=true
+line_send_attempted_once=true
+line_send_result=success
+retry_performed=false
+bulk_multicast_broadcast_group_room=false
+send_attempt_lock_present=true
+send_attempt_count=1
+duplicate_send_detected=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+api_direct_health_loop173_final=200
+https_api_health_loop173_final=200
+customers_no_header_loop173=401
+line_invalid_signature_loop173=401
+AI_PROVIDER=mock
+OpenAI systemd drop-in absent
+line_reply_push_ready=true
+production_readiness=production_no_go
+```
+
+LINE token, channel secret, webhook path value, LINE user identifier, reply token, inbound body, outbound body, target mapping, OpenAI secret/model value, and Supabase secret/URL were not recorded.
+
+## Loop 174 Final Pre-Go Readiness Packet
+
+The final pre-Go readiness packet is now ready, but final operator production Go is still not recorded.
+
+```txt
+https_ready_for_review=true
+line_receive_ready=true
+official_account_auto_response_ready=true
+supabase_ready=true
+supabase_receive_persistence_ready=true
+openai_provider_controlled_smoke_ready=true
+line_reply_push_ready=true
+final_operator_go=false
+production_readiness=production_no_go
+```
+
+Remaining No-Go reason:
+
+- Final operator production Go is not recorded.

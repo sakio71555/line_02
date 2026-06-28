@@ -424,6 +424,10 @@ Loop 171のようなhuman-approved LINE real reply/push smokeでは、approval t
 
 Loop 172のようなLINE send failure diagnosisでは、送信できなかった理由をretryで解消しようとせず、route auth要件をコードから整理します。productionでdev headerやfake bearerを許可せず、unauthenticated public smoke routeも追加しません。次の実送信はVPS内部CLI + explicit approval + one-send lockに分け、Loop 172自体はdry-run/preflight、`LINE_REAL_PUSH_ENABLED=false`、`production_readiness=production_no_go` で完了します。
 
+Loop 173のようなLINE internal CLI one-message controlled smokeでは、VPS内部CLIのdefaultをdry-runにし、executeはexplicit approval、no retry/no bulk acknowledgement、`LINE_REAL_PUSH_ENABLED=true`、単一fresh target、one-send lock作成が揃った時だけ許可します。送信は1通だけ、retryなし、bulk/multicast/broadcast/group/roomなしに限定し、結果に関係なく同じLoopで即 `LINE_REAL_PUSH_ENABLED=false` へrollbackします。LINE user identifier、reply token、受信本文、送信本文の正確な値、target mapping、secret値はdocs/final reportに残しません。
+
+Loop 174のようなfinal pre-Go readiness packetでは、HTTPS/LINE/Supabase/OpenAI/LINE reply-pushのreview-ready状態をまとめても、final operator Goは別Loopに残します。`line_reply_push_ready=true` になっても、最終承認がない限り `final_operator_go=false`、`production_readiness=production_no_go` を維持します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

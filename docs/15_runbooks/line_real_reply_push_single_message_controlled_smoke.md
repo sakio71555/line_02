@@ -168,6 +168,27 @@ LINE reply/push readiness remains false until a later Loop satisfies the human g
 Loop 171: LINE real reply/push human approval gate
 ```
 
+## Loop 173 Follow-up
+
+The controlled smoke eventually succeeded through the dedicated VPS-internal CLI.
+
+```txt
+execution_path=internal_cli_smoke_command
+one_message_only=true
+line_send_attempted_once=true
+line_send_result=success
+retry_performed=false
+bulk_multicast_broadcast_group_room=false
+send_attempt_lock_present=true
+send_attempt_count=1
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=true
+production_readiness=production_no_go
+```
+
+Final operator Go is still separate and not recorded here.
+
 ## Loop 171 Follow-up
 
 Loop 171 repeated the single-message smoke with all human approval tokens satisfied, but did not send because the existing staff reply route was not available through the authenticated staff path in the live review runtime.

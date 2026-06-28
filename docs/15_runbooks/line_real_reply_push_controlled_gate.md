@@ -19,6 +19,26 @@ line_real_push_reply=not_performed
 production_readiness=production_no_go
 ```
 
+## Loop 173 Update
+
+The approved one-message smoke was later executed once through the internal CLI.
+
+```txt
+human_approval_gate_satisfied=true
+execution_path=internal_cli_smoke_command
+line_send_attempted_once=true
+line_send_result=success
+retry_performed=false
+bulk_multicast_broadcast_group_room=false
+send_attempt_lock_present=true
+send_attempt_count=1
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=true
+production_readiness=production_no_go
+```
+
+Do not reuse this gate for another send. A new send requires a new explicit Loop.
+
 ## Loop 172 Update
 
 Loop 172 diagnosed the authenticated staff route failure without retrying LINE delivery.
