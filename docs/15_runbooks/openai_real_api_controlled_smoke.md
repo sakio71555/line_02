@@ -226,3 +226,26 @@ production_readiness=production_no_go
 ```
 
 OpenAI real API connectivity is still known from the prior raw diagnostic, but provider production readiness remains closed until schema validation succeeds.
+
+## Loop 168 Follow-up
+
+Loop 168 performed the provider-boundary smoke once after schema-specific prompt tightening.
+
+```txt
+provider_boundary_smoke_status=success
+request_sent=true
+response_received=true
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=true
+parse_stage=none
+schema_missing_fields=none
+schema_invalid_fields=none
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+ai_provider_final=mock
+line_real_push_enabled=false
+production_readiness=production_no_go
+```

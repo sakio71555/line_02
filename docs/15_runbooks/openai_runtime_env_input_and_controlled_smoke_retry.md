@@ -197,3 +197,22 @@ production_readiness=production_no_go
 ```
 
 Do not attach the OpenAI runtime env for steady-state production until schema validation succeeds in a separately approved Loop.
+
+## Loop 168 Follow-up
+
+The same controlled-smoke and rollback rules were used for Loop 168. The provider-boundary smoke succeeded, and the runtime was returned to mock AI.
+
+```txt
+provider_boundary_smoke_status=success
+json_contract_schema_valid=true
+schema_missing_fields=none
+schema_invalid_fields=none
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+production_readiness=production_no_go
+```

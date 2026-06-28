@@ -133,3 +133,26 @@ production_readiness=production_no_go
 ```
 
 The remaining failure is no longer text extraction or JSON parsing. It is method-specific schema validation.
+
+## Loop 168 Follow-up
+
+Loop 168 tightened the OpenAI draft reply schema and provider prompt against the existing application contract.
+
+```txt
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=true
+parse_stage=none
+schema_missing_fields=none
+schema_invalid_fields=none
+classification=success
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+ai_provider_final=mock
+openai_ready=true
+production_readiness=production_no_go
+```
+
+OpenAI provider output contract is ready at the controlled boundary, but OpenAI is not left enabled in runtime.

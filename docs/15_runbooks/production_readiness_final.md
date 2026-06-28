@@ -1240,6 +1240,31 @@ production_readiness=production_no_go
 
 Remaining No-Go reasons:
 
-- OpenAI provider schema validation has not succeeded.
+- OpenAI provider-boundary smoke succeeded, but OpenAI is not left enabled in runtime.
 - LINE real reply/push has not been performed.
 - Final operator Go has not been recorded.
+
+## Loop 168 OpenAI Provider Schema Readiness
+
+```txt
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=success
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=true
+parse_stage=none
+schema_missing_fields=none
+schema_invalid_fields=none
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=true
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+OpenAI provider schema validation is no longer the active No-Go blocker. Production remains No-Go because LINE real reply/push and final operator Go are not complete.

@@ -123,3 +123,29 @@ The remaining failure is schema validation, so the next remediation should focus
 ## Next
 
 Loop 168: OpenAI provider schema-specific prompt tightening
+
+## Loop 168 Follow-up
+
+Loop 168 aligned the method-specific draft reply schema and prompt.
+
+```txt
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=success
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=true
+parse_stage=none
+schema_missing_fields=none
+schema_invalid_fields=none
+classification=success
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=true
+production_readiness=production_no_go
+```
+
+The schema validation blocker is resolved. Production still remains No-Go because LINE real reply/push and final operator Go are not complete.

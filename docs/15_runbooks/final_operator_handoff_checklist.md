@@ -198,3 +198,30 @@ production_readiness=production_no_go
 ```
 
 Operator-facing Go/No-Go should continue to block production until OpenAI schema validation succeeds, LINE real reply/push is explicitly smoked, and final Go is recorded.
+
+## Loop 168 Follow-up
+
+OpenAI provider-boundary readiness is now true after schema-specific prompt tightening.
+
+```txt
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=success
+provider_output_text_extracted=true
+json_contract_parse_success=true
+json_contract_schema_valid=true
+parse_stage=none
+schema_missing_fields=none
+schema_invalid_fields=none
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+openai_ready=true
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+Operator-facing Go/No-Go should now focus on LINE real reply/push controlled smoke and final Go. Do not enable OpenAI permanently without a separate production runtime decision.

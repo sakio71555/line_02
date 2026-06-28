@@ -258,3 +258,22 @@ production_readiness=production_no_go
 ```
 
 The gate may not move to Go until a later Loop proves schema validation success, keeps secrets out of logs/docs, and separately validates LINE real reply/push.
+
+## Loop 168 Update
+
+OpenAI provider-boundary readiness is now true after schema-specific prompt tightening:
+
+```txt
+provider_boundary_smoke_status=success
+json_contract_schema_valid=true
+schema_missing_fields=none
+schema_invalid_fields=none
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+ai_provider_final=mock
+openai_ready=true
+```
+
+This does not open production by itself. The production gate still remains closed until LINE real reply/push and final operator Go are complete.

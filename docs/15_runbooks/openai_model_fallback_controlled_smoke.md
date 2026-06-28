@@ -168,3 +168,23 @@ production_readiness=production_no_go
 ```
 
 Do not treat model fallback as the remaining blocker unless a later smoke reclassifies the failure.
+
+## Loop 168 Follow-up
+
+The model fallback is no longer the active blocker. Loop 168 fixed schema-specific prompt/output alignment and the provider-boundary smoke succeeded.
+
+```txt
+provider_boundary_smoke_status=success
+json_contract_schema_valid=true
+schema_missing_fields=none
+schema_invalid_fields=none
+response_body_recorded=false
+prompt_body_recorded=false
+api_key_recorded=false
+model_value_recorded=false
+ai_provider_final=mock
+openai_ready=true
+production_readiness=production_no_go
+```
+
+OpenAI remains rollback-to-mock after smoke. Production remains No-Go until LINE real reply/push and final operator Go are complete.
