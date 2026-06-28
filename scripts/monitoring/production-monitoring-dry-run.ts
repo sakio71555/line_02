@@ -559,7 +559,7 @@ function isMainModule(): boolean {
   return import.meta.url === `file://${process.argv[1]}`;
 }
 
-if (isMainModule()) {
+async function main(): Promise<void> {
   try {
     const options = parseArgs(process.argv.slice(2));
     const result = await runProductionMonitoringDryRun(options);
@@ -570,4 +570,8 @@ if (isMainModule()) {
     console.error(`production_monitoring_dry_run=failed\nerror=${message}\nsecrets_recorded=false`);
     process.exit(2);
   }
+}
+
+if (isMainModule()) {
+  void main();
 }
