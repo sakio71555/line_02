@@ -444,6 +444,8 @@ Loop 179のようなfirst-hour production monitoringでは、activation後の状
 
 Loop 182のようなOpenAI runtime activationでは、operator tokensが明示的に `YES` で、OpenAI runtime有効化だけがScopeの場合に限り、OpenAI systemd drop-inを追加してAPI serviceだけをrestartします。OpenAI real API smoke、追加LINE送信、LINE runtime変更、Nginx/DNS/certbot変更、Supabase schema/RLS変更は同じLoopで実施しません。activation後はhealth、Admin no-header rejection、invalid-signature rejection、`AI_PROVIDER=openai`、OpenAI drop-in presentを確認し、API key、model値、prompt/response本文、LINE identifier、message body、Supabase endpointは記録しません。
 
+Loop 183のようなOpenAI runtime first-hour monitoringでは、OpenAI runtime有効化後の状態をread-onlyで確認します。`AI_PROVIDER=openai` とOpenAI drop-in presentは維持し、OpenAI real API smoke、追加LINE送信、runtime変更、Nginx/DNS/certbot変更、Supabase schema/RLS変更は行いません。health二周、Admin no-header rejection、invalid-signature rejection、sanitized journal/Nginx summary、resource状態を記録し、rollbackが必要に見える場合でも同じLoopでは実行せず別の明示承認Loopへ分けます。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

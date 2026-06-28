@@ -428,6 +428,8 @@ Loop 181では、OpenAI runtime activation planning after production Goを追加
 
 Loop 182では、明示承認に基づいてOpenAI runtimeを本番API serviceへ有効化しました。最終runtimeは `REPOSITORY_RUNTIME=supabase` / `LINE_REAL_PUSH_ENABLED=true` / `AI_PROVIDER=openai` / OpenAI systemd drop-in presentです。OpenAI real API smoke、追加LINE送信、Nginx/DNS/certbot変更、Supabase schema/RLS変更は行っていません。詳細はLoop 182 task docとOpenAI runtime activation runbookを参照してください。
 
+Loop 183では、OpenAI runtime有効化後のfirst-hour monitoringをread-onlyで実施しました。API/Admin health、Admin no-header 401、LINE invalid-signature 401、sanitized journal/Nginx summary、resource状態を確認し、rollback recommendationは不要と記録しました。runtimeは `REPOSITORY_RUNTIME=supabase` / `LINE_REAL_PUSH_ENABLED=true` / `AI_PROVIDER=openai` / OpenAI systemd drop-in presentのままです。詳細は [docs/11_codex_tasks/183_openai_runtime_first_hour_monitoring.md](docs/11_codex_tasks/183_openai_runtime_first_hour_monitoring.md) と [docs/15_runbooks/openai_runtime_first_hour_monitoring.md](docs/15_runbooks/openai_runtime_first_hour_monitoring.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
