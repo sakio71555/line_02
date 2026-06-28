@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-import { access, readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import { constants } from "node:fs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -311,9 +311,7 @@ async function readRuntimeState(apiService: string): Promise<RuntimeState> {
     repositoryRuntime: env.get("REPOSITORY_RUNTIME") ?? "unknown",
     lineRealPushEnabled: env.get("LINE_REAL_PUSH_ENABLED") ?? "unknown",
     aiProvider: env.get("AI_PROVIDER") ?? "unknown",
-    openAiDropIn: (await fileExists("/etc/systemd/system/amami-line-crm-api.service.d/30-openai-runtime.conf"))
-      ? "present"
-      : "absent",
+    openAiDropIn: (await hasOpenAiDropIn()) ? "present" : "absent",
     webhookSecretPath: env.get("LINE_WEBHOOK_SECRET_PATH") ?? null
   };
 }
@@ -531,6 +529,17 @@ async function fileExists(path: string): Promise<boolean> {
   try {
     await access(path, constants.F_OK);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+async function hasOpenAiDropIn(): Promise<boolean> {
+  const dropInDirectory = "/etc/systemd/system/amami-line-crm-api.service.d";
+
+  try {
+    const entries = await readdir(dropInDirectory);
+    return entries.some((entry) => /openai.*\.conf$/i.test(entry));
   } catch {
     return false;
   }
