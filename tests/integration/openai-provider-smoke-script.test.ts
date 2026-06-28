@@ -25,6 +25,7 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.stdout).toContain("openai_provider_smoke=skipped");
     expect(result.stdout).toContain("openai_smoke_final=not_performed");
     expect(result.stdout).toContain("request_sent=false");
+    expect(result.stdout).toContain("provider_output_text_extracted=false");
     expect(openAiFetch).not.toHaveBeenCalled();
   });
 
@@ -44,6 +45,7 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.stdout).toContain("reason=openai_model_missing");
     expect(result.stdout).toContain("openai_provider_smoke=skipped");
     expect(result.stdout).toContain("openai_smoke_final=not_performed");
+    expect(result.stdout).toContain("provider_output_text_extracted=false");
     expect(result.stdout).not.toContain("private-openai-key");
     expect(openAiFetch).not.toHaveBeenCalled();
   });
@@ -65,6 +67,7 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.stdout).toContain("reason=openai_real_api_smoke_not_approved");
     expect(result.stdout).toContain("openai_provider_smoke=skipped");
     expect(result.stdout).toContain("openai_smoke_final=not_performed");
+    expect(result.stdout).toContain("provider_output_text_extracted=false");
     expect(result.stdout).not.toContain("private-openai-key");
     expect(openAiFetch).not.toHaveBeenCalled();
   });
@@ -109,6 +112,7 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.stdout).toContain("openai_raw_smoke=success");
     expect(result.stdout).toContain("openai_provider_smoke=success");
     expect(result.stdout).toContain("openai_smoke_final=success");
+    expect(result.stdout).toContain("provider_output_text_extracted=true");
     expect(result.stdout).toContain("response_body_recorded=false");
     expect(result.stdout).toContain("prompt_body_recorded=false");
     expect(result.stdout).toContain("api_key_recorded=false");
@@ -145,6 +149,7 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.stdout).toContain("error_classification=C_auth_or_key_rejected");
     expect(result.stdout).toContain("openai_provider_smoke=skipped");
     expect(result.stdout).toContain("openai_smoke_final=failed");
+    expect(result.stdout).toContain("provider_output_text_extracted=false");
     expect(result.stdout).not.toContain("private-openai-key");
     expect(result.stdout).not.toContain("Authorization");
   });
@@ -186,6 +191,7 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.stdout).toContain("openai_raw_smoke=success");
     expect(result.stdout).toContain("openai_provider_smoke=failed");
     expect(result.stdout).toContain("provider_error_classification=F_request_shape_or_provider_mapping_bug");
+    expect(result.stdout).toContain("provider_output_text_extracted=false");
     expect(result.stdout).toContain("openai_smoke_final=failed");
     expect(result.stdout).toContain("error_classification=F_request_shape_or_provider_mapping_bug");
     expect(result.stdout).not.toContain("request body");
@@ -214,6 +220,7 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toContain("openai_provider_smoke=failed");
     expect(result.stdout).toContain("response_received=true");
+    expect(result.stdout).toContain("provider_output_text_extracted=true");
     expect(result.stdout).toContain("provider_error_classification=G_response_parse_bug");
     expect(result.stdout).not.toContain("wrong shape");
     expect(result.stdout).not.toContain("private-openai-key");
@@ -244,8 +251,50 @@ describe("Loop 165 OpenAI provider smoke command", () => {
     expect(result.exitCode).toBe(0);
     expect(openAiFetch).toHaveBeenCalledTimes(1);
     expect(result.stdout).toContain("openai_provider_smoke=success");
+    expect(result.stdout).toContain("provider_output_text_extracted=true");
     expect(result.stdout).not.toContain("openai_raw_smoke=");
     expect(result.stdout).not.toContain("provider output should not print");
+    expect(result.stdout).not.toContain("private-openai-key");
+    expect(result.stdout).not.toContain("gpt-test-model");
+  });
+
+  it("classifies raw success plus unextractable provider output as a response parse bug", async () => {
+    const rawProviderBody = "RAW_PROVIDER_BODY_SHOULD_NOT_PRINT";
+    const openAiFetch = vi.fn<OpenAiResponsesFetch>(async () => {
+      if (openAiFetch.mock.calls.length === 1) {
+        return {
+          ok: true,
+          status: 200,
+          async json() {
+            return { id: "raw-diagnostic-response" };
+          }
+        };
+      }
+
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            unexpected: rawProviderBody
+          };
+        }
+      };
+    });
+
+    const result = await runOpenAiProviderSmokeCli({
+      env: approvedEnv(),
+      openAiFetch
+    });
+
+    expect(openAiFetch).toHaveBeenCalledTimes(2);
+    expect(result.exitCode).toBe(1);
+    expect(result.stdout).toContain("openai_raw_smoke=success");
+    expect(result.stdout).toContain("openai_provider_smoke=failed");
+    expect(result.stdout).toContain("provider_output_text_extracted=false");
+    expect(result.stdout).toContain("provider_error_classification=G_response_parse_bug");
+    expect(result.stdout).toContain("error_classification=G_response_parse_bug");
+    expect(result.stdout).not.toContain(rawProviderBody);
     expect(result.stdout).not.toContain("private-openai-key");
     expect(result.stdout).not.toContain("gpt-test-model");
   });

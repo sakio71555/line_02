@@ -39,6 +39,7 @@ export interface OpenAiProviderBoundarySmokeResult {
   modelConfigured: boolean;
   requestSent: boolean;
   responseReceived: boolean;
+  providerOutputTextExtracted: boolean;
   responseBodyRecorded: false;
   promptBodyRecorded: false;
   apiKeyRecorded: false;
@@ -125,6 +126,7 @@ export async function runOpenAiProviderBoundarySmoke(
       modelConfigured: true,
       requestSent: true,
       responseReceived: true,
+      providerOutputTextExtracted: true,
       responseBodyRecorded: false,
       promptBodyRecorded: false,
       apiKeyRecorded: false,
@@ -139,6 +141,7 @@ export async function runOpenAiProviderBoundarySmoke(
       modelConfigured: true,
       requestSent,
       responseReceived: diagnostics.errorClassification === "G_response_parse_bug",
+      providerOutputTextExtracted: diagnostics.providerOutputTextExtracted,
       responseBodyRecorded: false,
       promptBodyRecorded: false,
       apiKeyRecorded: false,
@@ -202,6 +205,7 @@ export function formatOpenAiProviderBoundarySmokeResult(
       "openai_provider_smoke=skipped",
       `reason=${result.reason}`,
       "request_sent=false",
+      "provider_output_text_extracted=false",
       "response_body_recorded=false",
       "prompt_body_recorded=false",
       "api_key_recorded=false"
@@ -214,6 +218,7 @@ export function formatOpenAiProviderBoundarySmokeResult(
     result.modelConfigured ? "model=configured; value not displayed" : "model=not_configured",
     `request_sent=${result.requestSent ? "true" : "false"}`,
     `response_received=${result.responseReceived ? "true" : "false"}`,
+    `provider_output_text_extracted=${result.providerOutputTextExtracted ? "true" : "false"}`,
     "response_body_recorded=false",
     "prompt_body_recorded=false",
     "prompt_recorded=false",
@@ -253,6 +258,7 @@ export function classifyOpenAiSmokeError(error: unknown): {
   errorCode: string;
   errorType: string;
   errorClassification: OpenAiProviderErrorClassification;
+  providerOutputTextExtracted: boolean;
 } {
   if (error instanceof OpenAiProviderError) {
     return {
@@ -260,7 +266,8 @@ export function classifyOpenAiSmokeError(error: unknown): {
       errorStatus: error.status === null ? "unavailable" : String(error.status),
       errorCode: error.providerCode ?? "unavailable",
       errorType: error.providerType ?? "unavailable",
-      errorClassification: error.classification
+      errorClassification: error.classification,
+      providerOutputTextExtracted: error.providerOutputTextExtracted === true
     };
   }
 
@@ -273,7 +280,8 @@ export function classifyOpenAiSmokeError(error: unknown): {
       errorClassification:
         error.name === "AbortError" || error.name === "TimeoutError"
           ? "E_network_or_timeout"
-          : "I_unknown_sanitized"
+          : "I_unknown_sanitized",
+      providerOutputTextExtracted: false
     };
   }
 
@@ -282,7 +290,8 @@ export function classifyOpenAiSmokeError(error: unknown): {
     errorStatus: "unavailable",
     errorCode: "unavailable",
     errorType: "unavailable",
-    errorClassification: "I_unknown_sanitized"
+    errorClassification: "I_unknown_sanitized",
+    providerOutputTextExtracted: false
   };
 }
 
@@ -321,6 +330,7 @@ function notPerformed(
     modelConfigured,
     requestSent: false,
     responseReceived: false,
+    providerOutputTextExtracted: false,
     responseBodyRecorded: false,
     promptBodyRecorded: false,
     apiKeyRecorded: false,

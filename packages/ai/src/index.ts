@@ -176,6 +176,7 @@ export class OpenAiProviderError extends Error {
   readonly providerCode: string | null;
   readonly providerType: string | null;
   readonly classification: OpenAiProviderErrorClassification;
+  readonly providerOutputTextExtracted: boolean | null;
 
   constructor(input: OpenAiProviderErrorInput = {}) {
     super("OpenAI provider request failed.");
@@ -183,6 +184,7 @@ export class OpenAiProviderError extends Error {
     this.status = input.status ?? null;
     this.providerCode = sanitizeOpenAiErrorToken(input.providerCode);
     this.providerType = sanitizeOpenAiErrorToken(input.providerType);
+    this.providerOutputTextExtracted = input.providerOutputTextExtracted ?? null;
     this.classification =
       input.classification ??
       classifyOpenAiProviderError({
@@ -209,6 +211,7 @@ export interface OpenAiProviderErrorInput {
   providerCode?: string | null;
   providerType?: string | null;
   classification?: OpenAiProviderErrorClassification;
+  providerOutputTextExtracted?: boolean | null;
 }
 
 export interface OpenAiProviderErrorClassificationInput {
@@ -592,7 +595,10 @@ function parseOpenAiJsonResponse(response: OpenAiResponsesTransportResponse): Re
   const output = response.output_text ?? response.outputText;
 
   if (!output) {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: false
+    });
   }
 
   let parsed: unknown;
@@ -600,34 +606,46 @@ function parseOpenAiJsonResponse(response: OpenAiResponsesTransportResponse): Re
   try {
     parsed = JSON.parse(output);
   } catch {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: true
+    });
   }
 
   if (!isRecord(parsed)) {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: true
+    });
   }
 
   return parsed;
 }
 
-function normalizeOpenAiResponsesPayload(payload: unknown): OpenAiResponsesTransportResponse {
+export function normalizeOpenAiResponsesPayload(payload: unknown): OpenAiResponsesTransportResponse {
+  return { output_text: extractOpenAiResponseText(payload) };
+}
+
+export function extractOpenAiResponseText(payload: unknown): string {
   if (!isRecord(payload)) {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw openAiResponseTextExtractionError();
   }
 
-  const outputText = readOptionalString(payload.output_text) ?? readOptionalString(payload.outputText);
+  const candidates = [
+    readOptionalString(payload.output_text),
+    readOptionalString(payload.outputText),
+    readOptionalString(payload.text),
+    readOutputTextFromContentArray(payload.content),
+    readOutputTextFromResponsesOutput(payload.output)
+  ];
 
-  if (outputText) {
-    return { output_text: outputText };
+  for (const candidate of candidates) {
+    if (candidate) {
+      return candidate;
+    }
   }
 
-  const nestedOutputText = readOutputTextFromResponsesOutput(payload.output);
-
-  if (nestedOutputText) {
-    return { output_text: nestedOutputText };
-  }
-
-  throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+  throw openAiResponseTextExtractionError();
 }
 
 function readOutputTextFromResponsesOutput(output: unknown): string | null {
@@ -636,35 +654,71 @@ function readOutputTextFromResponsesOutput(output: unknown): string | null {
   }
 
   for (const item of output) {
-    if (!isRecord(item) || !Array.isArray(item.content)) {
+    if (!isRecord(item)) {
       continue;
     }
 
-    for (const content of item.content) {
-      if (!isRecord(content)) {
-        continue;
-      }
+    const itemText = readOptionalString(item.text);
 
-      const text = readOptionalString(content.text);
+    if (itemText) {
+      return itemText;
+    }
 
-      if (text) {
-        return text;
-      }
+    const contentText = readOutputTextFromContentArray(item.content);
+
+    if (contentText) {
+      return contentText;
     }
   }
 
   return null;
 }
 
+function readOutputTextFromContentArray(content: unknown): string | null {
+  if (!Array.isArray(content)) {
+    return null;
+  }
+
+  for (const item of content) {
+    if (!isRecord(item)) {
+      continue;
+    }
+
+    const text = readOptionalString(item.text);
+
+    if (text) {
+      return text;
+    }
+  }
+
+  return null;
+}
+
+function openAiResponseTextExtractionError(): OpenAiProviderError {
+  return new OpenAiProviderError({
+    classification: "G_response_parse_bug",
+    providerOutputTextExtracted: false
+  });
+}
+
 function readOptionalString(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value : null;
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  return trimmed ? trimmed : null;
 }
 
 function readRequiredString(record: Record<string, unknown>, key: string): string {
   const value = record[key];
 
   if (typeof value !== "string" || !value.trim()) {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: true
+    });
   }
 
   return value.trim();
@@ -674,7 +728,10 @@ function readStringArray(record: Record<string, unknown>, key: string): string[]
   const value = record[key];
 
   if (!Array.isArray(value)) {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: true
+    });
   }
 
   return value.filter((item): item is string => typeof item === "string").map((item) => item.trim());
@@ -684,7 +741,10 @@ function readBoolean(record: Record<string, unknown>, key: string): boolean {
   const value = record[key];
 
   if (typeof value !== "boolean") {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: true
+    });
   }
 
   return value;
@@ -694,7 +754,10 @@ function readRecommendedResponseMode(record: Record<string, unknown>): AiRecomme
   const value = record.recommended_response_mode;
 
   if (!isRecommendedResponseMode(value)) {
-    throw new OpenAiProviderError({ classification: "G_response_parse_bug" });
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: true
+    });
   }
 
   return value;
