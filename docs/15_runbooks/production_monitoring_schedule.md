@@ -172,3 +172,27 @@ production readiness: Go
 ```
 
 Future usage/cost API integration requires a separate explicit approval Loop and must summarize only aggregate status.
+
+## Loop 188 Backup Automation Plan
+
+Loop 188 adds the production backup automation plan without creating backups or jobs.
+
+Weekly operations should now also include:
+
+1. Confirm backup inventory status is reviewed without opening secret files.
+2. Confirm VPS deploy backups are not growing without review.
+3. Confirm Supabase backup method and retention remain operator-defined until approved.
+4. Confirm restore drill remains planned for non-production first.
+
+```txt
+backup_job_created=false
+DB export performed=false
+cron/systemd timer created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Supabase export performed=false
+production readiness: Go
+```
+
+The next safe step is an inventory-only dry-run script. It must not create backups, delete backups, copy secret files, export databases, install timers, or change runtime.

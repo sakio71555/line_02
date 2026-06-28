@@ -109,6 +109,31 @@ production readiness: Go
 
 Do not paste API keys, model values, organization IDs, project IDs, prompt text, response text, raw usage payloads, raw cost payloads, LINE identifiers, message bodies, Supabase endpoints, or DB URLs.
 
+## Loop 188 Backup Handoff
+
+Production backup automation is planned, but not implemented.
+
+Operator action:
+
+1. Review [production_backup_automation_plan.md](production_backup_automation_plan.md).
+2. Confirm retention expectations for VPS deploy backups.
+3. Confirm Supabase backup method before any export.
+4. Confirm where secret values are stored outside Git/docs.
+5. Approve only an inventory dry-run before any real backup job.
+
+```txt
+backup_job_created=false
+DB export performed=false
+cron/systemd timer created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Supabase export performed=false
+production readiness: Go
+```
+
+Do not copy secret files, display `.env` values, export the database, create cron/systemd timers, or delete old backups until a separate approved Loop.
+
 ## Loop 161 Follow-up
 
 ```txt

@@ -454,6 +454,8 @@ Loop 186のようなproduction monitoring automation dry-runでは、まずread-
 
 Loop 187のようなOpenAI usage / cost monitoring planでは、OpenAI runtimeが有効でもOpenAI API、usage API、cost API、dashboard APIは呼びません。まずmanual dashboard review、operator-defined thresholds、cost spike / quota / rate limit / malformed output時の対応、future API integration approvalをdocs/testで固定します。記録できるのはsummary statusだけで、API key、model値、organization/project id、prompt/response、raw usage/cost payload、LINE identifier、Supabase endpoint、DB URLは残しません。
 
+Loop 188のようなproduction backup automation planでは、backup対象、retention、restore drill、secret handling、Supabase backup方針をdocs/testで固定するだけにします。backup job作成、DB export、Supabase CLI/API backup、secret file copy、`.env` 表示、cron/systemd timer作成、runtime変更、LINE追加送信、OpenAI API、Nginx/DNS/certbot、Supabase schema/RLS/writeは同じLoopで行いません。次の実装候補もまずinventory dry-runに絞ります。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

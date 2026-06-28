@@ -1895,3 +1895,23 @@ additional_line_send_performed=false
 ```
 
 The plan uses manual dashboard review first, with `cost_threshold_values=operator_defined` and `currency=operator_defined`. Future API integration is not implemented and requires a separate explicit approval Loop.
+
+## Loop 188 Production Backup Automation Plan
+
+Loop 188 keeps production readiness Go and adds only the backup automation plan.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+backup automation current status=planned
+implementation status=not implemented
+backup_job_created=false
+DB export performed=false
+cron/systemd timer created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Supabase export performed=false
+```
+
+The plan documents Git/repo/docs recovery, VPS deploy backup inventory, Supabase backup strategy, secret handling, retention, and restore drill steps. Actual backup creation, DB export, timer installation, and restore execution remain separate future Loops.
