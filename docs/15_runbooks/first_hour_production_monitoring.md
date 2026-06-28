@@ -116,3 +116,23 @@ If a future incident appears, rollback must be handled in a separate explicitly 
 ```txt
 Loop 180: production stabilization and operator handoff closeout
 ```
+
+## Loop 180 Closeout Follow-up
+
+Loop 180 completed the closeout that this monitoring runbook pointed to.
+
+```txt
+closeout_status=complete
+monitoring_status=healthy
+rollback_recommended=false
+handoff_complete=true
+runtime_changes_performed=false
+line_send_performed=false
+openai_real_api_performed=false
+```
+
+The closeout runbook and monitoring schedule are recorded in:
+
+- [production_stabilization_and_operator_handoff_closeout.md](production_stabilization_and_operator_handoff_closeout.md)
+- [production_monitoring_schedule.md](production_monitoring_schedule.md)
+- [production_quick_rollback_card.md](production_quick_rollback_card.md)

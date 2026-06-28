@@ -422,6 +422,8 @@ Loop 178では、承認済みline-only activationとして `LINE_REAL_PUSH_ENABL
 
 Loop 179では、Loop 178後のfirst-hour production monitoringをread-onlyで実施しました。API/Admin health、Admin no-header 401、LINE invalid-signature 401、sanitized journal/Nginx summary、resource状態を確認し、rollback recommendationは不要と記録しました。runtimeは `REPOSITORY_RUNTIME=supabase` / `LINE_REAL_PUSH_ENABLED=true` / `AI_PROVIDER=mock` / OpenAI systemd drop-in absentのままです。詳細は [docs/11_codex_tasks/179_first_hour_production_monitoring.md](docs/11_codex_tasks/179_first_hour_production_monitoring.md) と [docs/15_runbooks/first_hour_production_monitoring.md](docs/15_runbooks/first_hour_production_monitoring.md) を参照してください。
 
+Loop 180では、line-only production activationの安定化とoperator handoff closeoutをdocs/test/read-only verificationで完了しました。最終状態は `REPOSITORY_RUNTIME=supabase` / `LINE_REAL_PUSH_ENABLED=true` / `AI_PROVIDER=mock` / OpenAI systemd drop-in absentで、追加LINE送信、OpenAI実API、Nginx/DNS/certbot変更、Supabase schema/RLS変更は行っていません。daily/weekly monitoring、incident response、quick rollback card、future backlogを整理しています。詳細は [docs/11_codex_tasks/180_production_stabilization_and_operator_handoff_closeout.md](docs/11_codex_tasks/180_production_stabilization_and_operator_handoff_closeout.md) と [docs/15_runbooks/production_stabilization_and_operator_handoff_closeout.md](docs/15_runbooks/production_stabilization_and_operator_handoff_closeout.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

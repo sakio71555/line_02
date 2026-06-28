@@ -655,3 +655,53 @@ https_line_invalid_signature_loop179_r2=401
 ```txt
 Loop 180: production stabilization and operator handoff closeout
 ```
+
+## Loop 180 Production Stabilization Handoff
+
+### 1. Closeout Result
+
+```txt
+closeout_status=complete
+activation_mode=line_only
+monitoring_status=healthy
+rollback_recommended=false
+handoff_complete=true
+runtime_changes_performed=false
+line_send_performed=false
+openai_real_api_performed=false
+```
+
+Production readiness is Go for line-only operations.
+
+### 2. Current Runtime State
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=mock
+OpenAI systemd drop-in=absent
+```
+
+### 3. Closeout Checks
+
+```txt
+api_direct_health_loop180_closeout=200
+https_api_health_loop180_closeout=200
+https_admin_root_loop180_closeout=200
+https_admin_customers_loop180_closeout=200
+https_admin_api_no_header_customers_loop180_closeout=401
+https_line_invalid_signature_loop180_closeout=401
+```
+
+### 4. Operator Routine
+
+- Use [production_monitoring_schedule.md](production_monitoring_schedule.md) for daily and weekly checks.
+- Use [production_quick_rollback_card.md](production_quick_rollback_card.md) only after explicit rollback approval.
+- Keep OpenAI runtime activation as a separate explicit Loop.
+- Keep additional LINE sends, Nginx/DNS/certbot changes, and Supabase schema/RLS changes out of routine monitoring.
+
+### 5. Next Operational Backlog
+
+```txt
+Loop 181: OpenAI runtime activation planning
+```
