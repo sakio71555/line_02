@@ -165,3 +165,34 @@ Next explicit candidate:
 ```txt
 Loop 189: backup inventory dry-run script
 ```
+
+## Loop 189 Follow-up
+
+Loop 189 adds the backup inventory dry-run script so P0 backup readiness can be inspected without creating backups or exporting data.
+
+```txt
+backup inventory dry-run=pending
+script_path=scripts/backup/backup-inventory-dry-run.ts
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+timer_created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Supabase export performed=false
+production readiness: Go
+```
+
+Remaining P0 implementation:
+
+- optional timer/notification install.
+- optional backup creation dry-run.
+- optional Supabase backup method selection.
+
+Next explicit candidate:
+
+```txt
+Loop 190: backup retention dry-run proposal
+```

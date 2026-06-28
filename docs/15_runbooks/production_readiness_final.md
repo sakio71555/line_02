@@ -1915,3 +1915,26 @@ Supabase export performed=false
 ```
 
 The plan documents Git/repo/docs recovery, VPS deploy backup inventory, Supabase backup strategy, secret handling, retention, and restore drill steps. Actual backup creation, DB export, timer installation, and restore execution remain separate future Loops.
+
+## Loop 189 Backup Inventory Dry-Run Script
+
+Loop 189 keeps production readiness Go and adds a read-only backup inventory dry-run script.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+backup inventory dry-run=pending
+script_path=scripts/backup/backup-inventory-dry-run.ts
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+supabase_export_performed=false
+timer_created=false
+secrets_recorded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+```
+
+The script inventories repo/docs, deploy backup counts, runtime config path existence, helper path existence, and backup strategy docs. It does not create backups, export data, copy secrets, install timers, change runtime, send LINE messages, call OpenAI, or change Nginx/DNS/certbot/Supabase schema.

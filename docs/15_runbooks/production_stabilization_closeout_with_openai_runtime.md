@@ -230,6 +230,32 @@ production readiness: Go
 
 The backup scope now covers Git/repo/docs, VPS deploy backups, runtime configuration paths, Supabase backup strategy, LINE/OpenAI provider recovery, and sanitized logs. Actual backup creation, retention enforcement, Supabase export, and restore drill execution remain separate future Loops.
 
+## Loop 189 Backup Inventory Dry-Run Follow-up
+
+Loop 189 adds the read-only backup inventory dry-run script for the current production state.
+
+```txt
+backup inventory dry-run=pending
+script_path=scripts/backup/backup-inventory-dry-run.ts
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+backup_job_created=false
+db_export_performed=false
+secret_file_copied=false
+env_values_displayed=false
+timer_created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+supabase_export_performed=false
+```
+
+P0 operations base now has monitoring dry-run, OpenAI usage/cost plan, backup automation plan, and backup inventory dry-run in place. Optional timer/notification install, backup creation dry-run, and Supabase backup method selection remain separate future Loops.
+
 ## Safety Boundary
 
 - Secret values were not displayed or recorded.
