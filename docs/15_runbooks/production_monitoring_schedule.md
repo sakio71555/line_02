@@ -42,8 +42,19 @@ This schedule is operational guidance. It does not authorize runtime changes, LI
 ```txt
 REPOSITORY_RUNTIME=supabase
 LINE_REAL_PUSH_ENABLED=true
-AI_PROVIDER=mock
-OpenAI systemd drop-in=absent
-activation_mode=line_only
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+activation_mode=line_and_openai_runtime
 monitoring_status=healthy
 ```
+
+## OpenAI Runtime Monitoring
+
+After Loop 182, daily checks should also include:
+
+1. Review sanitized OpenAI error classification.
+2. Review OpenAI usage and cost without recording values.
+3. Watch provider latency and timeout trend.
+4. Review AI draft quality with staff.
+5. Confirm AI output is not automatically sent to LINE.
+6. Confirm logs do not contain prompts, responses, API keys, model values, LINE identifiers, or message bodies.

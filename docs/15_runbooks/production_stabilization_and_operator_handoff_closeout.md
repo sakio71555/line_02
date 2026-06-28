@@ -186,3 +186,22 @@ line_send_performed=false
 ```
 
 Production readiness remains Go for line-only operations. OpenAI runtime planning is recorded in the Loop 181 dedicated runbook.
+
+## Loop 182 OpenAI Runtime Activation Follow-up
+
+Loop 182 activated OpenAI runtime with explicit approval and kept LINE runtime unchanged.
+
+```txt
+OpenAI runtime activation performed
+activation_result=activated
+rollback_performed=false
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+OpenAI real API smoke=not performed
+additional_line_send_performed=false
+```
+
+Production readiness remains Go. Continue monitoring OpenAI usage, sanitized errors, latency, and AI draft quality without recording secret values or message bodies.

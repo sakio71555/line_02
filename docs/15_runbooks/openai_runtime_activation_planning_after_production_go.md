@@ -172,3 +172,19 @@ ACTIVATION_MODE=openai_runtime_only
 - Nginx/DNS/certbot changes were not performed.
 - Supabase schema/RLS changes were not performed.
 - Secret values, webhook suffixes, LINE identifiers, reply tokens, message bodies, prompts, responses, OpenAI model values, Supabase endpoints, and DB URLs were not recorded.
+
+## Loop 182 Follow-up
+
+Loop 182 was executed with explicit approval tokens. OpenAI runtime activation was performed by adding the approved systemd drop-in and restarting only the API service.
+
+```txt
+OPENAI_RUNTIME_ACTIVATION_APPROVED=YES
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=YES
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+OpenAI real API smoke=not performed
+additional_line_send_performed=false
+activation_mode=line_and_openai_runtime
+```
+
+Use [openai_runtime_activation_with_explicit_approval.md](openai_runtime_activation_with_explicit_approval.md) as the current OpenAI runtime activation record.

@@ -29,16 +29,30 @@ describe("production monitoring schedule and future backlog", () => {
     }
   });
 
-  it("records current line-only runtime assumption", () => {
+  it("records current line and OpenAI runtime assumption", () => {
     const schedule = read(schedulePath);
 
     for (const expected of [
       "REPOSITORY_RUNTIME=supabase",
       "LINE_REAL_PUSH_ENABLED=true",
-      "AI_PROVIDER=mock",
-      "OpenAI systemd drop-in=absent",
-      "activation_mode=line_only",
+      "AI_PROVIDER=openai",
+      "OpenAI systemd drop-in=present",
+      "activation_mode=line_and_openai_runtime",
       "monitoring_status=healthy"
+    ]) {
+      expect(schedule).toContain(expected);
+    }
+  });
+
+  it("records OpenAI runtime monitoring checks", () => {
+    const schedule = read(schedulePath);
+
+    for (const expected of [
+      "## OpenAI Runtime Monitoring",
+      "Review sanitized OpenAI error classification",
+      "Review OpenAI usage and cost without recording values",
+      "Watch provider latency and timeout trend",
+      "Confirm AI output is not automatically sent to LINE"
     ]) {
       expect(schedule).toContain(expected);
     }
