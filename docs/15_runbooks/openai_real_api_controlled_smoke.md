@@ -190,3 +190,15 @@ production_readiness=production_no_go
 ```
 
 Raw API connectivity is proven, but production provider readiness remains No-Go until provider output contract handling is remediated and reapproved.
+
+## Loop 166 Update
+
+OpenAI real API connectivity remains proven by the prior raw diagnostic. Loop 166 did not rerun raw diagnostic; it confirmed provider text extraction and isolated the remaining failure to JSON output contract mismatch.
+
+```txt
+raw_diagnostic_rerun=no
+provider_output_text_extracted=true
+provider_boundary_error_classification=G_response_parse_bug
+openai_ready=false
+production_readiness=production_no_go
+```

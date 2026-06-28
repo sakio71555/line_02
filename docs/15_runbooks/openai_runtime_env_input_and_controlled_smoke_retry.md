@@ -159,3 +159,16 @@ production_readiness=production_no_go
 ```
 
 Do not rerun provider smoke until the next provider output contract remediation Loop.
+
+## Loop 166 Follow-up
+
+OpenAI runtime env remains a temporary smoke-only attachment. Loop 166 used it for one provider-boundary smoke, then removed the drop-in and returned to mock AI.
+
+```txt
+provider_boundary_smoke=performed_once
+provider_output_text_extracted=true
+provider_boundary_error_classification=G_response_parse_bug
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+production_readiness=production_no_go
+```

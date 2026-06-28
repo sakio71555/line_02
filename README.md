@@ -334,6 +334,8 @@ Loop 164ではoperatorがmodel fallback値を設定した後、1回だけOpenAI 
 
 Loop 165ではOpenAI request shape / provider transport remediationを実施しました。raw Responses API診断は1回だけHTTP 200で成功し、provider-boundary smokeは1回だけ失敗しました。response body、prompt本文、API key、model値は記録せず、最終runtimeはmock AIへrollback済みです。詳細は [docs/11_codex_tasks/165_openai_request_shape_provider_transport_remediation.md](docs/11_codex_tasks/165_openai_request_shape_provider_transport_remediation.md) と [docs/15_runbooks/openai_request_shape_provider_transport_remediation.md](docs/15_runbooks/openai_request_shape_provider_transport_remediation.md) を参照してください。
 
+Loop 166ではOpenAI provider output parserをResponses API風の複数shapeへ対応させ、provider-boundary smokeを1回だけ実施しました。text抽出は成功しましたが、期待JSON contract mismatchとして `G_response_parse_bug` で失敗したため、`openai_ready=false` と `production_readiness=production_no_go` を維持しています。response body、prompt本文、API key、model値は記録せず、最終runtimeはmock AIへrollback済みです。詳細は [docs/11_codex_tasks/166_openai_provider_output_contract_remediation.md](docs/11_codex_tasks/166_openai_provider_output_contract_remediation.md) と [docs/15_runbooks/openai_provider_output_contract_remediation.md](docs/15_runbooks/openai_provider_output_contract_remediation.md) を参照してください。
+
 Loop 027では本番向けstaff/admin tenant context planを追加しました。ただし、まだSupabase Auth実装、JWT検証、API差し替え、migration変更は行っていません。詳細は [docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md](docs/11_codex_tasks/027_supabase_auth_staff_tenant_context_plan.md) を参照してください。
 
 Loop 028ではstaff/admin tenant schema planを追加しました。staff membership、role、status、`auth_user_id` 連携を設計しましたが、migration SQL、Supabase Auth実装、API差し替えはまだ行っていません。詳細は [docs/11_codex_tasks/028_staff_tenant_schema_plan.md](docs/11_codex_tasks/028_staff_tenant_schema_plan.md) を参照してください。

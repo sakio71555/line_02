@@ -86,3 +86,24 @@ production_readiness=production_no_go
 ```txt
 Loop 166: OpenAI provider output contract remediation
 ```
+
+## Loop 166 Follow-up
+
+Loop 166 did not rerun the raw diagnostic. It added parser fixture coverage and ran provider-boundary smoke once.
+
+```txt
+provider_output_parser_remediation=applied
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=failed
+provider_output_text_extracted=true
+provider_boundary_error_classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+production_readiness=production_no_go
+```
+
+The remaining failure is now after text extraction, so the next Loop should focus on provider JSON output contract remediation.

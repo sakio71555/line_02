@@ -129,3 +129,21 @@ production_readiness=production_no_go
 ```
 
 The next OpenAI step should remediate provider output contract/parse behavior without another blind paid retry.
+
+## Loop 166 Follow-up
+
+Loop 166 confirmed that provider text extraction now succeeds, but the expected JSON output contract still fails.
+
+```txt
+provider_output_text_extracted=true
+provider_boundary_error_classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+ai_provider_final=mock
+openai_ready=false
+production_readiness=production_no_go
+```
+
+Next focus: OpenAI provider JSON output contract remediation.

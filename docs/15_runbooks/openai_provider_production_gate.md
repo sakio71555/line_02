@@ -217,3 +217,18 @@ production_readiness=production_no_go
 ```
 
 The next production gate is provider output contract remediation. Do not enable OpenAI steady-state runtime from the Loop 165 result alone.
+
+## Loop 166 Update
+
+The provider gate remains closed for production.
+
+```txt
+provider_output_parser_remediation=applied
+provider_output_text_extracted=true
+provider_json_contract_ready=false
+provider_boundary_error_classification=G_response_parse_bug
+openai_ready=false
+production_readiness=production_no_go
+```
+
+The next OpenAI Loop should fix output instructions/parser expectations without recording raw provider output.

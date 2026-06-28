@@ -1164,3 +1164,40 @@ Remaining No-Go reasons:
 - OpenAI provider runtime smoke has not succeeded.
 - LINE real reply/push has not been performed.
 - Final operator Go has not been recorded.
+
+## Loop 166 OpenAI Provider Output Contract Remediation
+
+Loop 166 hardened the provider parser and confirmed that the remaining provider failure is after text extraction.
+
+```txt
+raw_diagnostic_rerun=no
+provider_output_parser_remediation=applied
+synthetic_fixture_coverage=output_text,output_content_text,output_item_text,top_level_content_text,top_level_text
+provider_boundary_smoke=performed_once
+provider_boundary_smoke_status=failed
+provider_output_text_extracted=true
+provider_boundary_error_classification=G_response_parse_bug
+provider_boundary_retry_performed=no
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+openai_systemd_dropin_present_final=false
+ai_provider_final=mock
+line_real_push_enabled=false
+api_direct_health_final=200
+https_api_health_final=200
+customers_no_header_final=401
+line_invalid_signature_final=401
+openai_api_connectivity_ready=true
+openai_provider_text_extraction_ready=true
+openai_provider_json_contract_ready=false
+openai_ready=false
+production_readiness=production_no_go
+```
+
+Remaining No-Go reasons:
+
+- OpenAI provider JSON output contract has not succeeded.
+- LINE real reply/push has not been performed.
+- Final operator Go has not been recorded.

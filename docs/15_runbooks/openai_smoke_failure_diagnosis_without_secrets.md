@@ -140,3 +140,18 @@ production_readiness=production_no_go
 ```
 
 Raw API connectivity is available, but provider runtime readiness is still false.
+
+## Loop 166 Follow-up
+
+After Loop 165 raw Responses API HTTP 200 and Loop 166 parser remediation, the failure is no longer classified as unknown.
+
+```txt
+provider_output_text_extracted=true
+provider_boundary_error_classification=G_response_parse_bug
+response_body_recorded=no
+prompt_body_recorded=no
+api_key_recorded=no
+model_value_recorded=no
+```
+
+Next focus: extracted provider text must satisfy the JSON output contract.

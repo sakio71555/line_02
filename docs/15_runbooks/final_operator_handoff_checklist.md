@@ -159,3 +159,18 @@ production_readiness=production_no_go
 ```
 
 Next operator action is not LINE real reply/push yet. First decide whether to run a provider output contract remediation Loop and approve any future paid OpenAI smoke separately.
+
+## Loop 166 Follow-up
+
+OpenAI provider smoke still is not production-ready.
+
+```txt
+provider_output_parser_remediation=applied
+provider_output_text_extracted=true
+provider_boundary_error_classification=G_response_parse_bug
+openai_ready=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+Operator-facing Go/No-Go should continue to treat OpenAI as No-Go until the JSON output contract smoke succeeds and rollback to mock is verified again.
