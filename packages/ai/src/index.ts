@@ -177,6 +177,9 @@ export class OpenAiProviderError extends Error {
   readonly providerType: string | null;
   readonly classification: OpenAiProviderErrorClassification;
   readonly providerOutputTextExtracted: boolean | null;
+  readonly jsonContractParseSuccess: boolean | null;
+  readonly jsonContractSchemaValid: boolean | null;
+  readonly parseStage: OpenAiProviderParseStage | null;
 
   constructor(input: OpenAiProviderErrorInput = {}) {
     super("OpenAI provider request failed.");
@@ -185,6 +188,9 @@ export class OpenAiProviderError extends Error {
     this.providerCode = sanitizeOpenAiErrorToken(input.providerCode);
     this.providerType = sanitizeOpenAiErrorToken(input.providerType);
     this.providerOutputTextExtracted = input.providerOutputTextExtracted ?? null;
+    this.jsonContractParseSuccess = input.jsonContractParseSuccess ?? null;
+    this.jsonContractSchemaValid = input.jsonContractSchemaValid ?? null;
+    this.parseStage = input.parseStage ?? null;
     this.classification =
       input.classification ??
       classifyOpenAiProviderError({
@@ -206,12 +212,22 @@ export type OpenAiProviderErrorClassification =
   | "H_provider_transport_bug"
   | "I_unknown_sanitized";
 
+export type OpenAiProviderParseStage =
+  | "text_extraction"
+  | "json_parse"
+  | "schema_validation"
+  | "provider_mapping"
+  | "unknown";
+
 export interface OpenAiProviderErrorInput {
   status?: number | null;
   providerCode?: string | null;
   providerType?: string | null;
   classification?: OpenAiProviderErrorClassification;
   providerOutputTextExtracted?: boolean | null;
+  jsonContractParseSuccess?: boolean | null;
+  jsonContractSchemaValid?: boolean | null;
+  parseStage?: OpenAiProviderParseStage | null;
 }
 
 export interface OpenAiProviderErrorClassificationInput {
@@ -376,7 +392,7 @@ export class OpenAiProvider implements AiProvider {
           customer_id: input.customer_id,
           prompt: buildConversationPrompt({
             instruction:
-              "会話を担当者支援用に要約し、summary, next_actions, risk_flags, recommended_response_mode をJSONで返してください。",
+              "会話を担当者支援用に要約し、summary, next_actions, risk_flags, recommended_response_mode を含むJSON objectだけを返してください。Markdownや説明文は付けないでください。",
             conversation: input.conversation
           })
         }),
@@ -406,7 +422,7 @@ export class OpenAiProvider implements AiProvider {
           customer_id: input.customer_id,
           prompt: buildConversationPrompt({
             instruction:
-              "担当者が確認して送る返信下書きを短く作り、draft_body, next_questions, risk_flags, recommended_response_mode, should_handoff をJSONで返してください。",
+              "担当者が確認して送る返信下書きを短く作り、draft_body, next_questions, risk_flags, recommended_response_mode, should_handoff を含むJSON objectだけを返してください。Markdownや説明文は付けないでください。",
             conversation: input.conversation,
             ...(input.staff_context ? { staffContext: input.staff_context } : {})
           })
@@ -584,42 +600,73 @@ function buildRagPrompt(input: AiRagAnswerDraftInput): string {
     .join("\n\n");
 
   return [
-    "tenant scopedな公式sourceだけを根拠に、担当者確認用の回答案をJSONで返してください。",
+    "tenant scopedな公式sourceだけを根拠に、担当者確認用の回答案をJSON objectだけで返してください。Markdownや説明文は付けないでください。",
     "answer_body, can_answer, risk_flags, handoff_required, recommended_response_mode を含めてください。",
     `質問: ${input.query}`,
     `sources:\n${sources}`
   ].join("\n\n");
 }
 
-function parseOpenAiJsonResponse(response: OpenAiResponsesTransportResponse): Record<string, unknown> {
+export function parseOpenAiJsonResponse(
+  response: OpenAiResponsesTransportResponse
+): Record<string, unknown> {
   const output = response.output_text ?? response.outputText;
 
   if (!output) {
     throw new OpenAiProviderError({
       classification: "G_response_parse_bug",
-      providerOutputTextExtracted: false
+      providerOutputTextExtracted: false,
+      jsonContractParseSuccess: false,
+      jsonContractSchemaValid: false,
+      parseStage: "text_extraction"
     });
   }
 
-  let parsed: unknown;
+  return parseOpenAiJsonContractText(output);
+}
 
-  try {
-    parsed = JSON.parse(output);
-  } catch {
+export function parseOpenAiJsonContractText(output: string): Record<string, unknown> {
+  const candidates = createJsonTextCandidates(output);
+
+  if (candidates.length === 0) {
     throw new OpenAiProviderError({
       classification: "G_response_parse_bug",
-      providerOutputTextExtracted: true
+      providerOutputTextExtracted: true,
+      jsonContractParseSuccess: false,
+      jsonContractSchemaValid: false,
+      parseStage: "json_parse"
     });
   }
 
-  if (!isRecord(parsed)) {
-    throw new OpenAiProviderError({
-      classification: "G_response_parse_bug",
-      providerOutputTextExtracted: true
-    });
+  for (const candidate of candidates) {
+    try {
+      const parsed: unknown = JSON.parse(candidate);
+
+      if (!isRecord(parsed)) {
+        throw new OpenAiProviderError({
+          classification: "G_response_parse_bug",
+          providerOutputTextExtracted: true,
+          jsonContractParseSuccess: true,
+          jsonContractSchemaValid: false,
+          parseStage: "schema_validation"
+        });
+      }
+
+      return parsed;
+    } catch (error) {
+      if (error instanceof OpenAiProviderError) {
+        throw error;
+      }
+    }
   }
 
-  return parsed;
+  throw new OpenAiProviderError({
+    classification: "G_response_parse_bug",
+    providerOutputTextExtracted: true,
+    jsonContractParseSuccess: false,
+    jsonContractSchemaValid: false,
+    parseStage: "json_parse"
+  });
 }
 
 export function normalizeOpenAiResponsesPayload(payload: unknown): OpenAiResponsesTransportResponse {
@@ -697,7 +744,10 @@ function readOutputTextFromContentArray(content: unknown): string | null {
 function openAiResponseTextExtractionError(): OpenAiProviderError {
   return new OpenAiProviderError({
     classification: "G_response_parse_bug",
-    providerOutputTextExtracted: false
+    providerOutputTextExtracted: false,
+    jsonContractParseSuccess: false,
+    jsonContractSchemaValid: false,
+    parseStage: "text_extraction"
   });
 }
 
@@ -717,7 +767,10 @@ function readRequiredString(record: Record<string, unknown>, key: string): strin
   if (typeof value !== "string" || !value.trim()) {
     throw new OpenAiProviderError({
       classification: "G_response_parse_bug",
-      providerOutputTextExtracted: true
+      providerOutputTextExtracted: true,
+      jsonContractParseSuccess: true,
+      jsonContractSchemaValid: false,
+      parseStage: "schema_validation"
     });
   }
 
@@ -730,11 +783,24 @@ function readStringArray(record: Record<string, unknown>, key: string): string[]
   if (!Array.isArray(value)) {
     throw new OpenAiProviderError({
       classification: "G_response_parse_bug",
-      providerOutputTextExtracted: true
+      providerOutputTextExtracted: true,
+      jsonContractParseSuccess: true,
+      jsonContractSchemaValid: false,
+      parseStage: "schema_validation"
     });
   }
 
-  return value.filter((item): item is string => typeof item === "string").map((item) => item.trim());
+  if (!value.every((item) => typeof item === "string")) {
+    throw new OpenAiProviderError({
+      classification: "G_response_parse_bug",
+      providerOutputTextExtracted: true,
+      jsonContractParseSuccess: true,
+      jsonContractSchemaValid: false,
+      parseStage: "schema_validation"
+    });
+  }
+
+  return value.map((item) => item.trim()).filter((item) => item.length > 0);
 }
 
 function readBoolean(record: Record<string, unknown>, key: string): boolean {
@@ -743,7 +809,10 @@ function readBoolean(record: Record<string, unknown>, key: string): boolean {
   if (typeof value !== "boolean") {
     throw new OpenAiProviderError({
       classification: "G_response_parse_bug",
-      providerOutputTextExtracted: true
+      providerOutputTextExtracted: true,
+      jsonContractParseSuccess: true,
+      jsonContractSchemaValid: false,
+      parseStage: "schema_validation"
     });
   }
 
@@ -756,7 +825,10 @@ function readRecommendedResponseMode(record: Record<string, unknown>): AiRecomme
   if (!isRecommendedResponseMode(value)) {
     throw new OpenAiProviderError({
       classification: "G_response_parse_bug",
-      providerOutputTextExtracted: true
+      providerOutputTextExtracted: true,
+      jsonContractParseSuccess: true,
+      jsonContractSchemaValid: false,
+      parseStage: "schema_validation"
     });
   }
 
@@ -825,6 +897,93 @@ function preserveOpenAiProviderError(error: unknown): OpenAiProviderError {
   }
 
   return new OpenAiProviderError({ classification: "H_provider_transport_bug" });
+}
+
+function createJsonTextCandidates(output: string): string[] {
+  const trimmed = output.trim();
+
+  if (!trimmed) {
+    return [];
+  }
+
+  const candidates = new Set<string>([trimmed]);
+  const fencedMatches = trimmed.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi);
+
+  for (const match of fencedMatches) {
+    const fenced = match[1]?.trim();
+
+    if (fenced) {
+      candidates.add(fenced);
+    }
+  }
+
+  const balancedJson = extractFirstBalancedJsonValue(trimmed);
+
+  if (balancedJson) {
+    candidates.add(balancedJson);
+  }
+
+  return [...candidates];
+}
+
+function extractFirstBalancedJsonValue(input: string): string | null {
+  const maxLength = 20_000;
+  const source = input.length > maxLength ? input.slice(0, maxLength) : input;
+
+  for (let start = 0; start < source.length; start += 1) {
+    const open = source[start];
+
+    if (open !== "{" && open !== "[") {
+      continue;
+    }
+
+    const close = open === "{" ? "}" : "]";
+    const stack = [close];
+    let inString = false;
+    let escaped = false;
+
+    for (let index = start + 1; index < source.length; index += 1) {
+      const char = source[index];
+
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escaped = inString;
+        continue;
+      }
+
+      if (char === "\"") {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) {
+        continue;
+      }
+
+      if (char === "{" || char === "[") {
+        stack.push(char === "{" ? "}" : "]");
+        continue;
+      }
+
+      if (char === "}" || char === "]") {
+        if (stack.at(-1) !== char) {
+          break;
+        }
+
+        stack.pop();
+
+        if (stack.length === 0) {
+          return source.slice(start, index + 1);
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 async function readSanitizedOpenAiProviderError(
