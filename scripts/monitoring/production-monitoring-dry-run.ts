@@ -525,15 +525,6 @@ async function readTextIfAccessible(path: string): Promise<string> {
   }
 }
 
-async function fileExists(path: string): Promise<boolean> {
-  try {
-    await access(path, constants.F_OK);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function hasOpenAiDropIn(): Promise<boolean> {
   const dropInDirectory = "/etc/systemd/system/amami-line-crm-api.service.d";
 
