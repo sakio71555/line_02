@@ -149,3 +149,26 @@ secrets_recorded=false
 ```
 
 No cron job, systemd timer, monitoring notification, runtime change, additional LINE send, OpenAI real API call, Nginx reload/restart, or Supabase schema/RLS change was performed. Timer or notification installation must be a separate approved Loop.
+
+## Loop 187 OpenAI Usage and Cost Monitoring Plan
+
+Loop 187 adds the OpenAI usage and cost monitoring plan without calling OpenAI APIs.
+
+Daily/weekly operator checks should include:
+
+1. Review OpenAI dashboard manually.
+2. Record only summarized usage/cost status.
+3. Compare with `cost_threshold_values=operator_defined` and `currency=operator_defined`.
+4. Check sanitized provider error, latency, and malformed output status.
+5. If warning or critical, open a separate rollback/mitigation decision Loop.
+
+```txt
+OpenAI usage API not called
+OpenAI cost API not called
+OpenAI real API not called
+runtime_changes_performed=false
+additional_line_send_performed=false
+production readiness: Go
+```
+
+Future usage/cost API integration requires a separate explicit approval Loop and must summarize only aggregate status.

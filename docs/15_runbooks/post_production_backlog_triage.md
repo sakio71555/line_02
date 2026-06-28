@@ -9,7 +9,7 @@ It is a planning and operations document only. It does not authorize runtime cha
 ## Current Production Baseline
 
 ```txt
-production_readiness=production_go
+production readiness: Go
 activation_mode=line_and_openai_runtime
 monitoring_status=healthy
 rollback_recommended=false
@@ -63,8 +63,12 @@ secrets_recorded=false
 ### 2. OpenAI usage / cost monitoring
 
 - Goal: Observe OpenAI usage, cost, error class, latency, and AI draft quality.
+- Current status: planned.
+- Implementation status: not implemented.
+- API integration: separate future Loop.
 - Current state: OpenAI runtime is enabled; usage/cost automation is not implemented.
 - Implementation boundary: start with manual checklist and secret-safe dashboard review.
+- Next safe implementation: manual threshold checklist or API dry-run planning.
 - Validation: sanitized provider error summary and no prompt/response capture.
 - No-Go conditions: key/model values, prompts, responses, or paid calls are recorded without approval.
 
@@ -156,8 +160,26 @@ notifications_sent=false
 runtime_changes_performed=false
 additional_line_send_performed=false
 OpenAI real API smoke=not performed
-production_readiness=production_go
+production readiness: Go
 secrets_recorded=false
 ```
 
 Monitoring scheduling and notification delivery remain unimplemented and require a separate approved Loop.
+
+## Loop 187 Result
+
+The P0 OpenAI usage / cost monitoring plan was completed.
+
+```txt
+planning_status=complete
+OpenAI usage API not called
+OpenAI cost API not called
+OpenAI real API not called
+cost_threshold_values=operator_defined
+currency=operator_defined
+runtime_changes_performed=false
+additional_line_send_performed=false
+production readiness: Go
+```
+
+API-based usage/cost collection remains unimplemented and requires a separate explicit approval Loop.

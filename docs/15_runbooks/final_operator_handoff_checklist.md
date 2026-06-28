@@ -87,6 +87,28 @@ secrets_recorded=false
 
 No cron job, systemd timer, or notification channel is installed yet.
 
+## Loop 187 OpenAI Cost Handoff
+
+OpenAI usage / cost monitoring is now planned, but API integration is not implemented.
+
+Operator action:
+
+1. Check the OpenAI dashboard manually.
+2. Record only summarized usage and cost status.
+3. Compare against operator-defined thresholds.
+4. If warning or critical, request a rollback or mitigation Loop.
+
+```txt
+cost_threshold_values=operator_defined
+currency=operator_defined
+OpenAI usage API not called
+OpenAI cost API not called
+OpenAI real API not called
+production readiness: Go
+```
+
+Do not paste API keys, model values, organization IDs, project IDs, prompt text, response text, raw usage payloads, raw cost payloads, LINE identifiers, message bodies, Supabase endpoints, or DB URLs.
+
 ## Loop 161 Follow-up
 
 ```txt

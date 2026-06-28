@@ -10,7 +10,7 @@ It does not authorize runtime changes, additional LINE sends, OpenAI smoke, Ngin
 
 ```txt
 closeout_status=complete
-production_readiness=production_go
+production readiness: Go
 activation_mode=line_and_openai_runtime
 monitoring_status=healthy
 rollback_recommended=false
@@ -177,7 +177,7 @@ Loop 186 added a read-only production monitoring dry-run script and executed it 
 ```txt
 production_monitoring_dry_run=healthy
 exit_status=0
-production_readiness=production_go
+production readiness: Go
 activation_mode=line_and_openai_runtime
 REPOSITORY_RUNTIME=supabase
 LINE_REAL_PUSH_ENABLED=true
@@ -193,6 +193,24 @@ secrets_recorded=false
 ```
 
 The dry-run command is documented in [production_monitoring_automation_dry_run.md](production_monitoring_automation_dry_run.md). Automated scheduling remains a separate future Loop.
+
+## Loop 187 OpenAI Usage/Cost Follow-up
+
+Loop 187 completed a docs/test-only OpenAI usage and cost monitoring plan.
+
+```txt
+planning_status=complete
+OpenAI usage API not called
+OpenAI cost API not called
+OpenAI real API not called
+cost_threshold_values=operator_defined
+currency=operator_defined
+runtime_changes_performed=false
+additional_line_send_performed=false
+production readiness: Go
+```
+
+Operators should review OpenAI usage/cost manually and record only summarized status. Future API-based usage/cost collection must be a separate explicit approval Loop.
 
 ## Safety Boundary
 

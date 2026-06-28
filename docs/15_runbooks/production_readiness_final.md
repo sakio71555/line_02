@@ -1877,3 +1877,21 @@ secrets_recorded=false
 ```
 
 The dry-run script is present, but scheduled automation and notification delivery are still future work.
+
+## Loop 187 OpenAI Usage and Cost Monitoring Plan
+
+Loop 187 keeps production readiness Go and adds only the OpenAI usage/cost monitoring plan.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+OpenAI usage API not called
+OpenAI cost API not called
+OpenAI real API not called
+runtime_changes_performed=false
+additional_line_send_performed=false
+```
+
+The plan uses manual dashboard review first, with `cost_threshold_values=operator_defined` and `currency=operator_defined`. Future API integration is not implemented and requires a separate explicit approval Loop.

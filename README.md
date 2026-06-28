@@ -436,6 +436,8 @@ Loop 185では、post-production backlog triageをdocs/testのみで実施しま
 
 Loop 186では、production monitoring automation dry-runを追加しました。`scripts/monitoring/production-monitoring-dry-run.ts` でAPI/Admin health、Admin no-header 401、LINE invalid-signature、runtime state、sanitized journal/Nginx/resource summaryをまとめて確認できます。VPS active dry-runは `production_monitoring_dry_run=healthy` / `exit_status=0` でした。cron、systemd timer、通知送信、runtime変更、追加LINE送信、OpenAI実API、Nginx reload/restart、Supabase schema/RLS変更は行っていません。詳細は [docs/11_codex_tasks/186_production_monitoring_automation_dry_run.md](docs/11_codex_tasks/186_production_monitoring_automation_dry_run.md) と [docs/15_runbooks/production_monitoring_automation_dry_run.md](docs/15_runbooks/production_monitoring_automation_dry_run.md) を参照してください。
 
+Loop 187では、OpenAI usage / cost monitoring planをdocs/testのみで追加しました。OpenAI runtimeは有効なままですが、OpenAI API、usage API、cost API、dashboard APIは呼ばず、手動dashboard確認、operator-defined threshold、cost spike / quota / rate limit / malformed output時の対応、将来API連携の承認条件を整理しました。runtime変更、追加LINE送信、Nginx reload/restart、Supabase schema/RLS変更、cron/timer/通知追加は行っていません。詳細は [docs/11_codex_tasks/187_openai_usage_and_cost_monitoring_plan.md](docs/11_codex_tasks/187_openai_usage_and_cost_monitoring_plan.md) と [docs/15_runbooks/openai_usage_and_cost_monitoring_plan.md](docs/15_runbooks/openai_usage_and_cost_monitoring_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
