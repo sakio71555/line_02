@@ -1,12 +1,139 @@
-# Final Production Go / No-Go Review
+# Final Production Go/No-Go Review
 
 ## Purpose
 
-Track the final production decision criteria for the LINE顧客対応システム.
+This runbook records the Loop 175 final production Go/No-Go review.
 
-Loop 147-150 confirms that the system remains No-Go for production.
+It confirms that the main readiness areas are review-ready, but final operator production Go is not approved. No runtime activation was performed.
 
-## Current Decision
+## Operator Decision
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO
+FINAL_OPERATOR_GO_SCOPE=review_only
+ALLOW_RUNTIME_ACTIVATION_CHANGES=NO
+ALLOW_LINE_REAL_PUSH_ENABLED_FINAL_TRUE=NO
+ALLOW_OPENAI_RUNTIME_FINAL_TRUE=NO
+```
+
+## Readiness Matrix
+
+| Area | Ready | Evidence |
+| --- | --- | --- |
+| HTTPS | true | HTTPS `/api/health` returned `200`; Admin root and customers routes returned `200` |
+| LINE receive | true | Real receive smoke and signature verification succeeded in prior Loops; final invalid-signature request returned `401` |
+| LINE Official Account | true | Webhook ON; response message OFF; AI response message unavailable or OFF |
+| Supabase | true | Runtime repository classified as `supabase`; receive persistence and restart read smoke completed |
+| Supabase receive persistence | true | Tenant-scoped receive persistence was confirmed earlier; no-header Admin API customers returned `401` |
+| OpenAI provider controlled smoke | true | Provider-boundary controlled smoke succeeded; final runtime remains `AI_PROVIDER=mock` |
+| LINE reply/push | true | Internal CLI one-message push smoke succeeded once with send attempt count `1`; final `LINE_REAL_PUSH_ENABLED=false` |
+| Security/safety | true | No secret values recorded; invalid signature rejected; no-header Admin API rejected |
+| Final operator Go | false | Final operator production Go remains `NO` |
+
+## Final Runtime State
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=false
+AI_PROVIDER=mock
+OpenAI systemd drop-in absent
+Nginx/DNS/certbot changes=none
+Nginx reload/restart=not_performed
+runtime_activation_changes=not_performed
+```
+
+## Final Go/No-Go Result
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO
+final_operator_go=false
+go_ready_but_operator_go_pending=true
+production_readiness=production_no_go
+remaining_no_go_reasons=final operator production Go not recorded
+```
+
+## Safety Evidence
+
+```txt
+api_direct_health_loop175_final_review=200
+https_api_health_loop175_final_review=200
+https_admin_root_loop175_final_review=200
+https_admin_customers_loop175_final_review=200
+https_admin_api_no_header_customers_loop175_final_review=401
+https_line_invalid_signature_loop175_final_review=401
+secrets_recorded=false
+line_user_identifier_recorded=false
+line_message_body_recorded=false
+reply_token_recorded=false
+openai_api_key_recorded=false
+openai_model_value_recorded=false
+supabase_secret_recorded=false
+```
+
+## Not Performed
+
+- Production Go.
+- Runtime activation.
+- LINE real push/reply send.
+- LINE retry, bulk, multicast, broadcast, group, or room send.
+- OpenAI real API rerun.
+- OpenAI runtime final enablement.
+- Supabase migration apply, write smoke, or RLS change.
+- Nginx config change, reload, or restart.
+- DNS change.
+- certbot execution.
+
+## Rollback Checklist
+
+1. Confirm `LINE_REAL_PUSH_ENABLED=false`.
+2. If a future Loop enables LINE real push, run the approved disable helper immediately on rollback.
+3. Confirm `AI_PROVIDER=mock`.
+4. Remove the OpenAI runtime drop-in if it appears unexpectedly.
+5. Restart API only after an explicit rollback action requires it.
+6. Confirm API direct health `200`.
+7. Confirm HTTPS API health `200`.
+8. Confirm invalid-signature webhook request is rejected.
+9. Confirm Admin API rejects no-header customer access.
+10. Keep secrets, identifiers, webhook path values, and message bodies out of logs and docs.
+
+## First-Hour Monitoring Checklist
+
+Use only after a future Loop records final operator production Go and performs explicit runtime activation.
+
+1. Check API direct health.
+2. Check HTTPS API health.
+3. Check Admin root and customers routes.
+4. Watch sanitized LINE webhook 2xx/4xx pattern.
+5. Watch LINE send error counts without automatic retry.
+6. Watch Supabase read/write errors.
+7. Watch API journal for sanitized errors only.
+8. Confirm no secret, token, identifier, webhook path value, or exact message body appears in logs.
+9. Confirm rollback owner can disable LINE real push and OpenAI runtime.
+
+## Sanitized Commands Used
+
+```txt
+git diff --check
+npx pnpm@10.12.1 lint
+npx pnpm@10.12.1 typecheck
+npx pnpm@10.12.1 build
+VPS read-only systemd status checks
+VPS read-only health checks for API and Admin routes
+VPS invalid-signature webhook rejection check with configured path value not recorded
+VPS runtime classification with secret values redacted
+```
+
+## Next Loop
+
+```txt
+Loop 176: operator final Go approval and runtime activation planning
+```
+
+## Previous Review History
+
+This section preserves the earlier final review history that led to Loop 175.
+
+### Earlier Current Decision
 
 ```txt
 production_readiness=production_no_go
@@ -20,7 +147,7 @@ official_account_auto_response_ready=false
 final_operator_go_approval=false
 ```
 
-## Go Conditions
+### Earlier Go Conditions
 
 - HTTPS public review remains healthy.
 - LINE webhook verify succeeds.
@@ -33,15 +160,15 @@ final_operator_go_approval=false
 - Rollback steps are documented.
 - Final operator Go approval is recorded.
 
-## Current No-Go Reasons
+### Earlier No-Go Reasons
 
-- Supabase real connection smoke is pending.
-- OpenAI real API controlled smoke is pending.
-- LINE real reply/push single-message smoke is pending.
-- LINE Official Account auto-response OFF is pending.
-- Final operator Go approval is not recorded.
+- Supabase real connection smoke was pending.
+- OpenAI real API controlled smoke was pending.
+- LINE real reply/push single-message smoke was pending.
+- LINE Official Account auto-response OFF was pending.
+- Final operator Go approval was not recorded.
 
-## Safety Boundary
+### Earlier Safety Boundary
 
 ```txt
 secret_token_path_userid_body_displayed=no
@@ -55,7 +182,7 @@ certbot_rerun=no
 go_promotion=no
 ```
 
-## Loop 151 Update
+### Loop 151 Update
 
 ```txt
 runtime_wiring_ready=true
@@ -68,7 +195,7 @@ line_reply_push_ready=false
 production_readiness=production_no_go
 ```
 
-## Loop 152 Supabase Staging Connection Result
+### Loop 152 Supabase Staging Connection Result
 
 ```txt
 supabase_runtime_startup_ready=true
@@ -80,11 +207,11 @@ line_invalid_signature_after_supabase=401
 production_readiness=production_no_go
 ```
 
-Supabase runtime health reached 200 after the Node.js 20 WebSocket transport fix, but admin customers read smoke returned 500. The runtime was rolled back to `in_memory`, and production remains No-Go. Secret values, concrete Supabase endpoints, DB URLs, LINE webhook path values, LINE userIds, and message bodies are not recorded.
+Supabase runtime health reached `200` after the Node.js 20 WebSocket transport fix, but admin customers read smoke returned `500`. The runtime was rolled back to `in_memory`, and production remained No-Go. Secret values, concrete Supabase endpoints, DB URLs, LINE webhook path values, LINE user identifiers, and message bodies were not recorded.
 
-Runtime wiring readiness does not promote the system. Final review still requires controlled Supabase, OpenAI, and LINE real-send evidence plus operator approval.
+Runtime wiring readiness did not promote the system. Final review still required controlled Supabase, OpenAI, and LINE real-send evidence plus operator approval.
 
-## Loop 157-160 Update
+### Loop 157-160 Update
 
 Loop 157-160 reviewed the remaining production gates without waiting for human input.
 
@@ -104,4 +231,4 @@ production_readiness=production_no_go
 go_promotion=no
 ```
 
-No-Go remains because OpenAI real API smoke, LINE real reply/push smoke, Supabase write smoke, and final operator Go are not complete.
+No-Go remained because OpenAI real API smoke, LINE real reply/push smoke, Supabase write smoke, and final operator Go were not complete.

@@ -412,6 +412,8 @@ Loop 173では、VPS内部CLI `scripts/smoke/line-real-push-single-message-smoke
 
 Loop 174では、最終Go判断前のreadiness packetを追加しました。HTTPS、LINE receive、Official Account response settings、Supabase receive persistence、OpenAI provider controlled smoke、LINE reply/pushはいずれもreview-readyですが、final operator Goは未記録のため `production_readiness=production_no_go` を維持しています。詳細は [docs/11_codex_tasks/174_final_pre_go_readiness_packet_without_go.md](docs/11_codex_tasks/174_final_pre_go_readiness_packet_without_go.md) と [docs/15_runbooks/final_pre_go_readiness_packet_without_go.md](docs/15_runbooks/final_pre_go_readiness_packet_without_go.md) を参照してください。
 
+Loop 175では、final production Go/No-Go reviewを実施しました。HTTPS、LINE receive、Official Account response settings、Supabase receive persistence、OpenAI provider controlled smoke、LINE reply/push、security/safetyはreview-readyですが、operator tokenが `FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO` のため `final_operator_go=false`、`go_ready_but_operator_go_pending=true`、`production_readiness=production_no_go` を維持しています。runtime activation、LINE追加送信、OpenAI再実行、Nginx/DNS/certbot変更は行っていません。詳細はLoop 175 task docとfinal Go/No-Go review runbookを参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

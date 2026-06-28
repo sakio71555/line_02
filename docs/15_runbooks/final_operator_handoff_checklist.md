@@ -389,3 +389,68 @@ production_readiness=production_no_go
 Remaining No-Go reason:
 
 - Final operator production Go is not recorded.
+
+## Loop 175 Final Operator Handoff
+
+### 1. Current Final Runtime State
+
+```txt
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=false
+AI_PROVIDER=mock
+OpenAI drop-in absent
+production_readiness=production_no_go
+```
+
+Runtime activation was not changed in this review.
+
+### 2. Verified Capabilities
+
+- HTTPS review URL is healthy.
+- LINE receive and signature verification are ready.
+- Supabase receive persistence is ready.
+- OpenAI provider controlled smoke is ready, while final runtime remains mock.
+- LINE one-message push smoke succeeded once, while final real push remains disabled.
+- Security checks reject no-header Admin API access and invalid LINE signatures.
+
+### 3. Go Decision
+
+```txt
+FINAL_OPERATOR_PRODUCTION_GO_APPROVED=NO
+final_operator_go=false
+go_ready_but_operator_go_pending=true
+production_readiness=production_no_go
+remaining_no_go_reasons=final operator production Go not recorded
+```
+
+### 4. Activation Note
+
+- Runtime activation was not changed in this review.
+- Enabling persistent LINE real push requires a separate explicit activation step.
+- Enabling OpenAI runtime requires a separate explicit activation step.
+- Nginx, DNS, certbot, reload, and restart changes were not performed in this Loop.
+
+### 5. Rollback Checklist
+
+1. Confirm `LINE_REAL_PUSH_ENABLED=false`.
+2. If LINE real push is ever enabled in a future Loop, run the approved disable helper on rollback.
+3. Confirm `AI_PROVIDER=mock`.
+4. Remove the OpenAI drop-in if it appears unexpectedly.
+5. Restart API only after an explicit rollback action requires it.
+6. Confirm API direct health returns `200`.
+7. Confirm HTTPS API health returns `200`.
+8. Confirm invalid-signature webhook requests are rejected.
+9. Confirm no-header Admin API customer access is rejected.
+
+### 6. First-Hour Monitoring Checklist
+
+Use this only after a future explicit production activation Loop.
+
+1. API health.
+2. HTTPS health.
+3. Admin root and customers route health.
+4. Webhook 2xx/4xx pattern.
+5. LINE send errors without automatic retry.
+6. Supabase read/write errors.
+7. No secret logging.
+8. Rollback owner availability.
