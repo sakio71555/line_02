@@ -1369,3 +1369,38 @@ Remaining No-Go reasons:
 - LINE real reply/push has not been performed.
 - Authenticated staff route must be diagnosed before retrying any send.
 - Final operator Go has not been recorded.
+
+## Loop 172 LINE Send Failure Diagnosis
+
+Loop 172 diagnosed the Loop 171 authenticated staff route stop and added an internal dry-run target preflight path. It did not enable LINE real push and did not send.
+
+```txt
+reason=authenticated_staff_route_unavailable
+authenticated_staff_route_available=false
+authenticated_staff_route_unavailable_reason=admin_auth_runtime_unavailable_for_authenticated_staff_route
+route_auth_requirements_summary=Authorization + selected tenant + authenticated staff + send_staff_reply permission
+do_not_relax_auth=true
+do_not_add_public_test_route=true
+recommended_next_execution_path=internal_cli_smoke_command
+internal_cli_default_mode=dry_run
+internal_cli_smoke_path_ready=true
+internal_cli_execute_mode_implemented=false
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+line_real_reply_push_performed=false
+line_send_attempted_once=false
+LINE_REAL_PUSH_ENABLED=false
+AI_PROVIDER=mock
+OpenAI systemd drop-in absent
+line_reply_push_ready=false
+line_reply_push_internal_smoke_ready=true
+production_readiness=production_no_go
+```
+
+Remaining No-Go reasons:
+
+- LINE real reply/push has not been performed.
+- The internal CLI path currently supports dry-run/preflight only.
+- A future send Loop must add or invoke one-send lock enforcement and roll back to `LINE_REAL_PUSH_ENABLED=false`.
+- Final operator Go has not been recorded.

@@ -169,3 +169,26 @@ production_readiness=production_no_go
 ```
 
 Do not retry LINE delivery until the authenticated staff route is diagnosed in a separate Loop.
+
+## Loop 172 Diagnosis Result
+
+The next path should be a private internal CLI smoke command, not another unauthenticated route attempt.
+
+```txt
+authenticated_staff_route_available=false
+authenticated_staff_route_unavailable_reason=admin_auth_runtime_unavailable_for_authenticated_staff_route
+do_not_relax_auth=true
+do_not_add_public_test_route=true
+recommended_next_execution_path=internal_cli_smoke_command
+internal_cli_default_mode=dry_run
+internal_cli_smoke_path_ready=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+line_real_reply_push_performed=false
+line_send_attempted_once=false
+LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+line_reply_push_internal_smoke_ready=true
+production_readiness=production_no_go
+```

@@ -133,3 +133,25 @@ production_readiness=production_no_go
 ```txt
 Loop 172: LINE send failure diagnosis without retry
 ```
+
+## Loop 172 Diagnosis Update
+
+Loop 172 confirmed that the Loop 171 stop was caused by the authenticated staff route not being available in the live review runtime, not by a LINE API send failure. No retry was performed.
+
+```txt
+authenticated_staff_route_available=false
+authenticated_staff_route_unavailable_reason=admin_auth_runtime_unavailable_for_authenticated_staff_route
+route_auth_requirements_summary=Authorization + selected tenant + authenticated staff + send_staff_reply permission
+do_not_relax_auth=true
+do_not_add_public_test_route=true
+recommended_next_execution_path=internal_cli_smoke_command
+internal_cli_default_mode=dry_run
+internal_cli_smoke_path_ready=true
+internal_cli_execute_mode_implemented=false
+line_real_reply_push_performed=false
+line_send_attempted_once=false
+LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+line_reply_push_internal_smoke_ready=true
+production_readiness=production_no_go
+```

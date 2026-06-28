@@ -422,6 +422,8 @@ Loop 167のようなOpenAI provider JSON output contract remediationでは、抽
 
 Loop 171のようなhuman-approved LINE real reply/push smokeでは、approval tokenがすべて `YES` でも、authenticated staff route dry checkが通らなければ送信しません。fresh targetを1人に絞れても、`authenticated_staff_route_status=401` の場合は `LINE_REAL_PUSH_ENABLED` を有効化せず、`line_send_result=not_performed` として記録します。LINE user identifier、reply token、message body、outgoing body、target mappingは記録しません。
 
+Loop 172のようなLINE send failure diagnosisでは、送信できなかった理由をretryで解消しようとせず、route auth要件をコードから整理します。productionでdev headerやfake bearerを許可せず、unauthenticated public smoke routeも追加しません。次の実送信はVPS内部CLI + explicit approval + one-send lockに分け、Loop 172自体はdry-run/preflight、`LINE_REAL_PUSH_ENABLED=false`、`production_readiness=production_no_go` で完了します。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

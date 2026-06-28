@@ -308,3 +308,30 @@ production_readiness=production_no_go
 ```
 
 Next operator-facing action is not another send attempt. First diagnose the authenticated staff route without retrying LINE delivery.
+
+## Loop 172 Follow-up
+
+The authenticated staff route diagnosis is complete. Do not retry LINE delivery through a weakened route.
+
+```txt
+authenticated_staff_route_available=false
+authenticated_staff_route_unavailable_reason=admin_auth_runtime_unavailable_for_authenticated_staff_route
+route_auth_requirements_summary=Authorization + selected tenant + authenticated staff + send_staff_reply permission
+do_not_relax_auth=true
+do_not_add_public_test_route=true
+recommended_next_execution_path=internal_cli_smoke_command
+internal_cli_default_mode=dry_run
+internal_cli_smoke_path_ready=true
+internal_cli_execute_mode_implemented=false
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+line_real_reply_push_performed=false
+line_send_attempted_once=false
+LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+line_reply_push_internal_smoke_ready=true
+production_readiness=production_no_go
+```
+
+Operator-facing next action is a dedicated Loop 173 internal CLI one-message controlled smoke. It must keep explicit approval, no retry, no bulk, and one-send lock requirements.
