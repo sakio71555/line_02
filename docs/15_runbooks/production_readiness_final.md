@@ -1923,8 +1923,16 @@ Loop 189 keeps production readiness Go and adds a read-only backup inventory dry
 ```txt
 production readiness: Go
 activation_mode=line_and_openai_runtime
-backup inventory dry-run=pending
+backup inventory dry-run=done
 script_path=scripts/backup/backup-inventory-dry-run.ts
+vps_dry_run_performed=true
+backup_inventory_dry_run=completed
+api_direct_health_loop189_backup_inventory=200
+https_api_health_loop189_backup_inventory=200
+https_admin_root_loop189_backup_inventory=200
+https_admin_customers_loop189_backup_inventory=200
+https_admin_api_no_header_customers_loop189_backup_inventory=401
+https_line_invalid_signature_loop189_backup_inventory=401
 backup_job_created=false
 db_export_performed=false
 secret_file_copied=false

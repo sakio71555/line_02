@@ -69,7 +69,9 @@ describe("Loop 189 backup inventory dry-run docs", () => {
     expect(combined).toContain("Loop 189: backup inventory dry-run script");
     expect(combined).toContain("backup inventory dry-run");
     expect(combined).toContain("script_path=scripts/backup/backup-inventory-dry-run.ts");
-    expect(combined).toContain("backup inventory dry-run=pending");
+    expect(combined).toContain("backup inventory dry-run=done");
+    expect(combined).toContain("vps_dry_run_performed=true");
+    expect(combined).toContain("backup_inventory_dry_run=completed");
     expect(combined).toContain("backup_job_created=false");
     expect(combined).toContain("db_export_performed=false");
     expect(combined).toContain("secret_file_copied=false");

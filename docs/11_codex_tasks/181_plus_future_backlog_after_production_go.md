@@ -171,8 +171,10 @@ Loop 189: backup inventory dry-run script
 Loop 189 adds the backup inventory dry-run script so P0 backup readiness can be inspected without creating backups or exporting data.
 
 ```txt
-backup inventory dry-run=pending
+backup inventory dry-run=done
 script_path=scripts/backup/backup-inventory-dry-run.ts
+vps_dry_run_performed=true
+backup_inventory_dry_run=completed
 backup_job_created=false
 db_export_performed=false
 secret_file_copied=false

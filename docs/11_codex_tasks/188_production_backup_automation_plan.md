@@ -320,11 +320,13 @@ Loop 189: backup inventory dry-run script
 
 ## Loop 189 Follow-up
 
-The backup inventory dry-run script is the next safe step after this plan.
+The backup inventory dry-run script has been executed safely after this plan.
 
 ```txt
-backup inventory dry-run=pending
+backup inventory dry-run=done
 script_path=scripts/backup/backup-inventory-dry-run.ts
+vps_dry_run_performed=true
+backup_inventory_dry_run=completed
 backup_job_created=false
 db_export_performed=false
 secret_file_copied=false

@@ -89,11 +89,23 @@ Forbidden output:
 
 ## 6. VPS Result
 
-To be updated after Loop 189 active dry-run:
+Loop 189 active dry-run result:
 
 ```txt
-vps_dry_run_performed=pending
-backup_inventory_dry_run=pending
+vps_dry_run_performed=true
+archive_sha256=2069c2e4bf3c09fe74a9689a8e059755fc8361b75beae07e4146b467870421bb
+staging_validation=passed
+active_deploy_updated=true
+backup_inventory_dry_run=completed
+backup_inventory_dry_run_exit=0
+api_direct_health_loop189_backup_inventory=200
+https_api_health_loop189_backup_inventory=200
+https_admin_root_loop189_backup_inventory=200
+https_admin_customers_loop189_backup_inventory=200
+https_admin_api_no_header_customers_loop189_backup_inventory=401
+https_line_invalid_signature_loop189_backup_inventory=401
+backup_dir_1_exists=true
+backup_dir_1_artifact_count=24
 backup_job_created=false
 db_export_performed=false
 secret_file_copied=false
@@ -112,7 +124,7 @@ openai_api_performed=false
 production monitoring automation dry-run=done
 OpenAI usage/cost monitoring plan=done
 backup automation plan=done
-backup inventory dry-run=pending
+backup inventory dry-run=done
 production_readiness=production_go
 ```
 

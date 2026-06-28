@@ -236,11 +236,13 @@ That Loop should inventory paths, counts, and sizes only. It must not create bac
 
 ## 15. Loop 189 Follow-up
 
-Loop 189 adds the read-only backup inventory dry-run script.
+Loop 189 added and executed the read-only backup inventory dry-run script.
 
 ```txt
-backup inventory dry-run=pending
+backup inventory dry-run=done
 script_path=scripts/backup/backup-inventory-dry-run.ts
+vps_dry_run_performed=true
+backup_inventory_dry_run=completed
 backup_job_created=false
 db_export_performed=false
 secret_file_copied=false

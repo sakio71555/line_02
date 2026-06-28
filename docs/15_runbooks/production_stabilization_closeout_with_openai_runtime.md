@@ -235,8 +235,10 @@ The backup scope now covers Git/repo/docs, VPS deploy backups, runtime configura
 Loop 189 adds the read-only backup inventory dry-run script for the current production state.
 
 ```txt
-backup inventory dry-run=pending
+backup inventory dry-run=done
 script_path=scripts/backup/backup-inventory-dry-run.ts
+vps_dry_run_performed=true
+backup_inventory_dry_run=completed
 production readiness: Go
 activation_mode=line_and_openai_runtime
 REPOSITORY_RUNTIME=supabase
