@@ -120,3 +120,32 @@ The dry-run must keep these boundaries:
 - No Nginx/DNS/certbot change.
 - No Supabase schema/RLS change.
 - No secret, webhook suffix, LINE identifier, message body, OpenAI response, Supabase endpoint, or DB URL output.
+
+## Loop 186 Automation Dry-Run
+
+Loop 186 added a repeatable monitoring dry-run command:
+
+```bash
+npx pnpm@10.12.1 exec tsx scripts/monitoring/production-monitoring-dry-run.ts --dry-run
+```
+
+Final VPS dry-run result:
+
+```txt
+production_monitoring_dry_run=healthy
+exit_status=0
+api_health=200
+https_api_health=200
+admin_root=200
+admin_customers=200
+admin_api_no_header_customers=401
+line_invalid_signature=401
+runtime_repository=supabase
+runtime_line_real_push_enabled=true
+runtime_ai_provider=openai
+openai_dropin=present
+critical_errors_detected=false
+secrets_recorded=false
+```
+
+No cron job, systemd timer, monitoring notification, runtime change, additional LINE send, OpenAI real API call, Nginx reload/restart, or Supabase schema/RLS change was performed. Timer or notification installation must be a separate approved Loop.

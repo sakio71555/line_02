@@ -170,6 +170,30 @@ next_loop=Loop 186: production monitoring automation dry-run
 
 The prioritized backlog is maintained in [post_production_backlog_triage.md](post_production_backlog_triage.md).
 
+## Loop 186 Monitoring Automation Dry-Run Follow-up
+
+Loop 186 added a read-only production monitoring dry-run script and executed it once on the VPS active source.
+
+```txt
+production_monitoring_dry_run=healthy
+exit_status=0
+production_readiness=production_go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI real API smoke=not performed
+cron_installed=false
+systemd_timer_installed=false
+notifications_sent=false
+secrets_recorded=false
+```
+
+The dry-run command is documented in [production_monitoring_automation_dry_run.md](production_monitoring_automation_dry_run.md). Automated scheduling remains a separate future Loop.
+
 ## Safety Boundary
 
 - Secret values were not displayed or recorded.

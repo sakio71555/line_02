@@ -63,6 +63,30 @@ production_readiness=production_no_go
 
 Do not record secrets, webhook path values, LINE user identifier values, message bodies, Supabase endpoint values, DB URLs, OpenAI keys, or bearer tokens.
 
+## Current Production Monitoring Command
+
+Loop 186 added a read-only monitoring dry-run command for operator/developer checks:
+
+```bash
+cd /var/www/amami-line-crm
+npx pnpm@10.12.1 exec tsx scripts/monitoring/production-monitoring-dry-run.ts --dry-run
+```
+
+Latest recorded result:
+
+```txt
+production_monitoring_dry_run=healthy
+exit_status=0
+production readiness: Go
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+secrets_recorded=false
+```
+
+No cron job, systemd timer, or notification channel is installed yet.
+
 ## Loop 161 Follow-up
 
 ```txt
