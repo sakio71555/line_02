@@ -144,3 +144,33 @@ LINE reply/push readiness remains false until a later Loop satisfies the human g
 ```txt
 Loop 171: LINE real reply/push human approval gate
 ```
+
+## Loop 171 Follow-up
+
+Loop 171 repeated the single-message smoke with all human approval tokens satisfied, but did not send because the existing staff reply route was not available through the authenticated staff path in the live review runtime.
+
+```txt
+human_approval_gate_satisfied=true
+human_gate_not_satisfied=false
+fresh_test_target_selected=true
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+distinct_target_count=1
+authenticated_staff_route_status=401
+authenticated_staff_route_ready=false
+line_real_send_precondition_failed=true
+line_real_send_precondition_failure_reason=authenticated_staff_route_unavailable
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+reason=authenticated_staff_route_unavailable
+retry_performed=false
+duplicate_send_detected=false
+send_attempt_lock_present=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```

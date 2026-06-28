@@ -130,3 +130,42 @@ production_readiness=production_no_go
 ```
 
 No lock directory or send attempt was created because the Loop never entered the approved smoke window.
+
+## Loop 171 Controlled Smoke Result
+
+Loop 171 entered the human-approved planning window, but did not enter the send window because authenticated staff route readiness was not satisfied.
+
+```txt
+human_approval_gate_satisfied=true
+preferred_smoke_mode=push
+execution_path=existing_staff_reply_route
+one_message_only=true
+retry_allowed=false
+bulk_send_allowed=false
+multicast_allowed=false
+broadcast_allowed=false
+group_send_allowed=false
+room_send_allowed=false
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+authenticated_staff_route_status=401
+authenticated_staff_route_ready=false
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+retry_performed=false
+bulk_send_performed=false
+multicast_performed=false
+broadcast_performed=false
+group_send_performed=false
+room_send_performed=false
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+Do not retry LINE delivery until the authenticated staff route is diagnosed in a separate Loop.

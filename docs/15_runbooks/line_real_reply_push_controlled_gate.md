@@ -168,3 +168,22 @@ production_readiness=production_no_go
 ```
 
 The next real-send attempt must repeat the human approval gate in a dedicated Loop.
+
+## Loop 171 Update
+
+Loop 171 satisfied the human approval gate and selected one fresh target without recording identifiers, but the authenticated staff route dry check returned `401`. Because real LINE delivery must go through the existing authenticated staff route, the Loop did not enable `LINE_REAL_PUSH_ENABLED` and did not send.
+
+```txt
+human_approval_gate_satisfied=true
+fresh_test_target_selected=true
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+authenticated_staff_route_status=401
+authenticated_staff_route_ready=false
+line_send_result=not_performed
+send_attempted_once=false
+LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```

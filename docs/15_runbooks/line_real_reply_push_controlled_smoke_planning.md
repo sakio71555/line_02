@@ -238,3 +238,25 @@ production_readiness=production_no_go
 ```
 
 No LINE token, channel secret, webhook path value, LINE user identifier, reply token, or message body was recorded.
+
+## Loop 171 Update
+
+Loop 171 satisfied the human approval gate and selected exactly one recent tenant-scoped target, but the live authenticated staff route dry check returned `401`. The smoke stayed not-performed.
+
+```txt
+human_approval_gate_satisfied=true
+fresh_test_target_selected=true
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+authenticated_staff_route_status=401
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+reason=authenticated_staff_route_unavailable
+rollback_to_LINE_REAL_PUSH_ENABLED_false=true
+final_LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```

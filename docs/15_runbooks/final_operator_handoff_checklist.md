@@ -285,3 +285,26 @@ production_readiness=production_no_go
 ```
 
 Operator-facing next action is to decide whether to repeat a dedicated human approval gate for exactly one controlled LINE reply/push smoke. Do not send until all approval tokens are explicitly confirmed.
+
+## Loop 171 Follow-up
+
+The human approval gate was satisfied, but the live review runtime did not provide an authenticated staff route for the existing staff reply endpoint.
+
+```txt
+human_approval_gate_satisfied=true
+fresh_test_target_selected=true
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+authenticated_staff_route_status=401
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+reason=authenticated_staff_route_unavailable
+LINE_REAL_PUSH_ENABLED=false
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+Next operator-facing action is not another send attempt. First diagnose the authenticated staff route without retrying LINE delivery.

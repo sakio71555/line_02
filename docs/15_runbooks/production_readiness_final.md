@@ -1335,3 +1335,37 @@ production_readiness=production_no_go
 ```
 
 OpenAI provider schema validation is no longer the active No-Go blocker. Production remains No-Go because LINE real reply/push and final operator Go are not complete.
+
+## Loop 171 LINE Real Reply/Push Human Approved Smoke
+
+Loop 171 satisfied the human approval gate and selected one fresh target, but did not perform real LINE delivery because the authenticated staff route dry check returned `401`.
+
+```txt
+human_approval_gate_satisfied=true
+fresh_test_target_selected=true
+target_user_selected=true
+target_user_id_recorded=false
+target_message_body_recorded=false
+outgoing_message_body_recorded=false
+authenticated_staff_route_status=401
+LINE_REAL_PUSH_ENABLED_temporarily_enabled=false
+line_real_reply_push_performed=false
+send_attempted_once=false
+line_send_result=not_performed
+reason=authenticated_staff_route_unavailable
+final_LINE_REAL_PUSH_ENABLED=false
+api_direct_health_loop171=200
+https_api_health_loop171=200
+customers_no_header_loop171=401
+line_invalid_signature_loop171=401
+AI_PROVIDER=mock
+OpenAI systemd drop-in absent
+line_reply_push_ready=false
+production_readiness=production_no_go
+```
+
+Remaining No-Go reasons:
+
+- LINE real reply/push has not been performed.
+- Authenticated staff route must be diagnosed before retrying any send.
+- Final operator Go has not been recorded.

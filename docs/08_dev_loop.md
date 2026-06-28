@@ -420,6 +420,8 @@ Loop 166のようなOpenAI provider output contract remediationでは、実API r
 
 Loop 167のようなOpenAI provider JSON output contract remediationでは、抽出済みtextのJSON parse成功とschema validation成功を分けて記録します。`json_contract_parse_success=true` でも `json_contract_schema_valid=false` の場合はAPI keyやnetwork問題ではなくmethod-specific schema mismatchとして扱い、response body、抽出text、prompt本文、model実値は記録しません。provider smokeは1回だけにし、失敗後のretryは次Loopへ分けて `AI_PROVIDER=mock` と `production_no_go` へ戻します。
 
+Loop 171のようなhuman-approved LINE real reply/push smokeでは、approval tokenがすべて `YES` でも、authenticated staff route dry checkが通らなければ送信しません。fresh targetを1人に絞れても、`authenticated_staff_route_status=401` の場合は `LINE_REAL_PUSH_ENABLED` を有効化せず、`line_send_result=not_performed` として記録します。LINE user identifier、reply token、message body、outgoing body、target mappingは記録しません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。
