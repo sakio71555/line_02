@@ -475,6 +475,8 @@ Loop 197 Supabase CLI backup dry-run designでは、Free PlanのままCLI/pg_dum
 
 Loop 198 Supabase CLI backup command pack planningでは、preflight / export / verification / artifact handling / restore roadmap のplaceholder-only command packを整理しました。`command_pack_status=planned` / `placeholder_only=true` とし、Supabase CLI/API、pg_dump、DB export、restore、backup artifact作成、runtime変更は行っていません。詳細は [docs/11_codex_tasks/198_supabase_cli_backup_command_pack_planning.md](docs/11_codex_tasks/198_supabase_cli_backup_command_pack_planning.md) と [docs/15_runbooks/supabase_cli_backup_command_pack_planning.md](docs/15_runbooks/supabase_cli_backup_command_pack_planning.md) を参照してください。
 
+Loop 199 Supabase backup export and restore readiness accelerated closeoutでは、承認済み範囲でVPS health、LINE invalid-signature、tool availability、backup directory outside-repo policyをpreflightしました。`preflight_status=complete`、`backup_dir_ready=true`、`backup_dir_outside_repo=true` ですが、`supabase_cli_available=false` / `pg_dump_available=false` のため `backup_readiness_status=blocked_tooling_missing` とし、DB export、backup artifact作成、restore、runtime変更は行っていません。詳細は [docs/11_codex_tasks/199_supabase_backup_export_and_restore_readiness_accelerated_closeout.md](docs/11_codex_tasks/199_supabase_backup_export_and_restore_readiness_accelerated_closeout.md) と [docs/15_runbooks/supabase_backup_export_and_restore_readiness_accelerated_closeout.md](docs/15_runbooks/supabase_backup_export_and_restore_readiness_accelerated_closeout.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

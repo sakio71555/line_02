@@ -480,6 +480,8 @@ Loop 197 Supabase CLI backup dry-run designのようなoptional backup設計Loop
 
 Loop 198 Supabase CLI backup command pack planningのようなcommand pack設計Loopでは、preflight / export / verification / artifact handling / restore roadmapをplaceholder-onlyで整理します。`placeholder_only=true`、`preflight_execution_status=not_executed`、`export_execution_status=not_executed`、`restore_execution_status=not_executed`、`Supabase CLI/API called=false`、`pg_dump executed=false`、`DB export performed=false`、`backup artifact created=false` をdocs/testで固定し、実行承認はLoop 199以降に分けます。
 
+Loop 199 Supabase backup export and restore readiness accelerated closeoutのようなpreflight Loopでは、明示承認があってもtool/path/health確認に限定します。Supabase CLI/API provider call、DB export、`pg_dump` database execution、backup artifact作成、restore、secret表示は行いません。`preflight_status=complete`、`backup_dir_outside_repo=true`、`backup_readiness_status=blocked_tooling_missing` のようにsanitizedな結果だけを記録し、ツール不足なら次Loopはtooling導入またはoperator端末export計画に戻します。
+
 ## Obsidian Development Log Requirement
 
 Every Loop must update Obsidian-readable Markdown logs:

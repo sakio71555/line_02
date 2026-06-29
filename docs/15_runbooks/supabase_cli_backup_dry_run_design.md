@@ -231,3 +231,19 @@ secrets_recorded=false
 ```
 
 See [Supabase CLI Backup Command Pack Planning](supabase_cli_backup_command_pack_planning.md).
+
+## 16. Loop 199 Preflight Closeout
+
+Loop 199 confirmed production health, invalid-signature behavior, and backup directory policy, but did not run export or restore.
+
+```txt
+preflight_status=complete
+backup_readiness_status=blocked_tooling_missing
+backup_dir_outside_repo=true
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+```

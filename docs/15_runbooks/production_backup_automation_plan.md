@@ -510,3 +510,26 @@ runtime unchanged
 ```
 
 Automation remains blocked until an explicit future Loop approves the exact preflight or export scope.
+
+## 25. Loop 199 Supabase Backup Preflight Closeout
+
+Loop 199 executed the approved preflight only. Backup automation is still not enabled.
+
+```txt
+preflight_status=complete
+backup_readiness_status=blocked_tooling_missing
+backup_dir_ready=true
+backup_dir_outside_repo=true
+supabase_cli_available=false
+pg_dump_available=false
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+runtime unchanged
+production_readiness=production_go
+```
+
+Automation remains blocked until tooling is available and a later Loop explicitly approves export, artifact handling, and restore boundaries.
