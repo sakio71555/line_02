@@ -2342,3 +2342,46 @@ secrets_recorded=false
 ```
 
 Next safe step: Loop 200 Supabase backup tooling installation or operator-machine export planning.
+
+## Loop 200 Supabase Backup Tooling Installation Preflight
+
+Loop 200 keeps production readiness Go and records PostgreSQL client tooling recovery.
+
+```txt
+tooling_preflight_status=complete
+production_readiness=production_go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+api_direct_8788_health_status=200
+https_api_health_status=200
+https_admin_root_status=200
+https_admin_customers_status=200
+https_admin_api_no_header_customers_status=401
+https_line_invalid_signature_status=401
+postgresql_client_installed=true
+pg_dump_available_before=false
+pg_dump_available_after=true
+psql_available_after=true
+supabase_cli_available_before=false
+supabase_cli_installed=false
+backup_dir_ready=true
+backup_dir_outside_repo=true
+backup_readiness_status=pg_dump_available
+export_readiness=ready_pending_operator_approval
+Supabase CLI/API called=false
+pg_dump connection attempted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+nginx_dns_certbot_changes=false
+secrets_recorded=false
+```
+
+Next safe step: Loop 201 Supabase backup export controlled execution.

@@ -533,3 +533,31 @@ production_readiness=production_go
 ```
 
 Automation remains blocked until tooling is available and a later Loop explicitly approves export, artifact handling, and restore boundaries.
+
+## 26. Loop 200 Supabase Backup Tooling Installation Preflight
+
+Loop 200 recovered PostgreSQL client tooling. Backup automation is still not enabled.
+
+```txt
+tooling_preflight_status=complete
+postgresql_client_installed=true
+pg_dump_available_before=false
+pg_dump_available_after=true
+psql_available_after=true
+supabase_cli_available_before=false
+supabase_cli_installed=false
+backup_dir_ready=true
+backup_dir_outside_repo=true
+backup_readiness_status=pg_dump_available
+export_readiness=ready_pending_operator_approval
+Supabase CLI/API called=false
+pg_dump connection attempted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+runtime unchanged
+production_readiness=production_go
+```
+
+Automation remains blocked until a future Loop explicitly approves export and artifact handling.

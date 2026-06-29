@@ -477,6 +477,8 @@ Loop 198 Supabase CLI backup command pack planningでは、preflight / export / 
 
 Loop 199 Supabase backup export and restore readiness accelerated closeoutでは、承認済み範囲でVPS health、LINE invalid-signature、tool availability、backup directory outside-repo policyをpreflightしました。`preflight_status=complete`、`backup_dir_ready=true`、`backup_dir_outside_repo=true` ですが、`supabase_cli_available=false` / `pg_dump_available=false` のため `backup_readiness_status=blocked_tooling_missing` とし、DB export、backup artifact作成、restore、runtime変更は行っていません。詳細は [docs/11_codex_tasks/199_supabase_backup_export_and_restore_readiness_accelerated_closeout.md](docs/11_codex_tasks/199_supabase_backup_export_and_restore_readiness_accelerated_closeout.md) と [docs/15_runbooks/supabase_backup_export_and_restore_readiness_accelerated_closeout.md](docs/15_runbooks/supabase_backup_export_and_restore_readiness_accelerated_closeout.md) を参照してください。
 
+Loop 200 Supabase backup tooling installation preflightでは、VPS上でPostgreSQL client toolingを導入し、`pg_dump_available_after=true` / `psql_available_after=true` まで回復しました。Supabase CLIは導入せず、Supabase CLI/API、pg_dump DB接続、DB export、backup artifact作成、restore、runtime変更は行っていません。詳細は [docs/11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md](docs/11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md) と [docs/15_runbooks/supabase_backup_tooling_installation_preflight.md](docs/15_runbooks/supabase_backup_tooling_installation_preflight.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

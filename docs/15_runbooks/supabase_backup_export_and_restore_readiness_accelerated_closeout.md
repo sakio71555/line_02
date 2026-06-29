@@ -158,3 +158,24 @@ Loop 200: Supabase backup tooling installation or operator-machine export planni
 ```
 
 If both required tools are later confirmed available, Loop 200 may be retitled to controlled export execution only after explicit operator approval.
+
+## 10. Loop 200 Tooling Follow-Up
+
+Loop 200 recovered PostgreSQL client tooling and kept export/restore blocked.
+
+```txt
+tooling_preflight_status=complete
+postgresql_client_installed=true
+pg_dump_available_before=false
+pg_dump_available_after=true
+psql_available_after=true
+supabase_cli_available_before=false
+supabase_cli_installed=false
+backup_readiness_status=pg_dump_available
+Supabase CLI/API called=false
+pg_dump connection attempted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+```

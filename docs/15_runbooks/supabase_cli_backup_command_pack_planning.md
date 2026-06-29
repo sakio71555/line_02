@@ -296,3 +296,22 @@ production_restore_performed=false
 ```
 
 See [Supabase Backup Export And Restore Readiness Closeout](supabase_backup_export_and_restore_readiness_accelerated_closeout.md).
+
+## 18. Loop 200 Tooling Installation Preflight
+
+Loop 200 installs PostgreSQL client tooling only. Supabase CLI remains uninstalled.
+
+```txt
+tooling_preflight_status=complete
+postgresql_client_installed=true
+pg_dump_available_after=true
+psql_available_after=true
+supabase_cli_installed=false
+Supabase CLI/API called=false
+pg_dump connection attempted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+```
+
+See [Supabase Backup Tooling Installation Preflight](supabase_backup_tooling_installation_preflight.md).

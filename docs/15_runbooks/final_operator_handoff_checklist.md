@@ -1239,3 +1239,25 @@ production_readiness=production_go
 ```
 
 Operator next action: install/confirm backup tooling in a safe environment or plan operator-machine export before approving any real export.
+
+## Loop 200 Supabase Backup Tooling Handoff
+
+Loop 200 recovered `pg_dump` availability by installing PostgreSQL client tooling.
+
+```txt
+tooling_preflight_status=complete
+postgresql_client_installed=true
+pg_dump_available_after=true
+psql_available_after=true
+supabase_cli_installed=false
+backup_readiness_status=pg_dump_available
+Supabase CLI/API called=false
+pg_dump connection attempted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+production_readiness=production_go
+```
+
+Operator next action: approve or reject Loop 201 controlled export. Do not run export without explicit approval and secret handling outside docs, chat, Git, and logs.

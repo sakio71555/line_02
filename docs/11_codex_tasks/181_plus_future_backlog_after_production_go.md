@@ -559,3 +559,33 @@ Next optional backup step:
 ```txt
 Loop 200: Supabase backup tooling installation or operator-machine export planning
 ```
+
+## Loop 200 Supabase Backup Tooling Installation Preflight
+
+Loop 200 recovered PostgreSQL client tooling on the VPS without running an export or restore.
+
+```txt
+tooling_preflight_status=complete
+postgresql_client_installed=true
+pg_dump_available_before=false
+pg_dump_available_after=true
+psql_available_after=true
+supabase_cli_available_before=false
+supabase_cli_installed=false
+backup_readiness_status=pg_dump_available
+export_readiness=ready_pending_operator_approval
+Supabase CLI/API called=false
+pg_dump connection attempted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+production_readiness=production_go
+activation_mode=line_and_openai_runtime
+```
+
+Next optional backup step:
+
+```txt
+Loop 201: Supabase backup export controlled execution
+```

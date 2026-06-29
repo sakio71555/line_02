@@ -34,6 +34,7 @@ This repository can be opened directly as an Obsidian Vault.
 - `Loop 197`
 - `Loop 198`
 - `Loop 199`
+- `Loop 200`
 - `production_readiness`
 - `DevelopmentLog`
 - `Decisions`
@@ -54,6 +55,7 @@ This repository can be opened directly as an Obsidian Vault.
 - Loop 197 Supabase CLI backup dry-run design records the design-only command boundary after the operator chose planning-only.
 - Loop 198 Supabase CLI backup command pack planning records placeholder-only command groups and keeps execution blocked: `execution=false`, `next=Loop 199 preflight`.
 - Loop 199 Supabase backup export and restore readiness accelerated closeout records approved preflight results: `preflight_status=complete`, `backup_dir_outside_repo=true`, `backup_readiness_status=blocked_tooling_missing`, `DB export performed=false`, `restore performed=false`.
+- Loop 200 Supabase backup tooling installation preflight records PostgreSQL client tooling recovery: `postgresql_client_installed=true`, `pg_dump_available_after=true`, `psql_available_after=true`, `supabase_cli_installed=false`, `DB export performed=false`, `restore performed=false`.
 - Supabase backup remains a deferred risk: `supabase_backup_success_status=not_achieved` and `supabase_backup_review_required_later=true`.
 
 ## .obsidian Policy

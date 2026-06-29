@@ -29,6 +29,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 197 Supabase CLI Backup Dry-Run Design](../11_codex_tasks/197_supabase_cli_backup_dry_run_design.md)
 - [Loop 198 Supabase CLI Backup Command Pack Planning](../11_codex_tasks/198_supabase_cli_backup_command_pack_planning.md)
 - [Loop 199 Supabase Backup Export And Restore Readiness](../11_codex_tasks/199_supabase_backup_export_and_restore_readiness_accelerated_closeout.md)
+- [Loop 200 Supabase Backup Tooling Installation Preflight](../11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -37,8 +38,9 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Supabase CLI Backup Dry-Run Design](../15_runbooks/supabase_cli_backup_dry_run_design.md)
 - [Supabase CLI Backup Command Pack Planning](../15_runbooks/supabase_cli_backup_command_pack_planning.md)
 - [Supabase Backup Export And Restore Readiness Closeout](../15_runbooks/supabase_backup_export_and_restore_readiness_accelerated_closeout.md)
+- [Supabase Backup Tooling Installation Preflight](../15_runbooks/supabase_backup_tooling_installation_preflight.md)
 
-Loop 199 status: `preflight_status=complete`, `backup_readiness_status=blocked_tooling_missing`, `next=Loop 200 tooling or operator-machine planning`.
+Loop 200 status: `tooling_preflight_status=complete`, `backup_readiness_status=pg_dump_available`, `next=Loop 201 controlled export approval`.
 
 ## Obsidian Helpers
 
