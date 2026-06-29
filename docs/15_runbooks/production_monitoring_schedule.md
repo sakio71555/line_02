@@ -121,6 +121,46 @@ The dry-run must keep these boundaries:
 - No Supabase schema/RLS change.
 - No secret, webhook suffix, LINE identifier, message body, OpenAI response, Supabase endpoint, or DB URL output.
 
+## Loop 192 HTTPS 504 Anomaly Triage Addition
+
+If HTTPS Admin root/customers returns `504`, first run a read-only triage before any restart or remediation.
+
+Minimum checks:
+
+```txt
+api_direct_8788_health_status
+https_api_health_status
+https_admin_root_status
+https_admin_customers_status
+https_admin_api_no_header_customers_status
+https_line_invalid_signature_status
+production_monitoring_dry_run
+nginx_error_recent_count
+api_journal_interesting_count
+admin_journal_interesting_count
+resource_load_1m
+memory_used_percent
+root_disk_used_percent
+```
+
+Loop 192 result:
+
+```txt
+anomaly_status=resolved_or_transient
+restart_required=false
+https_admin_root_status=200
+https_admin_customers_status=200
+production_monitoring_dry_run=healthy
+restart_performed=false
+runtime_changes_performed=false
+Nginx/DNS/certbot changes=false
+LINE send=false
+OpenAI API=false
+Supabase write/export=false
+```
+
+If the anomaly recurs, create a separate Admin 504 remediation planning Loop rather than restarting services in the monitoring Loop.
+
 ## Loop 186 Automation Dry-Run
 
 Loop 186 added a repeatable monitoring dry-run command:

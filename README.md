@@ -446,6 +446,8 @@ Loop 190では、backup retention dry-run proposalを追加し、VPS active sour
 
 Loop 191では、Supabase backup method selectionをdocs/test/read-only verificationのみで実施しました。`backup method selected=operator_review_required` とし、最初はoperator確認済みmanual/managed backupを優先し、CLI/scheduled exportは明示承認後の別Loopへ分けます。`DB export performed=false` / `Supabase CLI/API called=false` / `restore drill target=non_production_first` を記録し、backup作成、DB export、secret表示、runtime変更、追加LINE送信、OpenAI API、Supabase writeは行いません。詳細は [docs/11_codex_tasks/191_supabase_backup_method_selection.md](docs/11_codex_tasks/191_supabase_backup_method_selection.md) と [docs/15_runbooks/supabase_backup_method_selection.md](docs/15_runbooks/supabase_backup_method_selection.md) を参照してください。
 
+Loop 192では、Loop 191で記録されたproduction HTTPS Admin `504` をread-onlyで再確認しました。HTTPS Admin root/customersは `200` に戻っており、monitoring dry-runはhealthy、LINE invalid-signatureは `401` でした。`anomaly_status=resolved_or_transient` / `restart_required=false` とし、restart、runtime変更、Nginx/DNS/certbot変更、LINE送信、OpenAI API、Supabase write/exportは行っていません。詳細は [docs/11_codex_tasks/192_production_https_504_anomaly_read_only_triage.md](docs/11_codex_tasks/192_production_https_504_anomaly_read_only_triage.md) と [docs/15_runbooks/production_https_504_anomaly_read_only_triage.md](docs/15_runbooks/production_https_504_anomaly_read_only_triage.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

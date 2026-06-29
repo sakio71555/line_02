@@ -462,6 +462,8 @@ Loop 190のようなbackup retention dry-run proposalでは、deploy backup arti
 
 Loop 191のようなSupabase backup method selectionでは、Supabase backup方式だけを選定し、production exportやSupabase CLI/API callは行いません。`backup method selected=operator_review_required`、`recommended_path=operator_confirmed_manual_or_managed_backup_first`、`DB export performed=false`、`Supabase CLI/API called=false`、`restore drill target=non_production_first` をdocs/testで固定します。CLI / scheduled export / restore drill / timer installは、operator確認と明示承認を得た別Loopへ分けます。
 
+Loop 192のようなproduction HTTPS 504 anomaly triageでは、修正やrestartへ進む前に短時間timeout付きのread-only matrixで再現有無を確認します。API/Admin systemd state、HTTPS Admin root/customers、Admin API guard、Nginx/Journals sanitized summary、resource summary、monitoring dry-run、LINE invalid-signatureを記録し、`restart_performed=false`、`runtime_changes_performed=false`、`Nginx/DNS/certbot changes=false`、`LINE send=false`、`OpenAI API=false`、`Supabase write/export=false` を固定します。解消済みなら次Loopはbackup checklistへ戻し、継続なら別のremediation planning Loopへ分けます。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

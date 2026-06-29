@@ -2017,3 +2017,35 @@ secrets_recorded=false
 ```
 
 The first recommended path is operator-confirmed manual or managed backup, followed by non-production restore drill. CLI/scheduled export remains future work and requires explicit approval.
+
+## Loop 192 Production HTTPS 504 Anomaly Read-Only Triage
+
+Loop 192 keeps production readiness Go and confirms the Loop 191 HTTPS Admin `504` anomaly was not reproduced.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+anomaly_status=resolved_or_transient
+restart_required=false
+api_direct_8788_health_status=200
+https_api_health_status=200
+https_admin_root_status=200
+https_admin_customers_status=200
+https_admin_api_no_header_customers_status=401
+https_line_invalid_signature_status=401
+production_monitoring_dry_run=healthy
+restart_performed=false
+runtime_changes_performed=false
+Nginx/DNS/certbot changes=false
+LINE send=false
+OpenAI API=false
+Supabase write/export=false
+secrets_recorded=false
+next_loop_decision=Loop 193: Supabase manual backup operator checklist
+```
+
+Admin direct port `3000` returned connection refused, but the public HTTPS Admin route returned `200`; this Loop did not remediate direct-port behavior.
