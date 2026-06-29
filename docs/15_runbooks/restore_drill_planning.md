@@ -1449,3 +1449,131 @@ cluster_changed=false
 production_runtime_changed=false
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 25. Loop 221 Pre-Data Only Restore Diagnostic Gate
+
+Loop 221 defines the gate for the next staged diagnostic after Loop 220 confirmed the dump has pre-data entries. It does not execute restore, run `pg_restore`, run `psql`, create a target DB, create roles, connect to Supabase, connect to production, display logs, display object names, or change runtime.
+
+### 25.1 Loop 220 Result Summary
+
+```txt
+pg_restore_list_exit_code=0
+toc_total_entries_count=462
+toc_pre_data_count=186
+toc_data_count=46
+toc_post_data_count=230
+toc_acl_entries_count=0
+toc_default_acl_entries_count=0
+toc_unknown_section_count=0
+toc_body_displayed=false
+object_name_displayed=false
+table_name_displayed=false
+function_name_displayed=false
+policy_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+selected_next_stage=pre_data_only_restore_diagnostic_gate
+```
+
+### 25.2 Future Execution Boundary
+
+Loop 222 may run exactly one pre-data only diagnostic after explicit operator approval.
+
+```txt
+diagnostic_phase=pre_data_only
+diagnostic_attempt_count=1
+pg_restore_path=/usr/lib/postgresql/17/bin/pg_restore
+pg_restore_17_explicit_path_required=true
+bare_pg_restore_allowed=false
+pg_restore_options_required=--section=pre-data --no-owner --no-privileges
+fresh_target_db_required=true
+target_db_scope=local_isolated_postgresql_only
+target_db_host=localhost
+raw_stdout_stderr_destination=repo_external_root_only_diagnostic_log
+diagnostic_log_permission_required=600
+diagnostic_log_dir_permission_required=700
+diagnostic_log_displayed=false
+object_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+```
+
+### 25.3 Fresh Target DB Conditions
+
+A fresh target DB may be created in Loop 222 only if:
+
+- Operator approval is explicit.
+- The target is localhost-only on the isolated PostgreSQL cluster.
+- The target DB name includes `restore_drill`, `pre_data`, and a Loop/timestamp marker.
+- The target is not production and not a Supabase project host.
+- The target does not use `SUPABASE_DB_URL`.
+- Runtime services are not pointed at the target.
+- Cleanup/drop or quarantine is planned before execution.
+
+Loop 221 creates no target DB.
+
+### 25.4 Success / Failure Judgement
+
+Success requires `pg_restore_exit_code=0`, `phase_success=true`, and target cleanup or quarantine recorded.
+
+Failure is recorded as a sanitized category only:
+
+```txt
+pre_data_extension_error_detected
+pre_data_schema_statement_error_detected
+pre_data_role_owner_acl_error_detected
+pre_data_permission_error_detected
+pre_data_target_cluster_error_detected
+pre_data_unknown_without_raw_log
+```
+
+Raw logs, matching lines, object names, SQL statements, role names, dump content, and row content remain hidden.
+
+### 25.5 Go / No-Go
+
+Go:
+
+- One explicit operator-approved pre-data diagnostic.
+- PostgreSQL 17 explicit path.
+- Fresh local isolated target DB.
+- Raw stdout/stderr repo-external and root-only.
+- Sanitized counts/booleans/exit code/category only.
+- Cleanup plan defined before execution.
+
+No-Go:
+
+- Any raw log, matching line, object name, table name, function name, policy name, SQL statement, role name, dump content, row content, DB URL, `.env`, or secret must be displayed.
+- Production or Supabase connection is required.
+- More than one attempt is needed.
+- The Loop expands into data/post-data restore or infrastructure/runtime work.
+
+### 25.6 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_changed=false
+role_created=false
+role_modified=false
+diagnostic_log_displayed=false
+object_name_displayed=false
+table_name_displayed=false
+function_name_displayed=false
+policy_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_restore_executed=false
+pre_data_diagnostic_gate_created=true
+loop_222_pre_data_execution_ready=true
+dr_readiness_status=not_ready_restore_failed
+```

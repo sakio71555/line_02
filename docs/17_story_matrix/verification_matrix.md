@@ -22,6 +22,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-012 | Staged diagnostics plan | docs-only check that Loop 218 records operator sanitized result and phase diagnostics plan | role placeholder No-Go and staged plan recorded | true | false | false | false | false | false | false | false | pending_loop_218_verification | Does not execute restore or `pg_restore`. |
 | V-013 | Staged diagnostics execution gate | docs-only check that Loop 219 selects one next stage and defines the execution boundary | `toc_count_only` selected and no execution performed | true | false | false | false | false | false | false | false | pending_loop_219_verification | Does not execute `pg_restore --list`. |
 | V-014 | TOC count-only diagnostic result | sanitized count-only review of Loop 220 docs and root-only metadata | TOC count recorded, body hidden, next stage selected | true | false | false | false | false | false | false | false | pending_loop_220_verification | Does not display TOC body or prove restore readiness. |
+| V-015 | Pre-data diagnostic gate | docs-only check that Loop 221 defines one-attempt pre-data execution boundary and cleanup policy | pre-data gate created, no execution performed | true | false | false | false | false | false | false | false | pending_loop_221_verification | Does not run restore, `pg_restore`, `psql`, or create a target DB. |
 
 ## Blocked Or Operator Approval Required
 
@@ -126,6 +127,29 @@ loop_220_psql_executed=false
 loop_220_target_db_created=false
 loop_220_backup_artifact_copied_into_repo=false
 loop_220_selected_next_stage=pre_data_only_restore_diagnostic_gate
+```
+
+## Loop 221 Verification Note
+
+```txt
+loop_221_pre_data_diagnostic_gate_created=true
+loop_221_loop_222_pre_data_execution_ready=true
+loop_221_restore_executed=false
+loop_221_pg_restore_executed=false
+loop_221_psql_executed=false
+loop_221_target_db_created=false
+loop_221_role_created=false
+loop_221_diagnostic_log_displayed=false
+loop_221_object_name_displayed=false
+loop_221_sql_statement_displayed=false
+loop_221_role_name_displayed=false
+loop_221_dump_content_displayed=false
+loop_221_row_content_displayed=false
+loop_221_secrets_recorded=false
+loop_221_backup_artifact_copied_into_repo=false
+loop_221_supabase_connection_executed=false
+loop_221_production_restore_executed=false
+loop_221_next_loop=Loop 222 pre-data only restore diagnostic execution
 ```
 
 ## Stage 2 Rule

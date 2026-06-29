@@ -59,6 +59,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 218 records the operator sanitized result as `unknown_after_operator_review` with low confidence, marks role placeholder remediation No-Go, and plans staged restore diagnostics without running restore, `pg_restore`, `psql`, target DB creation, or role changes.
 - Loop 219 selects `toc_count_only` as the first staged diagnostic execution candidate, defines the next Loop boundary, and still does not run restore, `pg_restore`, `psql`, create a target DB, display TOC body, or expose object names.
 - Loop 220 executes the TOC count-only diagnostic with PostgreSQL 17 explicit `pg_restore --list`, stores TOC output repo-external/root-only, records counts only, and selects `pre_data_only_restore_diagnostic_gate` as the next stage while keeping restore, target DB creation, raw TOC display, Supabase, and production untouched.
+- Loop 221 defines the pre-data only diagnostic gate, requiring a future fresh local isolated target DB, explicit PostgreSQL 17 `pg_restore`, repo-external/root-only diagnostic logs, sanitized result fields, and cleanup policy while still not executing restore, `pg_restore`, `psql`, target DB creation, Supabase, or production restore.
 
 ## .obsidian Policy
 

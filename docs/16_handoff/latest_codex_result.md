@@ -1,32 +1,29 @@
 # Latest Codex Result
 
-This file summarizes Loop 220 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 221 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, or production logs.
 
 ## Loop
 
-- Loop: Loop 220 TOC count-only staged restore diagnostic execution
-- Date: 2026-06-29
+- Loop: Loop 221 pre-data only restore diagnostic gate
+- Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: TOC count-only diagnostic execution
+- Scope type: docs-only execution gate
 - Commit hash: see final Codex report after commit
-- Push: not performed in this Loop
+- Push: planned after validation
 
 ## Source Evidence
 
-- Loop 219 commit: `d4c3d10 docs: add staged restore diagnostics gate`
-- Loop 219 result: `selected_next_diagnostic_stage=toc_count_only`
-- Loop 219 result: `target_db_required=false`
-- DR readiness before Loop 220: `not_ready_restore_failed`
+- Loop 220 commit: `2cce517 docs: record TOC count diagnostic result`
+- Loop 220 result: `selected_next_stage=pre_data_only_restore_diagnostic_gate`
+- Loop 220 result: `pg_restore_list_exit_code=0`
+- DR readiness before Loop 221: `not_ready_restore_failed`
 
 ## Loop 220 Result Summary
 
 ```txt
-artifact_checksum_verified=true
-pg_restore_version=17.10
-pg_restore_list_executed=true
 pg_restore_list_exit_code=0
 toc_total_entries_count=462
 toc_pre_data_count=186
@@ -34,43 +31,27 @@ toc_data_count=46
 toc_post_data_count=230
 toc_acl_entries_count=0
 toc_default_acl_entries_count=0
-toc_error_log_error_count=0
 selected_next_stage=pre_data_only_restore_diagnostic_gate
-restore_executed=false
-pg_restore_restore_executed=false
-psql_executed=false
-target_db_created=false
 toc_body_displayed=false
 object_name_displayed=false
 sql_statement_displayed=false
 role_name_displayed=false
-dump_content_displayed=false
-row_content_displayed=false
-secrets_recorded=false
 dr_readiness_status=not_ready_restore_failed
 ```
 
-## Diagnostic Storage
+## Pre-Data Gate Result
 
 ```txt
-toc_diagnostic_dir=/root/deploy-backups/amami-line-crm/loop220-toc-count-20260629-233207
-toc_diagnostic_dir_permission=700
-toc_file_permission=600
-toc_error_file_permission=600
-toc_file_committed=false
-toc_body_displayed=false
-toc_error_log_displayed=false
-```
-
-## Selected Next Diagnostic Stage
-
-```txt
-selected_next_stage=pre_data_only_restore_diagnostic_gate
-selected_next_stage_reason=toc_count_succeeded_and_pre_data_entries_exist
-role_placeholder_selected=false
-same_restore_retry_selected=false
-data_only_selected=false
-post_data_only_selected=false
+pre_data_diagnostic_gate_created=true
+loop_222_pre_data_execution_ready=true
+diagnostic_phase=pre_data_only
+diagnostic_attempt_count=1
+pg_restore_17_explicit_path_required=true
+pg_restore_options_required=--section=pre-data --no-owner --no-privileges
+fresh_target_db_required=true
+target_db_scope=local_isolated_postgresql_only
+raw_stdout_stderr_destination=repo_external_root_only_diagnostic_log
+cleanup_policy_created=true
 ```
 
 ## Verification
@@ -86,13 +67,12 @@ post_data_only_selected=false
 ## Safety Boundary
 
 - restore_executed=false
-- pg_restore_restore_executed=false
-- pg_restore_list_executed=true
+- pg_restore_executed=false
 - psql_executed=false
 - target_db_created=false
 - role_created=false
 - role_modified=false
-- toc_body_displayed=false
+- diagnostic_log_displayed=false
 - object_name_displayed=false
 - table_name_displayed=false
 - function_name_displayed=false
@@ -119,16 +99,16 @@ post_data_only_selected=false
 - backup_export_status=success
 - restore_drill_status=failed
 - toc_count_diagnostic_status=success
-- selected_next_stage=pre_data_only_restore_diagnostic_gate
+- pre_data_diagnostic_gate_created=true
 - dr_readiness_status=not_ready_restore_failed
 
 ## Risks / Follow-Up
 
-- TOC body may expose object names and must remain hidden.
-- Count-only TOC classification does not prove restore readiness.
-- Pre-data diagnostic must be gated separately before execution.
+- Pre-data raw logs may expose schema/object-sensitive names and must remain hidden.
+- Future execution must remain one phase / one attempt.
+- Target DB cleanup must be recorded.
 - Restore has not succeeded.
 
 ## Next Loop Candidate
 
-- Loop 221: pre-data only restore diagnostic gate
+- Loop 222: pre-data only restore diagnostic execution

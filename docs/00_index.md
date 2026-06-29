@@ -50,6 +50,7 @@
 - Loop 218 staged restore diagnostics plan: `11_codex_tasks/218_staged_restore_diagnostics_plan.md`
 - Loop 219 staged restore diagnostics execution gate: `11_codex_tasks/219_staged_restore_diagnostics_execution_gate.md`
 - Loop 220 TOC count-only staged restore diagnostic execution: `11_codex_tasks/220_toc_count_only_staged_restore_diagnostic_execution.md`
+- Loop 221 pre-data only restore diagnostic gate: `11_codex_tasks/221_pre_data_only_restore_diagnostic_gate.md`
 
 ## Prompts and Templates
 

@@ -8,17 +8,18 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 220 の TOC count-only staged restore diagnostic execution をレビューしてください。
+- Loop 221 の pre-data only restore diagnostic gate をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
 - safety boundary が守られているか確認してください。
 - Obsidian/dev log/handoff の記録漏れがあれば指摘してください。
-- TOC count-onlyの結果解釈が妥当か確認してください。
-- `pre_data_only_restore_diagnostic_gate` を次に選ぶ判断が妥当か確認してください。
-- 次Loopを即restore実行にせず、pre-data only gateに分ける方針でレビューしてください。
+- Loop 220結果整理が妥当か確認してください。
+- pre-data only実行境界が安全か確認してください。
+- fresh local isolated target DB条件、cleanup方針、Go/No-Goが十分か確認してください。
+- 次Loopをdata/post-dataへ広げず、pre-data only 1回に制限する方針でレビューしてください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名、SQL文、object名、table名、function名、policy名、TOC本文、PII、本番ログの提示は求めないでください。
-- restore、pg_restore restore、psql、target DB作成、role作成、Supabase接続、production DB接続、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smoke は Loop 220 では禁止です。
+- restore、pg_restore、psql、target DB作成、role作成、Supabase接続、production DB接続、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smoke は Loop 221 では禁止です。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -28,17 +29,14 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 220 TOC count-only staged restore diagnostic execution
-- Date: 2026-06-29
+- Loop: Loop 221 pre-data only restore diagnostic gate
+- Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
 - Start git status: main...origin/main
-- Scope type: TOC count-only diagnostic execution
+- Scope type: docs-only execution gate
 
 ## Loop 220 Result Summary
 
-- artifact_checksum_verified=true
-- pg_restore_version=17.10
-- pg_restore_list_executed=true
 - pg_restore_list_exit_code=0
 - toc_total_entries_count=462
 - toc_pre_data_count=186
@@ -46,44 +44,30 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - toc_post_data_count=230
 - toc_acl_entries_count=0
 - toc_default_acl_entries_count=0
-- toc_error_log_error_count=0
 - selected_next_stage=pre_data_only_restore_diagnostic_gate
-- restore_executed=false
-- pg_restore_restore_executed=false
-- psql_executed=false
-- target_db_created=false
 - toc_body_displayed=false
 - object_name_displayed=false
 - sql_statement_displayed=false
 - role_name_displayed=false
-- dump_content_displayed=false
-- row_content_displayed=false
-- secrets_recorded=false
 - dr_readiness_status=not_ready_restore_failed
 
-## Diagnostic Storage
+## Pre-Data Gate Result
 
-- toc_diagnostic_dir_permission=700
-- toc_file_permission=600
-- toc_error_file_permission=600
-- toc_file_committed=false
-- toc_body_displayed=false
-- toc_error_log_displayed=false
-
-## Selected Next Diagnostic Stage
-
-- selected_next_stage=pre_data_only_restore_diagnostic_gate
-- selected_next_stage_reason=toc_count_succeeded_and_pre_data_entries_exist
-- role_placeholder_selected=false
-- same_restore_retry_selected=false
-- data_only_selected=false
-- post_data_only_selected=false
+- pre_data_diagnostic_gate_created=true
+- loop_222_pre_data_execution_ready=true
+- diagnostic_phase=pre_data_only
+- diagnostic_attempt_count=1
+- pg_restore_17_explicit_path_required=true
+- pg_restore_options_required=--section=pre-data --no-owner --no-privileges
+- fresh_target_db_required=true
+- target_db_scope=local_isolated_postgresql_only
+- raw_stdout_stderr_destination=repo_external_root_only_diagnostic_log
+- cleanup_policy_created=true
 
 ## Safety Boundary
 
 - restore_executed=false
-- pg_restore_restore_executed=false
-- pg_restore_list_executed=true
+- pg_restore_executed=false
 - psql_executed=false
 - target_db_created=false
 - role_created=false
@@ -116,12 +100,12 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - backup_export_status=success
 - restore_drill_status=failed
 - toc_count_diagnostic_status=success
-- selected_next_stage=pre_data_only_restore_diagnostic_gate
+- pre_data_diagnostic_gate_created=true
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 221: pre-data only restore diagnostic gate
+- Loop 222: pre-data only restore diagnostic execution
 ---
 
 出力形式:
@@ -141,13 +125,13 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### handoff確認
 -
 
-### TOC count結果確認
+### Loop 220結果確認
 -
 
-### selected stage確認
+### pre-data実行境界確認
 -
 
-### 次Loop実行境界確認
+### cleanup方針確認
 -
 
 ### 残リスク
