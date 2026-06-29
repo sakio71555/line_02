@@ -486,3 +486,36 @@ dr_readiness_status=not_ready_restore_failed
 ```
 
 Loop 213 should use one fresh isolated target and one explicit `pg_restore --no-owner --no-privileges` retry only after confirming the Go/No-Go checklist.
+
+## 24. Loop 213 Controlled Restore Retry With No Owner No Privileges
+
+Loop 213 performed the approved isolated local restore retry with explicit `--no-owner --no-privileges`.
+
+```txt
+backup_artifact_in_repo=false
+artifact_checksum_verified=true
+restore_target=local_isolated_postgresql_on_vps
+cluster_identity=17:restore_drill_loop2091:55432:online
+listen_scope_loopback_only=true
+restore_options=no-owner,no-privileges
+restore_attempt_count=1
+pg_restore_exit_code=1
+restore_drill_status=failed
+pg_restore_failure_category=role_owner_acl_error_detected
+role_owner_acl_error_count=1
+extension_missing_count=0
+schema_or_sql_statement_count=0
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+psql_executed=true_local_isolated_target_cleanup_check
+supabase_connection_executed=false
+production_restore_executed=false
+```
+
+The backup artifact remains repo-external. Restore capability is still not proven, so DR readiness remains incomplete.

@@ -46,6 +46,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 210 pg_restore failure diagnostics records `pg_restore_failure_category=unknown_without_raw_log`, confirms artifact/tooling/cluster metadata, avoids restore retry and `psql`, and designs Loop 211 as a controlled diagnostic restore with root-only raw logs and sanitized category output.
 - Loop 211 controlled diagnostic restore runs one isolated diagnostic restore, stores raw output only in a repo-external root-only log, classifies the primary failure as `role_owner_acl_error_detected`, drops the diagnostic DB, and keeps raw log/dump/row/secret content out of docs and commits.
 - Loop 212 role owner ACL restore remediation plan compares remediation candidates, keeps `--no-owner --no-privileges` as the required baseline for the next retry, treats extension/schema as secondary signals, and defines Loop 213 Go/No-Go without rerunning restore.
+- Loop 213 controlled restore retry runs one isolated retry with explicit `--no-owner --no-privileges`, records `pg_restore_exit_code=1` / `role_owner_acl_error_count=1`, drops the target DB, and keeps raw log/dump/row/secret content out of docs and commits.
 
 ## .obsidian Policy
 

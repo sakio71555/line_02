@@ -41,6 +41,7 @@
 - Loop 210 pg_restore failure diagnostics without raw log exposure: `11_codex_tasks/210_pg_restore_failure_diagnostics_without_raw_log_exposure.md`
 - Loop 211 controlled diagnostic restore with sanitized failure classifier: `11_codex_tasks/211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md`
 - Loop 212 role owner ACL restore remediation plan: `11_codex_tasks/212_role_owner_acl_restore_remediation_plan.md`
+- Loop 213 controlled restore retry with no-owner no-privileges: `11_codex_tasks/213_controlled_restore_retry_with_no_owner_no_privileges.md`
 
 ## Prompts and Templates
 

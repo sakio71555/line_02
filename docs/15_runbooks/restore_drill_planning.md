@@ -713,3 +713,92 @@ remediation_plan_created=true
 loop_213_retry_ready=true
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 18. Loop 213 Controlled Restore Retry With No Owner No Privileges
+
+Loop 213 executed the approved single retry against the VPS local isolated PostgreSQL target. It used explicit PostgreSQL 17 `pg_restore` with `--no-owner --no-privileges`, wrote raw stdout/stderr only to a repo-external root-only diagnostic log, emitted sanitized classifier counts only, and dropped the target DB after the attempt.
+
+### 18.1 Preflight
+
+```txt
+artifact_exists=true
+artifact_file_permission=600
+artifact_dir_permission=700
+artifact_size=259222
+artifact_size_match=true
+artifact_checksum_verified=true
+pg_restore_17_path_present=true
+pg_restore_version=17.10
+cluster_identity=17:restore_drill_loop2091:55432:online
+cluster_identity_match=true
+listen_scope_loopback_only=true
+precheck_ok=true
+```
+
+### 18.2 Retry Result
+
+```txt
+run_id=loop213-20260629-201655
+target_db=amami_line_crm_restore_drill_loop213_20260629201655
+target_db_created=true
+target_db_verified_isolated=true
+restore_options=no-owner,no-privileges
+restore_attempt_limit=1
+restore_retry_executed=true
+restore_attempt_count=1
+pg_restore_executed=true
+pg_restore_exit_code=1
+restore_drill_status=failed
+sanitized_validation_executed=false
+```
+
+### 18.3 Sanitized Classifier
+
+```txt
+role_owner_acl_error_count=1
+role_owner_acl_error_detected=true
+extension_missing_count=0
+extension_missing_detected=false
+object_conflict_count=0
+permission_or_auth_count=0
+schema_or_sql_statement_count=0
+restore_option_count=0
+target_cluster_count=0
+custom_dump_format_count=0
+pg_restore_failure_category=role_owner_acl_error_detected
+sanitized_classifier_executed=true
+```
+
+### 18.4 Cleanup and Safety
+
+```txt
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+diagnostic_log_repo_path=false
+diagnostic_log_dir_permission=700
+diagnostic_log_permission=600
+diagnostic_log_displayed=false
+diagnostic_log_committed=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+psql_executed=true_local_isolated_target_cleanup_check
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+migration_executed=false
+rls_changed=false
+production_schema_changed=false
+production_runtime_changed=false
+push_performed=false
+```
+
+### 18.5 Assessment
+
+`--no-owner --no-privileges` remains a required baseline, but it was not sufficient for a successful restore. The remaining sanitized signal is still `role_owner_acl_error_detected`, with extension/schema signals absent in this retry.
+
+Do not run another identical retry. The next Loop should plan the remaining role/owner/ACL remediation path, such as role placeholders, staged restore, or operator-only root-log category refinement under the same no-raw-log boundary.
