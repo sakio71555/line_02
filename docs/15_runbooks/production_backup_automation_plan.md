@@ -339,3 +339,25 @@ production readiness: Go
 ```
 
 Operator action remains outside Codex: confirm dashboard/manual/managed backup availability, perform backup only if No-Go conditions are false, record summarized status only, and plan non-production restore drill next.
+
+## 18. Loop 194 Manual Backup Result Recording
+
+Loop 194 did not receive an operator-provided sanitized result. Backup automation remains blocked until a manual or managed backup is confirmed and recorded safely.
+
+```txt
+manual_backup_result_recording_status=pending
+operator_result_received=false
+operator_result_required=true
+backup_status=not_recorded
+backup_performed_by_operator=operator_unknown
+backup_artifact_committed_to_repo=false
+backup_artifact_uploaded_to_chat=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+secrets_recorded=false
+runtime_changes_performed=false
+production readiness: Go
+```
+
+Automation still requires a successful operator backup result and a non-production restore drill before any scheduled export proposal.

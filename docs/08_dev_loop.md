@@ -466,6 +466,8 @@ Loop 192のようなproduction HTTPS 504 anomaly triageでは、修正やrestart
 
 Loop 193のようなSupabase manual backup operator checklistでは、operatorが外部のSupabase dashboard/manual/managed backupを安全に確認するためのdocs/checklistだけを整備します。CodexはSupabase dashboard操作、Supabase CLI/API、DB export、restore、backup artifact download、backup archive作成を行いません。`manual_backup_operator_checklist=created`、`Supabase CLI/API called=false`、`DB export performed=false`、`restore performed=false`、`backup artifact downloaded=false`、`secrets_recorded=false` をdocs/testで固定し、production readiness: Goを維持します。実バックアップ結果の記録は別Loopへ分けます。
 
+Loop 194のようなSupabase manual backup result recordingでは、operatorからsanitized resultが提供された場合だけ結果を記録します。operator resultが未提供なら成功扱いにせず、`manual_backup_result_recording_status=pending`、`operator_result_received=false`、`operator_result_required=true`、`backup_status=not_recorded` として止めます。CodexはSupabase dashboard、CLI/API、DB export、restore、artifact download、runtime変更、LINE送信、OpenAI APIを行いません。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

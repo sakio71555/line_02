@@ -1061,3 +1061,25 @@ production readiness: Go
 ```
 
 The operator should record only summarized availability/status and must not paste secret values, project references, raw backup content, screenshots containing values, or provider logs into docs/chat.
+
+## Loop 194 Supabase Manual Backup Result Recording
+
+Loop 194 records that no sanitized operator backup result was provided. The operator must still perform or confirm the backup outside Codex and provide only summarized values.
+
+```txt
+manual_backup_result_recording_status=pending
+operator_result_received=false
+operator_result_required=true
+backup_status=not_recorded
+backup_performed_by_operator=operator_unknown
+backup_artifact_committed_to_repo=false
+backup_artifact_uploaded_to_chat=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+runtime_changes_performed=false
+secrets_recorded=false
+production readiness: Go
+```
+
+Operator next action: use the Supabase manual backup operator checklist, then report only sanitized status.
