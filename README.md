@@ -489,6 +489,8 @@ Loop 203 PostgreSQL 17 client installation preflightでは、VPSのOS/package状
 
 Loop 204 PostgreSQL 17 client installation approval and executionでは、VPSへPGDG source/keyを追加し、`postgresql-client-17 17.10` をside-by-side導入しました。`/usr/lib/postgresql/17/bin/pg_dump --version` は17系、既存 `/usr/lib/postgresql/16/bin/pg_dump` は16.14のままです。Supabase接続、DB export、backup artifact作成、restoreはまだ行っていません。詳細は [docs/11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md](docs/11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md) と [docs/16_obsidian/loop_204_postgresql_17_client_installation_approval_and_execution.md](docs/16_obsidian/loop_204_postgresql_17_client_installation_approval_and_execution.md) を参照してください。
 
+Loop 205 pg_dump 17 explicit path backup export retryでは、operator承認のもと `/usr/lib/postgresql/17/bin/pg_dump` を明示pathで使い、Supabase DB backup exportを1回だけ実行しました。`backup_export_status=success`、artifactはrepo外root-only directoryへ作成し、path/size/checksum/permissionのみ記録しています。DB URL、secret、raw log、dump内容は記録せず、restoreは未実行です。詳細は [docs/11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md](docs/11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md) と [docs/16_obsidian/loop_205_pg_dump_17_explicit_path_backup_export_retry.md](docs/16_obsidian/loop_205_pg_dump_17_explicit_path_backup_export_retry.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

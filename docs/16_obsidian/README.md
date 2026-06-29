@@ -36,6 +36,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 202.1 Supabase DB URL secret replacement records `supabase_db_url_replaced=true`, `present=true`, `format_check=passed`, `secrets_recorded=false`, `pg_dump_executed=false`, `supabase_export_executed=false`, and `restore_executed=false`. It does not authorize backup export.
 - Loop 203 PostgreSQL 17 client installation preflight records Ubuntu 24.04.3 / PostgreSQL client 16 state, notes that current APT cache does not expose `postgresql-client-17`, and keeps install/export/restore unexecuted.
 - Loop 204 PostgreSQL 17 client installation records PGDG source/key addition, `postgresql-client-17 17.10` installation, `libpq5` dependency upgrade, explicit pg_dump 17 path verification, and keeps DB export/restore unexecuted.
+- Loop 205 pg_dump 17 explicit path backup export retry records one operator-approved export attempt, `backup_export_status=success`, root-only repo-external artifact metadata, and keeps restore blocked for a separate Loop.
 
 ## .obsidian Policy
 

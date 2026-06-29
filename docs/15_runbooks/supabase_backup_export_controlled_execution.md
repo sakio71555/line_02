@@ -188,3 +188,31 @@ raw_log_displayed=false
 ```
 
 The next export Loop must call `/usr/lib/postgresql/17/bin/pg_dump` explicitly and must keep DB URL and raw log output redacted.
+
+## 14. Loop 205 Backup Export Retry Result
+
+Loop 205 used the explicit PostgreSQL 17 `pg_dump` path and completed one operator-approved export attempt successfully.
+
+```txt
+pg_dump_17_path=/usr/lib/postgresql/17/bin/pg_dump
+pg_dump_17_version=17.10
+pg_dump_17_explicit_path_used=true
+supabase_db_url_present=true
+supabase_db_url_format_check=passed
+pg_dump_executed=true
+pg_dump_attempt_count=1
+backup_export_status=success
+backup_artifact_created=true
+backup_artifact_in_repo=false
+backup_artifact_path=/root/deploy-backups/amami-line-crm/loop205-20260629-182014/supabase-db-loop205-20260629-182014.dump
+backup_artifact_size_bytes=259222
+backup_artifact_sha256=432dc75113b4b1a552c94b971d2fb0afca67554077992d425105f09510666493
+backup_artifact_permission=600
+backup_dir_permission=700
+restore_executed=false
+secrets_recorded=false
+raw_log_displayed=false
+dump_contents_displayed=false
+```
+
+The artifact may contain production data and remains outside the repository. Do not copy it into Git, chat, or docs. Restore is still blocked until a separate explicit restore drill Loop.

@@ -157,7 +157,24 @@ Future backup export must use the explicit path `/usr/lib/postgresql/17/bin/pg_d
 
 Rollback candidates are `postgresql-client-17`, the PGDG source file, the PGDG key file, and the `libpq5` dependency upgrade. Rollback must be a separate controlled Loop and must not be combined with export or restore.
 
-## 9. Obsidian Links
+## 9. Loop 205 Export Retry Resolution
+
+Loop 205 resolved the earlier server/client mismatch for backup export by using `/usr/lib/postgresql/17/bin/pg_dump` explicitly.
+
+```txt
+previous_failure_category=pg_dump_server_version_mismatch
+pg_dump_17_explicit_path_used=true
+pg_dump_attempt_count=1
+backup_export_status=success
+backup_artifact_created=true
+restore_executed=false
+secrets_recorded=false
+raw_log_displayed=false
+```
+
+The PostgreSQL 17 client boundary is now proven for export creation. It is not yet proven for restore.
+
+## 10. Obsidian Links
 
 - [OBSIDIAN.md](../../OBSIDIAN.md)
 - [Obsidian Link Map](../16_obsidian/obsidian_link_map.md)
@@ -168,3 +185,5 @@ Rollback candidates are `postgresql-client-17`, the PGDG source file, the PGDG k
 - [Loop 203 Obsidian Log](../16_obsidian/loop_203_postgresql_17_client_installation_preflight.md)
 - [Loop 204 Task Doc](../11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md)
 - [Loop 204 Obsidian Log](../16_obsidian/loop_204_postgresql_17_client_installation_approval_and_execution.md)
+- [Loop 205 Task Doc](../11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md)
+- [Loop 205 Obsidian Log](../16_obsidian/loop_205_pg_dump_17_explicit_path_backup_export_retry.md)

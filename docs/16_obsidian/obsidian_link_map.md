@@ -39,6 +39,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 203 Obsidian Log](loop_203_postgresql_17_client_installation_preflight.md)
 - [Loop 204 PostgreSQL 17 Client Installation](../11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md)
 - [Loop 204 Obsidian Log](loop_204_postgresql_17_client_installation_approval_and_execution.md)
+- [Loop 205 pg_dump 17 Backup Export Retry](../11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md)
+- [Loop 205 Obsidian Log](loop_205_pg_dump_17_explicit_path_backup_export_retry.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -58,6 +60,8 @@ Loop 202.1 status: `supabase_db_url_replaced=true`, `present=true`, `format_chec
 Loop 203 status: `vps_preflight_status=completed_read_only`, `current_pg_dump_major=16`, `required_pg_dump_major=17`, `postgresql_17_client_candidate_available=false_current_apt_cache`, `package_install_executed=false`, `pg_dump_executed=false`, `supabase_connection_executed=false`, `db_export_executed=false`, `restore_executed=false`.
 
 Loop 204 status: `postgresql_client_17_installed=true`, `pg_dump_17_path_present=true`, `pg_dump_17_version_check_passed=true`, `pg_dump_16_preserved=true`, `db_export_executed=false`, `backup_artifact_created=false`, `restore_executed=false`, `loop_205_backup_export_retry_ready=true_after_operator_approval`.
+
+Loop 205 status: `pg_dump_17_explicit_path_used=true`, `pg_dump_attempt_count=1`, `backup_export_status=success`, `backup_artifact_created=true`, `backup_artifact_in_repo=false`, `restore_executed=false`, `secrets_recorded=false`, `raw_log_displayed=false`.
 
 ## Obsidian Helpers
 
