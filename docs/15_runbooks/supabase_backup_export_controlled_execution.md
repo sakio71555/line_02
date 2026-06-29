@@ -455,3 +455,34 @@ production_restore_executed=false
 ```
 
 The backup artifact remains repo-external. Restore capability is still not proven; the next Loop should plan role/owner/ACL remediation before any retry.
+
+## 23. Loop 212 Role Owner ACL Restore Remediation Plan
+
+Loop 212 planned the next remediation step without rerunning restore or displaying raw diagnostic logs.
+
+```txt
+primary_failure_category=role_owner_acl_error_detected
+secondary_failure_signals=extension_missing_detected,schema_or_sql_statement_error_detected
+candidate_a_no_owner_no_privileges=required_baseline
+candidate_b_role_placeholders=defer_until_needed
+candidate_c_extension_preflight=defer_if_secondary_signal_persists
+candidate_d_staged_restore=defer_for_deeper_diagnostics
+candidate_e_operator_only_raw_log_review=optional_before_more_risky_changes
+recommended_next_loop=Loop 213: controlled restore retry with no-owner no-privileges
+restore_retried=false
+pg_restore_restore_executed=false
+psql_executed=false
+target_db_created=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_restore_executed=false
+loop_213_retry_ready=true
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 213 should use one fresh isolated target and one explicit `pg_restore --no-owner --no-privileges` retry only after confirming the Go/No-Go checklist.

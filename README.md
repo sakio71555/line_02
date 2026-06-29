@@ -507,6 +507,8 @@ Loop 210 pg_restore failure diagnostics without raw log exposureでは、Loop 20
 
 Loop 211 controlled diagnostic restore with sanitized failure classifierでは、isolated local PostgreSQL targetへdiagnostic restoreを1回だけ実行し、raw outputはrepo外root-only logへ保存しました。docs/Obsidianにはsanitized count/booleanだけを記録し、primary categoryは `pg_restore_failure_category=role_owner_acl_error_detected` です。diagnostic target DBはdrop済みで、raw log、dump内容、row content、DB URL、secretは記録していません。詳細は [docs/11_codex_tasks/211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md](docs/11_codex_tasks/211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md) と [docs/16_obsidian/loop_211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md](docs/16_obsidian/loop_211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md) を参照してください。
 
+Loop 212 role owner ACL restore remediation planでは、Loop 211のsanitized classifier結果だけを使い、次回retryのremediation方針をdocs-onlyで整理しました。primaryは `role_owner_acl_error_detected`、extension/schemaはsecondary signalとし、Loop 213では fresh local isolated target + explicit `--no-owner --no-privileges` + one attempt + root-only raw log + sanitized classifier + target cleanup をGo条件にしています。restore再実行、pg_restore restore、psql、diagnostic log表示、Supabase/production接続は行っていません。詳細は [docs/11_codex_tasks/212_role_owner_acl_restore_remediation_plan.md](docs/11_codex_tasks/212_role_owner_acl_restore_remediation_plan.md) と [docs/16_obsidian/loop_212_role_owner_acl_restore_remediation_plan.md](docs/16_obsidian/loop_212_role_owner_acl_restore_remediation_plan.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

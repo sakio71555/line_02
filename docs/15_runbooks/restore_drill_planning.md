@@ -617,3 +617,99 @@ next_loop=Loop 212: role owner ACL restore remediation plan
 ```
 
 Do not retry restore until Loop 212 decides how to handle role/owner/ACL restore behavior.
+
+## 17. Loop 212 Role Owner ACL Restore Remediation Plan
+
+Loop 212 planned the next restore remediation step using only the Loop 211 sanitized classifier result. It did not rerun restore, run `pg_restore`, run `psql`, create a target DB, display diagnostic logs, or connect to Supabase/production.
+
+### 17.1 Failure Signal Summary
+
+```txt
+primary_failure_category=role_owner_acl_error_detected
+role_owner_acl_error_count=14
+secondary_extension_missing_detected=true
+extension_missing_count=6
+secondary_schema_or_sql_statement_error_detected=true
+schema_or_sql_statement_error_count=17
+target_cluster_error_count=1
+object_conflict_count=0
+permission_or_auth_error_count=0
+restore_option_error_count=0
+custom_dump_format_error_count=0
+```
+
+These are sanitized classifier signals, not raw-log proof. `target_cluster_error_count=1` is not treated as the primary root cause because the diagnostic target was created and dropped successfully.
+
+### 17.2 Remediation Candidate Decision
+
+```txt
+candidate_a_no_owner_no_privileges=required_baseline
+candidate_b_role_placeholders=defer_until_needed
+candidate_c_extension_preflight=defer_if_secondary_signal_persists
+candidate_d_staged_restore=defer_for_deeper_diagnostics
+candidate_e_operator_only_raw_log_review=optional_before_more_risky_changes
+```
+
+The next retry should explicitly keep `--no-owner --no-privileges`, use a fresh local isolated target, run only once, and record sanitized output only. If role/owner/ACL errors persist, move to role placeholder or staged restore planning rather than repeating retries.
+
+### 17.3 Loop 213 Boundary
+
+```txt
+next_loop=Loop 213: controlled restore retry with no-owner no-privileges
+artifact_metadata_recheck_required=true
+fresh_local_isolated_target_required=true
+pg_restore_17_explicit_path_required=true
+no_owner_no_privileges_required=true
+restore_attempt_limit=1
+raw_log_repo_external_root_only=true
+sanitized_classifier_only=true
+target_cleanup_required=true
+```
+
+### 17.4 Go / No-Go
+
+Go:
+
+- Loop 211 commit is pushed.
+- Primary category is recorded as `role_owner_acl_error_detected`.
+- Secondary extension/schema signals are recorded.
+- `--no-owner --no-privileges` retry boundary is documented.
+- Raw diagnostic logs remain root-only and undisplayed.
+- Target is local isolated PostgreSQL only.
+- Restore attempt count is one.
+- Target cleanup plan is explicit.
+- Obsidian logging is ready.
+
+No-Go:
+
+- Raw diagnostic log display is required.
+- Extension preinstall is required but not planned.
+- Supabase/production connection is required.
+- Target identity is unclear.
+- Artifact checksum mismatches.
+- Raw log/dump/row content display is needed.
+- Cleanup plan is unclear.
+- Obsidian logging is not updated.
+
+### 17.5 Safety Boundary
+
+```txt
+restore_retried=false
+pg_restore_restore_executed=false
+psql_executed=false
+target_db_created=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+primary_failure_category_recorded=true
+secondary_failure_signals_recorded=true
+remediation_plan_created=true
+loop_213_retry_ready=true
+dr_readiness_status=not_ready_restore_failed
+```

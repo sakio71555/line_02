@@ -57,6 +57,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 210 Obsidian Log](loop_210_pg_restore_failure_diagnostics_without_raw_log_exposure.md)
 - [Loop 211 Controlled Diagnostic Restore](../11_codex_tasks/211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md)
 - [Loop 211 Obsidian Log](loop_211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md)
+- [Loop 212 Role Owner ACL Restore Remediation Plan](../11_codex_tasks/212_role_owner_acl_restore_remediation_plan.md)
+- [Loop 212 Obsidian Log](loop_212_role_owner_acl_restore_remediation_plan.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -95,6 +97,8 @@ Loop 209.2 status: `restore_attempt_count=1`, `restore_executed=true`, `pg_resto
 Loop 210 status: `restore_retried=false`, `pg_restore_restore_executed=false`, `psql_executed=false`, `pg_restore_failure_category=unknown_without_raw_log`, `pg_restore_failure_category_assigned=true`, `raw_log_displayed=false`, `dump_content_displayed=false`, `row_content_displayed=false`, `secrets_recorded=false`, `loop_211_diagnostic_restore_plan_created=true`, `dr_readiness_status=not_ready_restore_failed`.
 
 Loop 211 status: `diagnostic_restore_executed=true`, `restore_attempt_count=1`, `pg_restore_exit_code=1`, `restore_drill_status=failed`, `pg_restore_failure_category=role_owner_acl_error_detected`, `diagnostic_log_repo_path=false`, `diagnostic_log_permission=600`, `diagnostic_log_displayed=false`, `diagnostic_log_committed=false`, `restore_target_dropped=true`, `target_db_exists_after_drop=false`, `cleanup_required=false`, `raw_log_displayed=false`, `dump_content_displayed=false`, `row_content_displayed=false`, `secrets_recorded=false`, `next=Loop 212 role owner ACL restore remediation plan`.
+
+Loop 212 status: `restore_retried=false`, `pg_restore_restore_executed=false`, `psql_executed=false`, `target_db_created=false`, `primary_failure_category=role_owner_acl_error_detected`, `secondary_failure_signals_recorded=true`, `remediation_plan_created=true`, `loop_213_retry_ready=true`, `dr_readiness_status=not_ready_restore_failed`.
 
 ## Obsidian Helpers
 
