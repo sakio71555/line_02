@@ -2,24 +2,24 @@
 
 Copy the block below into ChatGPT. It already includes the sanitized latest Codex result from `latest_codex_result.md`.
 
-Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, or production logs.
+Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names copied from raw logs, SQL statements, object names, or production logs.
 
 ```text
-以下は amami-line-crm の最新Codex Goal結果です。
+以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- user story / ops story / DR readiness matrix の内容をレビューしてください。
+- Loop 216 の sanitized role ACL subcategory classifier 結果をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- safety boundaryが守られているか確認してください。
-- Obsidian/dev log/handoffの記録漏れがあれば指摘してください。
-- matrix completenessを確認してください。
-- residual riskを整理してください。
-- 次Loop候補を確認してください。
+- safety boundary が守られているか確認してください。
+- Obsidian/dev log/handoff の記録漏れがあれば指摘してください。
+- classifier結果の解釈が妥当か確認してください。
+- 次Loop選定が妥当か確認してください。
+- 残リスクを整理してください。
 - 大きな実装へ進まず、小さいLoopに分解する方針でレビューしてください。
 
 レビュー時の注意:
-- secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、PII、本番ログの提示は求めないでください。
-- Supabase接続、restore、pg_restore、pg_dump、psql、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smokeはこのGoalでは禁止です。
+- secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名、SQL文、object名、PII、本番ログの提示は求めないでください。
+- restore、pg_restore、psql、target DB作成、role作成、Supabase接続、production DB接続、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smoke は Loop 216 では禁止です。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -27,87 +27,95 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ---
 # Latest Codex Result
 
-## Goal
+## Loop
 
-- Goal: amami-line-crm user story / ops story / DR readiness matrix and safe verification loop
+- Loop: Loop 216 sanitized role ACL subcategory classifier without restore
 - Date: 2026-06-29
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Stage: Stage 1 inventory created and pushed; Stage 2 safe verification completed
-- Scope type: docs-only matrix plus safe local/static verification
+- Start git status: main...origin/main
+- Scope type: diagnostics-only / docs-only classifier
+- Push: not performed by Loop 216
 
 ## What Changed
 
-- Added docs/17_story_matrix/README.md.
-- Added user_story_status_matrix.md.
-- Added ops_story_status_matrix.md.
-- Added dr_readiness_story_matrix.md.
-- Added verification_matrix.md.
-- Added Obsidian inventory note with Decisions / DevelopmentLog / Risks / Checklist.
-- Updated README, docs index, dev log, Obsidian navigation, and handoff result.
+- Ran a category-only classifier against the Loop 213 repo-external root-only diagnostic log.
+- Recorded only boolean/count output.
+- Added Loop 216 task doc.
+- Added Loop 216 Obsidian log.
+- Updated restore drill runbook, DR matrix, verification matrix, dev log, Obsidian navigation, docs index, and handoff result.
 
-## Matrix Summary
+## Classifier Result
 
-- Product/user stories are partially verified overall.
-- Admin/customer/timeline/alert/RAG mock paths have safe local tests.
-- Real LINE receive/send, OpenAI real API, Supabase DB, production infra, and restore operations are blocked in this goal.
-- Backup export has succeeded.
-- Restore drill has not succeeded.
-- Current restore failure remains role_owner_acl_error_detected with role_owner_acl_error_count=1.
-- DR readiness is not_ready_restore_failed.
+- role_does_not_exist_detected=false
+- role_does_not_exist_count=0
+- owner_required_detected=false
+- owner_required_count=0
+- acl_grant_revoke_detected=false
+- acl_grant_revoke_count=0
+- default_privileges_detected=false
+- default_privileges_count=0
+- policy_owner_detected=false
+- policy_owner_count=0
+- extension_owner_detected=false
+- extension_owner_count=0
+- publication_subscription_owner_detected=false
+- publication_subscription_owner_count=0
+- security_definer_owner_detected=false
+- security_definer_owner_count=0
+- allowlisted_supabase_role_signal_detected=false
+- allowlisted_role_signal_count=0
+- role_placeholder_signal_detected=false
+- role_placeholder_signal_count=0
+- unknown_role_acl_subcategory_detected=true
+- unknown_role_acl_subcategory_count=1
+
+## Decision
+
+- Role placeholder preflight is not selected yet because role_placeholder_signal_detected=false.
+- Extension remediation is not selected because extension_owner_detected=false and Loop 213 extension signal was 0.
+- Staged restore diagnostics is not selected yet because the next smallest safe step is an operator-only subcategory review.
+- Next Loop selected: Loop 217 operator-only raw log review gate.
+- Loop 217 must not paste raw log content, matching lines, role names, SQL statements, object names, row content, dump content, DB URL, or secrets into docs/chat/commits.
 
 ## Safety Boundary
 
-- secret_recorded=false
-- db_url_recorded=false
-- raw_log_displayed=false
+- restore_retried=false
+- pg_restore_restore_executed=false
+- psql_executed=false
+- target_db_created=false
+- role_created=false
+- role_modified=false
 - diagnostic_log_displayed=false
+- diagnostic_log_copied_into_repo=false
+- raw_log_displayed=false
+- matching_line_displayed=false
+- role_name_displayed=false
+- sql_statement_displayed=false
+- object_name_displayed=false
 - dump_content_displayed=false
 - row_content_displayed=false
+- db_url_displayed=false
+- secrets_recorded=false
 - backup_artifact_copied_into_repo=false
 - supabase_connection_executed=false
 - production_db_connection_executed=false
-- restore_executed=false
-- pg_restore_executed=false
-- pg_dump_executed=false
-- psql_executed=false
+- production_restore_executed=false
 - line_real_send_executed=false
 - openai_api_call_executed=false
 - nginx_dns_https_certbot_public_smoke_executed=false
-- package_changed=false
-- cluster_changed=false
-- db_changed=false
 - production_runtime_changed=false
+- push_performed=false
 
-## Verification Plan
+## DR Readiness
 
-- git diff --check
-- docs link check
-- secret pattern boolean check
-- npx pnpm@10.12.1 lint
-- npx pnpm@10.12.1 typecheck
-- npx pnpm@10.12.1 test
-- npx pnpm@10.12.1 test:integration
-
-## Verification Result
-
-- git diff --check: passed
-- docs link check: passed
-- changed-file secret pattern boolean check: passed
-- npx pnpm@10.12.1 lint: passed
-- npx pnpm@10.12.1 typecheck: passed
-- npx pnpm@10.12.1 test: passed, 199 files passed / 1 skipped, 1212 tests passed / 4 skipped
-- npx pnpm@10.12.1 test:integration: passed, 199 files passed / 1 skipped, 1212 tests passed / 4 skipped
-
-## Risks / Follow-Up
-
-- Matrix status is an inventory, not a fresh production smoke.
-- Some operational facts can drift and must be rechecked in dedicated approved loops.
-- DR readiness remains incomplete until restore succeeds and sanitized validation passes.
-- Future high-risk work must stay split into small loop-engineering tasks.
+- backup_export_status=success
+- restore_drill_status=failed
+- remaining_role_acl_subcategory=unknown
+- dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- High-risk follow-up after this goal: Loop 216 sanitized role ACL subcategory classifier without restore
+- Loop 217: operator-only raw log review gate
 ---
 
 出力形式:
@@ -124,10 +132,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Obsidian確認
 -
 
-### matrix completeness確認
+### handoff確認
 -
 
-### residual risk
+### classifier結果の解釈確認
+-
+
+### 次Loop選定確認
+-
+
+### 残リスク
 -
 
 ### next Loop候補

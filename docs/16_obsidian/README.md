@@ -54,6 +54,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 214.1 dry-runs those templates with sanitized Loop 213 / Loop 214 results and keeps restore, `pg_restore`, `psql`, Supabase, production runtime, raw logs, dump contents, row contents, DB URLs, and secrets untouched.
 - Loop 215 records the role/owner/ACL follow-up remediation gate, rejects repeating the same retry or accepting nonzero exit, and recommends Loop 216 operator-only role ACL subcategory review without raw log exposure.
 - Goal story matrix inventory adds `docs/17_story_matrix/` for user stories, ops stories, DR readiness, and safe verification boundaries before the next high-risk restore remediation loop.
+- Loop 216 runs a category-only classifier against the Loop 213 repo-external root-only diagnostic log, records only boolean/count output, leaves the subcategory unknown, and recommends Loop 217 operator-only raw log review gate.
 
 ## .obsidian Policy
 

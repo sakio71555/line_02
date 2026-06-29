@@ -533,6 +533,66 @@ restore_retry_requires_new_approval=true
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## 20. Loop 216 Sanitized Role ACL Subcategory Classifier
+
+Loop 216 ran a category-only classifier against the repo-external root-only Loop 213 diagnostic log. It did not rerun restore, run `pg_restore`, run `psql`, create a target DB, create or modify roles, copy diagnostic logs into the repo, display raw logs, display matching lines, display role names, display SQL statements, display object names, touch the backup artifact, connect to Supabase, or change production runtime.
+
+### 20.1 Classifier Boundary
+
+```txt
+classifier_target=loop213_repo_external_root_only_diagnostic_log
+diagnostic_log_found=true
+diagnostic_log_repo_path=false
+diagnostic_log_displayed=false
+diagnostic_log_copied_into_repo=false
+matching_line_displayed=false
+role_name_displayed=false
+sql_statement_displayed=false
+object_name_displayed=false
+```
+
+### 20.2 Subcategory Result
+
+```txt
+role_does_not_exist_detected=false
+role_does_not_exist_count=0
+owner_required_detected=false
+owner_required_count=0
+acl_grant_revoke_detected=false
+acl_grant_revoke_count=0
+default_privileges_detected=false
+default_privileges_count=0
+policy_owner_detected=false
+policy_owner_count=0
+extension_owner_detected=false
+extension_owner_count=0
+publication_subscription_owner_detected=false
+publication_subscription_owner_count=0
+security_definer_owner_detected=false
+security_definer_owner_count=0
+allowlisted_supabase_role_signal_detected=false
+allowlisted_role_signal_count=0
+role_placeholder_signal_detected=false
+role_placeholder_signal_count=0
+unknown_role_acl_subcategory_detected=true
+unknown_role_acl_subcategory_count=1
+```
+
+### 20.3 Decision
+
+The remaining role/owner/ACL signal could not be safely classified into an allowlisted role placeholder, owner-required, ACL/default-privilege, policy-owner, extension-owner, publication/subscription-owner, or security-definer-owner subcategory without exposing raw log details.
+
+```txt
+next_loop=Loop 217: operator-only raw log review gate
+next_loop_reason=sanitized_classifier_unknown
+role_placeholder_preflight_selected=false
+staged_restore_diagnostics_selected=false
+extension_remediation_preflight_selected=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 217 must still keep raw content out of docs/chat/commits. The operator may inspect the root-only diagnostic log directly and return only an allowlisted sanitized subcategory/count decision.
+
 Loop 211 may perform a controlled diagnostic restore only with explicit approval, a fresh isolated target DB, root-only repo-external raw diagnostic log handling, sanitized category extraction, and target cleanup.
 
 ## 16. Loop 211 Controlled Diagnostic Restore Result

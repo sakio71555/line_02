@@ -75,6 +75,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 214.1 Obsidian Log](loop_214_1_handoff_template_dry_run.md)
 - [Loop 215 Role Owner ACL Follow-Up Remediation Gate](../11_codex_tasks/215_role_owner_acl_follow_up_remediation_gate.md)
 - [Loop 215 Obsidian Log](loop_215_role_owner_acl_follow_up_remediation_gate.md)
+- [Loop 216 Sanitized Role ACL Subcategory Classifier](../11_codex_tasks/216_sanitized_role_acl_subcategory_classifier_without_restore.md)
+- [Loop 216 Obsidian Log](loop_216_sanitized_role_acl_subcategory_classifier_without_restore.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -125,6 +127,8 @@ Loop 214.1 status: `latest_codex_result_updated=true`, `latest_gpt_review_prompt
 Loop 215 status: `remediation_gate_created=true`, `same_retry_rejected=true`, `acceptable_nonzero_rejected=true`, `extension_remediation_deferred=true`, `role_placeholder_provisioning_deferred_until_subcategory_known=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `diagnostic_log_displayed=false`, `backup_artifact_touched=false`, `supabase_connection_executed=false`, `production_runtime_changed=false`, `next=Loop 216 operator-only role ACL subcategory review gate without raw log exposure`.
 
 Goal story matrix inventory status: `story_matrix_created=true`, `user_story_matrix_created=true`, `ops_story_matrix_created=true`, `dr_readiness_matrix_created=true`, `verification_matrix_created=true`, `dr_readiness_status=not_ready_restore_failed`, `unsafe_verification_blocked=true`.
+
+Loop 216 status: `subcategory_classifier_executed=true`, `diagnostic_log_displayed=false`, `matching_line_displayed=false`, `role_name_displayed=false`, `sql_statement_displayed=false`, `object_name_displayed=false`, `unknown_role_acl_subcategory_detected=true`, `next=Loop 217 operator-only raw log review gate`.
 
 ## Obsidian Helpers
 

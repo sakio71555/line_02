@@ -34,6 +34,20 @@ These checks are not allowed in this goal.
 | BV-007 | Nginx/DNS/HTTPS/certbot/public smoke | Public exposure and infra changes are prohibited. | false | false | true | true | false | false | false | true | dedicated infra loop with approval |
 | BV-008 | Package or cluster changes | package/cluster changes are prohibited. | false | false | true | false | false | false | false | true | dedicated package/cluster loop |
 
+## Loop 216 Verification Note
+
+```txt
+loop_216_classifier_executed=true
+loop_216_classifier_mode=category_only_boolean_count
+loop_216_raw_log_displayed=false
+loop_216_matching_line_displayed=false
+loop_216_role_name_displayed=false
+loop_216_sql_statement_displayed=false
+loop_216_object_name_displayed=false
+loop_216_unknown_role_acl_subcategory_detected=true
+loop_216_next_loop=Loop 217 operator-only raw log review gate
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.
