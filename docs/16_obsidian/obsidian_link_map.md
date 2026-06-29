@@ -9,6 +9,11 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Development Loop](../08_dev_loop.md)
 - [Development Logs](../14_dev_logs/README.md)
 - [Codex / ChatGPT Handoff](../16_handoff/README.md)
+- [Story Matrix](../17_story_matrix/README.md)
+- [User Story Status Matrix](../17_story_matrix/user_story_status_matrix.md)
+- [Ops Story Status Matrix](../17_story_matrix/ops_story_status_matrix.md)
+- [DR Readiness Story Matrix](../17_story_matrix/dr_readiness_story_matrix.md)
+- [Verification Matrix](../17_story_matrix/verification_matrix.md)
 - [Latest Codex Result Template](../16_handoff/latest_codex_result.md)
 - [Latest GPT Review Prompt Template](../16_handoff/latest_gpt_review_prompt.md)
 - [Latest Dev Log: 2026-06-28](../14_dev_logs/2026-06-28.md)
@@ -70,6 +75,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 214.1 Obsidian Log](loop_214_1_handoff_template_dry_run.md)
 - [Loop 215 Role Owner ACL Follow-Up Remediation Gate](../11_codex_tasks/215_role_owner_acl_follow_up_remediation_gate.md)
 - [Loop 215 Obsidian Log](loop_215_role_owner_acl_follow_up_remediation_gate.md)
+- [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
@@ -117,6 +123,8 @@ Loop 213 status: `restore_retry_executed=true`, `restore_attempt_count=1`, `rest
 Loop 214.1 status: `latest_codex_result_updated=true`, `latest_gpt_review_prompt_updated=true`, `handoff_dry_run_completed=true`, `secret_recorded=false`, `raw_log_displayed=false`, `dump_content_displayed=false`, `row_content_displayed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `production_runtime_changed=false`, `next=Loop 215 role owner ACL follow-up remediation gate`.
 
 Loop 215 status: `remediation_gate_created=true`, `same_retry_rejected=true`, `acceptable_nonzero_rejected=true`, `extension_remediation_deferred=true`, `role_placeholder_provisioning_deferred_until_subcategory_known=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `diagnostic_log_displayed=false`, `backup_artifact_touched=false`, `supabase_connection_executed=false`, `production_runtime_changed=false`, `next=Loop 216 operator-only role ACL subcategory review gate without raw log exposure`.
+
+Goal story matrix inventory status: `story_matrix_created=true`, `user_story_matrix_created=true`, `ops_story_matrix_created=true`, `dr_readiness_matrix_created=true`, `verification_matrix_created=true`, `dr_readiness_status=not_ready_restore_failed`, `unsafe_verification_blocked=true`.
 
 ## Obsidian Helpers
 

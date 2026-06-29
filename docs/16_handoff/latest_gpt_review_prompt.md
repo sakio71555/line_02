@@ -5,19 +5,21 @@ Copy the block below into ChatGPT. It already includes the sanitized latest Code
 Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, or production logs.
 
 ```text
-以下は amami-line-crm の最新Codex Loop完了結果です。
+以下は amami-line-crm の最新Codex Goal結果です。
 
 目的:
-- Codexの作業結果をレビューしてください。
+- user story / ops story / DR readiness matrix の内容をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
 - safety boundaryが守られているか確認してください。
-- docs / dev log / Obsidian / runbook / handoff の記録漏れがあれば指摘してください。
-- 次Loopへ進む前に確認すべきリスクを整理してください。
+- Obsidian/dev log/handoffの記録漏れがあれば指摘してください。
+- matrix completenessを確認してください。
+- residual riskを整理してください。
+- 次Loop候補を確認してください。
+- 大きな実装へ進まず、小さいLoopに分解する方針でレビューしてください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、PII、本番ログの提示は求めないでください。
-- 追加実装を急がず、必要なら小さいLoopに分割してください。
-- production statusはCodex結果に書かれた状態を正としてください。
+- Supabase接続、restore、pg_restore、pg_dump、psql、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smokeはこのGoalでは禁止です。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -25,93 +27,78 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ---
 # Latest Codex Result
 
-## Loop
+## Goal
 
-- Loop: Loop 215 role owner ACL follow-up remediation gate
+- Goal: amami-line-crm user story / ops story / DR readiness matrix and safe verification loop
 - Date: 2026-06-29
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Goal: Decide the next smallest remediation after Loop 213 still failed with one remaining role/owner/ACL signal.
-- Scope type: docs-only gate
+- Stage: Stage 1 inventory created; Stage 2 safe verification pending
+- Scope type: docs-only matrix plus safe local/static verification
 
-## Source Evidence
+## What Changed
 
-- Loop 211: role_owner_acl_error_count=14, extension_missing_count=6, schema_or_sql_statement_error_count=17
-- Loop 213: explicit --no-owner --no-privileges retry, pg_restore_exit_code=1, restore_drill_status=failed
-- Loop 213: role_owner_acl_error_count=1, extension_missing_count=0, schema_or_sql_statement_count=0
-- Loop 213: restore_target_dropped=true, target_db_exists_after_drop=false, cleanup_required=false
-- Loop 213: raw_log_displayed=false, dump_content_displayed=false, row_content_displayed=false, secrets_recorded=false
+- Added docs/17_story_matrix/README.md.
+- Added user_story_status_matrix.md.
+- Added ops_story_status_matrix.md.
+- Added dr_readiness_story_matrix.md.
+- Added verification_matrix.md.
+- Added Obsidian inventory note with Decisions / DevelopmentLog / Risks / Checklist.
+- Updated README, docs index, dev log, Obsidian navigation, and handoff result.
 
-## Status
+## Matrix Summary
 
-- Start git status: main...origin/main
-- End git status before commit: pending
-- Commit hash: pending
-- Push: pending
-- Production status: unchanged
-
-## Decision
-
-- Repeating the same --no-owner --no-privileges retry is rejected.
-- Accepting pg_restore_exit_code=1 as acceptable is rejected.
-- Extension remediation is deferred because Loop 213 extension_missing_count=0.
-- Role placeholder provisioning is deferred until the remaining role/ACL subcategory is known.
-- Recommended next Loop: Loop 216 operator-only role ACL subcategory review gate without raw log exposure.
-
-## Verification
-
-- git diff --check: passed
-- docs link check: passed
-- secret pattern boolean check: passed
-- npx pnpm@10.12.1 lint: passed
-- typecheck/test/test:integration: skipped because this is docs-only
+- Product/user stories are partially verified overall.
+- Admin/customer/timeline/alert/RAG mock paths have safe local tests.
+- Real LINE receive/send, OpenAI real API, Supabase DB, production infra, and restore operations are blocked in this goal.
+- Backup export has succeeded.
+- Restore drill has not succeeded.
+- Current restore failure remains role_owner_acl_error_detected with role_owner_acl_error_count=1.
+- DR readiness is not_ready_restore_failed.
 
 ## Safety Boundary
 
-- restore_executed=false
-- pg_restore_executed=false
-- psql_executed=false
-- target_db_created=false
-- target_db_changed=false
-- vps_package_changed=false
-- cluster_changed=false
-- db_changed=false
-- diagnostic_log_displayed=false
-- diagnostic_log_copied_into_repo=false
+- secret_recorded=false
+- db_url_recorded=false
 - raw_log_displayed=false
+- diagnostic_log_displayed=false
 - dump_content_displayed=false
 - row_content_displayed=false
-- db_url_displayed=false
-- secrets_recorded=false
-- backup_artifact_touched=false
 - backup_artifact_copied_into_repo=false
 - supabase_connection_executed=false
 - production_db_connection_executed=false
-- production_restore_executed=false
-- line_send_executed=false
+- restore_executed=false
+- pg_restore_executed=false
+- pg_dump_executed=false
+- psql_executed=false
+- line_real_send_executed=false
 - openai_api_call_executed=false
 - nginx_dns_https_certbot_public_smoke_executed=false
+- package_changed=false
+- cluster_changed=false
+- db_changed=false
 - production_runtime_changed=false
 
-## Result Summary
+## Verification Plan
 
-- remediation_gate_created=true
-- same_retry_rejected=true
-- acceptable_nonzero_rejected=true
-- extension_remediation_deferred=true
-- role_placeholder_provisioning_deferred_until_subcategory_known=true
-- recommended_next_loop=Loop 216 operator-only role ACL subcategory review gate without raw log exposure
-- dr_readiness_status=not_ready_restore_failed
+- git diff --check
+- docs link check
+- secret pattern boolean check
+- npx pnpm@10.12.1 lint
+- npx pnpm@10.12.1 typecheck
+- npx pnpm@10.12.1 test
+- npx pnpm@10.12.1 test:integration
 
 ## Risks / Follow-Up
 
-- The exact remaining role/ACL subcategory is still unknown.
-- Raw diagnostic logs may contain sensitive object details and must remain root-only.
-- Role placeholder provisioning before subcategory refinement could add unnecessary local target state.
-- DR readiness remains incomplete until restore succeeds and sanitized validation runs.
+- Matrix status is an inventory, not a fresh production smoke.
+- Some operational facts can drift and must be rechecked in dedicated approved loops.
+- DR readiness remains incomplete until restore succeeds and sanitized validation passes.
+- Future high-risk work must stay split into small loop-engineering tasks.
 
 ## Next Loop Candidate
 
-- Loop 216: operator-only role ACL subcategory review gate without raw log exposure
+- Stage 2: safe verification loop for the matrix docs
+- High-risk follow-up after this goal: Loop 216 sanitized role ACL subcategory classifier without restore
 ---
 
 出力形式:
@@ -125,12 +112,15 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### safety確認
 -
 
-### 記録漏れ
+### Obsidian確認
 -
 
-### 残リスク
+### matrix completeness確認
 -
 
-### 次Loop提案
+### residual risk
+-
+
+### next Loop候補
 -
 ```

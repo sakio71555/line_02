@@ -116,6 +116,7 @@ This repository is intended to be opened as an Obsidian Vault. Start from [OBSID
 - Runbooks are stored in [docs/15_runbooks](docs/15_runbooks/).
 - Obsidian helpers are stored in [docs/16_obsidian](docs/16_obsidian/).
 - Codex to ChatGPT handoff templates are stored in [docs/16_handoff](docs/16_handoff/).
+- User story / ops story / DR readiness matrices are stored in [docs/17_story_matrix](docs/17_story_matrix/).
 - GitHub-pushed Markdown is the development log source of truth.
 - `.obsidian/workspace*`, `.obsidian/cache`, `.obsidian/plugins`, and `.obsidian/themes` are ignored because they are local personal state.
 

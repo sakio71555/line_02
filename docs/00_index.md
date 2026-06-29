@@ -51,3 +51,7 @@
 - `12_prompts/`: Codex作業依頼、レビュー依頼、AI要約、AI返信下書きのプロンプト
 - `13_templates/`: タスク、ADR、機能仕様、バグ報告のテンプレート
 - `16_handoff/`: Codex完了結果とChatGPTレビュー依頼の手動handoffテンプレート
+
+## Story Matrix
+
+- `17_story_matrix/`: user story、ops story、DR readiness、verification matrix。safe-to-run検証とoperator approval required項目を分けて管理します。
