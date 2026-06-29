@@ -41,6 +41,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 204 Obsidian Log](loop_204_postgresql_17_client_installation_approval_and_execution.md)
 - [Loop 205 pg_dump 17 Backup Export Retry](../11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md)
 - [Loop 205 Obsidian Log](loop_205_pg_dump_17_explicit_path_backup_export_retry.md)
+- [Loop 206 Restore Drill Planning](../11_codex_tasks/206_restore_drill_planning_without_production_restore.md)
+- [Loop 206 Obsidian Log](loop_206_restore_drill_planning_without_production_restore.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -52,6 +54,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Supabase Backup Tooling Installation Preflight](../15_runbooks/supabase_backup_tooling_installation_preflight.md)
 - [Supabase Backup Export Controlled Execution](../15_runbooks/supabase_backup_export_controlled_execution.md)
 - [pg_dump 17 Client Boundary And Backup Mismatch](../15_runbooks/pg_dump_17_client_boundary_and_backup_mismatch.md)
+- [Restore Drill Planning](../15_runbooks/restore_drill_planning.md)
 
 Loop 202 status: `pg_dump_failure_categories=pg_dump_server_version_mismatch`, `detected_server_major_or_version=17.6`, `detected_pg_dump_major_or_version=16.14`, `next=Loop 203 PostgreSQL 17 client installation preflight`.
 
@@ -62,6 +65,8 @@ Loop 203 status: `vps_preflight_status=completed_read_only`, `current_pg_dump_ma
 Loop 204 status: `postgresql_client_17_installed=true`, `pg_dump_17_path_present=true`, `pg_dump_17_version_check_passed=true`, `pg_dump_16_preserved=true`, `db_export_executed=false`, `backup_artifact_created=false`, `restore_executed=false`, `loop_205_backup_export_retry_ready=true_after_operator_approval`.
 
 Loop 205 status: `pg_dump_17_explicit_path_used=true`, `pg_dump_attempt_count=1`, `backup_export_status=success`, `backup_artifact_created=true`, `backup_artifact_in_repo=false`, `restore_executed=false`, `secrets_recorded=false`, `raw_log_displayed=false`.
+
+Loop 206 status: `restore_drill_plan_created=true`, `restore_executed=false`, `production_restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `backup_artifact_copied_into_repo=false`, `dump_content_displayed=false`, `secrets_recorded=false`, `loop_207_restore_drill_execution_ready=false_pending_operator_approval_and_target_selection`.
 
 ## Obsidian Helpers
 

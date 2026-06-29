@@ -32,6 +32,7 @@
 - Loop 203 PostgreSQL 17 client installation preflight: `11_codex_tasks/203_postgresql_17_client_installation_preflight.md`
 - Loop 204 PostgreSQL 17 client installation: `11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md`
 - Loop 205 pg_dump 17 backup export retry: `11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md`
+- Loop 206 restore drill planning without production restore: `11_codex_tasks/206_restore_drill_planning_without_production_restore.md`
 
 ## Prompts and Templates
 

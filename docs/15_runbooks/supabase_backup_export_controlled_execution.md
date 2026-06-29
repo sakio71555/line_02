@@ -216,3 +216,25 @@ dump_contents_displayed=false
 ```
 
 The artifact may contain production data and remains outside the repository. Do not copy it into Git, chat, or docs. Restore is still blocked until a separate explicit restore drill Loop.
+
+## 15. Loop 206 Restore Drill Planning Result
+
+Loop 206 planned the restore drill for the Loop 205 artifact without executing restore or connecting to any database.
+
+```txt
+restore_drill_plan_created=true
+restore_executed=false
+production_restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_executed=false
+migration_executed=false
+rls_changed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+secrets_recorded=false
+loop_207_restore_drill_execution_ready=false_pending_operator_approval_and_target_selection
+```
+
+Allowed future targets are isolated local PostgreSQL, a disposable non-production database, or a Supabase-separated verification database. Production restore remains forbidden. The future execution Loop must verify artifact metadata and use the explicit PostgreSQL 17 `pg_restore` path before attempting restore.

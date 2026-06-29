@@ -491,6 +491,8 @@ Loop 204 PostgreSQL 17 client installation approval and executionでは、VPSへ
 
 Loop 205 pg_dump 17 explicit path backup export retryでは、operator承認のもと `/usr/lib/postgresql/17/bin/pg_dump` を明示pathで使い、Supabase DB backup exportを1回だけ実行しました。`backup_export_status=success`、artifactはrepo外root-only directoryへ作成し、path/size/checksum/permissionのみ記録しています。DB URL、secret、raw log、dump内容は記録せず、restoreは未実行です。詳細は [docs/11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md](docs/11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md) と [docs/16_obsidian/loop_205_pg_dump_17_explicit_path_backup_export_retry.md](docs/16_obsidian/loop_205_pg_dump_17_explicit_path_backup_export_retry.md) を参照してください。
 
+Loop 206 restore drill planning without production restoreでは、Loop 205のbackup artifactについて復元訓練の候補環境、artifact検証範囲、Go/No-Go、停止条件を整理しました。restore、pg_restore、psql、Supabase接続、production restore、dump内容表示、secret記録は行っていません。詳細は [docs/11_codex_tasks/206_restore_drill_planning_without_production_restore.md](docs/11_codex_tasks/206_restore_drill_planning_without_production_restore.md)、[docs/15_runbooks/restore_drill_planning.md](docs/15_runbooks/restore_drill_planning.md)、[docs/16_obsidian/loop_206_restore_drill_planning_without_production_restore.md](docs/16_obsidian/loop_206_restore_drill_planning_without_production_restore.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

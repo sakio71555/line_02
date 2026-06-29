@@ -37,6 +37,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 203 PostgreSQL 17 client installation preflight records Ubuntu 24.04.3 / PostgreSQL client 16 state, notes that current APT cache does not expose `postgresql-client-17`, and keeps install/export/restore unexecuted.
 - Loop 204 PostgreSQL 17 client installation records PGDG source/key addition, `postgresql-client-17 17.10` installation, `libpq5` dependency upgrade, explicit pg_dump 17 path verification, and keeps DB export/restore unexecuted.
 - Loop 205 pg_dump 17 explicit path backup export retry records one operator-approved export attempt, `backup_export_status=success`, root-only repo-external artifact metadata, and keeps restore blocked for a separate Loop.
+- Loop 206 restore drill planning records isolated non-production restore target options, Go/No-Go conditions, artifact verification scope, and keeps `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, and `production_restore_executed=false`.
 
 ## .obsidian Policy
 
