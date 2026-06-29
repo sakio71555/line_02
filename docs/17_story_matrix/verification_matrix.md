@@ -20,6 +20,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-010 | Obsidian completeness | ensure Decisions / DevelopmentLog / Risks / Checklist exist | all four sections present | true | false | false | false | false | false | false | false | passed_stage_2 | Required by this goal. |
 | V-011 | Operator-only review protocol | docs-only check that Loop 217 defines sanitized `key=value` format and pending operator result | protocol exists and raw log exposure remains false | true | false | false | false | false | false | false | false | pending_loop_217_verification | Does not inspect diagnostic logs. |
 | V-012 | Staged diagnostics plan | docs-only check that Loop 218 records operator sanitized result and phase diagnostics plan | role placeholder No-Go and staged plan recorded | true | false | false | false | false | false | false | false | pending_loop_218_verification | Does not execute restore or `pg_restore`. |
+| V-013 | Staged diagnostics execution gate | docs-only check that Loop 219 selects one next stage and defines the execution boundary | `toc_count_only` selected and no execution performed | true | false | false | false | false | false | false | false | pending_loop_219_verification | Does not execute `pg_restore --list`. |
 
 ## Blocked Or Operator Approval Required
 
@@ -85,6 +86,24 @@ loop_218_role_created=false
 loop_218_raw_log_displayed=false
 loop_218_toc_body_displayed=false
 loop_218_next_loop=Loop 219 staged restore diagnostics execution gate
+```
+
+## Loop 219 Verification Note
+
+```txt
+loop_219_staged_diagnostics_gate_created=true
+loop_219_next_stage_selected=true
+loop_219_selected_next_diagnostic_stage=toc_count_only
+loop_219_restore_executed=false
+loop_219_pg_restore_executed=false
+loop_219_psql_executed=false
+loop_219_target_db_created=false
+loop_219_role_created=false
+loop_219_toc_body_displayed=false
+loop_219_object_name_displayed=false
+loop_219_sql_statement_displayed=false
+loop_219_role_name_displayed=false
+loop_219_next_loop=Loop 220 TOC count-only staged restore diagnostic execution
 ```
 
 ## Stage 2 Rule

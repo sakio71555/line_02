@@ -521,6 +521,8 @@ Loop 217 operator-only raw log review gateでは、Loop 216で残った `unknown
 
 Loop 218 staged restore diagnostics planでは、operator sanitized resultを `unknown_after_operator_review` として記録し、role placeholderは現時点No-Goにしました。次はpre-data/data/post-data/schema-only/TOC countなどの段階診断を計画しますが、このLoopではrestore、pg_restore、psql、target DB作成、role作成、raw log表示、Supabase接続、production restoreは行っていません。詳細は [docs/11_codex_tasks/218_staged_restore_diagnostics_plan.md](docs/11_codex_tasks/218_staged_restore_diagnostics_plan.md) と [docs/16_obsidian/loop_218_staged_restore_diagnostics_plan.md](docs/16_obsidian/loop_218_staged_restore_diagnostics_plan.md) を参照してください。
 
+Loop 219 staged restore diagnostics execution gateでは、次に実行する診断stageを `toc_count_only` に絞りました。TOC count / section countのみを最初に実行候補とし、TOC本文やobject/table/function/policy名は表示しない境界を定義しています。このLoopではrestore、pg_restore、psql、target DB作成、role作成、Supabase接続、production restore、TOC本文表示は行っていません。詳細は [docs/11_codex_tasks/219_staged_restore_diagnostics_execution_gate.md](docs/11_codex_tasks/219_staged_restore_diagnostics_execution_gate.md) と [docs/16_obsidian/loop_219_staged_restore_diagnostics_execution_gate.md](docs/16_obsidian/loop_219_staged_restore_diagnostics_execution_gate.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

@@ -1,82 +1,94 @@
 # Latest Codex Result
 
-This file summarizes Loop 218 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 219 in a paste-ready, sanitized format for ChatGPT review.
 
-Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names copied from raw logs, SQL statements, object names, TOC bodies, or production logs.
+Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, or production logs.
 
 ## Loop
 
-- Loop: Loop 218 staged restore diagnostics plan
+- Loop: Loop 219 staged restore diagnostics execution gate
 - Date: 2026-06-29
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only staged diagnostics plan
+- Scope type: docs-only execution gate
 - Commit hash: see final Codex report after commit
 - Push: planned after validation
 
 ## Source Evidence
 
-- Loop 217 commit: `340f166 docs: add operator-only restore log review gate`
-- Loop 217 result: operator-only review protocol created
-- Operator sanitized result: `operator_subcategory_selected=unknown_after_operator_review`
-- Operator confidence: `low`
-- DR readiness before Loop 218: `not_ready_restore_failed`
+- Loop 218 commit: `9de0b46 docs: plan staged restore diagnostics`
+- Loop 218 result: `operator_subcategory_selected=unknown_after_operator_review`
+- Loop 218 result: `role_placeholder_no_go=true`
+- Loop 218 result: `staged_restore_diagnostics_plan_created=true`
+- DR readiness before Loop 219: `not_ready_restore_failed`
 
-## Operator Sanitized Result
+## Loop 218 Result Summary
 
 ```txt
-operator_raw_log_review_executed=true
 operator_subcategory_selected=unknown_after_operator_review
 operator_subcategory_confidence=low
-log_exists=true
-log_size_bytes=167
-log_line_count=1
-pg_restore_error_count=1
-pg_restore_fatal_count=1
-pg_restore_warning_count=0
-pg_restore_toc_count=0
-pg_restore_ignored_errors_count=0
-role_does_not_exist_confirmed=false
-owner_required_confirmed=false
-acl_grant_revoke_confirmed=false
-default_privileges_confirmed=false
-policy_owner_confirmed=false
-extension_owner_confirmed=false
-extension_missing_confirmed=false
-schema_or_sql_statement_confirmed=false
-target_cluster_issue_confirmed=false
+role_placeholder_no_go=true
+staged_restore_diagnostics_plan_created=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+role_created=false
 raw_log_displayed=false
-matching_line_displayed=false
-role_name_disclosed=false
-sql_statement_disclosed=false
-object_name_disclosed=false
+toc_body_displayed=false
+dr_readiness_status=not_ready_restore_failed
 ```
 
-## What Changed
+## Candidate Comparison
 
-- Added Loop 218 task doc.
-- Added Loop 218 Obsidian log.
-- Recorded the operator sanitized result without raw log exposure.
-- Marked role placeholder remediation as No-Go.
-- Added staged restore diagnostics plan for pre-data, data, post-data, schema-only, and TOC count/section diagnostics.
-- Updated restore drill runbook, DR readiness matrix, verification matrix, dev log, README, docs index, Obsidian navigation, and handoff latest files.
+| Candidate | Decision | Reason |
+| --- | --- | --- |
+| TOC count / section count only | Selected first | Lowest-risk and no target DB required. |
+| pre-data only | Next candidate | Useful after TOC structure is known. |
+| schema-only | Later candidate | Useful if schema-level failure remains plausible. |
+| data only | Later | Requires prepared schema and no-row-output handling. |
+| post-data only | Later | Post-data objects can expose sensitive names if boundaries slip. |
 
-## Decision
+## Selected Next Diagnostic Stage
 
-- `role_placeholder_no_go=true`
-- Reason: operator selected `unknown_after_operator_review`, `role_does_not_exist_confirmed=false`, and no role name may be recorded.
-- Next direction: staged restore diagnostics planning.
-- Next execution should not be a broad full restore retry.
+```txt
+next_stage_selected=true
+selected_next_diagnostic_stage=toc_count_only
+selected_next_diagnostic_stage_reason=lowest_risk_no_target_db_required
+role_placeholder_selected=false
+restore_retry_selected=false
+```
 
-## Staged Diagnostics Plan
+## Next Loop Execution Boundary
 
-- pre-data only: identify schema/pre-data setup failure.
-- data only: identify data-phase failure without row display.
-- post-data only: identify post-data/index/constraint/policy/ACL residue.
-- schema-only: identify schema-level failure without SQL text display.
-- TOC count/section classification: count sections without displaying TOC entries.
+Recommended next Loop:
 
-Future execution must select exactly one phase and record only phase, exit code, booleans, counts, and allowlisted category.
+```txt
+Loop 220: TOC count-only staged restore diagnostic execution
+```
+
+Boundary:
+
+```txt
+pg_restore_17_explicit_path_required=true
+bare_pg_restore_allowed=false
+diagnostic_phase=toc_count_only
+diagnostic_attempt_count=1
+target_db_created=false
+target_db_required=false
+raw_stdout_stderr_repo_external_root_only=true
+toc_body_repo_external_root_only=true
+toc_body_displayed=false
+object_name_displayed=false
+table_name_displayed=false
+function_name_displayed=false
+policy_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+```
 
 ## Verification
 
@@ -97,12 +109,14 @@ Future execution must select exactly one phase and record only phase, exit code,
 - target_db_changed=false
 - role_created=false
 - role_modified=false
-- diagnostic_log_body_displayed=false
-- pg_restore_list_body_displayed=false
-- matching_line_displayed=false
-- role_name_displayed=false
-- sql_statement_displayed=false
+- diagnostic_log_displayed=false
+- toc_body_displayed=false
 - object_name_displayed=false
+- table_name_displayed=false
+- function_name_displayed=false
+- policy_name_displayed=false
+- sql_statement_displayed=false
+- role_name_displayed=false
 - dump_content_displayed=false
 - row_content_displayed=false
 - db_url_displayed=false
@@ -122,16 +136,17 @@ Future execution must select exactly one phase and record only phase, exit code,
 
 - backup_export_status=success
 - restore_drill_status=failed
-- staged_restore_diagnostics_plan_created=true
+- staged_diagnostics_gate_created=true
+- selected_next_diagnostic_stage=toc_count_only
 - dr_readiness_status=not_ready_restore_failed
 
 ## Risks / Follow-Up
 
+- TOC body may expose object names and must remain hidden.
+- Future execution must not become a broad restore retry.
 - Restore has not succeeded.
-- Future staged diagnostics can still produce sensitive raw output if boundaries are not followed.
-- TOC bodies may reveal object names and must not be displayed.
-- Role placeholder remediation may still become relevant later, but current evidence is insufficient.
+- Role placeholder remediation remains No-Go until evidence changes.
 
 ## Next Loop Candidate
 
-- Loop 219: staged restore diagnostics execution gate
+- Loop 220: TOC count-only staged restore diagnostic execution

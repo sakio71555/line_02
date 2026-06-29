@@ -1200,3 +1200,132 @@ Stop / No-Go:
 next_loop=Loop 219 staged restore diagnostics execution gate
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 23. Loop 219 Staged Restore Diagnostics Execution Gate
+
+Loop 219 selects the first future staged diagnostic and defines the execution boundary. It does not execute restore, `pg_restore`, `psql`, create a target DB, create roles, display raw logs, display TOC body, connect to Supabase, or touch production.
+
+### 23.1 Candidate Comparison
+
+| Candidate | What it can answer | Relative risk | Target DB needed | Selected order |
+| --- | --- | --- | --- | --- |
+| TOC count / section count only | What restore sections exist without exposing TOC entries. | Lowest | No | 1 |
+| pre-data only | Whether schema/pre-data setup fails before data load. | Medium | Yes | 2 |
+| schema-only | Whether schema-level restore fails without data. | Medium | Yes | 3 |
+| data only | Whether data-phase restore fails after schema is prepared. | Higher | Yes | Later |
+| post-data only | Whether indexes, constraints, policies, ACL residue, or post-data objects fail. | Higher | Yes | Later |
+
+### 23.2 Selected Next Stage
+
+```txt
+next_diagnostic_stage_selected=true
+selected_next_diagnostic_stage=toc_count_only
+selected_next_diagnostic_stage_reason=lowest_risk_no_target_db_required
+role_placeholder_selected=false
+restore_retry_selected=false
+```
+
+TOC count / section count only is selected first because it can provide dump structure counts without creating a target DB. The TOC body is still sensitive and must not be displayed or committed.
+
+### 23.3 Next Loop Execution Boundary
+
+Recommended next Loop:
+
+```txt
+Loop 220: TOC count-only staged restore diagnostic execution
+```
+
+Loop 220 may run exactly one TOC count-only diagnostic after explicit operator approval.
+
+```txt
+pg_restore_17_explicit_path_required=true
+bare_pg_restore_allowed=false
+diagnostic_phase=toc_count_only
+diagnostic_attempt_count=1
+target_db_created=false
+target_db_required=false
+raw_stdout_stderr_repo_external_root_only=true
+toc_body_repo_external_root_only=true
+toc_body_displayed=false
+object_name_displayed=false
+table_name_displayed=false
+function_name_displayed=false
+policy_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+```
+
+### 23.4 Allowed Future Result Fields
+
+```txt
+diagnostic_phase=toc_count_only
+pg_restore_version_checked=true/false
+toc_count_diagnostic_executed=true/false
+toc_total_entry_count=<number_or_not_executed>
+toc_section_pre_data_count=<number_or_not_executed>
+toc_section_data_count=<number_or_not_executed>
+toc_section_post_data_count=<number_or_not_executed>
+toc_unknown_section_count=<number_or_not_executed>
+pg_restore_exit_code=<number_or_not_executed>
+sanitized_category=<allowlisted_category_or_unknown>
+toc_body_displayed=false
+object_name_displayed=false
+table_name_displayed=false
+function_name_displayed=false
+policy_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+```
+
+### 23.5 Go / No-Go
+
+Go:
+
+- Operator explicitly approves a single TOC count-only diagnostic.
+- PostgreSQL 17 explicit path is used.
+- TOC body is redirected to repo-external root-only storage.
+- Only counts, section classification, exit code, and sanitized category are recorded.
+- No target DB is created.
+- No restore is run.
+
+No-Go:
+
+- TOC body, object names, table names, function names, policy names, SQL statements, role names, matching lines, row content, dump content, DB URL, or secrets must be displayed.
+- A target DB is required.
+- Production or Supabase connection is required.
+- More than one diagnostic is needed.
+- Any raw output would enter docs, chat, commits, or handoff files.
+
+### 23.6 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+role_created=false
+diagnostic_log_displayed=false
+toc_body_displayed=false
+object_name_displayed=false
+table_name_displayed=false
+function_name_displayed=false
+policy_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_restore_executed=false
+staged_diagnostics_gate_created=true
+next_stage_selected=true
+selected_next_diagnostic_stage=toc_count_only
+dr_readiness_status=not_ready_restore_failed
+```

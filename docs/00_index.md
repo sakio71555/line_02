@@ -48,6 +48,7 @@
 - Loop 216 sanitized role ACL subcategory classifier: `11_codex_tasks/216_sanitized_role_acl_subcategory_classifier_without_restore.md`
 - Loop 217 operator-only raw log review gate: `11_codex_tasks/217_operator_only_raw_log_review_gate.md`
 - Loop 218 staged restore diagnostics plan: `11_codex_tasks/218_staged_restore_diagnostics_plan.md`
+- Loop 219 staged restore diagnostics execution gate: `11_codex_tasks/219_staged_restore_diagnostics_execution_gate.md`
 
 ## Prompts and Templates
 
