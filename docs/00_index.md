@@ -25,6 +25,10 @@
 
 `11_codex_tasks/` にPhaseごとのタスクカードを置きます。各タスクはGoal、Scope、Out of scope、Acceptance Criteria、Files likely affected、Test requirements、Codex Promptを含みます。
 
+## Current Operations Runbooks
+
+- Loop 202 pg_dump 17 client boundary: `15_runbooks/pg_dump_17_client_boundary_and_backup_mismatch.md`
+
 ## Prompts and Templates
 
 - `12_prompts/`: Codex作業依頼、レビュー依頼、AI要約、AI返信下書きのプロンプト

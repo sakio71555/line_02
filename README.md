@@ -481,6 +481,8 @@ Loop 200 Supabase backup tooling installation preflightでは、VPS上でPostgre
 
 Loop 201 Supabase backup export controlled executionでは、`pg_dump` tooling、backup directory、production healthを確認したうえでoperator supplied DB URLの存在だけを確認しました。非対話VPS実行環境にDB URLが注入されていなかったため、`backup_export_status=blocked_operator_secret_not_injected`、`pg_dump executed=false`、`DB export performed=false`、`backup artifact created=false` として安全に停止しました。DB URL値、secret、artifact内容は記録していません。詳細は [docs/11_codex_tasks/201_supabase_backup_export_controlled_execution.md](docs/11_codex_tasks/201_supabase_backup_export_controlled_execution.md) と [docs/15_runbooks/supabase_backup_export_controlled_execution.md](docs/15_runbooks/supabase_backup_export_controlled_execution.md) を参照してください。
 
+Loop 202 pg_dump 17 client boundary and backup mismatch runbookでは、追加事象として Supabase PostgreSQL server `17.6` と VPS `pg_dump` client `16.14` の不一致を `pg_dump_failure_categories=pg_dump_server_version_mismatch` として記録しました。raw log、DB URL、secretは記録せず、pg_dump 17系client導入前はbackup exportを再実行しない方針に固定しています。詳細は [docs/11_codex_tasks/202_pg_dump_17_client_boundary_and_backup_mismatch_runbook.md](docs/11_codex_tasks/202_pg_dump_17_client_boundary_and_backup_mismatch_runbook.md) と [docs/15_runbooks/pg_dump_17_client_boundary_and_backup_mismatch.md](docs/15_runbooks/pg_dump_17_client_boundary_and_backup_mismatch.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

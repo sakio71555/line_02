@@ -31,6 +31,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 199 Supabase Backup Export And Restore Readiness](../11_codex_tasks/199_supabase_backup_export_and_restore_readiness_accelerated_closeout.md)
 - [Loop 200 Supabase Backup Tooling Installation Preflight](../11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md)
 - [Loop 201 Supabase Backup Export Controlled Execution](../11_codex_tasks/201_supabase_backup_export_controlled_execution.md)
+- [Loop 202 pg_dump 17 Client Boundary](../11_codex_tasks/202_pg_dump_17_client_boundary_and_backup_mismatch_runbook.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -41,8 +42,9 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Supabase Backup Export And Restore Readiness Closeout](../15_runbooks/supabase_backup_export_and_restore_readiness_accelerated_closeout.md)
 - [Supabase Backup Tooling Installation Preflight](../15_runbooks/supabase_backup_tooling_installation_preflight.md)
 - [Supabase Backup Export Controlled Execution](../15_runbooks/supabase_backup_export_controlled_execution.md)
+- [pg_dump 17 Client Boundary And Backup Mismatch](../15_runbooks/pg_dump_17_client_boundary_and_backup_mismatch.md)
 
-Loop 201 status: `backup_export_status=blocked_operator_secret_not_injected`, `DB export performed=false`, `backup artifact created=false`, `next=Loop 201.1 operator secret injection retry`.
+Loop 202 status: `pg_dump_failure_categories=pg_dump_server_version_mismatch`, `detected_server_major_or_version=17.6`, `detected_pg_dump_major_or_version=16.14`, `next=Loop 203 PostgreSQL 17 client installation preflight`.
 
 ## Obsidian Helpers
 

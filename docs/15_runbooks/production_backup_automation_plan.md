@@ -589,3 +589,28 @@ secrets_recorded=false
 ```
 
 Automation remains blocked until `Loop 201.1: Supabase backup export operator secret injection retry`.
+
+## 28. Loop 202 pg_dump 17 Client Boundary And Backup Mismatch
+
+Loop 202 records the post-Loop 201 backup mismatch safely. Supabase PostgreSQL server version `17.6` is not export-compatible with the VPS-side `pg_dump` client `16.14`.
+
+```txt
+pg_dump_failure_categories=pg_dump_server_version_mismatch
+detected_server_major_or_version=17.6
+detected_pg_dump_major_or_version=16.14
+raw_log_not_displayed=true
+secrets_recorded=false
+pg_dump_17_client_required=true
+pg_dump_16_retry_allowed=false
+backup_export_retry_before_pg_dump_17=false
+postgresql_client_17_installation_performed=false
+pg_dump reexecuted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+runtime unchanged
+production_readiness=production_go
+```
+
+Automation remains blocked until PostgreSQL client 17 is installed or otherwise made available in a separately approved Loop.

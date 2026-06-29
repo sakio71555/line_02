@@ -127,3 +127,24 @@ The retry must inject the database URL into the same non-interactive execution c
 - [Obsidian README](../16_obsidian/README.md)
 - [Development Log](../14_dev_logs/2026-06-28.md)
 - [Loop 201 Task Doc](../11_codex_tasks/201_supabase_backup_export_controlled_execution.md)
+
+## 11. Loop 202 Version Mismatch Follow-Up
+
+After Loop 201, the backup export failure category was recorded as a PostgreSQL server/client version mismatch. Do not retry export with the PostgreSQL 16 client.
+
+```txt
+pg_dump_failure_categories=pg_dump_server_version_mismatch
+detected_server_major_or_version=17.6
+detected_pg_dump_major_or_version=16.14
+raw_log_not_displayed=true
+secrets_recorded=false
+pg_dump_17_client_required=true
+pg_dump_16_retry_allowed=false
+backup_export_retry_before_pg_dump_17=false
+postgresql_client_17_installation_performed=false
+pg_dump reexecuted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+```
