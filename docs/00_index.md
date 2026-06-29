@@ -28,6 +28,7 @@
 ## Current Operations Runbooks
 
 - Loop 202 pg_dump 17 client boundary: `15_runbooks/pg_dump_17_client_boundary_and_backup_mismatch.md`
+- Loop 202.1 Supabase DB URL secret replacement: `11_codex_tasks/202_1_supabase_db_url_secret_replacement.md`
 
 ## Prompts and Templates
 

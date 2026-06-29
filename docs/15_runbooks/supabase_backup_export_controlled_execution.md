@@ -148,3 +148,22 @@ backup artifact created=false
 restore performed=false
 production_restore_performed=false
 ```
+
+## 12. Loop 202.1 SUPABASE_DB_URL Secret Replacement
+
+The incorrect `SUPABASE_DB_URL` was replaced through operator input and root-only handling. The value is not displayed or recorded.
+
+```txt
+secret_replaced=true
+present=true
+format_check=passed
+secrets_recorded=false
+raw_log_not_displayed=true
+pg_dump reexecuted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+```
+
+Do not use this replacement as approval to retry export. Backup export remains blocked until the PostgreSQL 17 client boundary is resolved in a separate Loop.

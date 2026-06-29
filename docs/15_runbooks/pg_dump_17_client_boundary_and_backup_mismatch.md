@@ -65,9 +65,29 @@ Loop 203: PostgreSQL 17 client installation preflight
 
 Loop 203 should only install or expose a PostgreSQL 17-compatible client after explicit approval. It must not also run `pg_dump` against Supabase, create an artifact, or perform restore.
 
-## 6. Obsidian Links
+## 6. Loop 202.1 SUPABASE_DB_URL Secret Replacement
+
+Loop 202.1 replaced the previously incorrect `SUPABASE_DB_URL` through operator input and root-only handling. The value was not displayed, recorded, or committed.
+
+```txt
+secret_replaced=true
+present=true
+format_check=passed
+secrets_recorded=false
+raw_log_not_displayed=true
+pg_dump reexecuted=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production_restore_performed=false
+```
+
+This replacement does not authorize backup export. The PostgreSQL 17 client boundary above still applies.
+
+## 7. Obsidian Links
 
 - [OBSIDIAN.md](../../OBSIDIAN.md)
 - [Obsidian Link Map](../16_obsidian/obsidian_link_map.md)
 - [Development Log](../14_dev_logs/2026-06-29.md)
 - [Loop 202 Task Doc](../11_codex_tasks/202_pg_dump_17_client_boundary_and_backup_mismatch_runbook.md)
+- [Loop 202.1 Task Doc](../11_codex_tasks/202_1_supabase_db_url_secret_replacement.md)
