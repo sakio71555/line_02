@@ -102,7 +102,8 @@ Recorded after copy-based deploy of Loop 190 implementation to the VPS active so
 vps_retention_dry_run_performed=true
 backup_retention_dry_run=completed
 backup_retention_dry_run_exit=0
-api_direct_health_loop190_backup_retention=200
+api_direct_health_loop190_backup_retention=000
+api_direct_health_loop190_backup_retention_status=not_listening_read_only
 https_api_health_loop190_backup_retention=200
 https_admin_root_loop190_backup_retention=200
 https_admin_customers_loop190_backup_retention=200
