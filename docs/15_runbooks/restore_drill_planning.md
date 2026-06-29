@@ -1679,3 +1679,105 @@ selected_next_stage=Loop 223: pre-data permission/auth remediation gate
 selected_next_stage_reason=pre_data_failed_with_permission_or_auth_signal
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 27. Loop 223 Pre-Data Permission/Auth Remediation Gate
+
+Loop 223 does not run restore, `pg_restore`, `psql`, target DB creation, target DB changes, role changes, package changes, cluster changes, Supabase connections, or production connections. It uses only the sanitized Loop 222 metadata already recorded in repo docs.
+
+### 27.1 Loop 222 Result Inputs
+
+```txt
+pre_data_only_restore_diagnostic_executed=true
+restore_options=--section=pre-data --no-owner --no-privileges
+restore_attempt_count=1
+pg_restore_exit_code=1
+pre_data_diagnostic_status=failed
+classifier=pre_data_permission_error_detected
+permission_or_auth_error_count=1
+sanitized_validation_executed=false
+restore_target_dropped=true
+cleanup_required=false
+raw_log_displayed=false
+matching_line_displayed=false
+object_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_restore_executed=false
+```
+
+### 27.2 Remediation Candidate Decision
+
+| candidate | decision | reason |
+| --- | --- | --- |
+| Local target privilege alignment gate without restore | Selected | Directly addresses permission/auth without DB changes in this Loop. |
+| Restore command option remediation gate | Deferred | Options may help later, but target privilege alignment should be clarified first. |
+| Local role / owner alignment preflight | Fold into selected gate | Useful as checklist design, but execution must remain a separate approved Loop. |
+| Operator-only pre-data permission category review gate | Secondary fallback | Useful if docs-only privilege planning is not enough. |
+| Staged restore retry with adjusted local target owner | No-Go now | Another retry is too early before alignment checks are planned. |
+| Accept pre-data failure as acceptable warning | No-Go | Pre-data failure with exit code 1 and no validation cannot prove DR readiness. |
+
+### 27.3 Selected Next Loop Boundary
+
+```txt
+selected_next_loop=Loop 224: local target privilege alignment gate without restore
+role_placeholder_no_go=true
+restore_retry_no_go=true
+accept_nonzero_exit_no_go=true
+```
+
+Loop 224 should stay docs-only and define a future read-only privilege checklist for target DB owner, restore execution user, connection scope, create schema privilege, database privileges, and local cluster identity.
+
+Loop 224 must not run `psql`, create a target DB, change privileges, create roles, run restore, run `pg_restore`, connect to Supabase/production, or display raw logs.
+
+### 27.4 Go / No-Go
+
+Go:
+
+- Loop 222 result is summarized from sanitized repository docs.
+- Permission/auth is treated as the primary signal.
+- Candidates are compared.
+- One next Loop is selected.
+- Raw log, matching line, object name, SQL statement, role name, dump content, row content, DB URL, and secrets remain hidden.
+- Obsidian and handoff files are updated.
+
+No-Go:
+
+- Raw diagnostic log, matching line, SQL statement, object name, role name, dump content, row content, DB URL, `.env`, or secret display is required.
+- Production or Supabase connection is required.
+- DB or role changes are required.
+- Restore retry is required.
+- Obsidian or handoff updates are missing.
+
+### 27.5 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+target_db_privilege_changed=false
+role_created=false
+role_modified=false
+package_changed=false
+cluster_changed=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+matching_line_displayed=false
+object_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_restore_executed=false
+remediation_gate_created=true
+next_loop_selected=true
+dr_readiness_status=not_ready_restore_failed
+```

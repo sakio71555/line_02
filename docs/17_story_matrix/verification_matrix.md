@@ -24,6 +24,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-014 | TOC count-only diagnostic result | sanitized count-only review of Loop 220 docs and root-only metadata | TOC count recorded, body hidden, next stage selected | true | false | false | false | false | false | false | false | pending_loop_220_verification | Does not display TOC body or prove restore readiness. |
 | V-015 | Pre-data diagnostic gate | docs-only check that Loop 221 defines one-attempt pre-data execution boundary and cleanup policy | pre-data gate created, no execution performed | true | false | false | false | false | false | false | false | pending_loop_221_verification | Does not run restore, `pg_restore`, `psql`, or create a target DB. |
 | V-016 | Pre-data diagnostic execution record | sanitized review of Loop 222 execution metadata, classifier, and cleanup | one attempt recorded, permission/auth signal classified, target dropped | true | false | false | false | false | false | true | true | pending_loop_222_verification | Raw diagnostic log and object details must remain hidden. |
+| V-017 | Pre-data permission/auth remediation gate | docs-only check that Loop 223 compares remediation candidates and selects one next Loop | local target privilege alignment gate selected, no execution performed | true | false | false | false | false | false | false | false | pending_loop_223_verification | Does not run restore, `pg_restore`, `psql`, create or change target DB, change roles, or display raw logs. |
 
 ## Blocked Or Operator Approval Required
 
@@ -178,6 +179,33 @@ loop_222_secrets_recorded=false
 loop_222_supabase_connection_executed=false
 loop_222_production_restore_executed=false
 loop_222_next_loop=Loop 223 pre-data permission/auth remediation gate
+```
+
+## Loop 223 Verification Note
+
+```txt
+loop_223_remediation_gate_created=true
+loop_223_loop_222_result_summarized=true
+loop_223_primary_signal=pre_data_permission_error_detected
+loop_223_permission_or_auth_error_count=1
+loop_223_candidate_comparison_completed=true
+loop_223_selected_next_loop=Loop 224 local target privilege alignment gate without restore
+loop_223_restore_executed=false
+loop_223_pg_restore_executed=false
+loop_223_psql_executed=false
+loop_223_target_db_created=false
+loop_223_target_db_modified=false
+loop_223_role_created=false
+loop_223_role_modified=false
+loop_223_diagnostic_log_displayed=false
+loop_223_raw_log_displayed=false
+loop_223_object_name_displayed=false
+loop_223_sql_statement_displayed=false
+loop_223_role_name_displayed=false
+loop_223_secrets_recorded=false
+loop_223_supabase_connection_executed=false
+loop_223_production_restore_executed=false
+loop_223_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

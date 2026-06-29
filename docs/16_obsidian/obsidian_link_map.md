@@ -89,6 +89,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 221 Obsidian Log](loop_221_pre_data_only_restore_diagnostic_gate.md)
 - [Loop 222 Pre-Data Only Restore Diagnostic Execution](../11_codex_tasks/222_pre_data_only_restore_diagnostic_execution.md)
 - [Loop 222 Obsidian Log](loop_222_pre_data_only_restore_diagnostic_execution.md)
+- [Loop 223 Pre-Data Permission/Auth Remediation Gate](../11_codex_tasks/223_pre_data_permission_auth_remediation_gate.md)
+- [Loop 223 Obsidian Log](loop_223_pre_data_permission_auth_remediation_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
