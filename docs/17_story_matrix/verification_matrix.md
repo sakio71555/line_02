@@ -26,6 +26,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-016 | Pre-data diagnostic execution record | sanitized review of Loop 222 execution metadata, classifier, and cleanup | one attempt recorded, permission/auth signal classified, target dropped | true | false | false | false | false | false | true | true | pending_loop_222_verification | Raw diagnostic log and object details must remain hidden. |
 | V-017 | Pre-data permission/auth remediation gate | docs-only check that Loop 223 compares remediation candidates and selects one next Loop | local target privilege alignment gate selected, no execution performed | true | false | false | false | false | false | false | false | pending_loop_223_verification | Does not run restore, `pg_restore`, `psql`, create or change target DB, change roles, or display raw logs. |
 | V-018 | Local target privilege alignment gate | docs-only check that Loop 224 creates the privilege checklist and selects one next inspection Loop | Loop 225 inspection-only selected, no execution performed | true | false | false | false | false | false | false | false | pending_loop_224_verification | Does not run `psql`, restore, `pg_restore`, create/change target DB, change roles, or display raw logs. |
+| V-019 | Local target privilege alignment inspection | local-only metadata inspection with counts/booleans/categories only | psql metadata inspected, no restore or DB changes, next blocked follow-up selected | true | false | false | false | false | true | false | false | pending_loop_225_verification | Uses local-only `psql`; no row content, role details, object names, DB URLs, or secrets. |
 
 ## Blocked Or Operator Approval Required
 
@@ -233,6 +234,35 @@ loop_224_secrets_recorded=false
 loop_224_supabase_connection_executed=false
 loop_224_production_restore_executed=false
 loop_224_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 225 Verification Note
+
+```txt
+loop_225_local_cluster_metadata_checked=true
+loop_225_local_cluster_exists=true
+loop_225_local_cluster_online=true
+loop_225_local_cluster_port=55432
+loop_225_local_cluster_loopback_only=false
+loop_225_local_cluster_remote_listen_detected=true
+loop_225_psql_metadata_inspection_executed=true
+loop_225_psql_connection_scope=local_only
+loop_225_psql_remote_connection_executed=false
+loop_225_metadata_current_user_category=local_admin
+loop_225_metadata_database_count=3
+loop_225_metadata_restore_drill_database_count=0
+loop_225_metadata_role_count=16
+loop_225_role_names_displayed=false
+loop_225_database_names_displayed=false
+loop_225_row_content_displayed=false
+loop_225_restore_executed=false
+loop_225_pg_restore_executed=false
+loop_225_target_db_created=false
+loop_225_target_db_modified=false
+loop_225_role_created=false
+loop_225_role_modified=false
+loop_225_selected_next_loop=Loop 226 pre-data permission blocked follow-up
+loop_225_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

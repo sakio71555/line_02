@@ -533,6 +533,8 @@ Loop 223 pre-data permission/auth remediation gateでは、Loop 222の `pre_data
 
 Loop 224 local target privilege alignment gate without restoreでは、pre-data permission/auth signalに対して、local isolated targetのcluster identity、restore execution identity、target DB privilege、pre-data riskの確認チェックリストをdocs-onlyで作成しました。次は `Loop 225: local target privilege alignment inspection without changes` とし、psql、restore、pg_restore、target DB作成/変更、role変更、raw log表示、Supabase/production接続は行っていません。詳細は [docs/11_codex_tasks/224_local_target_privilege_alignment_gate_without_restore.md](docs/11_codex_tasks/224_local_target_privilege_alignment_gate_without_restore.md) と [docs/16_obsidian/loop_224_local_target_privilege_alignment_gate_without_restore.md](docs/16_obsidian/loop_224_local_target_privilege_alignment_gate_without_restore.md) を参照してください。
 
+Loop 225 local target privilege alignment inspection without changesでは、VPS上のlocal isolated PostgreSQL targetについてmetadata-only確認を行いました。clusterは存在しonlineですが、listen scopeはloopback-onlyと証明できず、owner-aligned target DB作成やpre-data retryはまだNo-Goです。psqlはlocal-only metadata確認に限定し、DB変更、role変更、restore、pg_restore、raw log表示、row content表示、Supabase/production接続は行っていません。詳細は [docs/11_codex_tasks/225_local_target_privilege_alignment_inspection_without_changes.md](docs/11_codex_tasks/225_local_target_privilege_alignment_inspection_without_changes.md) と [docs/16_obsidian/loop_225_local_target_privilege_alignment_inspection_without_changes.md](docs/16_obsidian/loop_225_local_target_privilege_alignment_inspection_without_changes.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

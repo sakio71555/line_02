@@ -1,141 +1,117 @@
 # Latest Codex Result
 
-This file summarizes Loop 224 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 225 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, or production logs.
 
 ## Loop
 
-- Loop: Loop 224 local target privilege alignment gate without restore
+- Loop: Loop 225 local target privilege alignment inspection without changes
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only privilege alignment gate
+- Scope type: metadata-only inspection
 - Commit hash: see final Codex report after commit
-- Push: see final Codex report after push
+- Push: not performed in this Loop
 
 ## Source Evidence
 
-- Loop 223 commit: `8f5c264 docs: add pre-data permission remediation gate`
-- Loop 223 push completed.
-- DR readiness before Loop 224: `not_ready_restore_failed`
+- Loop 224 commit: `6be77e0 docs: add local target privilege alignment gate`
+- DR readiness before Loop 225: `not_ready_restore_failed`
 
-## Loop 222 / 223 Result Summary
+## Local Cluster Metadata
 
 ```txt
-loop_222_restore_stage=pre_data
-loop_222_restore_options=--section=pre-data --no-owner --no-privileges
-loop_222_restore_attempt_count=1
-loop_222_pg_restore_exit_code=1
-loop_222_pre_data_diagnostic_status=failed
-loop_222_classifier=pre_data_permission_error_detected
-loop_222_permission_or_auth_error_count=1
-loop_222_restore_target_dropped=true
-loop_222_cleanup_required=false
-loop_222_raw_log_displayed=false
-loop_222_sql_statement_displayed=false
-loop_222_object_name_displayed=false
-loop_222_role_name_displayed=false
-loop_222_dump_content_displayed=false
-loop_222_row_content_displayed=false
-loop_223_selected_next_loop=local_target_privilege_alignment_gate_without_restore
-restore_success_achieved=false
-dr_readiness_status=not_ready_restore_failed
+remote_host_category=vps
+local_cluster_exists=true
+local_cluster_version=17
+local_cluster_name_matches=true
+local_cluster_port=55432
+local_cluster_online=true
+local_cluster_listen_entry_count=2
+listen_loopback_entry_count=1
+listen_wildcard_entry_count=0
+listen_other_entry_count=1
+local_cluster_loopback_only=false
+local_cluster_remote_listen_detected=true
+listen_raw_addresses_displayed=false
+production_cluster_touched=false
+cluster_changed=false
 ```
 
-## Privilege Alignment Checklist
-
-Local cluster identity:
-
-- Confirm local isolated restore drill target.
-- Confirm local-only port/scope.
-- Confirm the target is not Supabase and not production.
-- Confirm runtime services are not pointed at the target.
-
-Restore execution identity:
-
-- Confirm planned restore execution user.
-- Confirm local admin context used for inspection.
-- Confirm intended owner/connection-user alignment.
-- Confirm local-only connection strategy avoids passwords and secrets.
-
-Target DB privilege:
-
-- Confirm owner and restore connection user alignment.
-- Confirm `CONNECT`, `TEMP`, schema creation, public schema, and extension creation privilege design.
-- Keep `--no-owner --no-privileges` as the baseline.
-
-Pre-data specific risk:
-
-- Pre-data can require schema and extension creation.
-- Ownership and permission boundaries can still matter.
-- RLS/policy should not be treated as primary pre-data cause without evidence.
-
-## Remediation Candidate Comparison
-
-| candidate | decision | reason |
-| --- | --- | --- |
-| Inspection-only local privilege check | Selected | Metadata-only and lowest risk. |
-| Fresh target DB owner alignment execution | Deferred | Requires DB creation and cleanup. |
-| Pre-data retry with owner-aligned target | No-Go now | Requires restore execution. |
-| Operator-only pre-data permission log review | Fallback | Useful only if inspection cannot narrow the issue. |
-| Accept failure as warning | No-Go | Exit code 1 cannot prove DR readiness. |
-
-## Recommended Direction
+## psql Metadata Inspection
 
 ```txt
-selected_next_loop=Loop 225: local target privilege alignment inspection without changes
-inspection_only=true
+psql_metadata_initial_attempt_failed_before_result=true
+psql_metadata_initial_attempt_db_changed=false
+psql_metadata_inspection_executed=true
+psql_connection_scope=local_only
+psql_remote_connection_executed=false
+metadata_current_database=postgres
+metadata_current_user_category=local_admin
+metadata_session_user_category=local_admin
+metadata_server_version_major=17
+metadata_database_count=3
+metadata_restore_drill_database_count=0
+metadata_role_count=16
+metadata_superuser_role_count=1
+metadata_createdb_role_count=1
+metadata_current_user_can_create_db=true
+metadata_current_user_can_create_role=true
+metadata_current_user_is_superuser=true
+metadata_role_names_displayed=false
+metadata_database_names_displayed=false
+metadata_schema_object_names_displayed=false
+metadata_row_content_displayed=false
+```
+
+## Privilege Alignment Judgement
+
+```txt
+local_cluster_metadata_checked=true
+psql_metadata_inspection_completed=true
+local_admin_has_create_db=true
+local_admin_has_create_role=true
+restore_drill_database_count=0
+owner_aligned_target_possible=true
+owner_aligned_retry_ready=false
+owner_aligned_retry_blocked_reason=local_cluster_loopback_only_false
+```
+
+## Selected Next Loop
+
+```txt
+selected_next_loop=Loop 226: pre-data permission blocked follow-up
+selected_next_loop_reason=local_cluster_loopback_only_false
 target_db_creation_no_go=true
 restore_retry_no_go=true
 role_change_no_go=true
-accept_nonzero_exit_no_go=true
+cluster_change_no_go_in_loop_225=true
 dr_readiness_status=not_ready_restore_failed
 ```
-
-## Loop 225 Boundary
-
-Allowed:
-
-- Local-only metadata inspection plan execution.
-- `psql` only if explicitly bounded to local isolated cluster metadata.
-- No row content.
-- No raw logs.
-- No DB URL or secrets.
-- No production/Supabase connection.
-- No DB or role modifications.
-
-Prohibited:
-
-- Restore retry.
-- `pg_restore`.
-- Target DB creation or modification.
-- Target DB privilege changes.
-- Role creation, drop, or alteration.
-- Package or cluster changes.
-- Backup artifact operations.
-- Raw log, SQL statement, object name, role name, dump content, row content, DB URL, `.env`, or secret display.
-- Supabase or production connection.
 
 ## Safety Boundary
 
 - restore_executed=false
 - pg_restore_executed=false
-- psql_executed=false
 - target_db_created=false
 - target_db_modified=false
 - role_created=false
 - role_modified=false
+- grant_revoke_executed=false
 - diagnostic_log_displayed=false
+- raw_log_displayed=false
 - object_name_displayed=false
 - sql_statement_displayed=false
-- role_name_displayed=false
+- role_name_details_displayed=false
+- database_name_details_displayed=false
 - dump_content_displayed=false
 - row_content_displayed=false
 - db_url_displayed=false
 - secrets_recorded=false
 - backup_artifact_copied_into_repo=false
 - supabase_connection_executed=false
+- production_db_connection_executed=false
 - production_restore_executed=false
 - production_runtime_changed=false
 
@@ -154,16 +130,16 @@ Prohibited:
 - backup_export_status=success
 - restore_drill_status=failed
 - pre_data_diagnostic_status=failed
-- privilege_alignment_gate_created=true
+- privilege_alignment_inspection_completed=true
 - dr_readiness_status=not_ready_restore_failed
 
 ## Risks / Follow-Up
 
-- The concrete permission/auth cause is still unknown.
-- Inspection-only will not itself fix restore.
-- Future `psql` inspection must be local-only and metadata-only.
+- Listen scope was not proven loopback-only.
+- Metadata inspection alone does not prove the pre-data permission/auth cause.
+- Owner-aligned target creation and retry remain blocked.
 - Restore has not succeeded.
 
 ## Next Loop Candidate
 
-- Loop 225: local target privilege alignment inspection without changes
+- Loop 226: pre-data permission blocked follow-up

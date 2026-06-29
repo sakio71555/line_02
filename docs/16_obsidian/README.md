@@ -63,6 +63,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 222 executes one pre-data only diagnostic on a fresh local isolated target DB, stores raw output repo-external/root-only, records `pre_data_permission_error_detected`, drops the target DB, and keeps raw log, object names, row content, secrets, Supabase, production restore, and runtime untouched.
 - Loop 223 records the pre-data permission/auth remediation gate, compares remediation candidates, selects `Loop 224: local target privilege alignment gate without restore`, and keeps restore, `pg_restore`, `psql`, target DB changes, role changes, raw log display, Supabase, and production untouched.
 - Loop 224 records the local target privilege alignment gate, creates the checklist for cluster identity, restore execution identity, target DB privilege, and pre-data risk, selects `Loop 225: local target privilege alignment inspection without changes`, and still keeps `psql`, restore, `pg_restore`, target DB changes, role changes, raw log display, Supabase, and production untouched.
+- Loop 225 runs local-only metadata inspection, records counts/booleans/categories only, finds the restore drill cluster online but not proven loopback-only, and selects `Loop 226: pre-data permission blocked follow-up` while keeping restore, `pg_restore`, target DB changes, role changes, raw logs, row content, Supabase, and production untouched.
 
 ## .obsidian Policy
 

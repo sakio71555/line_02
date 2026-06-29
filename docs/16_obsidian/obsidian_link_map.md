@@ -93,6 +93,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 223 Obsidian Log](loop_223_pre_data_permission_auth_remediation_gate.md)
 - [Loop 224 Local Target Privilege Alignment Gate Without Restore](../11_codex_tasks/224_local_target_privilege_alignment_gate_without_restore.md)
 - [Loop 224 Obsidian Log](loop_224_local_target_privilege_alignment_gate_without_restore.md)
+- [Loop 225 Local Target Privilege Alignment Inspection Without Changes](../11_codex_tasks/225_local_target_privilege_alignment_inspection_without_changes.md)
+- [Loop 225 Obsidian Log](loop_225_local_target_privilege_alignment_inspection_without_changes.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
