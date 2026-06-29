@@ -43,6 +43,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 205 Obsidian Log](loop_205_pg_dump_17_explicit_path_backup_export_retry.md)
 - [Loop 206 Restore Drill Planning](../11_codex_tasks/206_restore_drill_planning_without_production_restore.md)
 - [Loop 206 Obsidian Log](loop_206_restore_drill_planning_without_production_restore.md)
+- [Loop 207 Restore Drill Execution Gate](../11_codex_tasks/207_isolated_non_production_restore_drill_execution_gate.md)
+- [Loop 207 Obsidian Log](loop_207_isolated_non_production_restore_drill_execution_gate.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -67,6 +69,8 @@ Loop 204 status: `postgresql_client_17_installed=true`, `pg_dump_17_path_present
 Loop 205 status: `pg_dump_17_explicit_path_used=true`, `pg_dump_attempt_count=1`, `backup_export_status=success`, `backup_artifact_created=true`, `backup_artifact_in_repo=false`, `restore_executed=false`, `secrets_recorded=false`, `raw_log_displayed=false`.
 
 Loop 206 status: `restore_drill_plan_created=true`, `restore_executed=false`, `production_restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `backup_artifact_copied_into_repo=false`, `dump_content_displayed=false`, `secrets_recorded=false`, `loop_207_restore_drill_execution_ready=false_pending_operator_approval_and_target_selection`.
+
+Loop 207 status: `restore_execution_gate_created=true`, `restore_target_selected=false`, `restore_executed=false`, `production_restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `backup_artifact_copied_into_repo=false`, `dump_content_displayed=false`, `secrets_recorded=false`, `loop_208_restore_drill_target_selection_ready=true`.
 
 ## Obsidian Helpers
 

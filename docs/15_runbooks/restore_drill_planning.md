@@ -102,3 +102,98 @@ No-Go:
 ```txt
 Loop 207: isolated non-production restore drill execution gate
 ```
+
+## 10. Loop 207 Execution Gate
+
+Loop 207 adds an execution gate for the restore drill. It does not execute restore, `pg_restore`, `psql`, Supabase connection, migration, RLS, schema change, or production runtime change.
+
+### 10.1 Restore Target Selection Matrix
+
+Use this matrix to narrow the future restore target to exactly one candidate before execution.
+
+| Candidate | Isolation | Supabase similarity | Setup risk | Decision |
+| --- | --- | --- | --- | --- |
+| Isolated local PostgreSQL | High if disposable and separated from production | Medium | Medium | Preferred first target when it can be created safely. |
+| Disposable non-production database | High if newly created for the drill | High | Medium | Acceptable if local restore is impractical. |
+| Supabase-separated verification database | High only if separate from production | Highest | Higher | Requires explicit operator approval and proof it is not production. |
+| Production database | None | Production | Catastrophic | Forbidden. |
+
+Current state:
+
+```txt
+restore_target_selected=false
+selected_restore_target=not_selected
+production_target_allowed=false
+loop_208_restore_drill_target_selection_ready=true
+```
+
+### 10.2 Production Misconnection Prevention
+
+Before any future restore execution, confirm:
+
+- Target is explicitly non-production.
+- Target credentials are not production credentials.
+- Target is not the Supabase production project/database.
+- Restore target variable is not `SUPABASE_DB_URL`.
+- Runtime services are not pointed at the restore target.
+- No application restart, runtime switch, migration, RLS, or schema change is bundled into the restore drill.
+
+Unknown target or credential status means No-Go.
+
+### 10.3 Artifact Verification Boundary
+
+Allowed in a future execution Loop:
+
+- Check artifact path existence.
+- Check backup directory permission is `700`.
+- Check backup file permission is `600`.
+- Check backup file size is `259222` bytes.
+- Check SHA-256 equals `432dc75113b4b1a552c94b971d2fb0afca67554077992d425105f09510666493`.
+
+Future command shape, not executed in Loop 207:
+
+```sh
+# Metadata only. Do not show dump contents.
+stat -c '%a %s %n' /root/deploy-backups/amami-line-crm/loop205-20260629-182014/supabase-db-loop205-20260629-182014.dump
+sha256sum /root/deploy-backups/amami-line-crm/loop205-20260629-182014/supabase-db-loop205-20260629-182014.dump
+```
+
+Forbidden:
+
+- Dump content display.
+- Raw restore log display.
+- Repo copy of the artifact.
+- Secret or DB URL display.
+
+### 10.4 Isolated Target DB Requirements
+
+The target selected in a future Loop must be disposable or approved for destructive restore testing, disconnected from production application traffic, clearly non-production by name/host, and paired with a written teardown or lockdown plan. The target connection string must not be committed or recorded in docs.
+
+### 10.5 Command Boundary
+
+Future execution must use:
+
+```txt
+expected_pg_restore_path=/usr/lib/postgresql/17/bin/pg_restore
+expected_pg_restore_major=17
+bare_pg_restore_allowed=false
+```
+
+Loop 207 result:
+
+```txt
+restore_execution_gate_created=true
+restore_executed=false
+production_restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_executed=false
+migration_executed=false
+rls_changed=false
+schema_changed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+```

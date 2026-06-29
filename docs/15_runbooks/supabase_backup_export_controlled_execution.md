@@ -238,3 +238,30 @@ loop_207_restore_drill_execution_ready=false_pending_operator_approval_and_targe
 ```
 
 Allowed future targets are isolated local PostgreSQL, a disposable non-production database, or a Supabase-separated verification database. Production restore remains forbidden. The future execution Loop must verify artifact metadata and use the explicit PostgreSQL 17 `pg_restore` path before attempting restore.
+
+## 16. Loop 207 Restore Drill Execution Gate Result
+
+Loop 207 added the pre-execution gate for restore drill target selection and command boundaries. It still did not execute restore or connect to any database.
+
+```txt
+restore_execution_gate_created=true
+restore_target_selected=false
+selected_restore_target=not_selected
+production_target_allowed=false
+restore_executed=false
+production_restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_executed=false
+migration_executed=false
+rls_changed=false
+schema_changed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+loop_208_restore_drill_target_selection_ready=true
+```
+
+Before execution, choose exactly one isolated non-production target, verify artifact metadata, and confirm `/usr/lib/postgresql/17/bin/pg_restore` explicitly. Production restore remains forbidden.

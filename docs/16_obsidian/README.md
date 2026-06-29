@@ -38,6 +38,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 204 PostgreSQL 17 client installation records PGDG source/key addition, `postgresql-client-17 17.10` installation, `libpq5` dependency upgrade, explicit pg_dump 17 path verification, and keeps DB export/restore unexecuted.
 - Loop 205 pg_dump 17 explicit path backup export retry records one operator-approved export attempt, `backup_export_status=success`, root-only repo-external artifact metadata, and keeps restore blocked for a separate Loop.
 - Loop 206 restore drill planning records isolated non-production restore target options, Go/No-Go conditions, artifact verification scope, and keeps `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, and `production_restore_executed=false`.
+- Loop 207 restore drill execution gate records target selection criteria, production misconnection prevention, artifact verification boundaries, explicit `pg_restore` 17 boundary, and keeps `restore_target_selected=false`, `restore_executed=false`, `pg_restore_executed=false`, and `psql_executed=false`.
 
 ## .obsidian Policy
 
