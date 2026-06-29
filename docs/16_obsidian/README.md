@@ -48,6 +48,10 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 212 role owner ACL restore remediation plan compares remediation candidates, keeps `--no-owner --no-privileges` as the required baseline for the next retry, treats extension/schema as secondary signals, and defines Loop 213 Go/No-Go without rerunning restore.
 - Loop 213 controlled restore retry runs one isolated retry with explicit `--no-owner --no-privileges`, records `pg_restore_exit_code=1` / `role_owner_acl_error_count=1`, drops the target DB, and keeps raw log/dump/row/secret content out of docs and commits.
 
+## Current Handoff Trail
+
+- Loop 214 handoff automation v1 adds `docs/16_handoff/latest_codex_result.md` and `docs/16_handoff/latest_gpt_review_prompt.md` so Codex completion summaries can be copied into ChatGPT without exposing secrets, raw logs, dump contents, row contents, DB URLs, API keys, or production logs.
+
 ## .obsidian Policy
 
 - `.obsidian/workspace*`, `.obsidian/cache`, `.obsidian/plugins`, and `.obsidian/themes` are ignored because they are local personal state.

@@ -91,6 +91,8 @@ knowledge/RAG runtime switch前に、fake clientで `SupabaseKnowledgePageReposi
 
 GPTとCodexの往復は、repo context収集とCodex prompt生成だけを自動化し、実行、commit、push、外部接続は人間ゲートを残します。生成promptは `tmp/dev-loop/` 配下の作業用下書きであり、人間がScope / Out of Scope / push方針を確認してからCodexへ貼ります。
 
+Codex完了結果をChatGPTへレビュー依頼する場合は、`docs/16_handoff/latest_codex_result.md` にsanitized結果を整理し、`docs/16_handoff/latest_gpt_review_prompt.md` を貼り付け用promptとして使います。handoffにはsecret、DB URL、API key、`.env` 値、LINE userId、raw log、dump内容、row content、本番ログを書かず、ChatGPT feedbackは必ず次の小さいLoopへ変換してから実行します。
+
 本番認証、JWT検証、staff/admin tenant context、staff tenant schema、RLSのようなセキュリティ境界は、実装Loopの前に必ずplanning Loopを挟みます。開発用 `x-tenant-id` は本番認証ではないため、認証済みuser/sessionとactive membershipからtenant contextを決定する設計を先に固めてからAPI差し替えへ進みます。
 
 セキュリティ境界のschema migration Loopでは、DB schemaとstatic validation testだけを整え、Auth/JWT/API guard/RLS SQL/runtime切替は別Loopに分けます。
