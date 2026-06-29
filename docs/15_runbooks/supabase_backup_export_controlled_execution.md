@@ -420,3 +420,38 @@ dr_readiness_status=not_ready_restore_failed
 ```
 
 The next diagnostic Loop must not expose raw logs. It may record only allowlisted failure categories and counts after a separately approved diagnostic restore.
+
+## 22. Loop 211 Controlled Diagnostic Restore Result
+
+Loop 211 ran one diagnostic restore and classified the failure using sanitized counts only.
+
+```txt
+diagnostic_log_created=true
+diagnostic_log_repo_path=false
+diagnostic_log_permission=600
+diagnostic_log_displayed=false
+diagnostic_log_committed=false
+diagnostic_target_db_created=true
+diagnostic_target_verified_isolated=true
+diagnostic_restore_executed=true
+restore_attempt_count=1
+pg_restore_exit_code=1
+restore_drill_status=failed
+role_owner_acl_error_count=14
+extension_missing_count=6
+schema_or_sql_statement_error_count=17
+target_cluster_error_count=1
+pg_restore_failure_category=role_owner_acl_error_detected
+sanitized_classifier_executed=true
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_restore_executed=false
+```
+
+The backup artifact remains repo-external. Restore capability is still not proven; the next Loop should plan role/owner/ACL remediation before any retry.

@@ -505,6 +505,8 @@ Loop 209.2 isolated local PostgreSQL restore drill retryでは、Loop 209.1のis
 
 Loop 210 pg_restore failure diagnostics without raw log exposureでは、Loop 209.2のrestore失敗をraw logなしで整理し、`pg_restore_failure_category=unknown_without_raw_log` として分類しました。restore再実行、pg_restore restore、psql、Supabase/production接続は行わず、Loop 211ではroot-only raw diagnostic logからsanitized categoryだけを記録する方針を設計しています。詳細は [docs/11_codex_tasks/210_pg_restore_failure_diagnostics_without_raw_log_exposure.md](docs/11_codex_tasks/210_pg_restore_failure_diagnostics_without_raw_log_exposure.md) と [docs/16_obsidian/loop_210_pg_restore_failure_diagnostics_without_raw_log_exposure.md](docs/16_obsidian/loop_210_pg_restore_failure_diagnostics_without_raw_log_exposure.md) を参照してください。
 
+Loop 211 controlled diagnostic restore with sanitized failure classifierでは、isolated local PostgreSQL targetへdiagnostic restoreを1回だけ実行し、raw outputはrepo外root-only logへ保存しました。docs/Obsidianにはsanitized count/booleanだけを記録し、primary categoryは `pg_restore_failure_category=role_owner_acl_error_detected` です。diagnostic target DBはdrop済みで、raw log、dump内容、row content、DB URL、secretは記録していません。詳細は [docs/11_codex_tasks/211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md](docs/11_codex_tasks/211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md) と [docs/16_obsidian/loop_211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md](docs/16_obsidian/loop_211_controlled_diagnostic_restore_with_sanitized_failure_classifier.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

@@ -534,3 +534,86 @@ dr_readiness_status=not_ready_restore_failed
 ```
 
 Loop 211 may perform a controlled diagnostic restore only with explicit approval, a fresh isolated target DB, root-only repo-external raw diagnostic log handling, sanitized category extraction, and target cleanup.
+
+## 16. Loop 211 Controlled Diagnostic Restore Result
+
+Loop 211 ran one diagnostic restore against a fresh isolated local target DB. Raw stdout/stderr was saved only to a repo-external root-only diagnostic log and was not displayed or committed.
+
+### 16.1 Diagnostic Boundary
+
+```txt
+diagnostic_target_db=amami_line_crm_restore_drill_loop211_diag_20260629194109
+diagnostic_target_db_created=true
+diagnostic_target_verified_isolated=true
+diagnostic_log_path=/root/deploy-backups/amami-line-crm/loop211-diagnostics-20260629-194109/pg_restore-diagnostic.log
+diagnostic_log_created=true
+diagnostic_log_repo_path=false
+diagnostic_log_dir_permission=700
+diagnostic_log_permission=600
+diagnostic_log_permission_checked=true
+diagnostic_log_displayed=false
+diagnostic_log_committed=false
+```
+
+### 16.2 Restore Result
+
+```txt
+diagnostic_restore_executed=true
+restore_attempt_count=1
+pg_restore_exit_code=1
+restore_drill_status=failed
+sanitized_validation_executed=false
+```
+
+### 16.3 Sanitized Classifier Result
+
+```txt
+role_owner_acl_error_count=14
+extension_missing_count=6
+object_conflict_count=0
+permission_or_auth_error_count=0
+schema_or_sql_statement_error_count=17
+restore_option_error_count=0
+target_cluster_error_count=1
+custom_dump_format_error_count=0
+role_owner_acl_error_detected=true
+extension_missing_detected=true
+object_conflict_detected=false
+permission_or_auth_error_detected=false
+schema_or_sql_statement_error_detected=true
+restore_option_error_detected=false
+target_cluster_error_detected=true
+custom_dump_format_error_detected=false
+pg_restore_failure_category=role_owner_acl_error_detected
+sanitized_classifier_executed=true
+```
+
+`role_owner_acl_error_detected` is the primary category by priority. Positive secondary counts may overlap with the same raw diagnostic lines and must not be treated as independent root causes without a future approved review.
+
+### 16.4 Cleanup / Safety
+
+```txt
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+```
+
+### 16.5 Next Gate
+
+```txt
+dr_readiness_status=not_ready_restore_failed
+restore_capability_verified=false
+diagnostic_failure_category_available=true
+next_loop=Loop 212: role owner ACL restore remediation plan
+```
+
+Do not retry restore until Loop 212 decides how to handle role/owner/ACL restore behavior.

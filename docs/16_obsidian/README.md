@@ -44,6 +44,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 209.1 isolated local PostgreSQL target provisioning installs/provisions the VPS local PostgreSQL 17 restore target, creates cluster `restore_drill_loop2091` and DB `amami_line_crm_restore_drill_loop2091_20260629`, and keeps restore/`pg_restore` restore unexecuted.
 - Loop 209.2 isolated local PostgreSQL restore drill retry verifies artifact/target metadata, runs one explicit-path `pg_restore` attempt, records `restore_drill_status=failed` / `failure_category=pg_restore_exit_code_nonzero_without_raw_log`, drops the target DB, and keeps raw logs, row contents, dump contents, DB URL, secrets, Supabase, and production untouched.
 - Loop 210 pg_restore failure diagnostics records `pg_restore_failure_category=unknown_without_raw_log`, confirms artifact/tooling/cluster metadata, avoids restore retry and `psql`, and designs Loop 211 as a controlled diagnostic restore with root-only raw logs and sanitized category output.
+- Loop 211 controlled diagnostic restore runs one isolated diagnostic restore, stores raw output only in a repo-external root-only log, classifies the primary failure as `role_owner_acl_error_detected`, drops the diagnostic DB, and keeps raw log/dump/row/secret content out of docs and commits.
 
 ## .obsidian Policy
 
