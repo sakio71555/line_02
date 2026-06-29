@@ -460,6 +460,8 @@ Loop 189のようなbackup inventory dry-run scriptでは、read-only scriptでG
 
 Loop 190のようなbackup retention dry-run proposalでは、deploy backup artifactsをmetadataだけでkeep/reviewに分類し、削除候補は初期値 `delete_candidate_count=0` に留めます。`keep_latest_policy=5`、`delete_performed=false`、`retention_enforced=false`、`restore_viability_check_required_before_deletion=true` をdocs/test/outputで固定し、backup作成、DB export、secret表示、timer作成、runtime変更、LINE追加送信、OpenAI API、Nginx/DNS/certbot、Supabase schema/RLS/writeは行いません。実際の削除やretention enforcementは、restore viability checkと明示承認を含む別Loopに分けます。
 
+Loop 191のようなSupabase backup method selectionでは、Supabase backup方式だけを選定し、production exportやSupabase CLI/API callは行いません。`backup method selected=operator_review_required`、`recommended_path=operator_confirmed_manual_or_managed_backup_first`、`DB export performed=false`、`Supabase CLI/API called=false`、`restore drill target=non_production_first` をdocs/testで固定します。CLI / scheduled export / restore drill / timer installは、operator確認と明示承認を得た別Loopへ分けます。
+
 ## Admin UI Mobile-First Loops
 
 Loop 110以降のAdmin UI改善は、スマートフォンで社内担当者が迷わず使えることを優先します。顧客一覧やアラートはカード、顧客詳細は重要情報、会話タイムライン、AI補助、担当者返信の順に整理します。

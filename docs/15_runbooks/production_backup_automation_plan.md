@@ -209,8 +209,10 @@ Every future backup/restore Loop should verify:
 Loop 189: backup inventory dry-run script
 Loop 190: VPS deploy backup retention dry-run
 Loop 191: Supabase backup method selection
-Loop 192: Supabase backup dry-run
-Loop 193: restore drill in non-production
+Loop 192: Supabase manual backup operator checklist
+Loop 193: Supabase non-production restore drill checklist
+Loop 194: Supabase backup export dry-run with explicit approval
+Loop 195: Supabase scheduled backup automation plan
 ```
 
 ## 13. No-Go Conditions
@@ -218,6 +220,29 @@ Loop 193: restore drill in non-production
 - A command would display `.env` content.
 - A command would copy secret files.
 - A backup job would be created in a planning Loop.
+
+## Loop 191 Method Selection Follow-up
+
+```txt
+Supabase backup method selection=done
+selection_status=completed
+backup method selected=operator_review_required
+recommended_path=operator_confirmed_manual_or_managed_backup_first
+future_automation_path=CLI_or_scheduled_export_after_explicit_approval
+production_export_status=not_performed
+DB export performed=false
+Supabase CLI/API called=false
+restore drill target=non_production_first
+future_automation_requires_explicit_approval=true
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+supabase_write_migration_rls_performed=false
+nginx_dns_certbot_changes=none
+production readiness: Go
+```
+
+Actual Supabase backup execution remains blocked until the operator completes the manual backup checklist and a non-production restore drill plan.
 - A DB export would run without explicit approval.
 - cron or systemd timer would be created without a separate implementation Loop.
 - Runtime would change.

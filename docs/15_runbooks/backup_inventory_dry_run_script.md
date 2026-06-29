@@ -172,3 +172,29 @@ openai_api_performed=false
 ```
 
 Actual retention enforcement and deletion remain blocked until a future explicit approval Loop with a restore viability check.
+
+## 11. Loop 191 Follow-up
+
+Supabase backup method selection is complete, but no database export or Supabase CLI/API call was performed.
+
+```txt
+Supabase backup method selection=done
+selection_status=completed
+backup method selected=operator_review_required
+recommended_path=operator_confirmed_manual_or_managed_backup_first
+production_export_status=not_performed
+DB export performed=false
+Supabase CLI/API called=false
+restore drill target=non_production_first
+future_automation_requires_explicit_approval=true
+secrets_recorded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+```
+
+Next safe step:
+
+```txt
+Loop 192: Supabase manual backup operator checklist
+```

@@ -312,3 +312,32 @@ P0 operations base now has monitoring dry-run, OpenAI usage/cost plan, backup au
 ```txt
 Loop 191: Supabase backup method selection
 ```
+
+## Loop 191 Supabase Backup Method Selection Follow-up
+
+Loop 191 selected the Supabase backup method boundary without performing export or automation.
+
+```txt
+Supabase backup method selection=done
+selection_status=completed
+backup method selected=operator_review_required
+recommended_path=operator_confirmed_manual_or_managed_backup_first
+future_automation_path=CLI_or_scheduled_export_after_explicit_approval
+production_export_status=not_performed
+DB export performed=false
+Supabase CLI/API called=false
+restore drill target=non_production_first
+future_automation_requires_explicit_approval=true
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+supabase_write_migration_rls_performed=false
+nginx_dns_certbot_changes=none
+production readiness: Go
+```
+
+Next safe step:
+
+```txt
+Loop 192: Supabase manual backup operator checklist
+```

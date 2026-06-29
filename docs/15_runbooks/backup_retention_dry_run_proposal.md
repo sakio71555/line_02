@@ -170,3 +170,33 @@ Loop 191: Supabase backup method selection
 ```
 
 Do not proceed to deletion or retention enforcement without a separate explicit approval Loop.
+
+## 11. Loop 191 Follow-up
+
+Supabase backup method selection is complete, but no production export, Supabase CLI/API call, restore, backup creation, or scheduler was performed.
+
+```txt
+Supabase backup method selection=done
+selection_status=completed
+backup method selected=operator_review_required
+recommended_path=operator_confirmed_manual_or_managed_backup_first
+future_automation_path=CLI_or_scheduled_export_after_explicit_approval
+production_export_status=not_performed
+DB export performed=false
+Supabase CLI/API called=false
+restore drill target=non_production_first
+future_automation_requires_explicit_approval=true
+secrets_recorded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+supabase_write_migration_rls_performed=false
+nginx_dns_certbot_changes=none
+production_readiness=production_go
+```
+
+Next safe step:
+
+```txt
+Loop 192: Supabase manual backup operator checklist
+```

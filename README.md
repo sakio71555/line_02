@@ -444,6 +444,8 @@ Loop 189では、backup inventory dry-run scriptを追加し、VPS active source
 
 Loop 190では、backup retention dry-run proposalを追加し、VPS active source上でread-only dry-runを実行しました。`scripts/backup/backup-retention-dry-run.ts` は `/root/deploy-backups/amami-line-crm` のdeploy backup artifactを最新5件keep、古いnon-milestoneをreviewとして分類し、削除候補は作らず `delete_candidate_count=0` / `delete_performed=false` / `retention_enforced=false` を記録します。backup作成、DB export、secret表示、timer作成、runtime変更、追加LINE送信、OpenAI API、Supabase writeは行いません。詳細は [docs/11_codex_tasks/190_backup_retention_dry_run_proposal.md](docs/11_codex_tasks/190_backup_retention_dry_run_proposal.md) と [docs/15_runbooks/backup_retention_dry_run_proposal.md](docs/15_runbooks/backup_retention_dry_run_proposal.md) を参照してください。
 
+Loop 191では、Supabase backup method selectionをdocs/test/read-only verificationのみで実施しました。`backup method selected=operator_review_required` とし、最初はoperator確認済みmanual/managed backupを優先し、CLI/scheduled exportは明示承認後の別Loopへ分けます。`DB export performed=false` / `Supabase CLI/API called=false` / `restore drill target=non_production_first` を記録し、backup作成、DB export、secret表示、runtime変更、追加LINE送信、OpenAI API、Supabase writeは行いません。詳細は [docs/11_codex_tasks/191_supabase_backup_method_selection.md](docs/11_codex_tasks/191_supabase_backup_method_selection.md) と [docs/15_runbooks/supabase_backup_method_selection.md](docs/15_runbooks/supabase_backup_method_selection.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

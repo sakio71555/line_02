@@ -1986,3 +1986,34 @@ openai_api_performed=false
 ```
 
 The script classifies deploy backup artifacts into keep/review buckets only. It does not delete backups, enforce retention, create backups, export data, copy secrets, install timers, change runtime, send LINE messages, call OpenAI, or change Nginx/DNS/certbot/Supabase schema. Future deletion requires explicit approval and restore viability checks.
+
+## Loop 191 Supabase Backup Method Selection
+
+Loop 191 keeps production readiness Go and selects the Supabase backup method boundary only.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+Supabase configured; values not recorded
+selection_status=completed
+backup method selected=operator_review_required
+recommended_path=operator_confirmed_manual_or_managed_backup_first
+future_automation_path=CLI_or_scheduled_export_after_explicit_approval
+production_export_status=not_performed
+DB export performed=false
+Supabase CLI/API called=false
+restore drill target=non_production_first
+future_automation_requires_explicit_approval=true
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+supabase_write_migration_rls_performed=false
+nginx_dns_certbot_changes=none
+secrets_recorded=false
+```
+
+The first recommended path is operator-confirmed manual or managed backup, followed by non-production restore drill. CLI/scheduled export remains future work and requires explicit approval.
