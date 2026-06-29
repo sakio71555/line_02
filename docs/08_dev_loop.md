@@ -478,6 +478,8 @@ Loop 197のようなproduction operations final closeoutでは、必須の追加
 
 Loop 197 Supabase CLI backup dry-run designのようなoptional backup設計Loopでは、closeout済みのproduction状態を変更せず、将来のCLI/pg_dump系backup dry-runに必要なsecret handling、artifact handling、approval tokens、No-Go条件、future Loop splitだけをdocs/testで固定します。設計LoopではSupabase CLI/API、pg_dump、DB export、restore、backup artifact作成、secret表示を行いません。
 
+Loop 198 Supabase CLI backup command pack planningのようなcommand pack設計Loopでは、preflight / export / verification / artifact handling / restore roadmapをplaceholder-onlyで整理します。`placeholder_only=true`、`preflight_execution_status=not_executed`、`export_execution_status=not_executed`、`restore_execution_status=not_executed`、`Supabase CLI/API called=false`、`pg_dump executed=false`、`DB export performed=false`、`backup artifact created=false` をdocs/testで固定し、実行承認はLoop 199以降に分けます。
+
 ## Obsidian Development Log Requirement
 
 Every Loop must update Obsidian-readable Markdown logs:

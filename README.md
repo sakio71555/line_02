@@ -473,6 +473,8 @@ Loop 197では、production operations final closeoutを記録しました。`pr
 
 Loop 197 Supabase CLI backup dry-run designでは、Free PlanのままCLI/pg_dump系backup dry-runへ進む前の設計だけを追加しました。`secret_handling_model_created=true` / `artifact_handling_model_created=true` / `approval_tokens_created=true` とし、Supabase CLI/API、pg_dump、DB export、restore、backup artifact作成、runtime変更は行っていません。詳細は [docs/11_codex_tasks/197_supabase_cli_backup_dry_run_design.md](docs/11_codex_tasks/197_supabase_cli_backup_dry_run_design.md) と [docs/15_runbooks/supabase_cli_backup_dry_run_design.md](docs/15_runbooks/supabase_cli_backup_dry_run_design.md) を参照してください。
 
+Loop 198 Supabase CLI backup command pack planningでは、preflight / export / verification / artifact handling / restore roadmap のplaceholder-only command packを整理しました。`command_pack_status=planned` / `placeholder_only=true` とし、Supabase CLI/API、pg_dump、DB export、restore、backup artifact作成、runtime変更は行っていません。詳細は [docs/11_codex_tasks/198_supabase_cli_backup_command_pack_planning.md](docs/11_codex_tasks/198_supabase_cli_backup_command_pack_planning.md) と [docs/15_runbooks/supabase_cli_backup_command_pack_planning.md](docs/15_runbooks/supabase_cli_backup_command_pack_planning.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

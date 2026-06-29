@@ -191,3 +191,23 @@ secrets_recorded=false
 ```
 
 See [supabase_cli_backup_dry_run_design.md](supabase_cli_backup_dry_run_design.md).
+
+## 16. Loop 198 Supabase CLI Backup Command Pack Planning
+
+Loop 198 records placeholder-only command groups for the planning-only path.
+
+```txt
+command_pack_status=planned
+placeholder_only=true
+preflight_execution_status=not_executed
+export_execution_status=not_executed
+restore_execution_status=not_executed
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+production readiness: Go
+```
+
+Next safe step is Loop 199 preflight with explicit approval and no database export.

@@ -206,3 +206,28 @@ https_line_invalid_signature_status=401
 ```txt
 Loop 198: Supabase CLI backup command pack planning
 ```
+
+## 15. Loop 198 Command Pack Planning Follow-Up
+
+Loop 198 expands this design into a placeholder-only command pack plan.
+
+```txt
+command_pack_status=planned
+placeholder_only=true
+preflight_command_group=planned
+export_command_group=planned
+verification_command_group=planned
+artifact_handling_group=planned
+restore_roadmap_group=planned
+preflight_execution_status=not_executed
+export_execution_status=not_executed
+restore_execution_status=not_executed
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+secrets_recorded=false
+```
+
+See [Supabase CLI Backup Command Pack Planning](supabase_cli_backup_command_pack_planning.md).

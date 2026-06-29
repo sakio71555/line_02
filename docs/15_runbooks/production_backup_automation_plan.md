@@ -485,3 +485,28 @@ production readiness: Go
 ```
 
 Backup automation still requires explicit future approval, artifact storage approval, and a non-production restore drill.
+
+## 24. Loop 198 Supabase CLI Backup Command Pack Planning
+
+Loop 198 adds a placeholder-only command pack plan. It does not execute any preflight, export, verification, restore, or artifact command.
+
+```txt
+command_pack_status=planned
+placeholder_only=true
+preflight_command_group=planned
+export_command_group=planned
+verification_command_group=planned
+artifact_handling_group=planned
+restore_roadmap_group=planned
+preflight_execution_status=not_executed
+export_execution_status=not_executed
+restore_execution_status=not_executed
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+runtime unchanged
+```
+
+Automation remains blocked until an explicit future Loop approves the exact preflight or export scope.

@@ -1197,3 +1197,23 @@ secrets_recorded=false
 ```
 
 Next optional backup step: Loop 198 command pack planning with placeholders only.
+
+## Loop 198 Supabase CLI Backup Command Pack Planning Handoff
+
+Loop 198 adds placeholder-only command groups for preflight, export, verification, artifact handling, and restore roadmap.
+
+```txt
+command_pack_status=planned
+placeholder_only=true
+preflight_execution_status=not_executed
+export_execution_status=not_executed
+restore_execution_status=not_executed
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+restore performed=false
+secrets_recorded=false
+```
+
+Operator reminder: Loop 199 may only perform preflight checks if explicitly approved, with no database export and no backup artifact.
