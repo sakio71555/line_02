@@ -47,6 +47,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 207 Obsidian Log](loop_207_isolated_non_production_restore_drill_execution_gate.md)
 - [Loop 208 Restore Drill Target Selection](../11_codex_tasks/208_restore_drill_target_selection_without_restore.md)
 - [Loop 208 Obsidian Log](loop_208_restore_drill_target_selection_without_restore.md)
+- [Loop 209 Isolated Local PostgreSQL Restore Drill Execution](../11_codex_tasks/209_isolated_local_postgresql_restore_drill_execution.md)
+- [Loop 209 Obsidian Log](loop_209_isolated_local_postgresql_restore_drill_execution.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -75,6 +77,8 @@ Loop 206 status: `restore_drill_plan_created=true`, `restore_executed=false`, `p
 Loop 207 status: `restore_execution_gate_created=true`, `restore_target_selected=false`, `restore_executed=false`, `production_restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `backup_artifact_copied_into_repo=false`, `dump_content_displayed=false`, `secrets_recorded=false`, `loop_208_restore_drill_target_selection_ready=true`.
 
 Loop 208 status: `restore_target_selection_documented=true`, `restore_target_selected=true`, `selected_restore_target=local_isolated_postgresql_on_vps`, `target_db_created=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `production_restore_executed=false`, `secrets_recorded=false`, `loop_209_restore_drill_execution_ready=true_pending_operator_approval`.
+
+Loop 209 status: `restore_drill_status=blocked`, `failure_category=isolated_local_postgresql_target_unavailable`, `artifact_checksum_verified=true`, `pg_restore_17_version_check_passed=true`, `local_postgresql_ready=false`, `target_db_created=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `production_restore_executed=false`, `secrets_recorded=false`, `next=Loop 209.1 target provisioning approval`.
 
 ## Obsidian Helpers
 

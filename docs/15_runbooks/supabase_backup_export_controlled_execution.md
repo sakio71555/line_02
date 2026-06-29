@@ -294,3 +294,38 @@ loop_209_restore_drill_execution_ready=true_pending_operator_approval
 ```
 
 Loop 209 must use only a localhost-only disposable PostgreSQL target on the VPS unless a new Loop changes the target decision. Production and Supabase production remain forbidden restore targets.
+
+## 18. Loop 209 Restore Drill Execution Result
+
+Loop 209 attempted the preflight for the selected local isolated PostgreSQL target and stopped before restore.
+
+```txt
+restore_drill_status=blocked
+failure_category=isolated_local_postgresql_target_unavailable
+artifact_exists=true
+artifact_checksum_verified=true
+artifact_permission_checked=true
+pg_restore_17_path_present=true
+pg_restore_17_version_check_passed=true
+postgres_user_present=false
+local_postgresql_ready=false
+target_db_created=false
+restore_executed=false
+pg_restore_executed=false
+pg_restore_version_check_executed=true
+psql_executed=false
+restore_attempt_count=0
+sanitized_validation_executed=false
+restore_target_dropped=false
+cleanup_required=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+```
+
+No restore target was created, so no cleanup action was required. The next step is a separate provisioning approval Loop before restore can be retried.

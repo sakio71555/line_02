@@ -35,6 +35,7 @@
 - Loop 206 restore drill planning without production restore: `11_codex_tasks/206_restore_drill_planning_without_production_restore.md`
 - Loop 207 isolated non-production restore drill execution gate: `11_codex_tasks/207_isolated_non_production_restore_drill_execution_gate.md`
 - Loop 208 restore drill target selection without restore: `11_codex_tasks/208_restore_drill_target_selection_without_restore.md`
+- Loop 209 isolated local PostgreSQL restore drill execution: `11_codex_tasks/209_isolated_local_postgresql_restore_drill_execution.md`
 
 ## Prompts and Templates
 

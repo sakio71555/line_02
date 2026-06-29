@@ -265,3 +265,67 @@ db_url_displayed=false
 secrets_recorded=false
 loop_209_restore_drill_execution_ready=true_pending_operator_approval
 ```
+
+## 12. Loop 209 Restore Drill Execution Result
+
+Loop 209 reached the execution preflight for `local_isolated_postgresql_on_vps`, but stopped before restore because a usable local PostgreSQL target was unavailable.
+
+### 12.1 Sanitized Preflight
+
+```txt
+artifact_exists=true
+artifact_file_permission=600
+artifact_dir_permission=700
+artifact_size_match=true
+artifact_checksum_verified=true
+artifact_permission_checked=true
+artifact_dir_permission_checked=true
+pg_restore_17_path_present=true
+pg_restore_version=17.10
+pg_restore_17_version_check_passed=true
+postgres_user_present=false
+pg_isready_available=true
+local_postgresql_ready=false
+createdb_available=true
+dropdb_available=true
+vps_preflight_status=blocked
+```
+
+### 12.2 Restore Result
+
+```txt
+restore_drill_status=blocked
+failure_category=isolated_local_postgresql_target_unavailable
+selected_restore_target=local_isolated_postgresql_on_vps
+target_db_created=false
+restore_target_verified_isolated=false
+restore_target_db_name_contains_restore_drill=false
+restore_executed=false
+pg_restore_executed=false
+pg_restore_version_check_executed=true
+psql_executed=false
+restore_attempt_count=0
+sanitized_validation_executed=false
+restore_target_dropped=false
+cleanup_required=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+migration_executed=false
+rls_changed=false
+schema_changed=false
+backup_artifact_copied_into_repo=false
+row_content_displayed=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+```
+
+### 12.3 Next Gate
+
+```txt
+next_loop=Loop 209.1: isolated local PostgreSQL target provisioning approval
+```
+
+Do not retry restore until local PostgreSQL target provisioning is explicitly approved and separated from restore execution.

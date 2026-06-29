@@ -497,6 +497,8 @@ Loop 207 isolated non-production restore drill execution gateでは、restore dr
 
 Loop 208 restore drill target selection without restoreでは、次回の復元訓練targetとして `local_isolated_postgresql_on_vps` を選定しました。artifactを移動せず、VPS上のPostgreSQL 17 toolingを使えるため最初のisolated drill候補とします。ただしtarget DB作成、restore、pg_restore、psql、Supabase接続、production restoreはまだ行っていません。詳細は [docs/11_codex_tasks/208_restore_drill_target_selection_without_restore.md](docs/11_codex_tasks/208_restore_drill_target_selection_without_restore.md) と [docs/16_obsidian/loop_208_restore_drill_target_selection_without_restore.md](docs/16_obsidian/loop_208_restore_drill_target_selection_without_restore.md) を参照してください。
 
+Loop 209 isolated local PostgreSQL restore drill executionでは、Loop 205 artifact metadataと `/usr/lib/postgresql/17/bin/pg_restore` のversionをsanitized確認しましたが、VPS上のlocal PostgreSQL targetが利用できず `restore_drill_status=blocked` / `failure_category=isolated_local_postgresql_target_unavailable` として停止しました。restore、target DB作成、psql、Supabase接続、production restore、dump内容表示、secret記録は行っていません。詳細は [docs/11_codex_tasks/209_isolated_local_postgresql_restore_drill_execution.md](docs/11_codex_tasks/209_isolated_local_postgresql_restore_drill_execution.md) と [docs/16_obsidian/loop_209_isolated_local_postgresql_restore_drill_execution.md](docs/16_obsidian/loop_209_isolated_local_postgresql_restore_drill_execution.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
