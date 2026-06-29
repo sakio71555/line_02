@@ -1083,3 +1083,27 @@ production readiness: Go
 ```
 
 Operator next action: use the Supabase manual backup operator checklist, then report only sanitized status.
+
+## Loop 194.1 Supabase Free Plan Limitation Result
+
+The operator confirmed that dashboard/manual/managed backup is unavailable on the current Free Plan. Backup remains not performed.
+
+```txt
+manual_backup_availability_recording_status=complete
+operator_result_received=true
+manual_backup_available=false
+managed_backup_available=false
+backup_performed_by_operator=false
+backup_status=not_performed
+backup_artifact_downloaded=false
+backup_artifact_committed_to_repo=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+secrets_recorded=false
+runtime_changes_performed=false
+backup_success_recorded=false
+production readiness: Go
+```
+
+Operator next action: decide the backup path after Free Plan limitation.

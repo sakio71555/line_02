@@ -361,3 +361,27 @@ production readiness: Go
 ```
 
 Automation still requires a successful operator backup result and a non-production restore drill before any scheduled export proposal.
+
+## 19. Loop 194.1 Free Plan Limitation Availability Result
+
+Backup automation remains blocked because the operator confirmed dashboard/manual/managed backup is unavailable on the current Free Plan.
+
+```txt
+manual_backup_availability_recording_status=complete
+operator_result_received=true
+backup_availability_checked=true
+manual_backup_available=false
+managed_backup_available=false
+backup_performed_by_operator=false
+backup_status=not_performed
+backup_artifact_downloaded=false
+backup_artifact_committed_to_repo=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+runtime_changes_performed=false
+backup_success_recorded=false
+production readiness: Go
+```
+
+Next safe step is choosing a backup path after the Free Plan limitation. Scheduled automation remains future work.

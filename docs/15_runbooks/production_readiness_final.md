@@ -2111,3 +2111,41 @@ secrets_recorded=false
 ```
 
 No Supabase dashboard operation, CLI/API call, DB export, restore, artifact download, runtime change, additional LINE send, OpenAI API call, or Nginx/DNS/certbot change was performed.
+
+## Loop 194.1 Supabase Manual Backup Availability Result After Free Plan Limitation
+
+Loop 194.1 keeps production readiness Go and records the operator-confirmed Free Plan limitation. Backup is not marked as succeeded.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+manual_backup_availability_recording_status=complete
+operator_result_received=true
+backup_availability_checked=true
+manual_backup_available=false
+managed_backup_available=false
+retention_visibility=true
+restore_option_visible=true
+project_confirmed_by_operator=true
+backup_performed_by_operator=false
+backup_method=not_performed
+backup_status=not_performed
+backup_artifact_downloaded=false
+backup_artifact_committed_to_repo=false
+backup_artifact_uploaded_to_chat=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+secrets_recorded=false
+backup_success_recorded=false
+```
+
+Next safe step: Loop 195 Supabase backup path decision after Free Plan limitation.

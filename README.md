@@ -452,6 +452,8 @@ Loop 193では、Supabase manual backup operator checklistをdocs/test/read-only
 
 Loop 194では、Supabase manual backup result recordingをdocs/test/read-only verificationのみで追加しました。operator resultは未提供のため、バックアップ成功扱いにはせず `manual_backup_result_recording_status=pending` / `operator_result_required=true` として記録しています。CodexはSupabase dashboard操作、CLI/API、DB export、restore、artifact取得、secret表示、runtime変更を行っていません。詳細は [docs/11_codex_tasks/194_supabase_manual_backup_result_recording.md](docs/11_codex_tasks/194_supabase_manual_backup_result_recording.md) と [docs/15_runbooks/supabase_manual_backup_result_recording.md](docs/15_runbooks/supabase_manual_backup_result_recording.md) を参照してください。
 
+Loop 194.1では、operatorがSupabase dashboardで確認したsanitized resultを記録しました。Free Plan limitationによりmanual/managed backupは利用不可、`backup_status=not_performed`、`backup_success_recorded=false` です。CodexはSupabase dashboard操作、CLI/API、DB export、restore、artifact取得、secret表示、runtime変更を行っていません。詳細は [docs/11_codex_tasks/194_1_supabase_manual_backup_availability_result_after_free_plan_limitation.md](docs/11_codex_tasks/194_1_supabase_manual_backup_availability_result_after_free_plan_limitation.md) と [docs/15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md](docs/15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

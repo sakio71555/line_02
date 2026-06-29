@@ -343,3 +343,36 @@ Next explicit candidate:
 ```txt
 Loop 194.1: Operator performs Supabase manual backup using checklist
 ```
+
+## Loop 194.1 Follow-up
+
+Loop 194.1 records the operator-confirmed Free Plan limitation. Dashboard/manual/managed project backup is unavailable on the current plan, so backup remains not performed and not marked as succeeded.
+
+```txt
+manual_backup_availability_recording_status=complete
+operator_result_received=true
+backup_availability_checked=true
+manual_backup_available=false
+managed_backup_available=false
+backup_performed_by_operator=false
+backup_status=not_performed
+backup_artifact_downloaded=false
+backup_artifact_committed_to_repo=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+runtime_changes_performed=false
+production readiness: Go
+```
+
+Remaining P0 backup implementation:
+
+- decide backup path after Free Plan limitation.
+- do not start restore drill until a successful backup path/result exists.
+- keep all backup/export/upgrade/automation work in separate explicit Loops.
+
+Next explicit candidate:
+
+```txt
+Loop 195: Supabase backup path decision after Free Plan limitation
+```

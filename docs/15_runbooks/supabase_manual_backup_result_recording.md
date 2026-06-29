@@ -145,6 +145,41 @@ After the operator records a sanitized successful backup result:
 Loop 195: Supabase non-production restore drill plan
 ```
 
+## 12. Loop 194.1 Free Plan Limitation Availability Result
+
+Loop 194.1 records that the operator checked the Supabase dashboard and found the current Free Plan does not include the needed project backups.
+
+```txt
+manual_backup_availability_recording_status=complete
+operator_result_received=true
+operator_result_sanitized=true
+backup_availability_checked=true
+manual_backup_available=false
+managed_backup_available=false
+retention_visibility=true
+restore_option_visible=true
+project_confirmed_by_operator=true
+backup_performed_by_operator=false
+backup_method=not_performed
+backup_status=not_performed
+backup_artifact_downloaded=false
+backup_artifact_committed_to_repo=false
+backup_artifact_uploaded_to_chat=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+secrets_recorded=false
+runtime_changes_performed=false
+backup_success_recorded=false
+production readiness: Go
+```
+
+Next safe step:
+
+```txt
+Loop 195: Supabase backup path decision after Free Plan limitation
+```
+
 ## Result Recording Template for Future Operator Result
 
 Use this only after the operator provides sanitized values.

@@ -427,3 +427,33 @@ Next safe step:
 ```txt
 Loop 194.1: Operator performs Supabase manual backup using checklist
 ```
+
+## Loop 194.1 Supabase Free Plan Limitation Follow-up
+
+Loop 194.1 records that the operator checked the Supabase dashboard and manual/managed backup is unavailable on the current Free Plan.
+
+```txt
+manual_backup_availability_recording_status=complete
+operator_result_received=true
+manual_backup_available=false
+managed_backup_available=false
+backup_performed_by_operator=false
+backup_status=not_performed
+backup_artifact_downloaded=false
+backup_artifact_committed_to_repo=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+backup_success_recorded=false
+production readiness: Go
+```
+
+Next safe step:
+
+```txt
+Loop 195: Supabase backup path decision after Free Plan limitation
+```

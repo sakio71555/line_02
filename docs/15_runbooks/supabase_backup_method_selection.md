@@ -208,3 +208,30 @@ production readiness: Go
 ```
 
 Next action remains operator-performed manual or managed backup, followed by sanitized result recording.
+
+## 14. Loop 194.1 Free Plan Limitation Availability Result
+
+Operator-confirmed dashboard result: current Free Plan does not provide the needed manual/managed project backup path. Backup remains not performed.
+
+```txt
+manual_backup_availability_recording_status=complete
+operator_result_received=true
+backup_availability_checked=true
+manual_backup_available=false
+managed_backup_available=false
+retention_visibility=true
+restore_option_visible=true
+project_confirmed_by_operator=true
+backup_performed_by_operator=false
+backup_method=not_performed
+backup_status=not_performed
+backup_artifact_downloaded=false
+backup_artifact_committed_to_repo=false
+restore_performed=false
+Supabase CLI/API called by Codex=false
+DB export performed by Codex=false
+backup_success_recorded=false
+production readiness: Go
+```
+
+Next safe step is Supabase backup path decision after Free Plan limitation.
