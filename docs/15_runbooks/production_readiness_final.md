@@ -2241,3 +2241,27 @@ secrets_recorded=false
 ```
 
 The production system remains Go. Backup review is deferred for later operator action.
+
+## Loop 197 Supabase CLI Backup Dry-Run Design
+
+Production readiness remains Go. This Loop only designs the future CLI/pg_dump-style backup dry-run path.
+
+```txt
+design_status=complete
+production_readiness=production_go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+restore performed=false
+backup artifact created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+nginx_dns_certbot_changes=false
+secrets_recorded=false
+```

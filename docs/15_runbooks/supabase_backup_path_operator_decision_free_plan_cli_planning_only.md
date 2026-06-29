@@ -169,3 +169,25 @@ secrets_recorded=false
 ```
 
 No further required Loop remains. Backup should be reviewed later by the operator.
+
+## 15. Loop 197 Optional CLI Backup Dry-Run Design
+
+The planning-only path selected in Loop 196 now has a design boundary. This does not execute a command and does not change the Loop 197 production closeout result.
+
+```txt
+design_status=complete
+secret_handling_model_created=true
+artifact_handling_model_created=true
+approval_tokens_created=true
+command_pack_principles_created=true
+restore_verification_roadmap_created=true
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+restore performed=false
+backup artifact created=false
+runtime unchanged
+secrets_recorded=false
+```
+
+See [supabase_cli_backup_dry_run_design.md](supabase_cli_backup_dry_run_design.md).

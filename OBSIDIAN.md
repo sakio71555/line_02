@@ -49,6 +49,7 @@ This repository can be opened directly as an Obsidian Vault.
 - Loop 195 records the backup path decision options after that limitation.
 - Loop 196 records the operator decision: `selected_path=B_planning_only`.
 - Loop 197 records production operations final closeout.
+- Loop 197 Supabase CLI backup dry-run design records the design-only command boundary after the operator chose planning-only.
 - Supabase backup remains a deferred risk: `supabase_backup_success_status=not_achieved` and `supabase_backup_review_required_later=true`.
 
 ## .obsidian Policy

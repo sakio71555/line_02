@@ -222,3 +222,25 @@ scope:
 - no export
 - no restore
 ```
+
+## Loop 197 Supabase CLI Backup Dry-Run Design
+
+The selected Option B planning-only path now has a secret-safe dry-run design. No execution happened.
+
+```txt
+design_status=complete
+secret_handling_model_created=true
+artifact_handling_model_created=true
+approval_tokens_created=true
+command_pack_principles_created=true
+restore_verification_roadmap_created=true
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+restore performed=false
+backup artifact created=false
+runtime unchanged
+production readiness: Go
+```
+
+Next optional backup step is Loop 198 command pack planning with placeholders only.

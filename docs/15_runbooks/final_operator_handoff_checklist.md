@@ -1178,3 +1178,22 @@ secrets_recorded=false
 ```
 
 Operator reminder: review Supabase backup later before relying on long-term production data recovery.
+
+## Loop 197 Supabase CLI Backup Dry-Run Design Handoff
+
+Optional backup work can continue with a design-only path. Operators should not run CLI/API, export, restore, or create artifacts until a later Loop explicitly approves it.
+
+```txt
+design_status=complete
+secret_handling_model_created=true
+artifact_handling_model_created=true
+approval_tokens_created=true
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+restore performed=false
+backup artifact created=false
+secrets_recorded=false
+```
+
+Next optional backup step: Loop 198 command pack planning with placeholders only.

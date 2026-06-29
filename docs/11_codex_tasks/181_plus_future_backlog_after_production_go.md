@@ -466,3 +466,33 @@ secrets_recorded=false
 ```
 
 No further implementation Loop is required for initial production closeout. Future backup work is optional and should start only after renewed operator approval.
+
+## Loop 197 Optional Supabase CLI Backup Dry-Run Design
+
+Loop 197 also records an optional backup-design follow-up after the Loop 196 `selected_path=B_planning_only` decision. This does not reopen required production closeout work.
+
+```txt
+design_status=complete
+secret_handling_model_created=true
+artifact_handling_model_created=true
+approval_tokens_created=true
+command_pack_principles_created=true
+restore_verification_roadmap_created=true
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+restore performed=false
+backup artifact created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+nginx_dns_certbot_changes=false
+secrets_recorded=false
+production_readiness=production_go
+```
+
+Next optional backup step:
+
+```txt
+Loop 198: Supabase CLI backup command pack planning
+```

@@ -459,3 +459,29 @@ secrets_recorded=false
 ```
 
 Backup automation remains future optional work, not a required open Loop.
+
+## 23. Loop 197 Supabase CLI Backup Dry-Run Design
+
+Loop 197 adds the design boundary for the Free Plan CLI/pg_dump-style path selected as planning-only in Loop 196.
+
+```txt
+design_status=complete
+secret_handling_model_created=true
+artifact_handling_model_created=true
+approval_tokens_created=true
+command_pack_principles_created=true
+restore_verification_roadmap_created=true
+Supabase CLI/API called=false
+pg_dump executed=false
+DB export performed=false
+restore performed=false
+backup artifact created=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+nginx_dns_certbot_changes=false
+secrets_recorded=false
+production readiness: Go
+```
+
+Backup automation still requires explicit future approval, artifact storage approval, and a non-production restore drill.

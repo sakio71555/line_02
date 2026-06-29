@@ -26,11 +26,13 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 195 Backup Path Decision](../11_codex_tasks/195_supabase_backup_path_decision_after_free_plan_limitation.md)
 - [Loop 196 Operator Decision](../11_codex_tasks/196_supabase_backup_path_operator_decision_free_plan_cli_planning_only.md)
 - [Loop 197 Final Closeout](../11_codex_tasks/197_production_operations_final_closeout_with_supabase_backup_deferred_risk_acceptance.md)
+- [Loop 197 Supabase CLI Backup Dry-Run Design](../11_codex_tasks/197_supabase_cli_backup_dry_run_design.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
 - [Supabase Backup Path Operator Decision Free Plan CLI Planning Only](../15_runbooks/supabase_backup_path_operator_decision_free_plan_cli_planning_only.md)
 - [Production Operations Final Closeout With Supabase Backup Deferred Risk Acceptance](../15_runbooks/production_operations_final_closeout_with_supabase_backup_deferred_risk_acceptance.md)
+- [Supabase CLI Backup Dry-Run Design](../15_runbooks/supabase_cli_backup_dry_run_design.md)
 
 ## Obsidian Helpers
 

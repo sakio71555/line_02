@@ -476,6 +476,8 @@ Loop 196のようなSupabase backup path operator decisionでは、operatorが `
 
 Loop 197のようなproduction operations final closeoutでは、必須の追加実装Loopを残さず `project_closeout_status=complete` / `no_further_required_loop=true` を記録できます。ただし、未達のSupabase backupは `supabase_backup_success_status=not_achieved` として明示し、`supabase_backup_risk_accepted=true` / `supabase_backup_review_required_later=true` を残します。closeoutであっても、Supabase CLI/API、pg_dump、DB export、restore、runtime変更、追加LINE送信、OpenAI API、Nginx/DNS/certbot変更、secret表示は行いません。
 
+Loop 197 Supabase CLI backup dry-run designのようなoptional backup設計Loopでは、closeout済みのproduction状態を変更せず、将来のCLI/pg_dump系backup dry-runに必要なsecret handling、artifact handling、approval tokens、No-Go条件、future Loop splitだけをdocs/testで固定します。設計LoopではSupabase CLI/API、pg_dump、DB export、restore、backup artifact作成、secret表示を行いません。
+
 ## Obsidian Development Log Requirement
 
 Every Loop must update Obsidian-readable Markdown logs:
