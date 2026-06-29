@@ -527,6 +527,8 @@ Loop 220 TOC count-only staged restore diagnostic executionでは、`/usr/lib/po
 
 Loop 221 pre-data only restore diagnostic gateでは、Loop 220結果をもとに次のpre-data only diagnosticを1回だけ安全に実行するための境界をdocs化しました。fresh local isolated target DB条件、`/usr/lib/postgresql/17/bin/pg_restore --section=pre-data --no-owner --no-privileges` 方針、root-only diagnostic log、success/failure判定、cleanup方針、Go/No-Goを整理しています。このLoopではrestore、pg_restore、psql、target DB作成、Supabase接続、production restore、diagnostic log表示、secret記録は行っていません。詳細は [docs/11_codex_tasks/221_pre_data_only_restore_diagnostic_gate.md](docs/11_codex_tasks/221_pre_data_only_restore_diagnostic_gate.md) と [docs/16_obsidian/loop_221_pre_data_only_restore_diagnostic_gate.md](docs/16_obsidian/loop_221_pre_data_only_restore_diagnostic_gate.md) を参照してください。
 
+Loop 222 pre-data only restore diagnostic executionでは、fresh local isolated target DBへ `pg_restore --section=pre-data --no-owner --no-privileges` を1回だけ実行しました。結果は `pg_restore_exit_code=1` / `pre_data_diagnostic_status=failed` / `failure_category=pre_data_permission_error_detected` で、target DBはdrop済み、cleanup不要です。raw diagnostic log、object名、SQL文、role名、dump内容、row content、secretは記録していません。詳細は [docs/11_codex_tasks/222_pre_data_only_restore_diagnostic_execution.md](docs/11_codex_tasks/222_pre_data_only_restore_diagnostic_execution.md) と [docs/16_obsidian/loop_222_pre_data_only_restore_diagnostic_execution.md](docs/16_obsidian/loop_222_pre_data_only_restore_diagnostic_execution.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

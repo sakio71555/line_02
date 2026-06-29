@@ -60,6 +60,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 219 selects `toc_count_only` as the first staged diagnostic execution candidate, defines the next Loop boundary, and still does not run restore, `pg_restore`, `psql`, create a target DB, display TOC body, or expose object names.
 - Loop 220 executes the TOC count-only diagnostic with PostgreSQL 17 explicit `pg_restore --list`, stores TOC output repo-external/root-only, records counts only, and selects `pre_data_only_restore_diagnostic_gate` as the next stage while keeping restore, target DB creation, raw TOC display, Supabase, and production untouched.
 - Loop 221 defines the pre-data only diagnostic gate, requiring a future fresh local isolated target DB, explicit PostgreSQL 17 `pg_restore`, repo-external/root-only diagnostic logs, sanitized result fields, and cleanup policy while still not executing restore, `pg_restore`, `psql`, target DB creation, Supabase, or production restore.
+- Loop 222 executes one pre-data only diagnostic on a fresh local isolated target DB, stores raw output repo-external/root-only, records `pre_data_permission_error_detected`, drops the target DB, and keeps raw log, object names, row content, secrets, Supabase, production restore, and runtime untouched.
 
 ## .obsidian Policy
 

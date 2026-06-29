@@ -23,6 +23,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-013 | Staged diagnostics execution gate | docs-only check that Loop 219 selects one next stage and defines the execution boundary | `toc_count_only` selected and no execution performed | true | false | false | false | false | false | false | false | pending_loop_219_verification | Does not execute `pg_restore --list`. |
 | V-014 | TOC count-only diagnostic result | sanitized count-only review of Loop 220 docs and root-only metadata | TOC count recorded, body hidden, next stage selected | true | false | false | false | false | false | false | false | pending_loop_220_verification | Does not display TOC body or prove restore readiness. |
 | V-015 | Pre-data diagnostic gate | docs-only check that Loop 221 defines one-attempt pre-data execution boundary and cleanup policy | pre-data gate created, no execution performed | true | false | false | false | false | false | false | false | pending_loop_221_verification | Does not run restore, `pg_restore`, `psql`, or create a target DB. |
+| V-016 | Pre-data diagnostic execution record | sanitized review of Loop 222 execution metadata, classifier, and cleanup | one attempt recorded, permission/auth signal classified, target dropped | true | false | false | false | false | false | true | true | pending_loop_222_verification | Raw diagnostic log and object details must remain hidden. |
 
 ## Blocked Or Operator Approval Required
 
@@ -150,6 +151,33 @@ loop_221_backup_artifact_copied_into_repo=false
 loop_221_supabase_connection_executed=false
 loop_221_production_restore_executed=false
 loop_221_next_loop=Loop 222 pre-data only restore diagnostic execution
+```
+
+## Loop 222 Verification Note
+
+```txt
+loop_222_restore_stage=pre_data
+loop_222_restore_options_pre_data_no_owner_no_privileges=true
+loop_222_restore_attempt_count=1
+loop_222_pg_restore_exit_code=1
+loop_222_pre_data_diagnostic_status=failed
+loop_222_failure_category=pre_data_permission_error_detected
+loop_222_permission_or_auth_error_detected=true
+loop_222_permission_or_auth_error_count=1
+loop_222_sanitized_validation_executed=false
+loop_222_restore_target_dropped=true
+loop_222_target_db_exists_after_drop=false
+loop_222_cleanup_required=false
+loop_222_raw_log_displayed=false
+loop_222_object_name_displayed=false
+loop_222_sql_statement_displayed=false
+loop_222_role_name_displayed=false
+loop_222_dump_content_displayed=false
+loop_222_row_content_displayed=false
+loop_222_secrets_recorded=false
+loop_222_supabase_connection_executed=false
+loop_222_production_restore_executed=false
+loop_222_next_loop=Loop 223 pre-data permission/auth remediation gate
 ```
 
 ## Stage 2 Rule

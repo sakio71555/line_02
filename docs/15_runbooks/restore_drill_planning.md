@@ -1577,3 +1577,105 @@ pre_data_diagnostic_gate_created=true
 loop_222_pre_data_execution_ready=true
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 26. Loop 222 Pre-Data Only Restore Diagnostic Execution
+
+Loop 222 executes exactly one pre-data only diagnostic against a fresh local isolated target DB. It keeps raw output repo-external/root-only and records only sanitized category/count metadata.
+
+### 26.1 Preflight
+
+```txt
+artifact_exists=true
+artifact_readable=true
+file_permission=600
+parent_dir_permission=700
+artifact_size=259222
+artifact_checksum_verified=true
+local_cluster_name=restore_drill_loop2091
+local_cluster_found=true
+local_cluster_port=55432
+local_cluster_status=online
+local_cluster_socket_or_loopback_scope=true
+supabase_connection_executed=false
+production_db_connection_executed=false
+supabase_db_url_used=false
+```
+
+### 26.2 Target And Diagnostic Log
+
+The TCP localhost helper was interrupted before any restore attempt. The actual restore attempt used the local socket plus port `55432`.
+
+```txt
+pre_restore_helper_interrupted_before_pg_restore=true
+pre_restore_helper_restore_attempt_count=0
+fresh_target_db_name=amami_line_crm_restore_drill_loop222_pre_data_20260630_075241
+fresh_target_db_created=true
+fresh_target_verified_isolated=true
+diagnostic_log_path=/root/deploy-backups/amami-line-crm/loop222-pre-data-20260630_075241/pg_restore-pre-data-diagnostic.log
+diagnostic_log_repo_path=false
+diagnostic_log_permission=600
+diagnostic_log_dir_permission=700
+diagnostic_log_displayed=false
+diagnostic_log_committed=false
+```
+
+### 26.3 Pre-Data Diagnostic Result
+
+```txt
+pg_restore_17_path_present=true
+pg_restore_version=17.10
+pg_restore_17_version_check_passed=true
+restore_stage=pre_data
+restore_options=--section=pre-data --no-owner --no-privileges
+restore_attempt_count=1
+pg_restore_exit_code=1
+pre_data_diagnostic_status=failed
+failure_category=pre_data_permission_error_detected
+```
+
+### 26.4 Sanitized Classifier
+
+```txt
+sanitized_classifier_executed=true
+role_owner_acl_error_detected=false
+role_owner_acl_error_count=0
+extension_missing_detected=false
+extension_missing_count=0
+object_conflict_detected=false
+object_conflict_count=0
+permission_or_auth_error_detected=true
+permission_or_auth_error_count=1
+schema_or_sql_statement_error_detected=false
+schema_or_sql_statement_error_count=0
+restore_option_error_detected=false
+restore_option_error_count=0
+target_cluster_error_detected=false
+target_cluster_error_count=0
+custom_dump_format_error_detected=false
+custom_dump_format_error_count=0
+unknown_error_detected=false
+generic_error_count=1
+warning_count=0
+```
+
+### 26.5 Validation And Cleanup
+
+```txt
+sanitized_validation_executed=false
+sanitized_validation_status=not_executed
+row_content_displayed=false
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+pg_restore_comm_count_after=0
+createdb_comm_count_after=0
+psql_comm_count_after=0
+```
+
+### 26.6 Next Stage
+
+```txt
+selected_next_stage=Loop 223: pre-data permission/auth remediation gate
+selected_next_stage_reason=pre_data_failed_with_permission_or_auth_signal
+dr_readiness_status=not_ready_restore_failed
+```
