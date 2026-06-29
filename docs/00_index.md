@@ -53,6 +53,7 @@
 - Loop 221 pre-data only restore diagnostic gate: `11_codex_tasks/221_pre_data_only_restore_diagnostic_gate.md`
 - Loop 222 pre-data only restore diagnostic execution: `11_codex_tasks/222_pre_data_only_restore_diagnostic_execution.md`
 - Loop 223 pre-data permission/auth remediation gate: `11_codex_tasks/223_pre_data_permission_auth_remediation_gate.md`
+- Loop 224 local target privilege alignment gate without restore: `11_codex_tasks/224_local_target_privilege_alignment_gate_without_restore.md`
 
 ## Prompts and Templates
 

@@ -1781,3 +1781,106 @@ remediation_gate_created=true
 next_loop_selected=true
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 28. Loop 224 Local Target Privilege Alignment Gate Without Restore
+
+Loop 224 creates the gate for local target privilege alignment. It does not run `psql`, restore, `pg_restore`, target DB creation, target DB modification, target DB privilege changes, role changes, package changes, cluster changes, raw log review, Supabase connection, or production connection.
+
+### 28.1 Inputs From Loop 222 / 223
+
+```txt
+loop_222_restore_stage=pre_data
+loop_222_restore_options=--section=pre-data --no-owner --no-privileges
+loop_222_restore_attempt_count=1
+loop_222_pg_restore_exit_code=1
+loop_222_pre_data_diagnostic_status=failed
+loop_222_classifier=pre_data_permission_error_detected
+loop_222_permission_or_auth_error_count=1
+loop_222_restore_target_dropped=true
+loop_222_cleanup_required=false
+loop_223_selected_next_loop=local_target_privilege_alignment_gate_without_restore
+restore_success_achieved=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+### 28.2 Privilege Alignment Checklist
+
+Loop 225 should inspect only local isolated metadata. It should not display row content, raw logs, SQL statements, object names, role names, DB URLs, secrets, or production logs.
+
+Local cluster identity:
+
+- Confirm local isolated restore drill cluster identity.
+- Confirm local-only port/scope.
+- Confirm the target is not Supabase and not production.
+- Confirm runtime services are not pointed at the target.
+
+Restore execution identity:
+
+- Confirm planned restore execution user.
+- Confirm local admin context used for inspection.
+- Confirm whether target DB owner and restore connection user should match.
+- Confirm whether target DB creation owner is part of the permission surface.
+- Confirm local-only connection strategy avoids passwords and secrets.
+
+Target DB privilege:
+
+- Confirm owner and restore connection user alignment.
+- Confirm `CONNECT`, `TEMP`, schema creation, public schema, and extension creation privilege design.
+- Keep `--no-owner --no-privileges` as the baseline for future restore attempts.
+
+Pre-data specific risk:
+
+- Pre-data can require schema and extension creation.
+- Pre-data can define database objects without row data.
+- Ownership and permission boundaries can still matter even with the no-owner/no-privileges baseline.
+- RLS/policy should not be treated as the primary pre-data cause without evidence.
+
+### 28.3 Remediation Candidate Decision
+
+| candidate | decision | reason |
+| --- | --- | --- |
+| Inspection-only local privilege check | Selected | Metadata-only and lowest risk. |
+| Fresh target DB owner alignment execution | Deferred | Requires DB creation and cleanup in a later Loop. |
+| Pre-data retry with owner-aligned target | No-Go now | Requires restore execution and should wait. |
+| Operator-only pre-data permission log review | Fallback | Useful only if inspection cannot narrow the issue. |
+| Accept failure as warning | No-Go | Pre-data exit code 1 cannot prove DR readiness. |
+
+### 28.4 Selected Next Loop Boundary
+
+```txt
+selected_next_loop=Loop 225: local target privilege alignment inspection without changes
+inspection_only=true
+target_db_creation_no_go=true
+restore_retry_no_go=true
+role_change_no_go=true
+accept_nonzero_exit_no_go=true
+```
+
+Loop 225 may allow tightly scoped local-only `psql` metadata checks, but only after explicit Loop approval. It must not create or modify databases, change roles, run restore, run `pg_restore`, connect to Supabase/production, display raw logs, display object names, display SQL statements, display role names, display row content, or touch the backup artifact.
+
+### 28.5 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+target_db_privilege_changed=false
+role_created=false
+role_modified=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+object_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_restore_executed=false
+privilege_alignment_gate_created=true
+next_loop_selected=true
+dr_readiness_status=not_ready_restore_failed
+```
