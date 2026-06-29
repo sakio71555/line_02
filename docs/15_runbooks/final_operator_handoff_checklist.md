@@ -1132,3 +1132,22 @@ Allowed next choices:
 - Supabase Pro/managed backup confirmation.
 - CLI backup dry-run planning with explicit approval.
 - Explicit backup defer/risk acceptance record.
+
+## Loop 196 Supabase Backup Path Operator Decision
+
+Operator selected the CLI/pg_dump-style path for planning only.
+
+```txt
+operator_decision_status=recorded
+selected_path=B_planning_only
+Supabase Pro upgrade=false
+Supabase CLI/API approval=false
+DB export approval=false
+restore approval=false
+backup_success_status=not_achieved
+secret_handling_design_only=true
+runtime unchanged
+production readiness: Go
+```
+
+Operator next action: review Loop 197 design-only draft before approving any command execution, export, restore, or artifact handling.

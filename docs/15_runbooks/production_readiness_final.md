@@ -2179,3 +2179,34 @@ secrets_recorded=false
 ```
 
 Next safe step: Loop 196 operator selects the backup path.
+
+## Loop 196 Supabase Backup Path Operator Decision
+
+Loop 196 keeps production readiness Go and records that the operator selected CLI/pg_dump-style backup dry-run planning only.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+operator_decision_status=recorded
+selected_path=B_planning_only
+Supabase Pro upgrade=false
+Supabase CLI/API approval=false
+DB export approval=false
+restore approval=false
+backup_success_status=not_achieved
+secret_handling_design_only=true
+runtime unchanged
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+secrets_recorded=false
+```
+
+Next safe step: Loop 197 Supabase CLI backup dry-run design.

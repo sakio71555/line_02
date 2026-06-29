@@ -182,3 +182,21 @@ secrets_recorded=false
 ```
 
 Next safe step: operator chooses the backup path.
+
+## 14. Loop 196 Operator Decision
+
+The operator chose `selected_path=B_planning_only`. This keeps the project on the Free Plan and moves only to CLI/pg_dump-style backup dry-run design.
+
+```txt
+operator_decision_status=recorded
+selected_path=B_planning_only
+Supabase Pro upgrade=false
+Supabase CLI/API approval=false
+DB export approval=false
+restore approval=false
+backup_success_status=not_achieved
+secret_handling_design_only=true
+secrets_recorded=false
+```
+
+No backup, export, restore, artifact handling, or secret display has been approved.

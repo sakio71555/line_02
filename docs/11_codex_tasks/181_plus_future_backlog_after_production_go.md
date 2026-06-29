@@ -408,3 +408,34 @@ Next explicit candidate:
 ```txt
 Loop 196: Operator selects Supabase backup path
 ```
+
+## Loop 196 Follow-up
+
+Loop 196 records the operator decision after the Free Plan limitation: stay on Free Plan and only design the CLI/pg_dump-style backup dry-run path.
+
+```txt
+operator_decision_status=recorded
+selected_path=B_planning_only
+decision=Free PlanのままCLI/pg_dump系backup dry-runの設計だけ進める
+Supabase Pro upgrade=false
+Supabase CLI/API approval=false
+DB export approval=false
+restore approval=false
+backup_success_status=not_achieved
+secret_handling_design_only=true
+runtime unchanged
+Obsidian log updated=true
+production readiness: Go
+```
+
+Remaining P0 backup implementation:
+
+- design CLI/pg_dump-style backup dry-run boundary without execution.
+- require explicit approval before any CLI/API, export, restore, or artifact handling.
+- keep secrets out of docs, logs, chat, Git, and final reports.
+
+Next explicit candidate:
+
+```txt
+Loop 197: Supabase CLI backup dry-run design
+```

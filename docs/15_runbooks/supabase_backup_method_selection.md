@@ -261,3 +261,23 @@ Next safe step:
 ```txt
 Loop 196: Operator selects Supabase backup path
 ```
+
+## 16. Loop 196 Operator Decision
+
+The operator selected the CLI/pg_dump-style backup path for planning only.
+
+```txt
+operator_decision_status=recorded
+selected_path=B_planning_only
+decision=Free PlanのままCLI/pg_dump系backup dry-runの設計だけ進める
+Supabase Pro upgrade=false
+Supabase CLI/API approval=false
+DB export approval=false
+restore approval=false
+backup_success_status=not_achieved
+secret_handling_design_only=true
+secrets_recorded=false
+production readiness: Go
+```
+
+Next safe step is Loop 197 design-only command pack drafting, with no execution, no DB URL display, no secrets, no export, and no restore.

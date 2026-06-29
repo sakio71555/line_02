@@ -25,7 +25,8 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 
 - Loop 194.1 records the Supabase Free Plan limitation result.
 - Loop 195 records the backup path decision after Free Plan limitation.
-- Next operator step is choosing Pro/managed backup, CLI dry-run planning, or explicit defer/risk acceptance.
+- Loop 196 records `selected_path=B_planning_only`.
+- Next operator step is Loop 197 Supabase CLI backup dry-run design, still with no execution, no export, and no restore.
 
 ## .obsidian Policy
 

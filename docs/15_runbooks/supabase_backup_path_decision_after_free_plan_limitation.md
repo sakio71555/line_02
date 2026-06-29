@@ -191,3 +191,34 @@ Loop 196A: Supabase Pro/managed backup availability confirmation
 Loop 196B: Supabase CLI backup dry-run planning with explicit approval
 Loop 196C: Supabase backup deferred risk acceptance record
 ```
+
+## 15. Loop 196 Operator Decision
+
+The operator selected Option B as planning-only. This is not approval to execute commands or export data.
+
+```txt
+operator_decision_status=recorded
+selected_path=B_planning_only
+decision=Free PlanのままCLI/pg_dump系backup dry-runの設計だけ進める
+Supabase Pro upgrade=false
+Supabase CLI/API approval=false
+DB export approval=false
+restore approval=false
+backup_success_status=not_achieved
+secret_handling_design_only=true
+secrets_recorded=false
+```
+
+Next safe step:
+
+```txt
+Loop 197: Supabase CLI backup dry-run design
+scope:
+- docs/design only
+- command pack draft only
+- no execution
+- no DB URL display
+- no secrets
+- no export
+- no restore
+```

@@ -409,3 +409,29 @@ production readiness: Go
 ```
 
 Automation remains blocked until the operator chooses a path and a backup result plus non-production restore drill are recorded in later explicit Loops.
+
+## 21. Loop 196 Operator Decision
+
+Loop 196 records the operator-selected path as planning only.
+
+```txt
+operator_decision_status=recorded
+selected_path=B_planning_only
+decision=Free PlanのままCLI/pg_dump系backup dry-runの設計だけ進める
+Supabase Pro upgrade=false
+Supabase CLI/API approval=false
+DB export approval=false
+restore approval=false
+backup_success_status=not_achieved
+secret_handling_design_only=true
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+production readiness: Go
+```
+
+Automation remains blocked. Loop 197 may only design the CLI/pg_dump-style backup dry-run boundary.

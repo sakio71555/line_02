@@ -472,6 +472,8 @@ Loop 194.1のようなSupabase manual backup availability result after Free Plan
 
 Loop 195のようなSupabase backup path decision after Free Plan limitationでは、バックアップ成功扱いにせず `backup_success_status=not_achieved` を維持したまま、Pro/managed backup、CLI backup dry-run、defer/risk acceptanceの選択肢をdocs/testで比較します。Supabase plan変更、dashboard操作、CLI/API、DB export、restore、backup artifact handling、runtime変更、追加LINE送信、OpenAI API、Nginx/DNS/certbot変更は行わず、次Loopはoperatorのbackup path選択だけに絞ります。
 
+Loop 196のようなSupabase backup path operator decisionでは、operatorが `selected_path=B_planning_only` を選んでも、それはCLI/pg_dump系backup dry-runの設計だけを許可する記録です。Supabase CLI/API実行、pg_dump、DB export、restore、secret表示、artifact handling、Supabase Pro化、timer作成は未承認として残し、次Loopはdesign-onlyのcommand pack draftまでに絞ります。
+
 ## Obsidian Development Log Requirement
 
 Every Loop must update Obsidian-readable Markdown logs:
