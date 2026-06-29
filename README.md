@@ -495,6 +495,8 @@ Loop 206 restore drill planning without production restoreでは、Loop 205のba
 
 Loop 207 isolated non-production restore drill execution gateでは、restore drillを実行する前のtarget選定表、production誤接続防止、artifact checksum確認境界、`pg_restore` 17明示path、許可/禁止コマンド、成功/失敗判定をdocs化しました。restore、pg_restore、psql、Supabase接続、production restore、dump内容表示、secret記録は行っていません。詳細は [docs/11_codex_tasks/207_isolated_non_production_restore_drill_execution_gate.md](docs/11_codex_tasks/207_isolated_non_production_restore_drill_execution_gate.md) と [docs/16_obsidian/loop_207_isolated_non_production_restore_drill_execution_gate.md](docs/16_obsidian/loop_207_isolated_non_production_restore_drill_execution_gate.md) を参照してください。
 
+Loop 208 restore drill target selection without restoreでは、次回の復元訓練targetとして `local_isolated_postgresql_on_vps` を選定しました。artifactを移動せず、VPS上のPostgreSQL 17 toolingを使えるため最初のisolated drill候補とします。ただしtarget DB作成、restore、pg_restore、psql、Supabase接続、production restoreはまだ行っていません。詳細は [docs/11_codex_tasks/208_restore_drill_target_selection_without_restore.md](docs/11_codex_tasks/208_restore_drill_target_selection_without_restore.md) と [docs/16_obsidian/loop_208_restore_drill_target_selection_without_restore.md](docs/16_obsidian/loop_208_restore_drill_target_selection_without_restore.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

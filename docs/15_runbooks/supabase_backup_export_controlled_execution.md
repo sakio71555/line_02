@@ -265,3 +265,32 @@ loop_208_restore_drill_target_selection_ready=true
 ```
 
 Before execution, choose exactly one isolated non-production target, verify artifact metadata, and confirm `/usr/lib/postgresql/17/bin/pg_restore` explicitly. Production restore remains forbidden.
+
+## 17. Loop 208 Restore Target Selection Result
+
+Loop 208 selected the target candidate for the future restore drill without creating the target database or running restore.
+
+```txt
+restore_target_selection_documented=true
+restore_target_selected=true
+selected_restore_target=local_isolated_postgresql_on_vps
+selected_restore_target_candidate=A
+target_db_created=false
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+migration_executed=false
+rls_changed=false
+schema_changed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+loop_209_restore_drill_execution_ready=true_pending_operator_approval
+```
+
+Loop 209 must use only a localhost-only disposable PostgreSQL target on the VPS unless a new Loop changes the target decision. Production and Supabase production remain forbidden restore targets.

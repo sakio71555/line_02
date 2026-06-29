@@ -197,3 +197,71 @@ raw_log_displayed=false
 db_url_displayed=false
 secrets_recorded=false
 ```
+
+## 11. Loop 208 Target Selection
+
+Loop 208 selects one restore drill target for the next execution Loop. It still does not create a target database, execute restore, run `pg_restore`, run `psql`, connect to Supabase, or touch production.
+
+### 11.1 Candidate Comparison Summary
+
+| Candidate | Result | Reason |
+| --- | --- | --- |
+| A. Local isolated PostgreSQL on VPS | Selected | Artifact already lives on the VPS, PostgreSQL 17 tooling is available there, and no artifact transfer is needed. |
+| B. Local isolated PostgreSQL on developer Mac | Not selected | Would require moving or accessing the artifact from a developer machine. |
+| C. Disposable non-production PostgreSQL database | Fallback | Acceptable later, but needs extra host/credential handling. |
+| D. Supabase-separated verification DB | Later-stage option | Closest to Supabase, but carries higher project/secret confusion risk. |
+
+Selected target:
+
+```txt
+restore_target_selected=true
+selected_restore_target=local_isolated_postgresql_on_vps
+selected_restore_target_candidate=A
+selected_restore_target_network_scope=localhost_only
+selected_restore_target_disposable_required=true
+selected_restore_target_database_name_pattern=amami_restore_drill_loop209_disposable
+target_db_created=false
+```
+
+### 11.2 Loop 209 Boundary
+
+Loop 209 may only proceed after explicit operator approval. It may create a localhost-only disposable PostgreSQL target, verify artifact metadata, verify `/usr/lib/postgresql/17/bin/pg_restore --version`, run restore against that isolated target, perform sanitized verification, and drop or isolate the target.
+
+Loop 209 must not connect to production DB, Supabase production, run production restore, run migrations, change RLS, change application schema outside the isolated target, display DB URL, display raw logs, display dump contents, or change production runtime.
+
+### 11.3 Misconnection Prevention
+
+Before restore, Loop 209 must confirm:
+
+- Target host is localhost or explicitly non-production.
+- Target database name includes `restore_drill`, `disposable`, or `nonprod`.
+- Target is not a Supabase project host.
+- Target is not production hostname.
+- Target credentials are not production credentials.
+- Restore command does not use production env or `SUPABASE_DB_URL`.
+- Raw logs and shell history do not expose secrets.
+- Target can be dropped after the drill.
+
+### 11.4 Loop 208 Result
+
+```txt
+restore_target_selection_documented=true
+restore_target_selected=true
+selected_restore_target=local_isolated_postgresql_on_vps
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+target_db_created=false
+migration_executed=false
+rls_changed=false
+schema_changed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+loop_209_restore_drill_execution_ready=true_pending_operator_approval
+```

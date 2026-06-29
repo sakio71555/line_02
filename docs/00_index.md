@@ -34,6 +34,7 @@
 - Loop 205 pg_dump 17 backup export retry: `11_codex_tasks/205_pg_dump_17_explicit_path_backup_export_retry.md`
 - Loop 206 restore drill planning without production restore: `11_codex_tasks/206_restore_drill_planning_without_production_restore.md`
 - Loop 207 isolated non-production restore drill execution gate: `11_codex_tasks/207_isolated_non_production_restore_drill_execution_gate.md`
+- Loop 208 restore drill target selection without restore: `11_codex_tasks/208_restore_drill_target_selection_without_restore.md`
 
 ## Prompts and Templates
 

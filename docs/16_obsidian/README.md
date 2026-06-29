@@ -39,6 +39,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 205 pg_dump 17 explicit path backup export retry records one operator-approved export attempt, `backup_export_status=success`, root-only repo-external artifact metadata, and keeps restore blocked for a separate Loop.
 - Loop 206 restore drill planning records isolated non-production restore target options, Go/No-Go conditions, artifact verification scope, and keeps `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, and `production_restore_executed=false`.
 - Loop 207 restore drill execution gate records target selection criteria, production misconnection prevention, artifact verification boundaries, explicit `pg_restore` 17 boundary, and keeps `restore_target_selected=false`, `restore_executed=false`, `pg_restore_executed=false`, and `psql_executed=false`.
+- Loop 208 restore drill target selection chooses `local_isolated_postgresql_on_vps` as the next target candidate, keeps target DB creation/restore unexecuted, and requires explicit operator approval before Loop 209 execution.
 
 ## .obsidian Policy
 
