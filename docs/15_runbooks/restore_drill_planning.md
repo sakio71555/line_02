@@ -482,3 +482,55 @@ next_loop=Loop 210: pg_restore failure diagnostics without raw log exposure
 ```
 
 Do not retry restore until the failure is diagnosed with a safe, sanitized method and a new explicit approval is provided.
+
+## 15. Loop 210 pg_restore Failure Diagnostics Result
+
+Loop 210 classified the Loop 209.2 restore failure without rerunning restore, running `psql`, displaying raw logs, or exposing dump/row/secret content.
+
+### 15.1 Safe Metadata Recheck
+
+```txt
+artifact_exists=true
+artifact_readable=true
+artifact_file_permission=600
+artifact_dir_permission=700
+artifact_size_match=true
+artifact_checksum_verified=true
+pg_restore_17_path_present=true
+pg_restore_version=17.10
+cluster_identity_match=true
+cluster_identity=17:restore_drill_loop2091:55432:online
+restore_retried=false
+pg_restore_restore_executed=false
+psql_executed=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+```
+
+### 15.2 Failure Classification
+
+```txt
+previous_pg_restore_exit_code=1
+previous_failure_category=pg_restore_exit_code_nonzero_without_raw_log
+pg_restore_failure_category=unknown_without_raw_log
+pg_restore_failure_category_assigned=true
+```
+
+Artifact metadata, PostgreSQL 17 tooling, and local target identity were confirmed. Role/owner/ACL, missing extension, object conflict, permission/auth, SQL statement, option mismatch, and partial restore progress remain unconfirmed without a controlled diagnostic log.
+
+### 15.3 Loop 211 Diagnostic Boundary
+
+```txt
+loop_211_diagnostic_restore_plan_created=true
+raw_diagnostic_log_allowed_only_repo_external_root_only=true
+raw_diagnostic_log_must_not_be_committed=true
+sanitized_category_only=true
+restore_retry_requires_new_approval=true
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 211 may perform a controlled diagnostic restore only with explicit approval, a fresh isolated target DB, root-only repo-external raw diagnostic log handling, sanitized category extraction, and target cleanup.

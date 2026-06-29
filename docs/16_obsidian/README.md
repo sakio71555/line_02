@@ -43,6 +43,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 209 isolated local PostgreSQL restore drill execution reached preflight, verified artifact metadata and `pg_restore` 17 path, then blocked before restore because the local PostgreSQL target was unavailable. Restore, `psql`, Supabase connection, production DB connection, and target DB creation stayed unexecuted.
 - Loop 209.1 isolated local PostgreSQL target provisioning installs/provisions the VPS local PostgreSQL 17 restore target, creates cluster `restore_drill_loop2091` and DB `amami_line_crm_restore_drill_loop2091_20260629`, and keeps restore/`pg_restore` restore unexecuted.
 - Loop 209.2 isolated local PostgreSQL restore drill retry verifies artifact/target metadata, runs one explicit-path `pg_restore` attempt, records `restore_drill_status=failed` / `failure_category=pg_restore_exit_code_nonzero_without_raw_log`, drops the target DB, and keeps raw logs, row contents, dump contents, DB URL, secrets, Supabase, and production untouched.
+- Loop 210 pg_restore failure diagnostics records `pg_restore_failure_category=unknown_without_raw_log`, confirms artifact/tooling/cluster metadata, avoids restore retry and `psql`, and designs Loop 211 as a controlled diagnostic restore with root-only raw logs and sanitized category output.
 
 ## .obsidian Policy
 

@@ -393,3 +393,30 @@ production_restore_executed=false
 ```
 
 Artifact metadata remained valid, and the target identity was verified as `local_isolated_postgresql_on_vps` before the attempt. Restore capability is not yet proven. The next Loop should diagnose the failure without displaying raw restore logs, DB URLs, secrets, dump contents, or row contents.
+
+## 21. Loop 210 pg_restore Failure Diagnostics Result
+
+Loop 210 did not retry restore. It rechecked only safe metadata and classified the Loop 209.2 failure conservatively.
+
+```txt
+artifact_exists=true
+artifact_checksum_verified=true
+pg_restore_17_path_present=true
+pg_restore_version=17.10
+cluster_identity_match=true
+restore_retried=false
+pg_restore_restore_executed=false
+psql_executed=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+pg_restore_failure_category=unknown_without_raw_log
+pg_restore_failure_category_assigned=true
+loop_211_diagnostic_restore_plan_created=true
+dr_readiness_status=not_ready_restore_failed
+```
+
+The next diagnostic Loop must not expose raw logs. It may record only allowlisted failure categories and counts after a separately approved diagnostic restore.

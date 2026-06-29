@@ -503,6 +503,8 @@ Loop 209.1 isolated local PostgreSQL target provisioning approvalでは、VPS上
 
 Loop 209.2 isolated local PostgreSQL restore drill retryでは、Loop 209.1のisolated local PostgreSQL targetへ1回だけrestoreを試行しました。artifact/target preflightは通過しましたが、`pg_restore_exit_code=1` のため `restore_drill_status=failed` / `failure_category=pg_restore_exit_code_nonzero_without_raw_log` として記録し、target DBはdrop済みです。raw log、dump内容、row content、DB URL、secretは記録せず、Supabase/production restoreやruntime変更は行っていません。詳細は [docs/11_codex_tasks/209_2_isolated_local_postgresql_restore_drill_retry.md](docs/11_codex_tasks/209_2_isolated_local_postgresql_restore_drill_retry.md) と [docs/16_obsidian/loop_209_2_isolated_local_postgresql_restore_drill_retry.md](docs/16_obsidian/loop_209_2_isolated_local_postgresql_restore_drill_retry.md) を参照してください。
 
+Loop 210 pg_restore failure diagnostics without raw log exposureでは、Loop 209.2のrestore失敗をraw logなしで整理し、`pg_restore_failure_category=unknown_without_raw_log` として分類しました。restore再実行、pg_restore restore、psql、Supabase/production接続は行わず、Loop 211ではroot-only raw diagnostic logからsanitized categoryだけを記録する方針を設計しています。詳細は [docs/11_codex_tasks/210_pg_restore_failure_diagnostics_without_raw_log_exposure.md](docs/11_codex_tasks/210_pg_restore_failure_diagnostics_without_raw_log_exposure.md) と [docs/16_obsidian/loop_210_pg_restore_failure_diagnostics_without_raw_log_exposure.md](docs/16_obsidian/loop_210_pg_restore_failure_diagnostics_without_raw_log_exposure.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

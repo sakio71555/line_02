@@ -38,6 +38,7 @@
 - Loop 209 isolated local PostgreSQL restore drill execution: `11_codex_tasks/209_isolated_local_postgresql_restore_drill_execution.md`
 - Loop 209.1 isolated local PostgreSQL target provisioning approval: `11_codex_tasks/209_1_isolated_local_postgresql_target_provisioning_approval.md`
 - Loop 209.2 isolated local PostgreSQL restore drill retry: `11_codex_tasks/209_2_isolated_local_postgresql_restore_drill_retry.md`
+- Loop 210 pg_restore failure diagnostics without raw log exposure: `11_codex_tasks/210_pg_restore_failure_diagnostics_without_raw_log_exposure.md`
 
 ## Prompts and Templates
 
