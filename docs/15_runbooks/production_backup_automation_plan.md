@@ -314,3 +314,28 @@ production_readiness=production_go
 ```
 
 Actual deletion, retention enforcement, backup creation, database export, timer installation, and remote storage setup still require separate explicit Loops. Any future deletion must be preceded by a restore viability check.
+
+## 17. Loop 193 Manual Backup Operator Checklist
+
+Loop 193 creates the operator checklist for confirming and recording a manual or managed Supabase backup path. It does not perform a backup.
+
+```txt
+manual_backup_operator_checklist=created
+backup_availability_template=created
+backup_execution_checklist=created
+backup_result_record_template=created
+failure_record_template=created
+restore_drill_policy=non_production_first
+no_go_conditions=created
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+backup artifact downloaded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+production readiness: Go
+```
+
+Operator action remains outside Codex: confirm dashboard/manual/managed backup availability, perform backup only if No-Go conditions are false, record summarized status only, and plan non-production restore drill next.

@@ -1036,3 +1036,28 @@ Supabase write/export=false
 ```
 
 Operator action: continue normal monitoring and proceed to the Supabase manual backup operator checklist. If Admin `504` returns, open a separate remediation planning Loop before any restart.
+
+## Loop 193 Supabase Manual Backup Operator Checklist
+
+Operator action: use the Supabase manual backup operator checklist before any production backup/export/restore work.
+
+```txt
+manual_backup_operator_checklist=created
+backup_availability_template=created
+backup_execution_checklist=created
+backup_result_record_template=created
+failure_record_template=created
+restore_drill_policy=non_production_first
+no_go_conditions=created
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+backup artifact downloaded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+production readiness: Go
+```
+
+The operator should record only summarized availability/status and must not paste secret values, project references, raw backup content, screenshots containing values, or provider logs into docs/chat.

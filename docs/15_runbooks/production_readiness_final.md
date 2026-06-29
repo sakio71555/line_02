@@ -2049,3 +2049,34 @@ next_loop_decision=Loop 193: Supabase manual backup operator checklist
 ```
 
 Admin direct port `3000` returned connection refused, but the public HTTPS Admin route returned `200`; this Loop did not remediate direct-port behavior.
+
+## Loop 193 Supabase Manual Backup Operator Checklist
+
+Loop 193 keeps production readiness Go and creates the manual/managed backup operator checklist only.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+manual_backup_operator_checklist=created
+backup_availability_template=created
+backup_execution_checklist=created
+backup_result_record_template=created
+failure_record_template=created
+restore_drill_policy=non_production_first
+no_go_conditions=created
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+backup artifact downloaded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+secrets_recorded=false
+```
+
+Supabase backup execution is still operator-owned and outside Codex. The next safe record is a sanitized backup result after the operator performs the backup externally.

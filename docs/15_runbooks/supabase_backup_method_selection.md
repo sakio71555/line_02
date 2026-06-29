@@ -162,3 +162,28 @@ Loop 195: Supabase scheduled backup automation plan
 ```
 
 Loop 192 is checklist-only and must not call Supabase CLI/API or export the database.
+
+## 12. Loop 193 Manual Backup Operator Checklist Result
+
+Loop 193 creates the operator checklist that Loop 191 selected as the first safe path. The numbering moved because Loop 192 was used for production HTTPS `504` read-only triage.
+
+```txt
+manual_backup_operator_checklist=created
+backup_availability_template=created
+backup_execution_checklist=created
+backup_result_record_template=created
+failure_record_template=created
+restore_drill_policy=non_production_first
+no_go_conditions=created
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+backup artifact downloaded=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+production readiness: Go
+```
+
+The next action is operator-performed backup outside Codex, followed by a sanitized result recording Loop.
