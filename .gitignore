@@ -12,6 +12,10 @@ tmp/
 .env.staging
 .env.production
 docs/.obsidian/
+.obsidian/workspace*
+.obsidian/cache
+.obsidian/plugins
+.obsidian/themes
 *.log
 *.tsbuildinfo
 .DS_Store

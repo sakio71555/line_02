@@ -107,6 +107,17 @@ Loop 063ではstaff reply safety confirmation planを追加しました。担当
 
 Loop 064ではstaff reply confirmation UI placeholderを追加しました。担当者返信で、送信前確認カードと確認checkboxを挟み、デモ保存前に宛先・利用先・本文・本物LINE未送信を確認できるようにしました。LINE API実送信は未実装です。詳細は [docs/11_codex_tasks/064_staff_reply_confirmation_ui_placeholder.md](docs/11_codex_tasks/064_staff_reply_confirmation_ui_placeholder.md) を参照してください。
 
+## Obsidian / Development Logs
+
+This repository is intended to be opened as an Obsidian Vault. Start from [OBSIDIAN.md](OBSIDIAN.md).
+
+- Development logs are stored in [docs/14_dev_logs](docs/14_dev_logs/).
+- Loop task docs are stored in [docs/11_codex_tasks](docs/11_codex_tasks/).
+- Runbooks are stored in [docs/15_runbooks](docs/15_runbooks/).
+- Obsidian helpers are stored in [docs/16_obsidian](docs/16_obsidian/).
+- GitHub-pushed Markdown is the development log source of truth.
+- `.obsidian/workspace*`, `.obsidian/cache`, `.obsidian/plugins`, and `.obsidian/themes` are ignored because they are local personal state.
+
 ## Codex開発ループ
 
 このプロジェクトはループエンジニアリングで開発します。広範囲の機能を一度に実装せず、`docs/11_codex_tasks/` の小さいタスクを1つずつ完了し、テストを通してから次へ進みます。
