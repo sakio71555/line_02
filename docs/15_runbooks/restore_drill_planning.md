@@ -802,3 +802,94 @@ push_performed=false
 `--no-owner --no-privileges` remains a required baseline, but it was not sufficient for a successful restore. The remaining sanitized signal is still `role_owner_acl_error_detected`, with extension/schema signals absent in this retry.
 
 Do not run another identical retry. The next Loop should plan the remaining role/owner/ACL remediation path, such as role placeholders, staged restore, or operator-only root-log category refinement under the same no-raw-log boundary.
+
+## 19. Loop 215 Role Owner ACL Follow-Up Remediation Gate
+
+Loop 215 decides the next remediation direction after Loop 213 still failed with one remaining `role_owner_acl_error_detected` signal. It does not rerun restore, run `pg_restore`, run `psql`, create a target DB, display diagnostic logs, touch the backup artifact, connect to Supabase, or change production runtime.
+
+### 19.1 Evidence Comparison
+
+```txt
+loop_211_role_owner_acl_error_count=14
+loop_211_extension_missing_count=6
+loop_211_schema_or_sql_statement_error_count=17
+loop_213_restore_options=no-owner,no-privileges
+loop_213_role_owner_acl_error_count=1
+loop_213_extension_missing_count=0
+loop_213_schema_or_sql_statement_count=0
+loop_213_pg_restore_exit_code=1
+loop_213_restore_drill_status=failed
+```
+
+Assessment:
+
+- `--no-owner --no-privileges` remains the required baseline.
+- The role/ACL signal improved from `14` to `1`.
+- Extension and schema/SQL signals are no longer present in the Loop 213 sanitized classifier.
+- Restore still failed, so DR readiness remains incomplete.
+
+### 19.2 Candidate Decision
+
+| Candidate | Decision | Reason |
+| --- | --- | --- |
+| Repeat same retry | Reject | It would not add new information after Loop 213. |
+| Accept nonzero exit | Reject | `pg_restore_exit_code=1` and sanitized validation did not run. |
+| Extension remediation | Defer | Loop 213 extension signal is `0`. |
+| Role placeholder provisioning | Defer | Need the remaining role/ACL subcategory first. |
+| Staged restore diagnostics | Defer | More complex than needed before subcategory refinement. |
+| Operator-only root-log subcategory review | Recommend | Smallest next gate that can classify the remaining one signal without exposing raw logs. |
+
+### 19.3 Recommended Next Loop
+
+```txt
+next_loop=Loop 216: operator-only role ACL subcategory review gate without raw log exposure
+```
+
+Loop 216 should record only an allowlisted sanitized subcategory/count/boolean, such as:
+
+```txt
+remaining_role_acl_subcategory=missing_role_reference
+remaining_role_acl_subcategory=owner_statement_residue
+remaining_role_acl_subcategory=acl_statement_residue
+remaining_role_acl_subcategory=unknown_after_operator_review
+```
+
+Loop 216 must not paste or display raw diagnostic log content.
+
+### 19.4 Loop 215 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_changed=false
+vps_package_changed=false
+cluster_changed=false
+db_changed=false
+diagnostic_log_displayed=false
+diagnostic_log_copied_into_repo=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+backup_artifact_touched=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+production_runtime_changed=false
+```
+
+### 19.5 Result
+
+```txt
+remediation_gate_created=true
+same_retry_rejected=true
+acceptable_nonzero_rejected=true
+extension_remediation_deferred=true
+role_placeholder_provisioning_deferred_until_subcategory_known=true
+recommended_next_loop=Loop 216 operator-only role ACL subcategory review gate without raw log exposure
+dr_readiness_status=not_ready_restore_failed
+```

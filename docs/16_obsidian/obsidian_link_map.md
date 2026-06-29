@@ -68,6 +68,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 214 Obsidian Log](loop_214_handoff_automation_v1.md)
 - [Loop 214.1 Handoff Template Dry-Run](../11_codex_tasks/214_1_handoff_template_dry_run.md)
 - [Loop 214.1 Obsidian Log](loop_214_1_handoff_template_dry_run.md)
+- [Loop 215 Role Owner ACL Follow-Up Remediation Gate](../11_codex_tasks/215_role_owner_acl_follow_up_remediation_gate.md)
+- [Loop 215 Obsidian Log](loop_215_role_owner_acl_follow_up_remediation_gate.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
@@ -113,6 +115,8 @@ Loop 212 status: `restore_retried=false`, `pg_restore_restore_executed=false`, `
 Loop 213 status: `restore_retry_executed=true`, `restore_attempt_count=1`, `restore_options=no-owner,no-privileges`, `pg_restore_exit_code=1`, `restore_drill_status=failed`, `pg_restore_failure_category=role_owner_acl_error_detected`, `role_owner_acl_error_count=1`, `extension_missing_count=0`, `schema_or_sql_statement_count=0`, `restore_target_dropped=true`, `target_db_exists_after_drop=false`, `cleanup_required=false`, `psql_executed=true_local_isolated_target_cleanup_check`, `raw_log_displayed=false`, `dump_content_displayed=false`, `row_content_displayed=false`, `secrets_recorded=false`, `supabase_connection_executed=false`, `production_restore_executed=false`, `next=Loop 214 role owner ACL follow-up remediation gate`.
 
 Loop 214.1 status: `latest_codex_result_updated=true`, `latest_gpt_review_prompt_updated=true`, `handoff_dry_run_completed=true`, `secret_recorded=false`, `raw_log_displayed=false`, `dump_content_displayed=false`, `row_content_displayed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `production_runtime_changed=false`, `next=Loop 215 role owner ACL follow-up remediation gate`.
+
+Loop 215 status: `remediation_gate_created=true`, `same_retry_rejected=true`, `acceptable_nonzero_rejected=true`, `extension_remediation_deferred=true`, `role_placeholder_provisioning_deferred_until_subcategory_known=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `diagnostic_log_displayed=false`, `backup_artifact_touched=false`, `supabase_connection_executed=false`, `production_runtime_changed=false`, `next=Loop 216 operator-only role ACL subcategory review gate without raw log exposure`.
 
 ## Obsidian Helpers
 
