@@ -19,6 +19,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-009 | Handoff dry-run | update `docs/16_handoff/latest_*` with sanitized goal result | paste-ready review prompt | true | false | false | false | false | false | false | false | passed_stage_2 | Never paste secrets/raw logs. |
 | V-010 | Obsidian completeness | ensure Decisions / DevelopmentLog / Risks / Checklist exist | all four sections present | true | false | false | false | false | false | false | false | passed_stage_2 | Required by this goal. |
 | V-011 | Operator-only review protocol | docs-only check that Loop 217 defines sanitized `key=value` format and pending operator result | protocol exists and raw log exposure remains false | true | false | false | false | false | false | false | false | pending_loop_217_verification | Does not inspect diagnostic logs. |
+| V-012 | Staged diagnostics plan | docs-only check that Loop 218 records operator sanitized result and phase diagnostics plan | role placeholder No-Go and staged plan recorded | true | false | false | false | false | false | false | false | pending_loop_218_verification | Does not execute restore or `pg_restore`. |
 
 ## Blocked Or Operator Approval Required
 
@@ -66,6 +67,24 @@ loop_217_psql_executed=false
 loop_217_target_db_created=false
 loop_217_role_created=false
 loop_217_next_loop_branching_defined=true
+```
+
+## Loop 218 Verification Note
+
+```txt
+loop_218_operator_raw_log_review_executed=true
+loop_218_operator_subcategory_selected=unknown_after_operator_review
+loop_218_operator_subcategory_confidence=low
+loop_218_role_placeholder_no_go=true
+loop_218_staged_restore_diagnostics_plan_created=true
+loop_218_restore_executed=false
+loop_218_pg_restore_executed=false
+loop_218_psql_executed=false
+loop_218_target_db_created=false
+loop_218_role_created=false
+loop_218_raw_log_displayed=false
+loop_218_toc_body_displayed=false
+loop_218_next_loop=Loop 219 staged restore diagnostics execution gate
 ```
 
 ## Stage 2 Rule

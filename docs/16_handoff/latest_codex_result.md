@@ -1,112 +1,82 @@
 # Latest Codex Result
 
-This file summarizes Loop 217 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 218 in a paste-ready, sanitized format for ChatGPT review.
 
-Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names copied from raw logs, SQL statements, object names, or production logs.
+Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names copied from raw logs, SQL statements, object names, TOC bodies, or production logs.
 
 ## Loop
 
-- Loop: Loop 217 operator-only raw log review gate
+- Loop: Loop 218 staged restore diagnostics plan
 - Date: 2026-06-29
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only gate / operator-only review protocol
+- Scope type: docs-only staged diagnostics plan
 - Commit hash: see final Codex report after commit
-- Push: not performed by Loop 217
+- Push: planned after validation
 
 ## Source Evidence
 
-- Loop 216 commit: `a27cdb7 docs: classify remaining role ACL restore signal`
-- Loop 216 result: `unknown_role_acl_subcategory_detected=true`
-- Loop 216 result: `unknown_role_acl_subcategory_count=1`
-- Loop 216 result: `role_placeholder_signal_detected=false`
-- Loop 216 result: `allowlisted_supabase_role_signal_detected=false`
-- DR readiness before Loop 217: `not_ready_restore_failed`
+- Loop 217 commit: `340f166 docs: add operator-only restore log review gate`
+- Loop 217 result: operator-only review protocol created
+- Operator sanitized result: `operator_subcategory_selected=unknown_after_operator_review`
+- Operator confidence: `low`
+- DR readiness before Loop 218: `not_ready_restore_failed`
+
+## Operator Sanitized Result
+
+```txt
+operator_raw_log_review_executed=true
+operator_subcategory_selected=unknown_after_operator_review
+operator_subcategory_confidence=low
+log_exists=true
+log_size_bytes=167
+log_line_count=1
+pg_restore_error_count=1
+pg_restore_fatal_count=1
+pg_restore_warning_count=0
+pg_restore_toc_count=0
+pg_restore_ignored_errors_count=0
+role_does_not_exist_confirmed=false
+owner_required_confirmed=false
+acl_grant_revoke_confirmed=false
+default_privileges_confirmed=false
+policy_owner_confirmed=false
+extension_owner_confirmed=false
+extension_missing_confirmed=false
+schema_or_sql_statement_confirmed=false
+target_cluster_issue_confirmed=false
+raw_log_displayed=false
+matching_line_displayed=false
+role_name_disclosed=false
+sql_statement_disclosed=false
+object_name_disclosed=false
+```
 
 ## What Changed
 
-- Added Loop 217 task doc.
-- Added Loop 217 Obsidian log.
-- Updated restore drill runbook with operator-only protocol, sanitized `key=value` fields, allowed categories, pending operator result, next Loop branching, and safety boundary.
-- Updated DR readiness matrix and verification matrix.
-- Updated dev log, README, docs index, Obsidian navigation, and this handoff result.
+- Added Loop 218 task doc.
+- Added Loop 218 Obsidian log.
+- Recorded the operator sanitized result without raw log exposure.
+- Marked role placeholder remediation as No-Go.
+- Added staged restore diagnostics plan for pre-data, data, post-data, schema-only, and TOC count/section diagnostics.
+- Updated restore drill runbook, DR readiness matrix, verification matrix, dev log, README, docs index, Obsidian navigation, and handoff latest files.
 
-## Loop 216 Result Summary
+## Decision
 
-```txt
-remaining_signal=unknown_role_acl_subcategory
-unknown_role_acl_subcategory_count=1
-role_placeholder_signal_detected=false
-allowlisted_supabase_role_signal_detected=false
-raw_log_displayed=false
-matching_line_displayed=false
-role_name_displayed=false
-sql_statement_displayed=false
-object_name_displayed=false
-restore_retried=false
-pg_restore_restore_executed=false
-psql_executed=false
-```
+- `role_placeholder_no_go=true`
+- Reason: operator selected `unknown_after_operator_review`, `role_does_not_exist_confirmed=false`, and no role name may be recorded.
+- Next direction: staged restore diagnostics planning.
+- Next execution should not be a broad full restore retry.
 
-## Operator-Only Review Protocol
+## Staged Diagnostics Plan
 
-Codex must not open, display, copy, summarize, or classify raw diagnostic log content in this Loop. The operator may inspect the Loop 213 repo-external root-only diagnostic log directly and return only sanitized `key=value` output.
+- pre-data only: identify schema/pre-data setup failure.
+- data only: identify data-phase failure without row display.
+- post-data only: identify post-data/index/constraint/policy/ACL residue.
+- schema-only: identify schema-level failure without SQL text display.
+- TOC count/section classification: count sections without displaying TOC entries.
 
-Allowed operator fields include:
-
-```txt
-operator_raw_log_review_executed=true/false
-operator_raw_log_review_scope=loop213_diagnostic_log
-operator_raw_log_shared_with_codex=false
-operator_raw_log_shared_with_chatgpt=false
-operator_raw_log_committed=false
-operator_raw_log_copied_into_repo=false
-operator_subcategory_selected=<one_of_allowed_categories>
-operator_subcategory_confidence=high/medium/low
-operator_role_name_disclosed=false
-operator_sql_statement_disclosed=false
-operator_object_name_disclosed=false
-operator_matching_line_disclosed=false
-```
-
-Allowed categories:
-
-```txt
-role_does_not_exist
-owner_required
-acl_grant_revoke
-default_privileges
-policy_owner
-extension_owner
-publication_subscription_owner
-security_definer_owner
-extension_missing
-schema_or_sql_statement
-target_cluster_issue
-other_non_sensitive_category
-unknown_after_operator_review
-```
-
-## Operator Result Status
-
-```txt
-operator_raw_log_review_status=pending_operator_input
-operator_raw_log_review_executed=false
-operator_subcategory_selected=pending
-operator_subcategory_confidence=unknown
-operator_sanitized_result_recorded=false
-```
-
-## Next Loop Branching
-
-- `role_does_not_exist`: Loop 218 allowlisted role placeholder preflight without restore
-- `owner_required`, `acl_grant_revoke`, `default_privileges`, `policy_owner`, or `security_definer_owner`: Loop 218 staged restore diagnostics plan
-- `extension_owner` or `extension_missing`: Loop 218 extension remediation preflight
-- `schema_or_sql_statement`: Loop 218 staged restore diagnostics plan
-- `target_cluster_issue`: Loop 218 local restore target health gate
-- `other_non_sensitive_category`: Loop 218 staged restore diagnostics plan
-- `unknown_after_operator_review`: Loop 218 staged restore diagnostics plan
-- `pending`: wait for operator sanitized result
+Future execution must select exactly one phase and record only phase, exit code, booleans, counts, and allowlisted category.
 
 ## Verification
 
@@ -120,15 +90,15 @@ operator_sanitized_result_recorded=false
 
 ## Safety Boundary
 
-- restore_retried=false
-- pg_restore_restore_executed=false
+- restore_executed=false
+- pg_restore_executed=false
 - psql_executed=false
 - target_db_created=false
+- target_db_changed=false
 - role_created=false
 - role_modified=false
-- diagnostic_log_displayed=false
-- diagnostic_log_read_by_codex=false
-- diagnostic_log_copied_into_repo=false
+- diagnostic_log_body_displayed=false
+- pg_restore_list_body_displayed=false
 - matching_line_displayed=false
 - role_name_displayed=false
 - sql_statement_displayed=false
@@ -144,23 +114,24 @@ operator_sanitized_result_recorded=false
 - line_real_send_executed=false
 - openai_api_call_executed=false
 - nginx_dns_https_certbot_public_smoke_executed=false
+- package_changed=false
+- cluster_changed=false
 - production_runtime_changed=false
-- push_performed=false
 
 ## DR Readiness
 
 - backup_export_status=success
 - restore_drill_status=failed
-- operator_raw_log_review_status=pending_operator_input
+- staged_restore_diagnostics_plan_created=true
 - dr_readiness_status=not_ready_restore_failed
 
 ## Risks / Follow-Up
 
-- Operator may accidentally paste raw log content instead of sanitized fields.
-- Operator result is not yet recorded.
-- Role placeholder creation remains blocked until sanitized operator category allows it.
-- Restore success has not been achieved.
+- Restore has not succeeded.
+- Future staged diagnostics can still produce sensitive raw output if boundaries are not followed.
+- TOC bodies may reveal object names and must not be displayed.
+- Role placeholder remediation may still become relevant later, but current evidence is insufficient.
 
 ## Next Loop Candidate
 
-- Loop 218: branch pending operator sanitized result
+- Loop 219: staged restore diagnostics execution gate

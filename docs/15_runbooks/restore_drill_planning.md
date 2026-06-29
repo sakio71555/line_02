@@ -1098,3 +1098,105 @@ operator_sanitized_result_recorded=false
 next_loop_branching_defined=true
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 22. Loop 218 Staged Restore Diagnostics Plan
+
+Loop 218 records the operator-only sanitized result from the Loop 217 gate and moves the next remediation path away from role placeholder creation. It plans staged restore diagnostics without executing restore, `pg_restore`, `psql`, target DB creation, role changes, Supabase connection, production restore, or raw log display.
+
+### 22.1 Operator Sanitized Result
+
+```txt
+operator_raw_log_review_executed=true
+operator_subcategory_selected=unknown_after_operator_review
+operator_subcategory_confidence=low
+log_exists=true
+log_size_bytes=167
+log_line_count=1
+pg_restore_error_count=1
+pg_restore_fatal_count=1
+pg_restore_warning_count=0
+pg_restore_toc_count=0
+pg_restore_ignored_errors_count=0
+role_does_not_exist_confirmed=false
+owner_required_confirmed=false
+acl_grant_revoke_confirmed=false
+default_privileges_confirmed=false
+policy_owner_confirmed=false
+extension_owner_confirmed=false
+extension_missing_confirmed=false
+schema_or_sql_statement_confirmed=false
+target_cluster_issue_confirmed=false
+raw_log_displayed=false
+matching_line_displayed=false
+role_name_disclosed=false
+sql_statement_disclosed=false
+object_name_disclosed=false
+```
+
+### 22.2 Decision
+
+```txt
+role_placeholder_no_go=true
+role_placeholder_no_go_reason=operator_subcategory_unknown_and_role_does_not_exist_unconfirmed
+next_direction=staged_restore_diagnostics_plan
+restore_retry_selected=false
+role_creation_selected=false
+```
+
+Role placeholder remediation is not justified by the sanitized evidence. The remaining log is short and still unknown after operator-only review; the safer next step is to determine the restore phase where failure occurs.
+
+### 22.3 Staged Diagnostic Candidates
+
+| Candidate | Purpose | Raw output rule |
+| --- | --- | --- |
+| pre-data only | Detect schema/pre-data setup failure before data load. | Raw output stays repo-external root-only. |
+| data only | Detect data-phase failure after prerequisites are planned. | No row contents displayed. |
+| post-data only | Detect post-data/index/constraint/policy/ACL residue. | No SQL, object names, or matching lines displayed. |
+| schema-only | Detect schema-level failure without data. | No schema SQL text displayed. |
+| TOC count/section classification | Classify dump section counts without exposing TOC entries. | No `pg_restore --list` body displayed. |
+
+### 22.4 Future Sanitized Result Shape
+
+```txt
+diagnostic_phase=pre_data_only|data_only|post_data_only|schema_only|toc_count_only
+diagnostic_attempt_count=1
+pg_restore_exit_code=<number_or_not_executed>
+phase_success=true/false
+phase_failure_detected=true/false
+phase_failure_category=<allowlisted_category_or_unknown>
+raw_log_displayed=false
+matching_line_displayed=false
+role_name_disclosed=false
+sql_statement_disclosed=false
+object_name_disclosed=false
+toc_body_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+target_db_dropped_or_isolated=true/false
+cleanup_required=true/false
+```
+
+### 22.5 Success and Stop Conditions
+
+Success:
+
+- Exactly one diagnostic phase is selected.
+- The phase is run only in an explicitly approved future execution Loop.
+- Raw output stays repo-external root-only.
+- Result is recorded as phase, exit code, booleans, counts, and allowlisted category only.
+- Target cleanup or isolation is recorded.
+
+Stop / No-Go:
+
+- Raw output, matching lines, TOC body, role names, SQL statements, object names, row contents, DB URLs, or secrets would need to be displayed.
+- Production or Supabase connection is required.
+- More than one diagnostic phase or retry is needed.
+- Target identity or cleanup status is unclear.
+
+### 22.6 Next Loop
+
+```txt
+next_loop=Loop 219 staged restore diagnostics execution gate
+dr_readiness_status=not_ready_restore_failed
+```

@@ -79,6 +79,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 216 Obsidian Log](loop_216_sanitized_role_acl_subcategory_classifier_without_restore.md)
 - [Loop 217 Operator-Only Raw Log Review Gate](../11_codex_tasks/217_operator_only_raw_log_review_gate.md)
 - [Loop 217 Obsidian Log](loop_217_operator_only_raw_log_review_gate.md)
+- [Loop 218 Staged Restore Diagnostics Plan](../11_codex_tasks/218_staged_restore_diagnostics_plan.md)
+- [Loop 218 Obsidian Log](loop_218_staged_restore_diagnostics_plan.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -133,6 +135,8 @@ Goal story matrix inventory status: `story_matrix_created=true`, `user_story_mat
 Loop 216 status: `subcategory_classifier_executed=true`, `diagnostic_log_displayed=false`, `matching_line_displayed=false`, `role_name_displayed=false`, `sql_statement_displayed=false`, `object_name_displayed=false`, `unknown_role_acl_subcategory_detected=true`, `next=Loop 217 operator-only raw log review gate`.
 
 Loop 217 status: `operator_review_protocol_created=true`, `operator_raw_log_review_status=pending_operator_input`, `operator_sanitized_result_recorded=false`, `diagnostic_log_read_by_codex=false`, `diagnostic_log_displayed=false`, `matching_line_displayed=false`, `role_name_displayed=false`, `sql_statement_displayed=false`, `object_name_displayed=false`, `restore_retried=false`, `next=Loop 218 branch pending operator sanitized result`.
+
+Loop 218 status: `operator_raw_log_review_executed=true`, `operator_subcategory_selected=unknown_after_operator_review`, `operator_subcategory_confidence=low`, `role_placeholder_no_go=true`, `staged_restore_diagnostics_plan_created=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `target_db_created=false`, `role_created=false`, `raw_log_displayed=false`, `toc_body_displayed=false`, `next=Loop 219 staged restore diagnostics execution gate`.
 
 ## Obsidian Helpers
 
