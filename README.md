@@ -501,6 +501,8 @@ Loop 209 isolated local PostgreSQL restore drill executionでは、Loop 205 arti
 
 Loop 209.1 isolated local PostgreSQL target provisioning approvalでは、VPS上にPostgreSQL 17 serverとrestore drill専用cluster/DBを用意しました。`restore_drill_loop2091` clusterはport `55432` / localhost scope、target DBは `amami_line_crm_restore_drill_loop2091_20260629` です。restore、pg_restore restore、Supabase接続、production restore、dump内容表示、secret記録は行っていません。詳細は [docs/11_codex_tasks/209_1_isolated_local_postgresql_target_provisioning_approval.md](docs/11_codex_tasks/209_1_isolated_local_postgresql_target_provisioning_approval.md) と [docs/16_obsidian/loop_209_1_isolated_local_postgresql_target_provisioning_approval.md](docs/16_obsidian/loop_209_1_isolated_local_postgresql_target_provisioning_approval.md) を参照してください。
 
+Loop 209.2 isolated local PostgreSQL restore drill retryでは、Loop 209.1のisolated local PostgreSQL targetへ1回だけrestoreを試行しました。artifact/target preflightは通過しましたが、`pg_restore_exit_code=1` のため `restore_drill_status=failed` / `failure_category=pg_restore_exit_code_nonzero_without_raw_log` として記録し、target DBはdrop済みです。raw log、dump内容、row content、DB URL、secretは記録せず、Supabase/production restoreやruntime変更は行っていません。詳細は [docs/11_codex_tasks/209_2_isolated_local_postgresql_restore_drill_retry.md](docs/11_codex_tasks/209_2_isolated_local_postgresql_restore_drill_retry.md) と [docs/16_obsidian/loop_209_2_isolated_local_postgresql_restore_drill_retry.md](docs/16_obsidian/loop_209_2_isolated_local_postgresql_restore_drill_retry.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

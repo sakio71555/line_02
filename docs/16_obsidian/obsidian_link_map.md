@@ -51,6 +51,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 209 Obsidian Log](loop_209_isolated_local_postgresql_restore_drill_execution.md)
 - [Loop 209.1 Isolated Local PostgreSQL Target Provisioning](../11_codex_tasks/209_1_isolated_local_postgresql_target_provisioning_approval.md)
 - [Loop 209.1 Obsidian Log](loop_209_1_isolated_local_postgresql_target_provisioning_approval.md)
+- [Loop 209.2 Isolated Local PostgreSQL Restore Drill Retry](../11_codex_tasks/209_2_isolated_local_postgresql_restore_drill_retry.md)
+- [Loop 209.2 Obsidian Log](loop_209_2_isolated_local_postgresql_restore_drill_retry.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -83,6 +85,8 @@ Loop 208 status: `restore_target_selection_documented=true`, `restore_target_sel
 Loop 209 status: `restore_drill_status=blocked`, `failure_category=isolated_local_postgresql_target_unavailable`, `artifact_checksum_verified=true`, `pg_restore_17_version_check_passed=true`, `local_postgresql_ready=false`, `target_db_created=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `production_restore_executed=false`, `secrets_recorded=false`, `next=Loop 209.1 target provisioning approval`.
 
 Loop 209.1 status: `target_provisioning_status=success`, `package_operation_executed=true`, `postgresql_17_server_installed=true`, `local_cluster_created=true`, `local_cluster_name=restore_drill_loop2091`, `local_cluster_port=55432`, `restore_target_db_created=true`, `restore_target_verified_isolated=true`, `restore_executed=false`, `pg_restore_executed=false`, `loop_209_2_restore_drill_retry_ready=true`.
+
+Loop 209.2 status: `restore_attempt_count=1`, `restore_executed=true`, `pg_restore_executed=true`, `pg_restore_exit_code=1`, `restore_drill_status=failed`, `failure_category=pg_restore_exit_code_nonzero_without_raw_log`, `restore_target_dropped=true`, `target_db_exists_after_drop=false`, `cleanup_required=false`, `raw_log_displayed=false`, `dump_content_displayed=false`, `row_content_displayed=false`, `secrets_recorded=false`, `supabase_connection_executed=false`, `production_restore_executed=false`, `next=Loop 210 pg_restore failure diagnostics without raw log exposure`.
 
 ## Obsidian Helpers
 

@@ -403,3 +403,82 @@ secrets_recorded=false
 rollback_plan_documented=true
 loop_209_2_restore_drill_retry_ready=true
 ```
+
+## 14. Loop 209.2 Restore Drill Retry Result
+
+Loop 209.2 retried restore against the isolated local PostgreSQL target created in Loop 209.1. The preflight passed, but the single allowed `pg_restore` attempt failed with a nonzero exit code. Raw restore logs were suppressed and not recorded.
+
+### 14.1 Preflight
+
+```txt
+artifact_exists=true
+artifact_file_permission=600
+artifact_dir_permission=700
+artifact_size_match=true
+artifact_checksum_verified=true
+artifact_permission_checked=true
+artifact_dir_permission_checked=true
+pg_restore_17_path_present=true
+pg_restore_version=17.10
+psql_path_present=true
+cluster_identity_match=true
+cluster_identity=17:restore_drill_loop2091:55432:online
+listen_loopback_count=2
+listen_scope_loopback_only=true
+target_db_exists_before_restore=true
+restore_target_verified_isolated=true
+restore_target_db_name_contains_restore_drill=true
+restore_precheck_ok=true
+```
+
+### 14.2 Restore Attempt
+
+```txt
+restore_attempt_count=1
+restore_executed=true
+pg_restore_executed=true
+pg_restore_explicit_path_used=true
+pg_restore_exit_code=1
+restore_drill_status=failed
+failure_category=pg_restore_exit_code_nonzero_without_raw_log
+sanitized_validation_executed=false
+```
+
+Post-restore schema/table/count validation did not run because restore failed.
+
+### 14.3 Cleanup
+
+```txt
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+```
+
+The restore target DB was dropped after the failed attempt. The local-only cluster remains available for a future explicitly approved diagnostic or retry Loop.
+
+### 14.4 Safety Boundary
+
+```txt
+row_content_displayed=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+migration_executed=false
+rls_changed=false
+schema_changed=false
+backup_artifact_copied_into_repo=false
+```
+
+### 14.5 Next Gate
+
+```txt
+dr_readiness_status=not_ready_restore_failed
+restore_capability_verified=false
+next_loop=Loop 210: pg_restore failure diagnostics without raw log exposure
+```
+
+Do not retry restore until the failure is diagnosed with a safe, sanitized method and a new explicit approval is provided.

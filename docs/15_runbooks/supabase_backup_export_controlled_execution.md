@@ -363,3 +363,33 @@ loop_209_2_restore_drill_retry_ready=true
 ```
 
 The target is ready for a separate restore retry Loop with explicit operator approval.
+
+## 20. Loop 209.2 Restore Drill Retry Result
+
+Loop 209.2 executed the first isolated restore attempt against the VPS local PostgreSQL target. The attempt failed, and the target DB was dropped afterward.
+
+```txt
+restore_attempt_count=1
+restore_executed=true
+pg_restore_executed=true
+pg_restore_explicit_path_used=true
+pg_restore_version=17.10
+pg_restore_exit_code=1
+restore_drill_status=failed
+failure_category=pg_restore_exit_code_nonzero_without_raw_log
+sanitized_validation_executed=false
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+backup_artifact_copied_into_repo=false
+row_content_displayed=false
+dump_content_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+```
+
+Artifact metadata remained valid, and the target identity was verified as `local_isolated_postgresql_on_vps` before the attempt. Restore capability is not yet proven. The next Loop should diagnose the failure without displaying raw restore logs, DB URLs, secrets, dump contents, or row contents.
