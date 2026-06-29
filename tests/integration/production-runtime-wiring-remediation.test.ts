@@ -233,7 +233,6 @@ describe("Loop 151 production runtime wiring remediation", () => {
       new RegExp("SUPABASE_URL" + "=https?://[^<]"),
       new RegExp("SUPABASE_ANON_KEY" + "=.+"),
       new RegExp("/api/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

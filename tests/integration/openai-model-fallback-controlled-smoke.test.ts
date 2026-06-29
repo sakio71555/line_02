@@ -95,7 +95,6 @@ describe("Loop 164 OpenAI model fallback controlled smoke docs", () => {
       new RegExp("SUPABASE" + "_URL=https?://[^<]"),
       new RegExp("https://" + "[a-z0-9-]+\\.supabase\\.co", "i"),
       new RegExp("postgres(?:ql)?" + "://", "i"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

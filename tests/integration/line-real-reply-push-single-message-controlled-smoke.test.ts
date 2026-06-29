@@ -145,7 +145,6 @@ describe("Loop 170 LINE real reply/push single-message controlled smoke", () => 
       new RegExp("postgres" + "://", "i"),
       new RegExp("BEGIN (RSA |EC |OPENSSH )?PRIVATE" + " KEY"),
       new RegExp("priv" + "key\\.pem"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

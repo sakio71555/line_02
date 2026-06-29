@@ -1151,3 +1151,30 @@ production readiness: Go
 ```
 
 Operator next action: review Loop 197 design-only draft before approving any command execution, export, restore, or artifact handling.
+
+## Loop 197 Production Operations Final Closeout
+
+Initial production operations are closed out. Supabase backup is explicitly deferred and accepted as a later review risk.
+
+```txt
+project_closeout_status=complete
+no_further_required_loop=true
+production_readiness=production_go
+activation_mode=line_and_openai_runtime
+handoff_complete=true
+obsidian_alignment_status=complete
+supabase_backup_success_status=not_achieved
+supabase_backup_risk_accepted=true
+supabase_backup_review_required_later=true
+supabase_pro_upgrade=false
+supabase_cli_api_called=false
+db_export_performed=false
+restore_performed=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+openai_api_performed=false
+nginx_dns_certbot_changes=false
+secrets_recorded=false
+```
+
+Operator reminder: review Supabase backup later before relying on long-term production data recovery.

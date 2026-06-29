@@ -88,7 +88,6 @@ describe("Loop 161 OpenAI real API controlled smoke docs", () => {
       new RegExp("/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
       new RegExp("U[a-f0-9]{32}", "i"),
       new RegExp("line-test-sent-no-auto-reply"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

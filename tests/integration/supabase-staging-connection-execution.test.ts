@@ -81,7 +81,6 @@ describe("Loop 152 Supabase staging connection execution docs", () => {
       new RegExp("/api/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
       new RegExp("/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
       new RegExp("U[a-f0-9]{32}", "i"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

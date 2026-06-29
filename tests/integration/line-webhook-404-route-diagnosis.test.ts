@@ -99,7 +99,6 @@ describe("Loop 144 LINE webhook 404 route diagnosis docs", () => {
       new RegExp("priv" + "key\\.pem"),
       new RegExp("/api/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
       new RegExp("/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

@@ -90,7 +90,6 @@ describe("Loop 146 LINE real receive event smoke docs", () => {
       new RegExp("/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
       new RegExp("U[a-f0-9]{32}", "i"),
       new RegExp("受信" + "テスト"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

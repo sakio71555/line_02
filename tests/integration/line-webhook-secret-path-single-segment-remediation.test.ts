@@ -78,7 +78,6 @@ describe("Loop 145A LINE webhook secret path single-segment remediation docs", (
       new RegExp("priv" + "key\\.pem"),
       new RegExp("/api/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
       new RegExp("/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

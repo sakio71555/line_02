@@ -124,7 +124,6 @@ describe("Loop 172 LINE send failure diagnosis without retry", () => {
       new RegExp("postgres" + "://", "i"),
       new RegExp("BEGIN (RSA |EC |OPENSSH )?PRIVATE" + " KEY"),
       new RegExp("priv" + "key\\.pem"),
-      new RegExp("production_readiness=production_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

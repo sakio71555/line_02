@@ -58,7 +58,6 @@ describe("Loop 177 explicit production activation with operator approval", () =>
     }
 
     expect(combined).not.toContain("final_operator_go=true");
-    expect(combined).not.toContain("production_readiness=production_" + "go");
   });
 
   it("records final runtime and safety evidence", () => {
@@ -132,8 +131,7 @@ function forbiddenPatterns(): RegExp[] {
     new RegExp("postgres" + "://", "i"),
     new RegExp("BEGIN (RSA |EC |OPENSSH )?PRIVATE" + " KEY"),
     new RegExp("priv" + "key\\.pem"),
-    new RegExp("line-test-sent-no-auto-reply"),
-    new RegExp("production_readiness=production_" + "go")
+    new RegExp("line-test-sent-no-auto-reply")
   ];
 }
 

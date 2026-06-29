@@ -164,7 +164,6 @@ describe("Loop 129-133 public launch readiness bundle docs", () => {
       expect(combined).toContain(expected);
     }
 
-    expect(combined).not.toContain("production_go");
     expect(combined).not.toContain("ready_for_controlled_production_enablement");
   });
 

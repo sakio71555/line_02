@@ -469,6 +469,8 @@ Loop 195では、Free Plan limitation後のSupabase backup path decisionをdocs/
 
 Loop 196では、operator decisionとして `selected_path=B_planning_only` を記録しました。Free PlanのままCLI/pg_dump系backup dry-runの設計だけ進めますが、Supabase Pro化、Supabase CLI/API、DB export、restore、secret表示、artifact handling、runtime変更は未承認のままです。次は [Loop 197: Supabase CLI backup dry-run design](docs/11_codex_tasks/196_supabase_backup_path_operator_decision_free_plan_cli_planning_only.md) に進みます。
 
+Loop 197では、production operations final closeoutを記録しました。`project_closeout_status=complete` / `no_further_required_loop=true` / `production_readiness=production_go` とし、Supabase backupは `supabase_backup_success_status=not_achieved` のまま deferred risk accepted として後日レビュー対象にしています。Supabase CLI/API、pg_dump、DB export、restore、runtime変更、追加LINE送信、OpenAI API、Nginx/DNS/certbot変更は行っていません。詳細は [docs/11_codex_tasks/197_production_operations_final_closeout_with_supabase_backup_deferred_risk_acceptance.md](docs/11_codex_tasks/197_production_operations_final_closeout_with_supabase_backup_deferred_risk_acceptance.md) と [docs/15_runbooks/production_operations_final_closeout_with_supabase_backup_deferred_risk_acceptance.md](docs/15_runbooks/production_operations_final_closeout_with_supabase_backup_deferred_risk_acceptance.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

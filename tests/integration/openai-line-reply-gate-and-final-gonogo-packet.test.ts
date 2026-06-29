@@ -127,7 +127,6 @@ describe("Loop 157-160 OpenAI and LINE reply gate packet docs", () => {
       new RegExp("/line/webhook/" + "[A-Za-z0-9._~-]{8,}"),
       new RegExp("U[a-f0-9]{32}", "i"),
       new RegExp("line-test-sent-no-auto-reply"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

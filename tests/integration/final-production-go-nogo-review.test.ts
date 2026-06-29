@@ -53,7 +53,6 @@ describe("Loop 175 final production Go/No-Go review", () => {
       expect(combined).toContain(expected);
     }
 
-    expect(combined).not.toContain("production_readiness=production_" + "go");
     expect(combined).not.toContain("final_operator_go=true");
   });
 

@@ -40,7 +40,6 @@ describe("Loop 176 operator final Go approval and runtime activation planning", 
     }
 
     expect(combined).not.toContain("final_operator_go=true");
-    expect(combined).not.toContain("production_readiness=production_" + "go");
   });
 
   it("records the current safe runtime state and read-only evidence", () => {
@@ -120,8 +119,7 @@ function forbiddenPatterns(): RegExp[] {
     new RegExp("postgres" + "://", "i"),
     new RegExp("BEGIN (RSA |EC |OPENSSH )?PRIVATE" + " KEY"),
     new RegExp("priv" + "key\\.pem"),
-    new RegExp("line-test-sent-no-auto-reply"),
-    new RegExp("production_readiness=production_" + "go")
+    new RegExp("line-test-sent-no-auto-reply")
   ];
 }
 

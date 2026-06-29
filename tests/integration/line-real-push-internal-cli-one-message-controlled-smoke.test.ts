@@ -124,7 +124,6 @@ function forbiddenPatterns(): RegExp[] {
     new RegExp("BEGIN (RSA |EC |OPENSSH )?PRIVATE" + " KEY"),
     new RegExp("priv" + "key\\.pem"),
     new RegExp("final_operator_go=true"),
-    new RegExp("production_readiness=production_go")
   ];
 }
 

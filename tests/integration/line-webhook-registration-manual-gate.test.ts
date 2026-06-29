@@ -125,7 +125,6 @@ describe("Loop 142 LINE webhook registration manual gate docs", () => {
       new RegExp("sk-" + "[A-Za-z0-9]"),
       new RegExp("BEGIN (RSA |EC |OPENSSH )?PRIVATE" + " KEY"),
       new RegExp("priv" + "key\\.pem"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {

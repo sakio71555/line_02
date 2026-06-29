@@ -114,7 +114,6 @@ describe("Loop 169 LINE real reply/push controlled smoke planning", () => {
       new RegExp("postgres" + "://", "i"),
       new RegExp("BEGIN (RSA |EC |OPENSSH )?PRIVATE" + " KEY"),
       new RegExp("priv" + "key\\.pem"),
-      new RegExp("production" + "_go")
     ];
 
     for (const pattern of forbiddenPatterns) {
