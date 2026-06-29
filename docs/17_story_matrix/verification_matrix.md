@@ -21,6 +21,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-011 | Operator-only review protocol | docs-only check that Loop 217 defines sanitized `key=value` format and pending operator result | protocol exists and raw log exposure remains false | true | false | false | false | false | false | false | false | pending_loop_217_verification | Does not inspect diagnostic logs. |
 | V-012 | Staged diagnostics plan | docs-only check that Loop 218 records operator sanitized result and phase diagnostics plan | role placeholder No-Go and staged plan recorded | true | false | false | false | false | false | false | false | pending_loop_218_verification | Does not execute restore or `pg_restore`. |
 | V-013 | Staged diagnostics execution gate | docs-only check that Loop 219 selects one next stage and defines the execution boundary | `toc_count_only` selected and no execution performed | true | false | false | false | false | false | false | false | pending_loop_219_verification | Does not execute `pg_restore --list`. |
+| V-014 | TOC count-only diagnostic result | sanitized count-only review of Loop 220 docs and root-only metadata | TOC count recorded, body hidden, next stage selected | true | false | false | false | false | false | false | false | pending_loop_220_verification | Does not display TOC body or prove restore readiness. |
 
 ## Blocked Or Operator Approval Required
 
@@ -104,6 +105,27 @@ loop_219_object_name_displayed=false
 loop_219_sql_statement_displayed=false
 loop_219_role_name_displayed=false
 loop_219_next_loop=Loop 220 TOC count-only staged restore diagnostic execution
+```
+
+## Loop 220 Verification Note
+
+```txt
+loop_220_pg_restore_list_executed=true
+loop_220_pg_restore_list_exit_code=0
+loop_220_toc_total_entries_count=462
+loop_220_toc_pre_data_count=186
+loop_220_toc_data_count=46
+loop_220_toc_post_data_count=230
+loop_220_toc_body_displayed=false
+loop_220_object_name_displayed=false
+loop_220_sql_statement_displayed=false
+loop_220_role_name_displayed=false
+loop_220_restore_executed=false
+loop_220_pg_restore_restore_executed=false
+loop_220_psql_executed=false
+loop_220_target_db_created=false
+loop_220_backup_artifact_copied_into_repo=false
+loop_220_selected_next_stage=pre_data_only_restore_diagnostic_gate
 ```
 
 ## Stage 2 Rule

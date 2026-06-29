@@ -523,6 +523,8 @@ Loop 218 staged restore diagnostics planでは、operator sanitized resultを `u
 
 Loop 219 staged restore diagnostics execution gateでは、次に実行する診断stageを `toc_count_only` に絞りました。TOC count / section countのみを最初に実行候補とし、TOC本文やobject/table/function/policy名は表示しない境界を定義しています。このLoopではrestore、pg_restore、psql、target DB作成、role作成、Supabase接続、production restore、TOC本文表示は行っていません。詳細は [docs/11_codex_tasks/219_staged_restore_diagnostics_execution_gate.md](docs/11_codex_tasks/219_staged_restore_diagnostics_execution_gate.md) と [docs/16_obsidian/loop_219_staged_restore_diagnostics_execution_gate.md](docs/16_obsidian/loop_219_staged_restore_diagnostics_execution_gate.md) を参照してください。
 
+Loop 220 TOC count-only staged restore diagnostic executionでは、`/usr/lib/postgresql/17/bin/pg_restore --list` 相当を1回だけ実行し、TOC本文はrepo外root-onlyに保存したまま件数だけを記録しました。`pg_restore_list_exit_code=0`、`toc_total_entries_count=462`、次stageは `pre_data_only_restore_diagnostic_gate` です。restore、target DB作成、psql、Supabase接続、production restore、TOC本文表示、object名表示、secret記録は行っていません。詳細は [docs/11_codex_tasks/220_toc_count_only_staged_restore_diagnostic_execution.md](docs/11_codex_tasks/220_toc_count_only_staged_restore_diagnostic_execution.md) と [docs/16_obsidian/loop_220_toc_count_only_staged_restore_diagnostic_execution.md](docs/16_obsidian/loop_220_toc_count_only_staged_restore_diagnostic_execution.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

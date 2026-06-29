@@ -83,6 +83,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 218 Obsidian Log](loop_218_staged_restore_diagnostics_plan.md)
 - [Loop 219 Staged Restore Diagnostics Execution Gate](../11_codex_tasks/219_staged_restore_diagnostics_execution_gate.md)
 - [Loop 219 Obsidian Log](loop_219_staged_restore_diagnostics_execution_gate.md)
+- [Loop 220 TOC Count-Only Staged Restore Diagnostic Execution](../11_codex_tasks/220_toc_count_only_staged_restore_diagnostic_execution.md)
+- [Loop 220 Obsidian Log](loop_220_toc_count_only_staged_restore_diagnostic_execution.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -141,6 +143,8 @@ Loop 217 status: `operator_review_protocol_created=true`, `operator_raw_log_revi
 Loop 218 status: `operator_raw_log_review_executed=true`, `operator_subcategory_selected=unknown_after_operator_review`, `operator_subcategory_confidence=low`, `role_placeholder_no_go=true`, `staged_restore_diagnostics_plan_created=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `target_db_created=false`, `role_created=false`, `raw_log_displayed=false`, `toc_body_displayed=false`, `next=Loop 219 staged restore diagnostics execution gate`.
 
 Loop 219 status: `staged_diagnostics_gate_created=true`, `next_stage_selected=true`, `selected_next_diagnostic_stage=toc_count_only`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `target_db_created=false`, `role_created=false`, `toc_body_displayed=false`, `object_name_displayed=false`, `next=Loop 220 TOC count-only staged restore diagnostic execution`.
+
+Loop 220 status: `pg_restore_list_executed=true`, `pg_restore_list_exit_code=0`, `toc_total_entries_count=462`, `toc_pre_data_count=186`, `toc_data_count=46`, `toc_post_data_count=230`, `toc_body_displayed=false`, `object_name_displayed=false`, `restore_executed=false`, `pg_restore_restore_executed=false`, `target_db_created=false`, `secrets_recorded=false`, `next=Loop 221 pre-data only restore diagnostic gate`.
 
 ## Obsidian Helpers
 
