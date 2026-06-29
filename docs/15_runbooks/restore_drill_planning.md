@@ -329,3 +329,77 @@ next_loop=Loop 209.1: isolated local PostgreSQL target provisioning approval
 ```
 
 Do not retry restore until local PostgreSQL target provisioning is explicitly approved and separated from restore execution.
+
+## 13. Loop 209.1 Target Provisioning Result
+
+Loop 209.1 provisioned the isolated local PostgreSQL target on the VPS. It did not run restore or `pg_restore` restore.
+
+### 13.1 Package / Server Result
+
+```txt
+target_provisioning_status=success
+package_operation_executed=true
+package_install_requested=postgresql-17
+apt_upgrade_executed=false
+apt_full_upgrade_executed=false
+postgresql_17_server_installed=true
+installed_package_postgresql_17=17.10-1.pgdg24.04+1
+installed_package_postgresql_common=291.pgdg24.04+1
+installed_package_postgresql_client_17=17.10-1.pgdg24.04+1
+installed_package_postgresql_client_18=18.4-1.pgdg24.04+1
+```
+
+`postgresql-client-18` and PostgreSQL common/client meta packages were installed or updated as dependencies of the PostgreSQL server provisioning.
+
+### 13.2 Local Target
+
+```txt
+local_cluster_created=true
+local_cluster_name=restore_drill_loop2091
+local_cluster_port=55432
+local_cluster_status=online
+local_cluster_started=true
+listen_scope=localhost
+local_cluster_local_only=true
+restore_target_db_created=true
+restore_target_db_name=amami_line_crm_restore_drill_loop2091_20260629
+restore_target_db_name_contains_restore_drill=true
+restore_target_verified_isolated=true
+target_disposable=true
+target_drop_command_known=true
+```
+
+Loopback-only listen addresses were observed:
+
+```txt
+listen_address=127.0.1.1:55432
+listen_address=127.0.0.1:55432
+```
+
+### 13.3 Rollback / Cleanup Plan
+
+```txt
+drop_target_db_command=runuser -u postgres -- dropdb -p 55432 amami_line_crm_restore_drill_loop2091_20260629
+stop_cluster_command=pg_ctlcluster 17 restore_drill_loop2091 stop
+drop_cluster_command=pg_dropcluster --stop 17 restore_drill_loop2091
+```
+
+Keep `postgresql-17` installed until the restore drill is completed unless a separate rollback Loop is approved.
+
+### 13.4 Safety Boundary
+
+```txt
+pg_restore_17_path_present=true
+pg_restore_17_version_check_passed=true
+restore_executed=false
+pg_restore_executed=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+secrets_recorded=false
+rollback_plan_documented=true
+loop_209_2_restore_drill_retry_ready=true
+```

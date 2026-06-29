@@ -329,3 +329,37 @@ secrets_recorded=false
 ```
 
 No restore target was created, so no cleanup action was required. The next step is a separate provisioning approval Loop before restore can be retried.
+
+## 19. Loop 209.1 Restore Target Provisioning Result
+
+Loop 209.1 provisioned the isolated local PostgreSQL target for a future restore retry. It still did not restore the backup artifact.
+
+```txt
+target_provisioning_status=success
+package_operation_executed=true
+postgresql_17_server_installed=true
+local_cluster_created=true
+local_cluster_name=restore_drill_loop2091
+local_cluster_port=55432
+local_cluster_started=true
+local_cluster_local_only=true
+restore_target_db_created=true
+restore_target_db_name=amami_line_crm_restore_drill_loop2091_20260629
+restore_target_db_name_contains_restore_drill=true
+restore_target_verified_isolated=true
+pg_restore_17_path_present=true
+pg_restore_17_version_check_passed=true
+restore_executed=false
+pg_restore_executed=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+backup_artifact_copied_into_repo=false
+dump_content_displayed=false
+raw_log_displayed=false
+secrets_recorded=false
+rollback_plan_documented=true
+loop_209_2_restore_drill_retry_ready=true
+```
+
+The target is ready for a separate restore retry Loop with explicit operator approval.
