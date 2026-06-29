@@ -9,7 +9,7 @@ Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, di
 - Goal: amami-line-crm user story / ops story / DR readiness matrix and safe verification loop
 - Date: 2026-06-29
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
-- Stage: Stage 1 inventory created; Stage 2 safe verification pending
+- Stage: Stage 1 inventory created and pushed; Stage 2 safe verification completed
 - Scope type: docs-only matrix plus safe local/static verification
 
 ## Source Evidence
@@ -25,9 +25,10 @@ Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, di
 ## Status
 
 - Start git status: `main...origin/main`
-- Stage 1 commit hash: pending
-- Stage 1 push: pending
-- Stage 2 verification: pending
+- Stage 1 commit hash: `c8d4973 docs: add story readiness matrices`
+- Stage 1 push: completed
+- Stage 2 verification: completed
+- Stage 2 commit hash: pending
 - Production status: unchanged
 - DR readiness: `not_ready_restore_failed`
 
@@ -63,6 +64,16 @@ Safe Stage 2 checks only:
 - `npx pnpm@10.12.1 typecheck`
 - `npx pnpm@10.12.1 test`
 - `npx pnpm@10.12.1 test:integration`
+
+Stage 2 results:
+
+- `git diff --check`: passed
+- docs link check: passed
+- changed-file secret pattern boolean check: passed
+- `npx pnpm@10.12.1 lint`: passed
+- `npx pnpm@10.12.1 typecheck`: passed
+- `npx pnpm@10.12.1 test`: passed, `199 passed / 1 skipped`, `1212 passed / 4 skipped`
+- `npx pnpm@10.12.1 test:integration`: passed, `199 passed / 1 skipped`, `1212 passed / 4 skipped`
 
 Blocked in this goal:
 
@@ -112,5 +123,4 @@ Blocked in this goal:
 
 ## Next Loop Candidate
 
-- Stage 2: safe verification loop for the matrix docs
 - High-risk follow-up after this goal: Loop 216 sanitized role ACL subcategory classifier without restore

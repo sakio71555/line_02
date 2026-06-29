@@ -32,7 +32,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - Goal: amami-line-crm user story / ops story / DR readiness matrix and safe verification loop
 - Date: 2026-06-29
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Stage: Stage 1 inventory created; Stage 2 safe verification pending
+- Stage: Stage 1 inventory created and pushed; Stage 2 safe verification completed
 - Scope type: docs-only matrix plus safe local/static verification
 
 ## What Changed
@@ -88,6 +88,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - npx pnpm@10.12.1 test
 - npx pnpm@10.12.1 test:integration
 
+## Verification Result
+
+- git diff --check: passed
+- docs link check: passed
+- changed-file secret pattern boolean check: passed
+- npx pnpm@10.12.1 lint: passed
+- npx pnpm@10.12.1 typecheck: passed
+- npx pnpm@10.12.1 test: passed, 199 files passed / 1 skipped, 1212 tests passed / 4 skipped
+- npx pnpm@10.12.1 test:integration: passed, 199 files passed / 1 skipped, 1212 tests passed / 4 skipped
+
 ## Risks / Follow-Up
 
 - Matrix status is an inventory, not a fresh production smoke.
@@ -97,7 +107,6 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Stage 2: safe verification loop for the matrix docs
 - High-risk follow-up after this goal: Loop 216 sanitized role ACL subcategory classifier without restore
 ---
 

@@ -15,6 +15,8 @@
 - Added user story, ops story, DR readiness, and verification matrices with explicit safety columns.
 - Reflected current DR state: backup export success, restore failed, remaining role/ACL signal count 1, `dr_readiness_status=not_ready_restore_failed`.
 - Updated dev log, Obsidian navigation, handoff latest files, and docs index.
+- Stage 1 committed and pushed as `c8d4973 docs: add story readiness matrices`.
+- Stage 2 safe verification completed with docs link check, changed-file secret pattern boolean check, lint, typecheck, unit test, and integration test.
 
 ## Risks
 
@@ -59,3 +61,13 @@
 - db_changed=false
 - production_runtime_changed=false
 - stage_1_ready_for_safe_verification=true
+- stage_1_commit_pushed=true
+- stage_2_safe_verification_completed=true
+- git_diff_check_passed=true
+- docs_link_check_passed=true
+- changed_file_secret_pattern_check_passed=true
+- lint_passed=true
+- typecheck_passed=true
+- test_passed=true
+- test_integration_passed=true
+- full_repo_secret_pattern_check_used_for_gate=false
