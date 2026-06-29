@@ -84,10 +84,47 @@ production_restore_performed=false
 
 This replacement does not authorize backup export. The PostgreSQL 17 client boundary above still applies.
 
-## 7. Obsidian Links
+## 7. Loop 203 PostgreSQL 17 Client Installation Preflight
+
+Loop 203 checked the VPS OS/package state before installing a PostgreSQL 17 client. It was read-only and did not run `pg_dump`.
+
+```txt
+vps_preflight_status=completed_read_only
+os_id=ubuntu
+os_version=24.04.3_LTS
+os_codename=noble
+pg_dump_available=true
+current_pg_dump_path=/usr/bin/pg_dump
+current_pg_dump_wrapper=/usr/share/postgresql-common/pg_wrapper
+current_pg_dump_binary=/usr/lib/postgresql/16/bin/pg_dump
+current_pg_dump_version_source=postgresql-client-16_package
+current_pg_dump_version=16.14-0ubuntu0.24.04.1
+current_pg_dump_major=16
+detected_server_major_or_version=17.6
+version_mismatch_status=pg_dump_server_version_mismatch
+postgresql_apt_source_detected=false
+postgresql_17_client_candidate_available=false_current_apt_cache
+pg_dump_17_binary_candidate_path=/usr/lib/postgresql/17/bin/pg_dump
+package_install_executed=false
+apt_update_executed=false
+apt_install_executed=false
+pg_dump_executed=false
+supabase_connection_executed=false
+db_export_executed=false
+backup_artifact_created=false
+restore_executed=false
+secrets_recorded=false
+raw_log_displayed=false
+```
+
+Recommended next step is a separate operator-approved install Loop. Current Ubuntu sources did not expose `postgresql-client-17`, so PostgreSQL official APT repository approval may be required. Keep the existing PostgreSQL 16 client intact and use an explicit PostgreSQL 17 binary path after installation.
+
+## 8. Obsidian Links
 
 - [OBSIDIAN.md](../../OBSIDIAN.md)
 - [Obsidian Link Map](../16_obsidian/obsidian_link_map.md)
 - [Development Log](../14_dev_logs/2026-06-29.md)
 - [Loop 202 Task Doc](../11_codex_tasks/202_pg_dump_17_client_boundary_and_backup_mismatch_runbook.md)
 - [Loop 202.1 Task Doc](../11_codex_tasks/202_1_supabase_db_url_secret_replacement.md)
+- [Loop 203 Task Doc](../11_codex_tasks/203_postgresql_17_client_installation_preflight.md)
+- [Loop 203 Obsidian Log](../16_obsidian/loop_203_postgresql_17_client_installation_preflight.md)
