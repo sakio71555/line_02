@@ -43,6 +43,7 @@
 - Loop 212 role owner ACL restore remediation plan: `11_codex_tasks/212_role_owner_acl_restore_remediation_plan.md`
 - Loop 213 controlled restore retry with no-owner no-privileges: `11_codex_tasks/213_controlled_restore_retry_with_no_owner_no_privileges.md`
 - Loop 214 handoff automation v1: `11_codex_tasks/214_handoff_automation_v1.md`
+- Loop 214.1 handoff template dry-run: `11_codex_tasks/214_1_handoff_template_dry_run.md`
 
 ## Prompts and Templates
 

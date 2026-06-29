@@ -51,6 +51,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 ## Current Handoff Trail
 
 - Loop 214 handoff automation v1 adds `docs/16_handoff/latest_codex_result.md` and `docs/16_handoff/latest_gpt_review_prompt.md` so Codex completion summaries can be copied into ChatGPT without exposing secrets, raw logs, dump contents, row contents, DB URLs, API keys, or production logs.
+- Loop 214.1 dry-runs those templates with sanitized Loop 213 / Loop 214 results and keeps restore, `pg_restore`, `psql`, Supabase, production runtime, raw logs, dump contents, row contents, DB URLs, and secrets untouched.
 
 ## .obsidian Policy
 
