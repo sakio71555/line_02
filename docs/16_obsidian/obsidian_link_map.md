@@ -8,7 +8,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [OBSIDIAN.md](../../OBSIDIAN.md)
 - [Development Loop](../08_dev_loop.md)
 - [Development Logs](../14_dev_logs/README.md)
-- [Latest Dev Log: 2026-06-28](../14_dev_logs/2026-06-28.md)
+- [Latest Dev Log: 2026-06-29](../14_dev_logs/2026-06-29.md)
 
 ## Current Production / Operations
 
@@ -32,6 +32,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 200 Supabase Backup Tooling Installation Preflight](../11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md)
 - [Loop 201 Supabase Backup Export Controlled Execution](../11_codex_tasks/201_supabase_backup_export_controlled_execution.md)
 - [Loop 202 pg_dump 17 Client Boundary](../11_codex_tasks/202_pg_dump_17_client_boundary_and_backup_mismatch_runbook.md)
+- [Loop 202.1 Supabase DB URL Secret Replacement](../11_codex_tasks/202_1_supabase_db_url_secret_replacement.md)
+- [Loop 202.1 Obsidian Log](loop_202_1_supabase_db_url_secret_replacement.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -45,6 +47,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [pg_dump 17 Client Boundary And Backup Mismatch](../15_runbooks/pg_dump_17_client_boundary_and_backup_mismatch.md)
 
 Loop 202 status: `pg_dump_failure_categories=pg_dump_server_version_mismatch`, `detected_server_major_or_version=17.6`, `detected_pg_dump_major_or_version=16.14`, `next=Loop 203 PostgreSQL 17 client installation preflight`.
+
+Loop 202.1 status: `supabase_db_url_replaced=true`, `present=true`, `format_check=passed`, `secrets_recorded=false`, `pg_dump_executed=false`, `supabase_export_executed=false`, `restore_executed=false`. Backup export remains blocked until the PostgreSQL 17 client boundary is resolved.
 
 ## Obsidian Helpers
 

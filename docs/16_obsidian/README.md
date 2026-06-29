@@ -33,6 +33,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 200 Supabase backup tooling installation preflight records `pg_dump_available_after=true`, `psql_available_after=true`, `supabase_cli_installed=false`, and keeps export/restore unexecuted.
 - Loop 201 Supabase backup export controlled execution reached the export gate, but `operator_supplied_db_url_present=false`, so `backup_export_status=blocked_operator_secret_not_injected`, `DB export performed=false`, `backup artifact created=false`, and `restore performed=false`.
 - Loop 202 pg_dump 17 client boundary records `pg_dump_failure_categories=pg_dump_server_version_mismatch`, `detected_server_major_or_version=17.6`, `detected_pg_dump_major_or_version=16.14`, and blocks retry until PostgreSQL client 17 is available.
+- Loop 202.1 Supabase DB URL secret replacement records `supabase_db_url_replaced=true`, `present=true`, `format_check=passed`, `secrets_recorded=false`, `pg_dump_executed=false`, `supabase_export_executed=false`, and `restore_executed=false`. It does not authorize backup export.
 
 ## .obsidian Policy
 
