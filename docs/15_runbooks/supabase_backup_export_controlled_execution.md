@@ -167,3 +167,24 @@ production_restore_performed=false
 ```
 
 Do not use this replacement as approval to retry export. Backup export remains blocked until the PostgreSQL 17 client boundary is resolved in a separate Loop.
+
+## 13. Loop 204 PostgreSQL 17 Client Installation Follow-Up
+
+PostgreSQL 17 client tooling is now installed on the VPS, but DB export has still not been retried.
+
+```txt
+pg_dump_17_path=/usr/lib/postgresql/17/bin/pg_dump
+pg_dump_17_version=17.10
+pg_dump_17_version_check_passed=true
+pg_dump_16_preserved=true
+postgresql_client_17_installed=true
+pg_dump_db_connection_executed=false
+supabase_connection_executed=false
+db_export_executed=false
+backup_artifact_created=false
+restore_executed=false
+secrets_recorded=false
+raw_log_displayed=false
+```
+
+The next export Loop must call `/usr/lib/postgresql/17/bin/pg_dump` explicitly and must keep DB URL and raw log output redacted.

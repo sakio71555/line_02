@@ -487,6 +487,8 @@ Loop 202.1 Supabase DB URL secret replacementでは、誤っていた `SUPABASE_
 
 Loop 203 PostgreSQL 17 client installation preflightでは、VPSのOS/package状態をread-onlyで確認し、Ubuntu 24.04.3 / PostgreSQL client 16.14 / current APT cacheでは `postgresql-client-17` 候補なし、という状態を記録しました。PostgreSQL 17 client導入はまだ行わず、pg_dump、Supabase接続、DB export、backup artifact作成、restoreも未実行です。詳細は [docs/11_codex_tasks/203_postgresql_17_client_installation_preflight.md](docs/11_codex_tasks/203_postgresql_17_client_installation_preflight.md) と [docs/16_obsidian/loop_203_postgresql_17_client_installation_preflight.md](docs/16_obsidian/loop_203_postgresql_17_client_installation_preflight.md) を参照してください。
 
+Loop 204 PostgreSQL 17 client installation approval and executionでは、VPSへPGDG source/keyを追加し、`postgresql-client-17 17.10` をside-by-side導入しました。`/usr/lib/postgresql/17/bin/pg_dump --version` は17系、既存 `/usr/lib/postgresql/16/bin/pg_dump` は16.14のままです。Supabase接続、DB export、backup artifact作成、restoreはまだ行っていません。詳細は [docs/11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md](docs/11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md) と [docs/16_obsidian/loop_204_postgresql_17_client_installation_approval_and_execution.md](docs/16_obsidian/loop_204_postgresql_17_client_installation_approval_and_execution.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

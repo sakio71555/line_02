@@ -119,7 +119,45 @@ raw_log_displayed=false
 
 Recommended next step is a separate operator-approved install Loop. Current Ubuntu sources did not expose `postgresql-client-17`, so PostgreSQL official APT repository approval may be required. Keep the existing PostgreSQL 16 client intact and use an explicit PostgreSQL 17 binary path after installation.
 
-## 8. Obsidian Links
+## 8. Loop 204 PostgreSQL 17 Client Installation
+
+Loop 204 installed PostgreSQL 17 client tooling and verified only local client versions. It did not connect to Supabase and did not export or restore data.
+
+```txt
+pgdg_source_added=true
+pgdg_source_file=/etc/apt/sources.list.d/pgdg.list
+pgdg_key_file=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+apt_update_executed=true
+apt_install_executed=true
+postgresql_client_17_installed=true
+installed_package=postgresql-client-17 17.10-1.pgdg24.04+1
+dependency_upgraded=libpq5 18.4-1.pgdg24.04+1
+postgresql_server_17_installed=false
+pg_dump_17_path=/usr/lib/postgresql/17/bin/pg_dump
+pg_dump_17_version=17.10
+pg_dump_17_version_check_passed=true
+pg_dump_16_path=/usr/lib/postgresql/16/bin/pg_dump
+pg_dump_16_version=16.14
+pg_dump_16_preserved=true
+usr_bin_pg_dump_symlink_target=../share/postgresql-common/pg_wrapper
+usr_bin_pg_dump_symlink_modified=false
+pg_wrapper_package_modified=false
+pg_dump_update_alternatives_modified=false
+pg_dump_db_connection_executed=false
+psql_executed=false
+supabase_connection_executed=false
+db_export_executed=false
+backup_artifact_created=false
+restore_executed=false
+secrets_recorded=false
+raw_log_displayed=false
+```
+
+Future backup export must use the explicit path `/usr/lib/postgresql/17/bin/pg_dump`. The bare `pg_dump` command now resolves to 17.10 through pg_wrapper because PostgreSQL 17 is installed side-by-side, but runbooks should avoid relying on that implicit behavior.
+
+Rollback candidates are `postgresql-client-17`, the PGDG source file, the PGDG key file, and the `libpq5` dependency upgrade. Rollback must be a separate controlled Loop and must not be combined with export or restore.
+
+## 9. Obsidian Links
 
 - [OBSIDIAN.md](../../OBSIDIAN.md)
 - [Obsidian Link Map](../16_obsidian/obsidian_link_map.md)
@@ -128,3 +166,5 @@ Recommended next step is a separate operator-approved install Loop. Current Ubun
 - [Loop 202.1 Task Doc](../11_codex_tasks/202_1_supabase_db_url_secret_replacement.md)
 - [Loop 203 Task Doc](../11_codex_tasks/203_postgresql_17_client_installation_preflight.md)
 - [Loop 203 Obsidian Log](../16_obsidian/loop_203_postgresql_17_client_installation_preflight.md)
+- [Loop 204 Task Doc](../11_codex_tasks/204_postgresql_17_client_installation_approval_and_execution.md)
+- [Loop 204 Obsidian Log](../16_obsidian/loop_204_postgresql_17_client_installation_approval_and_execution.md)
