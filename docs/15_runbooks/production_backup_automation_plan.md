@@ -385,3 +385,27 @@ production readiness: Go
 ```
 
 Next safe step is choosing a backup path after the Free Plan limitation. Scheduled automation remains future work.
+
+## 20. Loop 195 Backup Path Decision After Free Plan Limitation
+
+Loop 195 records the decision options after dashboard/manual/managed backup was unavailable on the Free Plan. Backup remains not achieved.
+
+```txt
+decision_status=recorded
+backup path decision recorded
+recommended_path=operator_decision_required_between_pro_upgrade_or_cli_dry_run
+backup_success_status=not_achieved
+option_a_status=operator_plan_decision_required
+option_b_status=explicit_approval_required
+option_c_status=not_recommended_without_explicit_risk_acceptance
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+production readiness: Go
+```
+
+Automation remains blocked until the operator chooses a path and a backup result plus non-production restore drill are recorded in later explicit Loops.

@@ -1107,3 +1107,28 @@ production readiness: Go
 ```
 
 Operator next action: decide the backup path after Free Plan limitation.
+
+## Loop 195 Supabase Backup Path Decision
+
+Operator next action: choose one backup path before any backup execution or restore drill.
+
+```txt
+decision_status=recorded
+backup path decision recorded
+recommended_path=operator_decision_required_between_pro_upgrade_or_cli_dry_run
+backup_success_status=not_achieved
+option_a_status=operator_plan_decision_required
+option_b_status=explicit_approval_required
+option_c_status=not_recommended_without_explicit_risk_acceptance
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+runtime_changes_performed=false
+production readiness: Go
+```
+
+Allowed next choices:
+
+- Supabase Pro/managed backup confirmation.
+- CLI backup dry-run planning with explicit approval.
+- Explicit backup defer/risk acceptance record.

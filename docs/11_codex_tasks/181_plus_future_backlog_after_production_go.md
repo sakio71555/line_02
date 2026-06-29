@@ -376,3 +376,35 @@ Next explicit candidate:
 ```txt
 Loop 195: Supabase backup path decision after Free Plan limitation
 ```
+
+## Loop 195 Follow-up
+
+Loop 195 records the backup path decision after the Free Plan limitation. Backup remains not achieved.
+
+```txt
+decision_status=recorded
+backup path decision recorded
+recommended_path=operator_decision_required_between_pro_upgrade_or_cli_dry_run
+backup_success_status=not_achieved
+option_a_status=operator_plan_decision_required
+option_b_status=explicit_approval_required
+option_c_status=not_recommended_without_explicit_risk_acceptance
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+runtime_changes_performed=false
+production readiness: Go
+```
+
+Remaining P0 backup implementation:
+
+- operator selects Supabase backup path.
+- if Pro/managed path is chosen, confirm availability after operator plan decision.
+- if CLI path is chosen, plan a separate explicit-approval dry-run.
+- if backup is deferred, record explicit risk acceptance.
+
+Next explicit candidate:
+
+```txt
+Loop 196: Operator selects Supabase backup path
+```

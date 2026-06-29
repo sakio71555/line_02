@@ -23,8 +23,10 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 181+ Future Backlog](../11_codex_tasks/181_plus_future_backlog_after_production_go.md)
 - [Loop 194 Manual Backup Result Recording](../11_codex_tasks/194_supabase_manual_backup_result_recording.md)
 - [Loop 194.1 Free Plan Backup Availability Result](../11_codex_tasks/194_1_supabase_manual_backup_availability_result_after_free_plan_limitation.md)
+- [Loop 195 Backup Path Decision](../11_codex_tasks/195_supabase_backup_path_decision_after_free_plan_limitation.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
+- [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
 
 ## Obsidian Helpers
 

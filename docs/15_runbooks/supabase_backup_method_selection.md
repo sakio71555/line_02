@@ -235,3 +235,29 @@ production readiness: Go
 ```
 
 Next safe step is Supabase backup path decision after Free Plan limitation.
+
+## 15. Loop 195 Backup Path Decision After Free Plan Limitation
+
+The operator-confirmed Free Plan limitation requires a new backup path decision before any backup execution or restore drill.
+
+```txt
+decision_status=recorded
+backup path decision recorded
+recommended_path=operator_decision_required_between_pro_upgrade_or_cli_dry_run
+recommended_immediate_next=operator chooses backup path
+backup_success_status=not_achieved
+option_a_status=operator_plan_decision_required
+option_b_status=explicit_approval_required
+option_c_status=not_recommended_without_explicit_risk_acceptance
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+secrets_recorded=false
+production readiness: Go
+```
+
+Next safe step:
+
+```txt
+Loop 196: Operator selects Supabase backup path
+```

@@ -21,6 +21,12 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 4. Open related runbooks in [../15_runbooks](../15_runbooks/).
 5. Confirm validation, safety boundary, production state, and Next Loop.
 
+## Current Backup Decision Trail
+
+- Loop 194.1 records the Supabase Free Plan limitation result.
+- Loop 195 records the backup path decision after Free Plan limitation.
+- Next operator step is choosing Pro/managed backup, CLI dry-run planning, or explicit defer/risk acceptance.
+
 ## .obsidian Policy
 
 - `.obsidian/workspace*`, `.obsidian/cache`, `.obsidian/plugins`, and `.obsidian/themes` are ignored because they are local personal state.

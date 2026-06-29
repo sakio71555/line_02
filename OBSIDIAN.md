@@ -29,6 +29,7 @@ This repository can be opened directly as an Obsidian Vault.
 ## Search Keywords
 
 - `Loop 194.2`
+- `Loop 195`
 - `production_readiness`
 - `DevelopmentLog`
 - `Decisions`
@@ -36,8 +37,15 @@ This repository can be opened directly as an Obsidian Vault.
 - `Validation`
 - `Next Loop`
 - `Supabase backup`
+- `backup path decision`
 - `LINE_REAL_PUSH_ENABLED`
 - `AI_PROVIDER`
+
+## Current Backup Trail
+
+- Loop 194.1 recorded the Supabase Free Plan limitation and kept backup success not achieved.
+- Loop 195 records the backup path decision options after that limitation.
+- Next backup action is operator-owned: choose Pro/managed backup, CLI dry-run planning, or explicit defer/risk acceptance.
 
 ## .obsidian Policy
 

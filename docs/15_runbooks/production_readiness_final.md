@@ -2149,3 +2149,33 @@ backup_success_recorded=false
 ```
 
 Next safe step: Loop 195 Supabase backup path decision after Free Plan limitation.
+
+## Loop 195 Supabase Backup Path Decision After Free Plan Limitation
+
+Loop 195 keeps production readiness Go and records the backup path decision options. Backup is still not achieved.
+
+```txt
+production readiness: Go
+activation_mode=line_and_openai_runtime
+REPOSITORY_RUNTIME=supabase
+LINE_REAL_PUSH_ENABLED=true
+AI_PROVIDER=openai
+OpenAI systemd drop-in=present
+decision_status=recorded
+backup path decision recorded
+recommended_path=operator_decision_required_between_pro_upgrade_or_cli_dry_run
+backup_success_status=not_achieved
+option_a_status=operator_plan_decision_required
+option_b_status=explicit_approval_required
+option_c_status=not_recommended_without_explicit_risk_acceptance
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+runtime_changes_performed=false
+additional_line_send_performed=false
+OpenAI API performed=false
+Nginx/DNS/certbot changes=false
+secrets_recorded=false
+```
+
+Next safe step: Loop 196 operator selects the backup path.

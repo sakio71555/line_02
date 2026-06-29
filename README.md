@@ -465,6 +465,8 @@ Loop 194では、Supabase manual backup result recordingをdocs/test/read-only v
 
 Loop 194.1では、operatorがSupabase dashboardで確認したsanitized resultを記録しました。Free Plan limitationによりmanual/managed backupは利用不可、`backup_status=not_performed`、`backup_success_recorded=false` です。CodexはSupabase dashboard操作、CLI/API、DB export、restore、artifact取得、secret表示、runtime変更を行っていません。詳細は [docs/11_codex_tasks/194_1_supabase_manual_backup_availability_result_after_free_plan_limitation.md](docs/11_codex_tasks/194_1_supabase_manual_backup_availability_result_after_free_plan_limitation.md) と [docs/15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md](docs/15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md) を参照してください。
 
+Loop 195では、Free Plan limitation後のSupabase backup path decisionをdocs/test/read-only verificationのみで記録しました。`backup_success_status=not_achieved` のまま、Option A: Pro/managed backup、Option B: CLI backup dry-run、Option C: defer risk acceptanceを比較し、次はoperatorがbackup pathを選ぶことに絞っています。Supabase CLI/API、DB export、restore、runtime変更、追加LINE送信、OpenAI API、Nginx/DNS/certbot変更は行っていません。詳細は [docs/11_codex_tasks/195_supabase_backup_path_decision_after_free_plan_limitation.md](docs/11_codex_tasks/195_supabase_backup_path_decision_after_free_plan_limitation.md) と [docs/15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md](docs/15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

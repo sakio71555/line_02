@@ -162,3 +162,23 @@ The current Free Plan does not provide the needed dashboard/managed backup path.
 ```txt
 Loop 195: Supabase backup path decision after Free Plan limitation
 ```
+
+## 13. Loop 195 Decision Result
+
+Loop 195 records the backup path decision after this Free Plan limitation. It does not perform backup, export, restore, plan change, runtime change, or artifact handling.
+
+```txt
+decision_status=recorded
+backup path decision recorded
+recommended_path=operator_decision_required_between_pro_upgrade_or_cli_dry_run
+backup_success_status=not_achieved
+option_a_status=operator_plan_decision_required
+option_b_status=explicit_approval_required
+option_c_status=not_recommended_without_explicit_risk_acceptance
+Supabase CLI/API called=false
+DB export performed=false
+restore performed=false
+secrets_recorded=false
+```
+
+Next safe step: operator chooses the backup path.
