@@ -517,6 +517,8 @@ Loop 213 controlled restore retry with no-owner no-privilegesでは、VPSのisol
 
 Loop 214 handoff automation v1では、Codex完了結果をChatGPTへレビュー依頼するための手動handoffテンプレートを追加しました。`docs/16_handoff/latest_codex_result.md` と `docs/16_handoff/latest_gpt_review_prompt.md` を使い、secret、DB URL、API key、raw log、dump内容、row content、本番ログを書かずにレビューへ回せます。詳細は [docs/16_handoff/README.md](docs/16_handoff/README.md) と [docs/15_runbooks/codex_chatgpt_handoff_v1.md](docs/15_runbooks/codex_chatgpt_handoff_v1.md) を参照してください。
 
+Loop 217 operator-only raw log review gateでは、Loop 216で残った `unknown_role_acl_subcategory_count=1` に対して、operatorだけがroot-only raw logを確認し、Codex/ChatGPT/docsにはsanitized `key=value`だけを返す手順を整えました。restore、pg_restore、psql、target DB作成、role作成、Supabase接続、production restore、raw log表示は行っていません。詳細は [docs/11_codex_tasks/217_operator_only_raw_log_review_gate.md](docs/11_codex_tasks/217_operator_only_raw_log_review_gate.md) と [docs/16_obsidian/loop_217_operator_only_raw_log_review_gate.md](docs/16_obsidian/loop_217_operator_only_raw_log_review_gate.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

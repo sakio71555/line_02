@@ -46,6 +46,7 @@
 - Loop 214.1 handoff template dry-run: `11_codex_tasks/214_1_handoff_template_dry_run.md`
 - Loop 215 role owner ACL follow-up remediation gate: `11_codex_tasks/215_role_owner_acl_follow_up_remediation_gate.md`
 - Loop 216 sanitized role ACL subcategory classifier: `11_codex_tasks/216_sanitized_role_acl_subcategory_classifier_without_restore.md`
+- Loop 217 operator-only raw log review gate: `11_codex_tasks/217_operator_only_raw_log_review_gate.md`
 
 ## Prompts and Templates
 

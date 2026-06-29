@@ -8,18 +8,19 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 216 の sanitized role ACL subcategory classifier 結果をレビューしてください。
+- Loop 217 の operator-only raw log review gate をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
 - safety boundary が守られているか確認してください。
 - Obsidian/dev log/handoff の記録漏れがあれば指摘してください。
-- classifier結果の解釈が妥当か確認してください。
-- 次Loop選定が妥当か確認してください。
+- operator-only review protocol が十分に安全か確認してください。
+- sanitized key=value format が十分か確認してください。
+- 次Loop分岐が小さく安全に分解されているか確認してください。
 - 残リスクを整理してください。
 - 大きな実装へ進まず、小さいLoopに分解する方針でレビューしてください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名、SQL文、object名、PII、本番ログの提示は求めないでください。
-- restore、pg_restore、psql、target DB作成、role作成、Supabase接続、production DB接続、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smoke は Loop 216 では禁止です。
+- restore、pg_restore、psql、target DB作成、role作成、Supabase接続、production DB接続、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smoke は Loop 217 では禁止です。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -29,53 +30,53 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 216 sanitized role ACL subcategory classifier without restore
+- Loop: Loop 217 operator-only raw log review gate
 - Date: 2026-06-29
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
 - Start git status: main...origin/main
-- Scope type: diagnostics-only / docs-only classifier
-- Push: not performed by Loop 216
+- Scope type: docs-only gate / operator-only review protocol
+- Push: not performed by Loop 217
+
+## Source Evidence
+
+- Loop 216 commit: a27cdb7 docs: classify remaining role ACL restore signal
+- Loop 216 result: unknown_role_acl_subcategory_detected=true
+- Loop 216 result: unknown_role_acl_subcategory_count=1
+- Loop 216 result: role_placeholder_signal_detected=false
+- Loop 216 result: allowlisted_supabase_role_signal_detected=false
+- DR readiness before Loop 217: not_ready_restore_failed
 
 ## What Changed
 
-- Ran a category-only classifier against the Loop 213 repo-external root-only diagnostic log.
-- Recorded only boolean/count output.
-- Added Loop 216 task doc.
-- Added Loop 216 Obsidian log.
-- Updated restore drill runbook, DR matrix, verification matrix, dev log, Obsidian navigation, docs index, and handoff result.
+- Added Loop 217 task doc.
+- Added Loop 217 Obsidian log.
+- Updated restore drill runbook with operator-only protocol, sanitized key=value fields, allowed categories, pending operator result, next Loop branching, and safety boundary.
+- Updated DR readiness matrix, verification matrix, dev log, README, docs index, Obsidian navigation, and handoff files.
 
-## Classifier Result
+## Operator-Only Review Protocol
 
-- role_does_not_exist_detected=false
-- role_does_not_exist_count=0
-- owner_required_detected=false
-- owner_required_count=0
-- acl_grant_revoke_detected=false
-- acl_grant_revoke_count=0
-- default_privileges_detected=false
-- default_privileges_count=0
-- policy_owner_detected=false
-- policy_owner_count=0
-- extension_owner_detected=false
-- extension_owner_count=0
-- publication_subscription_owner_detected=false
-- publication_subscription_owner_count=0
-- security_definer_owner_detected=false
-- security_definer_owner_count=0
-- allowlisted_supabase_role_signal_detected=false
-- allowlisted_role_signal_count=0
-- role_placeholder_signal_detected=false
-- role_placeholder_signal_count=0
-- unknown_role_acl_subcategory_detected=true
-- unknown_role_acl_subcategory_count=1
+- Codex must not open, display, copy, summarize, or classify raw diagnostic log content in this Loop.
+- The operator may inspect the Loop 213 repo-external root-only diagnostic log directly.
+- Operator may return only sanitized key=value fields.
+- Raw log, matching line, role name, SQL statement, object name, dump content, row content, DB URL, secret, and PII must not be pasted into docs/chat/commits.
 
-## Decision
+## Operator Result Status
 
-- Role placeholder preflight is not selected yet because role_placeholder_signal_detected=false.
-- Extension remediation is not selected because extension_owner_detected=false and Loop 213 extension signal was 0.
-- Staged restore diagnostics is not selected yet because the next smallest safe step is an operator-only subcategory review.
-- Next Loop selected: Loop 217 operator-only raw log review gate.
-- Loop 217 must not paste raw log content, matching lines, role names, SQL statements, object names, row content, dump content, DB URL, or secrets into docs/chat/commits.
+- operator_raw_log_review_status=pending_operator_input
+- operator_raw_log_review_executed=false
+- operator_subcategory_selected=pending
+- operator_sanitized_result_recorded=false
+
+## Next Loop Branching
+
+- role_does_not_exist: Loop 218 allowlisted role placeholder preflight without restore
+- owner_required / acl_grant_revoke / default_privileges / policy_owner / security_definer_owner: Loop 218 staged restore diagnostics plan
+- extension_owner / extension_missing: Loop 218 extension remediation preflight
+- schema_or_sql_statement: Loop 218 staged restore diagnostics plan
+- target_cluster_issue: Loop 218 local restore target health gate
+- other_non_sensitive_category: Loop 218 staged restore diagnostics plan
+- unknown_after_operator_review: Loop 218 staged restore diagnostics plan
+- pending: wait for operator sanitized result
 
 ## Safety Boundary
 
@@ -86,8 +87,8 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - role_created=false
 - role_modified=false
 - diagnostic_log_displayed=false
+- diagnostic_log_read_by_codex=false
 - diagnostic_log_copied_into_repo=false
-- raw_log_displayed=false
 - matching_line_displayed=false
 - role_name_displayed=false
 - sql_statement_displayed=false
@@ -110,12 +111,12 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 - backup_export_status=success
 - restore_drill_status=failed
-- remaining_role_acl_subcategory=unknown
+- operator_raw_log_review_status=pending_operator_input
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 217: operator-only raw log review gate
+- Loop 218: branch pending operator sanitized result
 ---
 
 出力形式:
@@ -135,10 +136,13 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### handoff確認
 -
 
-### classifier結果の解釈確認
+### operator-only review protocol確認
 -
 
-### 次Loop選定確認
+### sanitized result format確認
+-
+
+### 次Loop分岐確認
 -
 
 ### 残リスク

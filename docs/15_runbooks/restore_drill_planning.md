@@ -953,3 +953,148 @@ role_placeholder_provisioning_deferred_until_subcategory_known=true
 recommended_next_loop=Loop 216 operator-only role ACL subcategory review gate without raw log exposure
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 20. Loop 216 Sanitized Role ACL Subcategory Classifier
+
+Loop 216 ran a category-only boolean/count classifier against the Loop 213 repo-external root-only diagnostic log. The raw diagnostic log was not displayed, copied, committed, summarized, or pasted into docs.
+
+### 20.1 Sanitized Result
+
+```txt
+remaining_signal=unknown_role_acl_subcategory
+unknown_role_acl_subcategory_detected=true
+unknown_role_acl_subcategory_count=1
+role_placeholder_signal_detected=false
+allowlisted_supabase_role_signal_detected=false
+diagnostic_log_displayed=false
+matching_line_displayed=false
+role_name_displayed=false
+sql_statement_displayed=false
+object_name_displayed=false
+restore_retried=false
+pg_restore_restore_executed=false
+psql_executed=false
+```
+
+The result means no safe category-only next step can create roles or rerun restore yet.
+
+### 20.2 Decision
+
+```txt
+next_loop=Loop 217 operator-only raw log review gate
+role_placeholder_preflight_selected=false
+extension_remediation_selected=false
+restore_retry_selected=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+## 21. Loop 217 Operator-Only Raw Log Review Gate
+
+Loop 217 defines how an operator can inspect the repo-external root-only diagnostic log without exposing raw content to Codex, ChatGPT, docs, handoff files, or commits.
+
+### 21.1 Operator-Only Protocol
+
+Codex must not open, display, copy, summarize, or classify raw diagnostic log content in this Loop. The operator may inspect the log directly in the root-only environment and return only the sanitized `key=value` fields below.
+
+```txt
+operator_raw_log_review_executed=true/false
+operator_raw_log_review_scope=loop213_diagnostic_log
+operator_raw_log_shared_with_codex=false
+operator_raw_log_shared_with_chatgpt=false
+operator_raw_log_committed=false
+operator_raw_log_copied_into_repo=false
+
+operator_subcategory_selected=<one_of_allowed_categories>
+operator_subcategory_confidence=high/medium/low
+operator_role_name_disclosed=false
+operator_sql_statement_disclosed=false
+operator_object_name_disclosed=false
+operator_matching_line_disclosed=false
+
+role_does_not_exist_confirmed=true/false/unknown
+owner_required_confirmed=true/false/unknown
+acl_grant_revoke_confirmed=true/false/unknown
+default_privileges_confirmed=true/false/unknown
+policy_owner_confirmed=true/false/unknown
+extension_owner_confirmed=true/false/unknown
+publication_subscription_owner_confirmed=true/false/unknown
+security_definer_owner_confirmed=true/false/unknown
+extension_missing_confirmed=true/false/unknown
+schema_or_sql_statement_confirmed=true/false/unknown
+target_cluster_issue_confirmed=true/false/unknown
+other_non_sensitive_category_confirmed=true/false/unknown
+```
+
+Allowed categories:
+
+```txt
+role_does_not_exist
+owner_required
+acl_grant_revoke
+default_privileges
+policy_owner
+extension_owner
+publication_subscription_owner
+security_definer_owner
+extension_missing
+schema_or_sql_statement
+target_cluster_issue
+other_non_sensitive_category
+unknown_after_operator_review
+```
+
+### 21.2 Pending Operator Result
+
+```txt
+operator_raw_log_review_status=pending_operator_input
+operator_raw_log_review_executed=false
+operator_subcategory_selected=pending
+operator_subcategory_confidence=unknown
+operator_sanitized_result_recorded=false
+operator_raw_log_shared_with_codex=false
+operator_raw_log_shared_with_chatgpt=false
+operator_raw_log_committed=false
+operator_raw_log_copied_into_repo=false
+```
+
+### 21.3 Next Loop Branching
+
+| Operator result | Next Loop candidate | Boundary |
+| --- | --- | --- |
+| `role_does_not_exist` | Loop 218 allowlisted role placeholder preflight without restore | Do not record role names. Plan placeholder and cleanup only. |
+| `owner_required`, `acl_grant_revoke`, `default_privileges`, `policy_owner`, `security_definer_owner` | Loop 218 staged restore diagnostics plan | Do not create roles or retry restore. |
+| `extension_owner`, `extension_missing` | Loop 218 extension remediation preflight | Plan extension checks only. |
+| `schema_or_sql_statement` | Loop 218 staged restore diagnostics plan | Classify phase without raw SQL exposure. |
+| `target_cluster_issue` | Loop 218 local restore target health gate | Verify target health only. |
+| `other_non_sensitive_category` | Loop 218 staged restore diagnostics plan | Keep operator category sanitized. |
+| `unknown_after_operator_review` | Loop 218 staged restore diagnostics plan | Treat raw review as inconclusive. |
+| `pending` | Wait for operator sanitized result | No role creation or restore retry. |
+
+### 21.4 Safety Boundary
+
+```txt
+restore_retried=false
+pg_restore_restore_executed=false
+psql_executed=false
+target_db_created=false
+role_created=false
+role_modified=false
+diagnostic_log_displayed=false
+diagnostic_log_read_by_codex=false
+diagnostic_log_copied_into_repo=false
+matching_line_displayed=false
+role_name_displayed=false
+sql_statement_displayed=false
+object_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+operator_review_protocol_created=true
+operator_sanitized_result_recorded=false
+next_loop_branching_defined=true
+dr_readiness_status=not_ready_restore_failed
+```
