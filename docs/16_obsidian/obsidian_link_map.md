@@ -30,6 +30,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 198 Supabase CLI Backup Command Pack Planning](../11_codex_tasks/198_supabase_cli_backup_command_pack_planning.md)
 - [Loop 199 Supabase Backup Export And Restore Readiness](../11_codex_tasks/199_supabase_backup_export_and_restore_readiness_accelerated_closeout.md)
 - [Loop 200 Supabase Backup Tooling Installation Preflight](../11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md)
+- [Loop 201 Supabase Backup Export Controlled Execution](../11_codex_tasks/201_supabase_backup_export_controlled_execution.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
 - [Supabase Manual Backup Availability Result After Free Plan Limitation](../15_runbooks/supabase_manual_backup_availability_result_after_free_plan_limitation.md)
 - [Supabase Backup Path Decision After Free Plan Limitation](../15_runbooks/supabase_backup_path_decision_after_free_plan_limitation.md)
@@ -39,8 +40,9 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Supabase CLI Backup Command Pack Planning](../15_runbooks/supabase_cli_backup_command_pack_planning.md)
 - [Supabase Backup Export And Restore Readiness Closeout](../15_runbooks/supabase_backup_export_and_restore_readiness_accelerated_closeout.md)
 - [Supabase Backup Tooling Installation Preflight](../15_runbooks/supabase_backup_tooling_installation_preflight.md)
+- [Supabase Backup Export Controlled Execution](../15_runbooks/supabase_backup_export_controlled_execution.md)
 
-Loop 200 status: `tooling_preflight_status=complete`, `backup_readiness_status=pg_dump_available`, `next=Loop 201 controlled export approval`.
+Loop 201 status: `backup_export_status=blocked_operator_secret_not_injected`, `DB export performed=false`, `backup artifact created=false`, `next=Loop 201.1 operator secret injection retry`.
 
 ## Obsidian Helpers
 

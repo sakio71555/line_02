@@ -589,3 +589,39 @@ Next optional backup step:
 ```txt
 Loop 201: Supabase backup export controlled execution
 ```
+
+## Loop 201 Supabase Backup Export Controlled Execution
+
+Loop 201 reached the controlled export gate, but it stopped safely because the operator supplied database URL was not present in the non-interactive VPS execution environment.
+
+```txt
+pg_dump_available=true
+pg_dump_version_check=ok
+backup_dir_ready=true
+backup_dir_outside_repo=true
+operator_supplied_db_url_present=false
+operator_supplied_db_url_used=false
+DB URL value not recorded
+backup_export_status=blocked_operator_secret_not_injected
+backup_export_execution_status=blocked_operator_secret_not_injected
+pg_dump executed=false
+pg_dump connection attempted=false
+DB export performed=false
+backup artifact created=false
+backup_artifact_size_bytes=not_recorded
+backup_artifact_sha256_recorded=false
+backup_artifact_contents_displayed=false
+backup_artifact_committed_to_repo=false
+backup_artifact_uploaded_to_chat=false
+restore performed=false
+production_restore_performed=false
+non_production_restore_performed=false
+production_readiness=production_go
+activation_mode=line_and_openai_runtime
+```
+
+Next optional backup step:
+
+```txt
+Loop 201.1: Supabase backup export operator secret injection retry
+```

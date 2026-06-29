@@ -1261,3 +1261,31 @@ production_readiness=production_go
 ```
 
 Operator next action: approve or reject Loop 201 controlled export. Do not run export without explicit approval and secret handling outside docs, chat, Git, and logs.
+
+## Loop 201 Supabase Backup Export Controlled Execution Handoff
+
+Loop 201 reached the controlled export gate but did not run `pg_dump` against the database because the operator supplied database URL was not present in the non-interactive VPS execution environment.
+
+```txt
+pg_dump_available=true
+backup_dir_ready=true
+backup_dir_outside_repo=true
+operator_supplied_db_url_present=false
+operator_supplied_db_url_used=false
+DB URL value not recorded
+backup_export_status=blocked_operator_secret_not_injected
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+backup_artifact_size_bytes=not_recorded
+backup_artifact_sha256_recorded=false
+backup_artifact_contents_displayed=false
+backup_artifact_committed_to_repo=false
+backup_artifact_uploaded_to_chat=false
+restore performed=false
+production_restore_performed=false
+production_readiness=production_go
+secrets_recorded=false
+```
+
+Operator next action: run `Loop 201.1: Supabase backup export operator secret injection retry` with the database URL injected into the exact non-interactive execution context. Do not record the value.

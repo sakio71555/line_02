@@ -561,3 +561,31 @@ production_readiness=production_go
 ```
 
 Automation remains blocked until a future Loop explicitly approves export and artifact handling.
+
+## 27. Loop 201 Supabase Backup Export Controlled Execution
+
+Loop 201 attempted the controlled export gate. Tooling and backup directory checks passed, but backup automation is still not enabled because the operator supplied database URL was not present in the non-interactive VPS execution environment.
+
+```txt
+pg_dump_available=true
+pg_dump_version_check=ok
+backup_dir_ready=true
+backup_dir_outside_repo=true
+operator_supplied_db_url_present=false
+operator_supplied_db_url_used=false
+DB URL value not recorded
+backup_export_status=blocked_operator_secret_not_injected
+backup_export_execution_status=blocked_operator_secret_not_injected
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+backup_artifact_size_bytes=not_recorded
+backup_artifact_sha256_recorded=false
+restore performed=false
+production_restore_performed=false
+runtime unchanged
+production_readiness=production_go
+secrets_recorded=false
+```
+
+Automation remains blocked until `Loop 201.1: Supabase backup export operator secret injection retry`.

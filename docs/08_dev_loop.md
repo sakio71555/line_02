@@ -484,6 +484,8 @@ Loop 199 Supabase backup export and restore readiness accelerated closeoutのよ
 
 Loop 200 Supabase backup tooling installation preflightのようなtooling Loopでは、承認済みのVPS package installとPostgreSQL client導入だけを行います。`pg_dump --version` / `psql --version` までは確認できますが、DB URL、secret、`.env`、provider tokenは扱わず、`pg_dump` のDB接続、DB export、backup artifact作成、restore、Supabase CLI install/API callは行いません。成功後もexportは別Loopの明示承認に分けます。
 
+Loop 201 Supabase backup export controlled executionのようなexport Loopでは、operator supplied DB URLが実行環境に存在する場合だけ `pg_dump` exportへ進めます。DB URL値、secret file、`.env`、artifact contentsは表示・記録せず、存在確認は `operator_supplied_db_url_present=true/false` だけにします。DB URLが無い場合は `backup_export_status=blocked_operator_secret_not_injected` として停止し、`pg_dump executed=false`、`DB export performed=false`、`backup artifact created=false`、`restore performed=false` をdocs/testへ残して次Loopをsecret injection retryにします。
+
 ## Obsidian Development Log Requirement
 
 Every Loop must update Obsidian-readable Markdown logs:

@@ -31,6 +31,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 198 Supabase CLI backup command pack planning records placeholder-only preflight/export/verification/artifact/restore groups and keeps execution blocked: `execution=false`, `next=Loop 199 preflight`.
 - Loop 199 Supabase backup export and restore readiness accelerated closeout records the first approved preflight: `preflight_status=complete`, `backup_dir_outside_repo=true`, `backup_readiness_status=blocked_tooling_missing`, `DB export performed=false`, `restore performed=false`.
 - Loop 200 Supabase backup tooling installation preflight records `pg_dump_available_after=true`, `psql_available_after=true`, `supabase_cli_installed=false`, and keeps export/restore unexecuted.
+- Loop 201 Supabase backup export controlled execution reached the export gate, but `operator_supplied_db_url_present=false`, so `backup_export_status=blocked_operator_secret_not_injected`, `DB export performed=false`, `backup artifact created=false`, and `restore performed=false`.
 
 ## .obsidian Policy
 

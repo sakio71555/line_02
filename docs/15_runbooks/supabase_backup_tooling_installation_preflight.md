@@ -122,3 +122,23 @@ Loop 201 must separately approve secret handling, artifact path, export executio
 - [Obsidian README](../16_obsidian/README.md)
 - [Development Log](../14_dev_logs/2026-06-28.md)
 - [Loop 200 Task Doc](../11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md)
+
+## 12. Loop 201 Controlled Export Follow-Up
+
+Loop 201 confirmed the tooling remains available, but the controlled export did not run because the operator supplied database URL was absent from the non-interactive execution environment.
+
+```txt
+pg_dump_available=true
+pg_dump_version_check=ok
+backup_export_status=blocked_operator_secret_not_injected
+operator_supplied_db_url_present=false
+operator_supplied_db_url_used=false
+DB URL value not recorded
+pg_dump executed=false
+DB export performed=false
+backup artifact created=false
+backup_artifact_sha256_recorded=false
+restore performed=false
+production_restore_performed=false
+secrets_recorded=false
+```

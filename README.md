@@ -479,6 +479,8 @@ Loop 199 Supabase backup export and restore readiness accelerated closeoutでは
 
 Loop 200 Supabase backup tooling installation preflightでは、VPS上でPostgreSQL client toolingを導入し、`pg_dump_available_after=true` / `psql_available_after=true` まで回復しました。Supabase CLIは導入せず、Supabase CLI/API、pg_dump DB接続、DB export、backup artifact作成、restore、runtime変更は行っていません。詳細は [docs/11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md](docs/11_codex_tasks/200_supabase_backup_tooling_installation_preflight.md) と [docs/15_runbooks/supabase_backup_tooling_installation_preflight.md](docs/15_runbooks/supabase_backup_tooling_installation_preflight.md) を参照してください。
 
+Loop 201 Supabase backup export controlled executionでは、`pg_dump` tooling、backup directory、production healthを確認したうえでoperator supplied DB URLの存在だけを確認しました。非対話VPS実行環境にDB URLが注入されていなかったため、`backup_export_status=blocked_operator_secret_not_injected`、`pg_dump executed=false`、`DB export performed=false`、`backup artifact created=false` として安全に停止しました。DB URL値、secret、artifact内容は記録していません。詳細は [docs/11_codex_tasks/201_supabase_backup_export_controlled_execution.md](docs/11_codex_tasks/201_supabase_backup_export_controlled_execution.md) と [docs/15_runbooks/supabase_backup_export_controlled_execution.md](docs/15_runbooks/supabase_backup_export_controlled_execution.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
