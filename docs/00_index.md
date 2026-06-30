@@ -79,6 +79,7 @@
 - Loop 247 package classifier blocked follow-up: `11_codex_tasks/247_package_classifier_blocked_follow_up.md`
 - Loop 248 strict operator-only package candidate classifier retry: `11_codex_tasks/248_strict_operator_only_package_candidate_classifier_retry.md`
 - Loop 249 strict operator package classifier input collection: `11_codex_tasks/249_strict_operator_package_classifier_input_collection.md`
+- Loop 250 strict operator package classifier payload collection: `11_codex_tasks/250_strict_operator_package_classifier_payload_collection.md`
 
 ## Prompts and Templates
 

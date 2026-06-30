@@ -40,6 +40,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-030 | Package classifier blocked follow-up | docs-only review of Loop 247 blocked cause, strict result format, validation rule, and Loop 248 boundary | strict retry protocol created, install remains No-Go, exact names hidden | true | false | false | false | false | false | false | false | pending_loop_247_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-031 | Strict package classifier retry | docs-only review of Loop 248 strict retry outcome and blocked reason | operator sanitized payload absent, classifier retry blocked, input collection selected | true | false | false | false | false | false | false | false | pending_loop_248_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-032 | Strict package classifier input collection | docs-only review of Loop 249 collection protocol, allowed-key template, reject rules, and retry readiness gate | input protocol created, ready_for_classifier_retry=false, payload collection selected | true | false | false | false | false | false | false | false | pending_loop_249_verification | Does not run classifier retry, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
+| V-033 | Strict package classifier payload collection | docs-only review of Loop 250 payload presence check and blocked result | operator payload absent, ready_for_classifier_retry=false, recollection/protocol fix selected | true | false | false | false | false | false | false | false | pending_loop_250_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1287,6 +1288,59 @@ loop_249_supabase_connection_executed=false
 loop_249_production_restore_executed=false
 loop_249_production_readiness=production_no_go
 loop_249_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 250 Verification Note
+
+```txt
+loop_250_docs_only=true
+loop_250_operator_payload_collection_status=blocked
+loop_250_operator_payload_present=false
+loop_250_operator_payload_valid=false
+loop_250_ready_for_classifier_retry=false
+loop_250_blocked_reason=operator_payload_absent
+loop_250_codex_generated_payload=false
+loop_250_payload_inferred_by_codex=false
+loop_250_strict_key_value_format_checked=false
+loop_250_allowed_keys_only_checked=false
+loop_250_forbidden_content_checked=false
+loop_250_codex_validation_result=not_run_payload_absent
+loop_250_operator_payload_recorded_in_docs=false
+loop_250_normalized_payload_recorded=false
+loop_250_selected_next_loop=Loop 251 strict operator package classifier payload recollection or protocol fix
+loop_250_classifier_retry_executed=false
+loop_250_package_candidate_classified=false
+loop_250_package_candidate_confirmed=false
+loop_250_apt_cache_executed=false
+loop_250_apt_update_executed=false
+loop_250_apt_upgrade_executed=false
+loop_250_apt_install_executed=false
+loop_250_package_install_executed=false
+loop_250_package_removed=false
+loop_250_restore_executed=false
+loop_250_pg_restore_executed=false
+loop_250_psql_executed=false
+loop_250_target_db_created=false
+loop_250_target_db_modified=false
+loop_250_extension_created=false
+loop_250_schema_modified=false
+loop_250_role_modified=false
+loop_250_cluster_modified=false
+loop_250_cluster_restarted=false
+loop_250_cluster_reloaded=false
+loop_250_package_candidate_names_disclosed=false
+loop_250_extension_name_disclosed=false
+loop_250_raw_package_output_disclosed=false
+loop_250_raw_log_displayed=false
+loop_250_sql_displayed=false
+loop_250_object_name_displayed=false
+loop_250_role_name_displayed=false
+loop_250_backup_artifact_touched=false
+loop_250_secrets_recorded=false
+loop_250_supabase_connection_executed=false
+loop_250_production_restore_executed=false
+loop_250_production_readiness=production_no_go
+loop_250_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

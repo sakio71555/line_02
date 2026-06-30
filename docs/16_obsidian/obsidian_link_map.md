@@ -246,6 +246,8 @@ Loop 248 status: `docs_only=true`, `classifier_retry_status=blocked`, `classifie
 
 Loop 249 status: `docs_only=true`, `operator_input_collection_protocol_created=true`, `operator_input_template_created=true`, `reject_rule_created=true`, `future_classifier_retry_gate_created=true`, `operator_sanitized_payload_collected=false`, `ready_for_classifier_retry=false`, `not_ready_reason=operator_payload_not_collected_in_docs_only_gate`, `classifier_retry_executed=false`, `apt_cache_executed=false`, `apt_update_executed=false`, `apt_upgrade_executed=false`, `apt_install_executed=false`, `package_install_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 250 strict operator package classifier payload collection`.
 
+Loop 250 status: `docs_only=true`, `operator_payload_collection_status=blocked`, `operator_payload_present=false`, `operator_payload_valid=false`, `ready_for_classifier_retry=false`, `blocked_reason=operator_payload_absent`, `codex_generated_payload=false`, `payload_inferred_by_codex=false`, `classifier_retry_executed=false`, `package_candidate_classified=false`, `apt_cache_executed=false`, `apt_update_executed=false`, `apt_upgrade_executed=false`, `apt_install_executed=false`, `package_install_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 251 strict operator package classifier payload recollection or protocol fix`.
+
 ## Obsidian Helpers
 
 - [Obsidian README](README.md)

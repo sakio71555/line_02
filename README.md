@@ -583,6 +583,8 @@ Loop 248 strict operator-only package candidate classifier retryでは、Loop 24
 
 Loop 249 strict operator package classifier input collectionでは、次回classifier retryへ渡すoperator payloadの収集protocol、allowed-key-only template、reject rule、readiness gateをdocs-onlyで整備しました。実payloadはまだ収集していないため `ready_for_classifier_retry=false` です。classifier retry、apt-cache、apt操作、package install、restore、pg_restore、psql、DB変更、extension作成、cluster変更は行っていません。次は Loop 250: strict operator package classifier payload collection です。詳細は [Loop 249 task doc](docs/11_codex_tasks/249_strict_operator_package_classifier_input_collection.md) を参照してください。
 
+Loop 250 strict operator package classifier payload collectionでは、operator sanitized payload の有無を確認しましたが、このLoop入力には有効payloadが無いため `operator_payload_absent` としてblockedにしました。`operator_payload_present=false` / `operator_payload_valid=false` / `ready_for_classifier_retry=false` を記録し、classifier retry、package候補分類、apt-cache、apt操作、package install、restore、pg_restore、psql、DB変更、extension作成、cluster変更は行っていません。次は Loop 251: strict operator package classifier payload recollection or protocol fix です。詳細は [Loop 250 task doc](docs/11_codex_tasks/250_strict_operator_package_classifier_payload_collection.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
