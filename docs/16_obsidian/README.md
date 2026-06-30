@@ -85,6 +85,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 244 retries the operator identifier path without displaying or recording the value, confirms shell-safe identifier availability, records local control unavailable and package candidates available as count/boolean only, selects Loop 245 Supabase extension package risk gate, and keeps restore, `pg_restore`, `psql`, DB changes, extension creation, package installation, raw logs, exact names, Supabase, production, and secrets untouched.
 - Loop 245 documents package candidate misidentification, install, extension creation, and Supabase compatibility risks, keeps apt/package/restore/DB changes No-Go, selects Loop 246 operator-only package candidate classifier, and keeps exact names, raw logs, Supabase, production, and secrets untouched.
 - Loop 246 records the operator-only package candidate classifier attempt, treats the malformed sanitized result as invalid, keeps package/extension names hidden, selects Loop 247 package classifier blocked follow-up, and keeps apt/package/restore/DB changes, Supabase, production, and secrets untouched.
+- Loop 247 records the package classifier blocked follow-up, defines strict sanitized result and validation rules for the next retry, selects Loop 248 strict operator-only package candidate classifier retry, and keeps apt/package/restore/DB changes, Supabase, production, and secrets untouched.
 
 ## .obsidian Policy
 

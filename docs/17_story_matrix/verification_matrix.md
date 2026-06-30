@@ -37,6 +37,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-027 | Operator extension compatibility preflight | read-only review of Loop 244 identifier, control, and package availability metadata | identifier shell-safe, control unavailable, package candidate count recorded, names hidden, package risk gate selected | true | false | false | false | false | false | false | false | pending_loop_244_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-028 | Supabase extension package risk gate | docs-only review of Loop 245 package risk, remediation comparison, and Loop 246 boundary | broad package count treated as unconfirmed, install remains No-Go, operator-only classifier selected | true | false | false | false | false | false | false | false | pending_loop_245_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-029 | Operator-only package candidate classifier | docs-only review of Loop 246 sanitized classifier result and blocked follow-up decision | malformed classifier result recorded safely, exact names hidden, package classifier blocked | true | false | false | false | false | false | false | false | pending_loop_246_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
+| V-030 | Package classifier blocked follow-up | docs-only review of Loop 247 blocked cause, strict result format, validation rule, and Loop 248 boundary | strict retry protocol created, install remains No-Go, exact names hidden | true | false | false | false | false | false | false | false | pending_loop_247_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1135,6 +1136,61 @@ loop_246_secrets_recorded=false
 loop_246_supabase_connection_executed=false
 loop_246_production_restore_executed=false
 loop_246_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 247 Verification Note
+
+```txt
+loop_247_docs_only=true
+loop_247_operator_package_classifier_result_valid=false
+loop_247_package_classifier_input_malformed=true
+loop_247_package_search_count=106
+loop_247_package_search_count_broad=true
+loop_247_package_candidate_confirmed=false
+loop_247_package_candidate_confidence=unknown
+loop_247_package_candidate_dependency_risk=unknown
+loop_247_strict_classifier_retry_protocol_created=true
+loop_247_allowed_keys_only_required=true
+loop_247_prompt_body_allowed=false
+loop_247_package_name_displayed=false
+loop_247_extension_name_displayed=false
+loop_247_package_install_go=false
+loop_247_apt_update_go=false
+loop_247_apt_upgrade_go=false
+loop_247_apt_install_go=false
+loop_247_restore_retry_go=false
+loop_247_extension_creation_go=false
+loop_247_db_change_go=false
+loop_247_selected_next_loop=Loop 248 strict operator-only package candidate classifier retry
+loop_247_target_db_currently_absent=true
+loop_247_cleanup_required=false
+loop_247_apt_cache_executed=false
+loop_247_apt_update_executed=false
+loop_247_apt_upgrade_executed=false
+loop_247_apt_install_executed=false
+loop_247_package_install_executed=false
+loop_247_package_removed=false
+loop_247_restore_executed=false
+loop_247_pg_restore_executed=false
+loop_247_psql_executed=false
+loop_247_target_db_created=false
+loop_247_target_db_modified=false
+loop_247_extension_created=false
+loop_247_schema_modified=false
+loop_247_role_modified=false
+loop_247_cluster_modified=false
+loop_247_cluster_restarted=false
+loop_247_cluster_reloaded=false
+loop_247_diagnostic_log_displayed=false
+loop_247_raw_log_displayed=false
+loop_247_sql_displayed=false
+loop_247_object_name_displayed=false
+loop_247_role_name_displayed=false
+loop_247_backup_artifact_touched=false
+loop_247_secrets_recorded=false
+loop_247_supabase_connection_executed=false
+loop_247_production_restore_executed=false
+loop_247_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

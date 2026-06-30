@@ -8,11 +8,11 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 246 の operator-only package candidate classifier 結果をレビューしてください。
+- Loop 247 の package classifier blocked follow-up をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
 - package名 / extension名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
-- operator結果が malformed だったため、candidate confidence を unknown とし package_classifier_blocked にした判断が妥当か確認してください。
-- 次Loopを package classifier blocked follow-up にする判断が妥当か確認してください。
+- Loop 246のmalformed resultをblockedとして扱い、Loop 248をstrict sanitized key=value retryにした判断が妥当か確認してください。
+- validation ruleが、prompt本文・package名・extension名・apt-cache本文・dependency名の混入を防げる設計か確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -25,79 +25,94 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 246 operator-only package candidate classifier
+- Loop: Loop 247 package classifier blocked follow-up
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only operator classifier result record
+- Scope type: docs-only blocked follow-up and strict retry protocol
 
-## Loop 245 Baseline
+## Loop 246 Result
 
-- extension_control_available=false
-- package_search_count=106
-- package_candidate_maybe_available=true
-- package_search_count_broad=true
-- package_candidate_confirmed=false
-- package_install_no_go=true
-- apt_update_no_go=true
-- apt_upgrade_no_go=true
-- apt_install_no_go=true
-- dr_readiness_status=not_ready_restore_failed
-
-## Sanitized Operator Result
-
-- operator_package_classifier_executed=true
-- operator_package_classifier_result_valid=false
-- package_classifier_input_malformed=true
 - operator_extension_identifier_available=true
 - operator_extension_identifier_shell_safe=true
 - apt_cache_available=true
-- package_candidate_count=106
-- package_candidate_exact_match_found=unknown
+- package_search_count=106
+- package_search_count_broad=true
+- operator_package_classifier_result_valid=false
+- package_classifier_input_malformed=true
 - package_candidate_confidence=unknown
-- package_candidate_source_category=unknown
-- package_candidate_requires_install=unknown
-- package_candidate_requires_apt_update=unknown
-- package_candidate_show_reviewed=unknown
 - package_candidate_dependency_risk=unknown
+- compatibility_path=package_classifier_blocked
 - package_candidate_names_disclosed=false
 - extension_name_disclosed=false
 - package_install_executed=false
 - apt_update_executed=false
 - apt_upgrade_executed=false
+- apt_install_executed=false
 
-## Compatibility Decision
+## Strict Sanitized Result Format
 
-- compatibility_path=package_classifier_blocked
-- selected_next_loop=Loop 247: package classifier blocked follow-up
+- operator_package_classifier_executed=true/false
+- operator_package_classifier_result_valid=true/false
+- operator_package_review_scope=apt_cache_search_only/apt_cache_search_and_show/none
+- package_candidate_count=<number>
+- package_candidate_exact_match_found=true/false/unknown
+- package_candidate_confidence=high/medium/low/unknown
+- package_candidate_source_category=pgdg/ubuntu/third_party/unknown
+- package_candidate_dependency_risk=low/medium/high/unknown
+- package_candidate_requires_install=true/false/unknown
+- package_candidate_requires_apt_update=true/false/unknown
+- package_candidate_names_disclosed=false
+- extension_name_disclosed=false
+- apt_update_executed=false
+- apt_upgrade_executed=false
+- apt_install_executed=false
+- package_install_executed=false
+- raw_package_output_disclosed=false
 
-## Go / No-Go
+## Validation Rule
 
-- read_only_classifier_attempted=true
-- operator_result_accepted=false
-- package_install_go=false
-- apt_update_go=false
-- apt_upgrade_go=false
-- apt_install_go=false
-- restore_retry_go=false
-- extension_creation_go=false
-- schema_change_go=false
-- cluster_change_go=false
-- supabase_connection_go=false
-- production_db_connection_go=false
+- allowed_keys_only_required=true
+- package_like_names_allowed=false
+- extension_like_names_allowed=false
+- prompt_body_allowed=false
+- apt_update_executed_must_be_false=true
+- apt_upgrade_executed_must_be_false=true
+- apt_install_executed_must_be_false=true
+- package_install_executed_must_be_false=true
+- raw_package_output_disclosed_must_be_false=true
+- invalid_result_handling=blocked_without_retry
+
+## Loop 248 Boundary
+
+- selected_next_loop=Loop 248: strict operator-only package candidate classifier retry
+- loop_248_operator_only=true
+- loop_248_apt_cache_search_show_read_only=true
+- package_name_recording_allowed=false
+- extension_name_recording_allowed=false
+- apt_update_allowed=false
+- apt_upgrade_allowed=false
+- apt_install_allowed=false
+- package_install_allowed=false
+- psql_allowed=false
+- restore_allowed=false
+- pg_restore_allowed=false
+- extension_creation_allowed=false
+- db_change_allowed=false
 
 ## Safety
 
+- apt_cache_executed=false
+- apt_update_executed=false
+- apt_upgrade_executed=false
+- apt_install_executed=false
+- package_install_executed=false
+- package_removed=false
 - restore_executed=false
 - pg_restore_executed=false
 - psql_executed=false
 - target_db_created=false
 - target_db_modified=false
 - extension_created=false
-- package_installed=false
-- package_removed=false
-- apt_update_executed=false
-- apt_upgrade_executed=false
-- apt_install_executed=false
 - schema_modified=false
 - role_modified=false
 - cluster_modified=false
@@ -125,7 +140,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 247: package classifier blocked follow-up
+- Loop 248: strict operator-only package candidate classifier retry
 ---
 
 出力形式:
@@ -136,13 +151,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### operator result確認
+### blocked原因確認
 -
 
-### package classifier確認
+### strict format確認
 -
 
-### selected next Loop確認
+### validation rule確認
+-
+
+### Loop 248境界確認
 -
 
 ### Go / No-Go確認
