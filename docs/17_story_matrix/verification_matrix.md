@@ -426,6 +426,43 @@ loop_229_selected_next_loop=Loop 230 owner-aligned target DB provisioning gate
 loop_229_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 230 Verification Note
+
+```txt
+loop_230_loop_229_result_summarized=true
+loop_230_target_cluster=17/restore_drill_loop2091
+loop_230_target_cluster_port=55432
+loop_230_target_cluster_listen_addresses=localhost
+loop_230_local_cluster_loopback_only=true
+loop_230_external_interface_listen_detected=false
+loop_230_target_db_design_created=true
+loop_230_target_db_scope=local_isolated_restore_drill_cluster_only
+loop_230_target_db_lifecycle=fresh_disposable
+loop_230_target_db_name_pattern=amami_line_crm_restore_drill_loop231_YYYYMMDD
+loop_230_target_db_candidate_name=amami_line_crm_restore_drill_loop231_20260630
+loop_230_owner_alignment_required=true
+loop_230_db_owner_must_equal_restore_execution_user=true
+loop_230_role_creation_allowed_in_loop231=false
+loop_230_role_change_allowed_in_loop231=false
+loop_230_cleanup_policy_created=true
+loop_230_selected_next_loop=Loop 231 owner-aligned target DB provisioning execution
+loop_230_docs_only=true
+loop_230_psql_executed=false
+loop_230_restore_executed=false
+loop_230_pg_restore_executed=false
+loop_230_target_db_created=false
+loop_230_target_db_modified=false
+loop_230_role_created=false
+loop_230_role_modified=false
+loop_230_cluster_modified=false
+loop_230_supabase_connection_executed=false
+loop_230_production_restore_executed=false
+loop_230_db_url_displayed=false
+loop_230_secrets_recorded=false
+loop_230_backup_artifact_copied_into_repo=false
+loop_230_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

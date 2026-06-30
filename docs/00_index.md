@@ -59,6 +59,7 @@
 - Loop 227 local restore cluster listen scope read-only inspection: `11_codex_tasks/227_local_restore_cluster_listen_scope_read_only_inspection.md`
 - Loop 228 restore drill cluster loopback remediation plan: `11_codex_tasks/228_restore_drill_cluster_loopback_remediation_plan.md`
 - Loop 229 restore drill cluster loopback remediation execution: `11_codex_tasks/229_restore_drill_cluster_loopback_remediation_execution.md`
+- Loop 230 owner-aligned target DB provisioning gate: `11_codex_tasks/230_owner_aligned_target_db_provisioning_gate.md`
 
 ## Prompts and Templates
 

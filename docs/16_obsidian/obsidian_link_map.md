@@ -103,6 +103,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 228 Obsidian Log](loop_228_restore_drill_cluster_loopback_remediation_plan.md)
 - [Loop 229 Restore Drill Cluster Loopback Remediation Execution](../11_codex_tasks/229_restore_drill_cluster_loopback_remediation_execution.md)
 - [Loop 229 Obsidian Log](loop_229_restore_drill_cluster_loopback_remediation_execution.md)
+- [Loop 230 Owner-Aligned Target DB Provisioning Gate](../11_codex_tasks/230_owner_aligned_target_db_provisioning_gate.md)
+- [Loop 230 Obsidian Log](loop_230_owner_aligned_target_db_provisioning_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -175,6 +177,8 @@ Loop 227 status: `pg_lsclusters_checked=true`, `listen_scope_checked=true`, `lis
 Loop 228 status: `external_listen_blocker_recorded=true`, `recommended_remediation=postgresql_listen_addresses_loopback`, `primary_setting_plan=listen_addresses_localhost`, `rollback_plan_created=true`, `cluster_modified=false`, `cluster_reloaded=false`, `cluster_restarted=false`, `firewall_modified=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 229 restore drill cluster loopback remediation execution gate`.
 
 Loop 229 status: `target_cluster_identity_confirmed=true`, `config_backup_created=true`, `listen_addresses_changed=true`, `target_cluster_restart_result=success`, `local_cluster_loopback_only=true`, `external_interface_listen_detected=false`, `rollback_executed=false`, `psql_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `target_db_created=false`, `role_created=false`, `secrets_recorded=false`, `next=Loop 230 owner-aligned target DB provisioning gate`.
+
+Loop 230 status: `owner_aligned_target_db_gate_created=true`, `target_db_name_pattern=amami_line_crm_restore_drill_loop231_YYYYMMDD`, `target_db_candidate_name=amami_line_crm_restore_drill_loop231_20260630`, `owner_alignment_required=true`, `db_owner_must_equal_restore_execution_user=true`, `target_db_created=false`, `psql_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `role_created=false`, `cluster_modified=false`, `secrets_recorded=false`, `next=Loop 231 owner-aligned target DB provisioning execution`.
 
 ## Obsidian Helpers
 

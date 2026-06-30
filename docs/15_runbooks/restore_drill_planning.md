@@ -2373,3 +2373,120 @@ secrets_recorded=false
 backup_artifact_copied_into_repo=false
 push_performed=false
 ```
+
+## 34. Loop 230 Owner-Aligned Target DB Provisioning Gate
+
+Loop 230 is a docs-only gate after Loop 229 cleared the restore drill cluster listen-scope blocker. It does not create a database, run `psql`, run restore, run `pg_restore`, create or change roles, change cluster configuration, connect to Supabase, connect to production DB, or display secrets/raw logs/dump contents/row contents.
+
+### 34.1 Loop 229 Inputs
+
+```txt
+target_cluster_version=17
+target_cluster_name=restore_drill_loop2091
+target_cluster_port=55432
+target_cluster_listen_addresses=localhost
+local_cluster_loopback_only=true
+external_interface_listen_detected=false
+rollback_executed=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+### 34.2 Target DB Design
+
+```txt
+target_db_design_created=true
+target_db_scope=local_isolated_restore_drill_cluster_only
+target_db_lifecycle=fresh_disposable
+target_db_name_pattern=amami_line_crm_restore_drill_loop231_YYYYMMDD
+target_db_candidate_name=amami_line_crm_restore_drill_loop231_20260630
+target_db_must_include_restore_drill=true
+target_db_must_include_loop231=true
+owner_alignment_required=true
+db_owner_must_equal_restore_execution_user=true
+role_creation_allowed_in_loop231=false
+role_change_allowed_in_loop231=false
+```
+
+The target DB must remain local-only and disposable. It must not use a production-like name and must not be confused with Supabase or production DBs.
+
+### 34.3 Loop 231 Boundary
+
+```txt
+selected_next_loop=Loop 231: owner-aligned target DB provisioning execution
+loop_231_cluster_identity_check_required=true
+loop_231_loopback_check_required=true
+loop_231_existing_db_check_required=true
+loop_231_target_db_creation_allowed=true_with_operator_scope
+loop_231_target_db_identity_check_required=true
+loop_231_owner_alignment_check_required=true
+loop_231_restore_allowed=false
+loop_231_pg_restore_allowed=false
+loop_231_role_change_allowed=false
+loop_231_cluster_change_allowed=false
+loop_231_push_split_recommended=true
+```
+
+Loop 231 should stop after target DB creation and owner-alignment verification. Restore retry remains a later Loop.
+
+### 34.4 Cleanup / Rollback Policy
+
+```txt
+cleanup_policy_created=true
+target_db_drop_on_failed_identity_check=true
+target_db_drop_on_wrong_owner=true
+target_db_drop_on_unexpected_existing_db=true
+target_db_keep_after_success=true_short_lived_for_next_restore_gate
+restore_retry_still_separate=true
+```
+
+If the DB is created successfully and owner alignment is confirmed, it may be kept short-lived for the next restore gate. If identity, owner, or isolation checks fail, the target DB should be dropped and only sanitized booleans/categories recorded.
+
+### 34.5 Go / No-Go
+
+Go:
+
+- Target cluster identity is `17/restore_drill_loop2091`.
+- Port is `55432`.
+- Listen scope remains loopback-only.
+- Planned DB name is fresh and contains `restore_drill` and `loop231`.
+- Existing local role can own the DB and be the future restore execution user.
+- No restore, `pg_restore`, Supabase, production DB, role change, cluster change, or secret display is required.
+
+No-Go:
+
+- Target cluster identity is unclear.
+- Listen scope is not loopback-only.
+- Planned DB name already exists and cleanup is not explicitly approved.
+- Owner alignment cannot be proven without role creation or role change.
+- Supabase/production connection is needed.
+- Restore or `pg_restore` is requested in the same Loop.
+- Raw logs, dump contents, row contents, DB URLs, `.env`, or secrets are required.
+
+### 34.6 Safety Boundary
+
+```txt
+docs_only=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+role_created=false
+role_modified=false
+cluster_modified=false
+cluster_restarted=false
+package_modified=false
+firewall_modified=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+db_url_displayed=false
+secrets_recorded=false
+raw_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+backup_artifact_copied_into_repo=false
+owner_aligned_target_db_gate_created=true
+next_loop_selected=true
+dr_readiness_status=not_ready_restore_failed
+```
