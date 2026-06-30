@@ -125,6 +125,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 239 Obsidian Log](loop_239_operator_only_sanitized_schema_extension_classifier.md)
 - [Loop 240 Operator Sanitized Schema Extension Result Collection](../11_codex_tasks/240_operator_sanitized_schema_extension_result_collection.md)
 - [Loop 240 Obsidian Log](loop_240_operator_sanitized_schema_extension_result_collection.md)
+- [Loop 241 Supabase-Specific Extension Compatibility Gate](../11_codex_tasks/241_supabase_specific_extension_compatibility_gate.md)
+- [Loop 241 Obsidian Log](loop_241_supabase_specific_extension_compatibility_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)

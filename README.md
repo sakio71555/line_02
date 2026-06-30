@@ -563,7 +563,9 @@ Loop 238 pre-data schema extension remediation gateでは、Loop 237でpermissio
 
 Loop 239 operator-only sanitized schema extension classifierでは、operator-onlyのsanitized `key=value` protocolを定義し、operator resultは `pending_operator_input` として記録しました。次は [Loop 240: operator sanitized schema extension result collection](docs/11_codex_tasks/239_operator_only_sanitized_schema_extension_classifier.md) とし、raw log、matching line、SQL文、object名、extension名、role名、dump内容、row content、DB URL、secretを記録せず、restore、pg_restore、psql、DB変更、extension作成、Supabase/production接続は行っていません。
 
-Loop 240 operator sanitized schema extension result collectionでは、operator review結果をsanitized metadataとして記録し、extension categoryはSupabase-related、schema error categoryはextension dependencyとして扱います。次は [Loop 241: Supabase-specific extension compatibility gate](docs/11_codex_tasks/240_operator_sanitized_schema_extension_result_collection.md) とし、raw content、exact SQL、extension名、object名、role名、dump内容、row content、DB URL、secretを記録せず、restore、pg_restore、psql、DB変更、extension作成、Supabase/production接続は行っていません。
+Loop 240 operator sanitized schema extension result collectionでは、operator review結果をsanitized metadataとして記録し、extension categoryはSupabase-related、schema error categoryはextension dependencyとして扱います。次は [Loop 241: Supabase-specific extension compatibility gate](docs/11_codex_tasks/241_supabase_specific_extension_compatibility_gate.md) とし、raw content、exact SQL、extension名、object名、role名、dump内容、row content、DB URL、secretを記録せず、restore、pg_restore、psql、DB変更、extension作成、Supabase/production接続は行っていません。
+
+Loop 241 Supabase-specific extension compatibility gateでは、Loop 240のsanitized resultを受けて、Supabase-related extension dependencyをlocal isolated PostgreSQL restore drillでどう扱うかをdocs-onlyで整理しました。推奨次Loopは Loop 242: Supabase extension local compatibility preflight で、read-only preflightに限定します。詳細は [Loop 241 task doc](docs/11_codex_tasks/241_supabase_specific_extension_compatibility_gate.md) を参照してください。このLoopではrestore、pg_restore、psql、target DB作成/変更、extension作成、package install、schema変更、Supabase/production接続、raw log、extension名、object名、SQL文、DB URL、secret表示は行っていません。
 
 ## Secrets
 

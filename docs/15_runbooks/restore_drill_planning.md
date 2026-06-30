@@ -3610,3 +3610,99 @@ schema_change_no_go=true
 ```
 
 Loop 241 should be docs-only. It should not create extensions, install packages, run restore, run `pg_restore`, run `psql`, modify target DBs, connect to Supabase/production, or record raw diagnostic content.
+
+## 45. Loop 241 Supabase-Specific Extension Compatibility Gate
+
+Loop 241 records how to handle the Supabase-related extension dependency identified in Loop 240 before any further restore retry or local DB change.
+
+### 45.1 Loop 240 Result Summary
+
+```txt
+extension_category_supabase_related=true
+schema_error_category=extension_dependency
+schema_error_confidence=high
+permission_or_auth_error_count=0
+role_owner_acl_error_count=0
+schema_or_sql_statement_error_count=1
+extension_missing_count=2
+target_db_dropped=true
+target_db_currently_absent=true
+cleanup_required=false
+raw_content_recorded_in_repo=false
+exact_sql_recorded=false
+extension_name_recorded=false
+object_name_recorded=false
+role_name_recorded=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+### 45.2 Compatibility Option Comparison
+
+| option | decision | reason |
+| --- | --- | --- |
+| Local isolated compatible extension introduction | Later / gated | Highest local restore fidelity if feasible, but may require package installation and extension creation. |
+| Supabase-managed extension skip/compat handling | Fallback only | Avoids local DB changes, but lowers restore fidelity and cannot complete DR readiness alone. |
+| Exclude extension-dependent objects | No-Go for now | Requires object-level handling and weakens fidelity. |
+| Supabase-like non-production restore environment | No-Go without separate approval | Higher fidelity, but adds credential, cost, and boundary complexity. |
+| Immediate retry | No-Go | Lacks new compatibility evidence and likely repeats failure. |
+
+### 45.3 Recommended Next Loop
+
+```txt
+selected_next_loop=Loop 242: Supabase extension local compatibility preflight
+selected_next_loop_reason=read_only_feasibility_check_before_package_or_extension_changes
+```
+
+Loop 242 should be read-only. It may check local cluster status, PostgreSQL version, package availability, and extension control availability using sanitized boolean/category output only. It must not create extensions, install packages, run restore, run `pg_restore`, run DB-changing `psql`, create target DBs, connect to Supabase/production, or record exact extension names.
+
+### 45.4 Go / No-Go
+
+```txt
+loop_242_read_only_go=true
+extension_install_execution_go=false
+extension_creation_go=false
+restore_retry_go=false
+package_install_go=false
+schema_change_go=false
+supabase_connection_go=false
+production_db_connection_go=false
+```
+
+Future extension or package execution remains No-Go until a separate Loop documents local feasibility, rollback, cleanup, fidelity impact, and operator approval.
+
+### 45.5 Cleanup State
+
+```txt
+target_db_currently_absent=true
+cleanup_required=false
+backup_artifact_touched=false
+```
+
+### 45.6 Safety Boundary
+
+```txt
+docs_only=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+extension_created=false
+package_installed=false
+schema_modified=false
+role_modified=false
+cluster_modified=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+sql_displayed=false
+extension_name_displayed=false
+object_name_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+backup_artifact_touched=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_restore_executed=false
+dr_readiness_status=not_ready_restore_failed
+```
