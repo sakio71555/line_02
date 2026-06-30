@@ -505,6 +505,34 @@ loop_231_selected_next_loop=Loop 232 owner-aligned pre-data restore retry gate
 loop_231_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 232 Verification Note
+
+```txt
+loop_232_loop_231_result_summarized=true
+loop_232_target_db=amami_line_crm_restore_drill_loop231_20260630
+loop_232_target_db_owner_aligned=true
+loop_232_target_db_retained=true
+loop_232_cleanup_required=true
+loop_232_owner_aligned_pre_data_retry_gate_created=true
+loop_232_selected_next_loop=Loop 233 owner-aligned pre-data restore retry execution
+loop_232_future_pg_restore_options=--section=pre-data --no-owner --no-privileges
+loop_232_restore_attempt_limit=1
+loop_232_raw_log_destination=repo_external_root_only
+loop_232_restore_executed=false
+loop_232_pg_restore_executed=false
+loop_232_psql_executed=false
+loop_232_target_db_created=false
+loop_232_target_db_modified=false
+loop_232_role_created=false
+loop_232_role_modified=false
+loop_232_cluster_modified=false
+loop_232_backup_artifact_used=false
+loop_232_supabase_connection_executed=false
+loop_232_production_restore_executed=false
+loop_232_secrets_recorded=false
+loop_232_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

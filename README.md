@@ -547,6 +547,8 @@ Loop 230 owner-aligned target DB provisioning gateでは、Loop 229でloopback-o
 
 Loop 231 owner-aligned target DB provisioning executionでは、restore drill local PostgreSQL clusterの安全条件を確認し、fresh local disposable target DB `amami_line_crm_restore_drill_loop231_20260630` を作成しました。owner alignmentはlocal metadataのみで確認し、次のpre-data retry gate用に短期保持します。restore、pg_restore、backup artifact使用、Supabase/production接続、role変更、cluster変更、raw log/dump/row content表示、secret表示は行っていません。詳細は [docs/11_codex_tasks/231_owner_aligned_target_db_provisioning_execution.md](docs/11_codex_tasks/231_owner_aligned_target_db_provisioning_execution.md) と [docs/16_obsidian/loop_231_owner_aligned_target_db_provisioning_execution.md](docs/16_obsidian/loop_231_owner_aligned_target_db_provisioning_execution.md) を参照してください。
 
+Loop 232 owner-aligned pre-data restore retry gateでは、Loop 231で作成したowner-aligned target DBを使って次にpre-data restore retryを1回だけ実行するための境界をdocs-onlyで整理しました。`--section=pre-data --no-owner --no-privileges`、artifact/checksum確認、owner alignment再確認、repo外root-only raw log、cleanup方針を定義しています。このLoopではrestore、pg_restore、psql、target DB変更、role変更、cluster変更、backup artifact使用、Supabase/production接続、secret表示は行っていません。詳細は [docs/11_codex_tasks/232_owner_aligned_pre_data_restore_retry_gate.md](docs/11_codex_tasks/232_owner_aligned_pre_data_restore_retry_gate.md) と [docs/16_obsidian/loop_232_owner_aligned_pre_data_restore_retry_gate.md](docs/16_obsidian/loop_232_owner_aligned_pre_data_restore_retry_gate.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

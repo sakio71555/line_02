@@ -107,6 +107,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 230 Obsidian Log](loop_230_owner_aligned_target_db_provisioning_gate.md)
 - [Loop 231 Owner-Aligned Target DB Provisioning Execution](../11_codex_tasks/231_owner_aligned_target_db_provisioning_execution.md)
 - [Loop 231 Obsidian Log](loop_231_owner_aligned_target_db_provisioning_execution.md)
+- [Loop 232 Owner-Aligned Pre-Data Restore Retry Gate](../11_codex_tasks/232_owner_aligned_pre_data_restore_retry_gate.md)
+- [Loop 232 Obsidian Log](loop_232_owner_aligned_pre_data_restore_retry_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -183,6 +185,8 @@ Loop 229 status: `target_cluster_identity_confirmed=true`, `config_backup_create
 Loop 230 status: `owner_aligned_target_db_gate_created=true`, `target_db_name_pattern=amami_line_crm_restore_drill_loop231_YYYYMMDD`, `target_db_candidate_name=amami_line_crm_restore_drill_loop231_20260630`, `owner_alignment_required=true`, `db_owner_must_equal_restore_execution_user=true`, `target_db_created=false`, `psql_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `role_created=false`, `cluster_modified=false`, `secrets_recorded=false`, `next=Loop 231 owner-aligned target DB provisioning execution`.
 
 Loop 231 status: `local_cluster_confirmed=true`, `local_cluster_loopback_only=true`, `external_interface_listen_detected=false`, `target_db_exists_before=false`, `target_db_created=true`, `target_db_exists_after_create=true`, `target_db_owner_aligned=true`, `target_db_retained=true`, `cleanup_required=true`, `psql_metadata_executed=true`, `restore_executed=false`, `pg_restore_executed=false`, `backup_artifact_used=false`, `role_created=false`, `role_modified=false`, `cluster_modified=false`, `secrets_recorded=false`, `next=Loop 232 owner-aligned pre-data restore retry gate`.
+
+Loop 232 status: `owner_aligned_pre_data_retry_gate_created=true`, `target_db=amami_line_crm_restore_drill_loop231_20260630`, `target_db_owner_aligned=true`, `cleanup_required=true`, `future_pg_restore_options=--section=pre-data --no-owner --no-privileges`, `restore_attempt_limit=1`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `target_db_modified=false`, `role_modified=false`, `cluster_modified=false`, `backup_artifact_used=false`, `secrets_recorded=false`, `next=Loop 233 owner-aligned pre-data restore retry execution`.
 
 ## Obsidian Helpers
 

@@ -643,6 +643,116 @@ dump_content_displayed=false
 push_performed=false
 ```
 
+## 36. Loop 232 Owner-Aligned Pre-Data Restore Retry Gate
+
+Loop 232 is a docs-only gate after Loop 231 created and retained the owner-aligned target DB. It does not run restore, run `pg_restore`, run `psql`, create or modify the target DB, change roles, change cluster configuration, use the backup artifact, connect to Supabase/production DB, or display secrets/raw logs/dump contents/row contents.
+
+### 36.1 Loop 231 Inputs
+
+```txt
+target_cluster=17/restore_drill_loop2091
+target_cluster_port=55432
+local_cluster_loopback_only=true
+external_interface_listen_detected=false
+target_db=amami_line_crm_restore_drill_loop231_20260630
+target_db_exists_after_create=true
+target_db_owner_aligned=true
+future_restore_execution_user_matches_owner=true
+target_db_retained=true
+target_db_restricted=true_by_loopback_cluster
+cleanup_required=true
+cleanup_deadline=after_loop232_or_before_2026-07-01
+dr_readiness_status=not_ready_restore_failed
+```
+
+### 36.2 Future Pre-Data Retry Boundary
+
+```txt
+selected_next_loop=Loop 233: owner-aligned pre-data restore retry execution
+target_db_reuse_allowed=true
+target_db_name_required=amami_line_crm_restore_drill_loop231_20260630
+target_db_must_exist_before_retry=true
+target_db_owner_alignment_recheck_required=true
+local_cluster_loopback_recheck_required=true
+artifact_metadata_recheck_required=true
+artifact_checksum_recheck_required=true
+pg_restore_17_explicit_path_required=true
+pg_restore_options=--section=pre-data --no-owner --no-privileges
+restore_attempt_limit=1
+raw_log_destination=repo_external_root_only
+docs_recording=sanitized_metadata_only
+```
+
+Loop 233 may run exactly one pre-data retry only. Full restore, data restore, post-data restore, role changes, cluster changes, Supabase/production connection, and raw content display remain prohibited.
+
+### 36.3 Cleanup Policy
+
+```txt
+cleanup_policy_created=true
+target_db_drop_after_retry_default=true
+target_db_retain_after_retry_allowed=false_unless_next_gate_approves
+target_db_drop_on_failed_preflight=true
+target_db_drop_on_failed_owner_alignment=true
+target_db_drop_on_restore_attempt_complete=true
+cleanup_required_until_drop=true
+```
+
+If Loop 233 cannot proceed promptly, create a cleanup-only Loop to drop `amami_line_crm_restore_drill_loop231_20260630`. The target DB must not be retained indefinitely.
+
+### 36.4 Go / No-Go
+
+Go:
+
+- Git status is clean.
+- Target cluster is `17/restore_drill_loop2091` on port `55432`.
+- Listen scope remains loopback-only.
+- Target DB exists and owner alignment is still true.
+- Backup artifact metadata and checksum match recorded values.
+- PostgreSQL 17 `pg_restore` explicit path is available.
+- Retry command is limited to `--section=pre-data --no-owner --no-privileges`.
+- Attempt count is one.
+- Raw log destination is repo-external/root-only.
+- Cleanup policy is explicit.
+
+No-Go:
+
+- Target DB is missing or owner alignment is unclear.
+- Cluster identity or loopback scope is unclear.
+- Artifact checksum cannot be verified.
+- Supabase or production DB connection is required.
+- Role, cluster, package, or firewall changes are needed.
+- Raw logs, dump contents, row contents, DB URLs, `.env`, secrets, SQL statements, role details, or object details are required.
+
+### 36.5 Safety Boundary
+
+```txt
+docs_only=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+role_created=false
+role_modified=false
+cluster_modified=false
+package_modified=false
+firewall_modified=false
+backup_artifact_used=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+db_url_displayed=false
+secrets_recorded=false
+raw_log_displayed=false
+diagnostic_log_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+owner_aligned_pre_data_retry_gate_created=true
+next_loop_selected=true
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## 20. Loop 216 Sanitized Role ACL Subcategory Classifier
 
 Loop 216 ran a category-only classifier against the repo-external root-only Loop 213 diagnostic log. It did not rerun restore, run `pg_restore`, run `psql`, create a target DB, create or modify roles, copy diagnostic logs into the repo, display raw logs, display matching lines, display role names, display SQL statements, display object names, touch the backup artifact, connect to Supabase, or change production runtime.
