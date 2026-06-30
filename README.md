@@ -136,6 +136,8 @@ Loop 253ではlocal-only production start verification checklistを実行し、A
 
 Loop 254ではfinal pre-external-runtime readiness reviewを実施し、Loop 253のlocal app passを前提に、VPS/Nginx/DNS/HTTPS/public smoke/LINE/OpenAI/Supabase/operator env injection/rollbackの承認待ち状態をoperator approval packとして整理しました。外部runtime実行、secret入力、DB操作、production反映は行わず、`production_no_go=true`、`dr_readiness_status=not_ready_restore_failed`、`classifier_route_status=frozen` を維持しています。詳細は [docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md](docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md) を参照してください。
 
+Loop 255ではfinal external runtime approval request pack and staged execution planを追加しました。operatorが次に承認すべきカテゴリ、段階実行計画、permission matrix、operator input category matrix、Go/No-Go、rollback/stop条件、anti-waste guard、短い承認依頼文をdocs-onlyで整理しています。外部runtime実行、secret入力、DB操作、production反映は行わず、`external_runtime_execution_allowed=false`、`production_no_go=true`、`dr_readiness_status=not_ready_restore_failed`、`classifier_route_status=frozen` を維持しています。詳細は [docs/11_codex_tasks/255_final_external_runtime_approval_request_pack.md](docs/11_codex_tasks/255_final_external_runtime_approval_request_pack.md) を参照してください。
+
 1. `docs/11_codex_tasks/` の対象タスクを読む。
 2. Scopeに書かれた範囲だけ実装する。
 3. Out of scopeに書かれたものは実装しない。

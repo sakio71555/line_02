@@ -6,6 +6,44 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 255 Current Status Override
+
+Loop 255 completed the final external runtime approval request pack. It keeps execution blocked until a future Loop has explicit operator approval for one category.
+
+```txt
+loop_255_current_status_override=true
+final_external_runtime_approval_request_pack_completed=true
+staged_external_runtime_execution_plan_created=true
+operator_permission_matrix_created=true
+operator_input_category_matrix_created=true
+go_no_go_matrix_finalized=true
+rollback_owner_and_stop_conditions_documented=true
+production_no_go=true
+production_go_changed=false
+external_runtime_execution_allowed=false
+next_loop_requires_explicit_operator_approval=true
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 256 operator env injection dry-run checklist
+```
+
+Current final Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| local app | `pass` | Loop 253 remains valid local evidence. |
+| operator approval | `required` | One category must be approved before execution. |
+| external runtime | `not_allowed_in_loop_255` | No external runtime work executed. |
+| env injection | `dry_run_checklist_required` | Selected as the next minimal action. |
+| VPS / Nginx / DNS / HTTPS | `approval_required` | No infra mutation approved. |
+| LINE / OpenAI | `approval_required` | No real send or API call approved. |
+| Supabase | `approval_required` | No DB/runtime connection approved. |
+| public smoke | `approval_required` | No public smoke approved. |
+| rollback | `owner_required` | Must be assigned before mutation. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Known risk remains. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 254 Current Status Override
 
 Loop 254 completed the final pre-external-runtime readiness review. Local app readiness is pass from Loop 253, but external runtime, operator env injection, public smoke, and production activation remain blocked until an explicit operator approval pack is accepted.

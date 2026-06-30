@@ -147,6 +147,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 253 Obsidian Log](loop_253_local_production_start_verification_checklist_execution.md)
 - [Loop 254 Final Pre-External-Runtime Readiness Review](../11_codex_tasks/254_final_pre_external_runtime_readiness_review.md)
 - [Loop 254 Obsidian Log](loop_254_final_pre_external_runtime_readiness_review.md)
+- [Loop 255 Final External Runtime Approval Request Pack](../11_codex_tasks/255_final_external_runtime_approval_request_pack.md)
+- [Loop 255 Obsidian Log](loop_255_final_external_runtime_approval_request_pack.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -267,6 +269,8 @@ Loop 252 status: `docs_only=true`, `classifier_route_status=frozen`, `next_class
 Loop 253 status: `local_production_verification_status=pass`, `api_local_start_status=pass`, `api_local_health_check=pass`, `admin_local_start_status=pass`, `admin_local_login_check=pass`, `api_process_stop_check=pass`, `admin_process_stop_check=pass`, `build_status=pass_api_admin`, `lint_status=pass`, `typecheck_status=pass`, `test_status=pass`, `classifier_route_status=frozen`, `dr_readiness_status=not_ready_restore_failed`, `production_no_go=true`, `vps_operation_executed=false`, `supabase_connection_executed=false`, `line_real_send_executed=false`, `openai_api_executed=false`, `psql_executed=false`, `pg_restore_executed=false`, `restore_executed=false`, `production_runtime_changed=false`, `secrets_recorded=false`, `next=Loop 254 final pre-external-runtime readiness review`.
 
 Loop 254 status: `final_pre_external_runtime_review_completed=true`, `local_app_readiness_status=pass`, `external_runtime_readiness_status=operator_approval_required`, `operator_approval_pack_created=true`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 255 final external runtime approval request pack`.
+
+Loop 255 status: `final_external_runtime_approval_request_pack_completed=true`, `staged_external_runtime_execution_plan_created=true`, `operator_permission_matrix_created=true`, `operator_input_category_matrix_created=true`, `go_no_go_matrix_finalized=true`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 256 operator env injection dry-run checklist`.
 
 ## Obsidian Helpers
 

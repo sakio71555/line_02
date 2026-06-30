@@ -11,10 +11,9 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 254 の final pre-external-runtime readiness review をレビューしてください。
-- Loop 253のlocal app passを前提に、外部runtimeへ進む前のoperator approval packが十分か確認してください。
-- production_no_go、DR not ready、classifier route frozen、secret/raw log非記録が守られているか確認してください。
-- 次Loop候補が実行Loopではなく、approval request packに限定されているか確認してください。
+- Loop 255 の final external runtime approval request pack and staged execution plan をレビューしてください。
+- operatorが次に何を承認すればよいか、1つの次Loopに絞れているか確認してください。
+- production_no_go、external_runtime_execution_allowed=false、DR not ready、classifier route frozen、secret/raw log非記録が守られているか確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -27,40 +26,52 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 254 final pre-external-runtime readiness review
+- Loop: Loop 255 final external runtime approval request pack and staged execution plan
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only readiness review and operator approval pack
+- Scope type: docs-only operator approval request pack
 
-## Loop 254 Result
+## Loop 255 Result
 
-- final_pre_external_runtime_review_completed=true
-- local_app_readiness_status=pass
-- external_runtime_readiness_status=operator_approval_required
-- operator_approval_pack_created=true
+- final_external_runtime_approval_request_pack_completed=true
+- staged_external_runtime_execution_plan_created=true
+- operator_permission_matrix_created=true
+- operator_input_category_matrix_created=true
+- go_no_go_matrix_finalized=true
+- rollback_owner_and_stop_conditions_documented=true
 - production_no_go=true
 - production_go_changed=false
+- external_runtime_execution_allowed=false
+- next_loop_requires_explicit_operator_approval=true
 - dr_readiness_status=not_ready_restore_failed
 - classifier_route_status=frozen
-- next_minimal_action=Loop 255 final external runtime approval request pack
+- next_minimal_action=Loop 256 operator env injection dry-run checklist
 
-## External Runtime Areas Reviewed
+## Operator Approval Pack Summary
 
-- VPS deployment: operator_approval_required
-- Nginx: operator_approval_required
-- DNS: operator_approval_required
-- HTTPS/certbot: operator_approval_required
-- public smoke: operator_approval_required
-- LINE runtime: operator_approval_required
-- OpenAI runtime: operator_approval_required
-- Supabase runtime: operator_approval_required
-- operator env injection: operator_input_required
-- rollback: review_required_before_execution
-- No-Go checklist: reviewed_docs_only
-- final operator handoff: approval_pack_created
-- monitoring/ops checks: review_required_before_execution
-- DR known risk: not_ready_restore_failed
-- classifier route: frozen
+- Current local evidence is pass.
+- External runtime remains approval-required.
+- Operator must choose one next category.
+- Approval options are category-only.
+- Secret values and raw outputs are not safe to record.
+- Missing repeated input becomes human_input_required, not more prep loops.
+
+## Go / No-Go Summary
+
+- local_app_go_conditions=pass
+- operator_approval_go_conditions=approval_required
+- external_runtime_go_conditions=not_allowed_in_loop_255
+- env_injection_go_conditions=dry_run_checklist_required
+- vps_go_conditions=approval_required
+- nginx_dns_https_go_conditions=approval_required
+- line_openai_go_conditions=approval_required
+- supabase_go_conditions=approval_required
+- public_smoke_go_conditions=approval_required
+- rollback_go_conditions=owner_required
+- production_go_conditions=not_requested
+- dr_known_risk_conditions=not_ready_restore_failed
+- classifier_route_frozen_conditions=frozen
+- no_go_conditions=active
 
 ## Safety
 
@@ -75,16 +86,12 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - psql_executed=false
 - pg_restore_executed=false
 - restore_executed=false
-- target_db_created=false
-- target_db_modified=false
-- schema_modified=false
-- role_modified=false
+- db_changed=false
+- schema_changed=false
+- role_changed=false
 - extension_created=false
-- cluster_modified=false
-- package_install_executed=false
-- package_remove_executed=false
-- pnpm_install_executed=false
-- pnpm_add_executed=false
+- cluster_changed=false
+- package_operation_executed=false
 - apt_operation_executed=false
 - env_file_created=false
 - env_file_modified=false
@@ -92,15 +99,17 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - secret_recorded=false
 - db_url_recorded=false
 - raw_log_recorded=false
-- dump_content_recorded=false
-- row_content_recorded=false
+- command_output_body_recorded=false
+- sql_recorded=false
+- db_object_name_recorded=false
+- role_name_recorded=false
 - package_name_recorded=false
 - extension_name_recorded=false
 - production_runtime_changed=false
 
 ## Next Loop Candidate
 
-- Loop 255: final external runtime approval request pack
+- Loop 256: operator env injection dry-run checklist
 ---
 
 必ず以下の順で判定してください。
@@ -119,13 +128,19 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### レビュー結果
 -
 
-### local app readiness確認
+### approval request pack確認
 -
 
-### external runtime readiness確認
+### staged execution plan確認
 -
 
-### operator approval pack確認
+### permission / input matrix確認
+-
+
+### Go / No-Go確認
+-
+
+### anti-waste guard確認
 -
 
 ### production_no_go確認
@@ -138,12 +153,6 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 -
 
 ### secret / raw log safety確認
--
-
-### Obsidian確認
--
-
-### handoff確認
 -
 
 ### 次Loop候補確認

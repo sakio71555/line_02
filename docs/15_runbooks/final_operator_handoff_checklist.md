@@ -6,6 +6,48 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 255 Current Status Override
+
+Loop 255 completed the final external runtime approval request pack and staged execution plan. It does not approve execution. It defines what the operator must approve next and where to stop.
+
+```txt
+loop_255_current_status_override=true
+final_external_runtime_approval_request_pack_completed=true
+staged_external_runtime_execution_plan_created=true
+operator_permission_matrix_created=true
+operator_input_category_matrix_created=true
+go_no_go_matrix_finalized=true
+rollback_owner_and_stop_conditions_documented=true
+production_no_go=true
+production_go_changed=false
+external_runtime_execution_allowed=false
+next_loop_requires_explicit_operator_approval=true
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 256 operator env injection dry-run checklist
+```
+
+Operator approval options for the next review:
+
+```txt
+[ ] approve_only_env_injection_dry_run
+[ ] approve_only_vps_preflight
+[ ] approve_runtime_permission_gates_only
+[ ] do_not_approve_external_runtime_yet
+[ ] request_more_review
+```
+
+Required operator input categories:
+
+- operator env injection permission.
+- rollback owner confirmation.
+- maintenance window confirmation.
+- VPS / Nginx / DNS / HTTPS / public smoke permission categories.
+- LINE / OpenAI / Supabase runtime permission categories.
+- post-deploy monitoring owner confirmation.
+
+Stop immediately if a secret value, DB URL, raw log, command output body, SQL, DB object name, role name, package name, extension name, production log, dump, or row content would need to be recorded.
+
 ## Loop 254 Current Status Override
 
 Loop 254 completed the final pre-external-runtime readiness review. Loop 253 proved the local app start path, but external runtime work now requires an explicit operator approval pack before any action is executed.

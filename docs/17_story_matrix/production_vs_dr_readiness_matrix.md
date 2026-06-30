@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 255 final external runtime approval request pack | Not final Go |
-| External runtime readiness | `operator_approval_required` | Loop 254 approval pack exists; no external runtime executed | `docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md` | Loop 255 final external runtime approval request pack | Not final Go |
-| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md` | Loop 255 final external runtime approval request pack | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 256 operator env injection dry-run checklist | Not final Go |
+| External runtime readiness | `approval_request_pack_ready` | Loop 255 final approval request pack and staged plan exist; no external runtime executed | `docs/11_codex_tasks/255_final_external_runtime_approval_request_pack.md` | Loop 256 operator env injection dry-run checklist | Not final Go |
+| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/255_final_external_runtime_approval_request_pack.md` | Loop 256 operator env injection dry-run checklist | `production_no_go` maintained |
 
 ## Current State
 
@@ -21,10 +21,42 @@ local_production_verification_status=pass
 final_pre_external_runtime_review_completed=true
 external_runtime_readiness_status=operator_approval_required
 operator_approval_pack_created=true
+final_external_runtime_approval_request_pack_completed=true
+staged_external_runtime_execution_plan_created=true
+operator_permission_matrix_created=true
+operator_input_category_matrix_created=true
+go_no_go_matrix_finalized=true
+external_runtime_execution_allowed=false
+next_loop_requires_explicit_operator_approval=true
 production_readiness_status=production_no_go_external_runtime_and_dr
 production_no_go=true
 production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 255 Final External Runtime Approval Request Pack
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Approval request pack | `complete` | Operator-facing categories, checkboxes, and secret policy documented. |
+| Staged execution plan | `created` | Phase 0 through Phase 6 plan only; no execution. |
+| Permission matrix | `created` | VPS, infra, runtime, env injection, rollback, and monitoring categories. |
+| Operator input matrix | `created` | Inputs are sanitized categories only; values are not safe to record. |
+| Go / No-Go matrix | `finalized` | Production remains No-Go and execution remains disallowed. |
+| Anti-waste guard | `created` | Missing repeated input becomes human input required, not more prep loops. |
+
+```txt
+loop_255_final_external_runtime_approval_request_pack_completed=true
+loop_255_staged_external_runtime_execution_plan_created=true
+loop_255_operator_permission_matrix_created=true
+loop_255_operator_input_category_matrix_created=true
+loop_255_go_no_go_matrix_finalized=true
+loop_255_external_runtime_execution_allowed=false
+loop_255_production_no_go=true
+loop_255_production_go_changed=false
+loop_255_dr_readiness_status=not_ready_restore_failed
+loop_255_classifier_route_status=frozen
+loop_255_next_minimal_action=Loop 256 operator env injection dry-run checklist
 ```
 
 ## Loop 254 Final Pre-External-Runtime Readiness Review

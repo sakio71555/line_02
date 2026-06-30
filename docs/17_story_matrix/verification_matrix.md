@@ -45,6 +45,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-035 | App production path review and readiness cleanup | docs-only review of Loop 252 app path, No-Go reason split, cleanup batch, and next minimal action | app production path reviewed, production_no_go reason split, classifier route frozen, local start verification selected | true | false | false | false | false | false | false | false | pending_loop_252_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, or production runtime changes. |
 | V-036 | Local production start verification checklist | local-only build/start/curl verification for API and Admin on loopback with safe defaults | API/Admin build and local start pass, local curl pass, processes stopped, production_no_go maintained | true | false | false | false | false | false | false | false | pending_loop_253_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, or production runtime changes. |
 | V-037 | Final pre-external-runtime readiness review | docs-only review of Loop 253 local pass plus external runtime approval categories | local app pass accepted, operator approval pack created, production_no_go maintained | true | false | false | false | false | false | false | false | pending_loop_254_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, secret injection, or production runtime changes. |
+| V-038 | Final external runtime approval request pack | docs-only approval request, staged plan, permission matrix, input category matrix, Go/No-Go, and anti-waste guard | approval pack complete, staged plan created, execution disallowed, production_no_go maintained | true | false | false | false | false | false | false | false | pending_loop_255_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, secret injection, or production runtime changes. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1549,6 +1550,55 @@ loop_254_package_name_recorded=false
 loop_254_extension_name_recorded=false
 loop_254_production_runtime_changed=false
 loop_254_selected_next_loop=Loop 255 final external runtime approval request pack
+```
+
+## Loop 255 Verification Note
+
+```txt
+loop_255_final_external_runtime_approval_request_pack_completed=true
+loop_255_staged_external_runtime_execution_plan_created=true
+loop_255_operator_permission_matrix_created=true
+loop_255_operator_input_category_matrix_created=true
+loop_255_go_no_go_matrix_finalized=true
+loop_255_rollback_owner_and_stop_conditions_documented=true
+loop_255_production_no_go=true
+loop_255_production_go_changed=false
+loop_255_external_runtime_execution_allowed=false
+loop_255_next_loop_requires_explicit_operator_approval=true
+loop_255_dr_readiness_status=not_ready_restore_failed
+loop_255_classifier_route_status=frozen
+loop_255_vps_operation_executed=false
+loop_255_nginx_operation_executed=false
+loop_255_dns_operation_executed=false
+loop_255_https_or_certbot_operation_executed=false
+loop_255_public_smoke_executed=false
+loop_255_line_real_send_executed=false
+loop_255_openai_api_executed=false
+loop_255_supabase_connection_executed=false
+loop_255_psql_executed=false
+loop_255_pg_restore_executed=false
+loop_255_restore_executed=false
+loop_255_db_changed=false
+loop_255_schema_changed=false
+loop_255_role_changed=false
+loop_255_extension_created=false
+loop_255_cluster_changed=false
+loop_255_package_operation_executed=false
+loop_255_apt_operation_executed=false
+loop_255_env_file_created=false
+loop_255_env_file_modified=false
+loop_255_env_file_displayed=false
+loop_255_secret_recorded=false
+loop_255_db_url_recorded=false
+loop_255_raw_log_recorded=false
+loop_255_command_output_body_recorded=false
+loop_255_sql_recorded=false
+loop_255_db_object_name_recorded=false
+loop_255_role_name_recorded=false
+loop_255_package_name_recorded=false
+loop_255_extension_name_recorded=false
+loop_255_production_runtime_changed=false
+loop_255_selected_next_loop=Loop 256 operator env injection dry-run checklist
 ```
 
 ## Stage 2 Rule
