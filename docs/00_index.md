@@ -55,6 +55,7 @@
 - Loop 223 pre-data permission/auth remediation gate: `11_codex_tasks/223_pre_data_permission_auth_remediation_gate.md`
 - Loop 224 local target privilege alignment gate without restore: `11_codex_tasks/224_local_target_privilege_alignment_gate_without_restore.md`
 - Loop 225 local target privilege alignment inspection without changes: `11_codex_tasks/225_local_target_privilege_alignment_inspection_without_changes.md`
+- Loop 226 pre-data permission blocked follow-up: `11_codex_tasks/226_pre_data_permission_blocked_follow_up.md`
 
 ## Prompts and Templates
 

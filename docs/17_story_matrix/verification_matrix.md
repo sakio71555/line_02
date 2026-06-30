@@ -265,6 +265,38 @@ loop_225_selected_next_loop=Loop 226 pre-data permission blocked follow-up
 loop_225_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 226 Verification Note
+
+```txt
+loop_226_loop_225_results_summarized=true
+loop_226_local_cluster_loopback_only=false
+loop_226_loopback_blocker_recorded=true
+loop_226_read_only_listen_scope_inspection_required=true
+loop_226_owner_aligned_target_possible=true
+loop_226_target_db_creation_no_go=true
+loop_226_restore_retry_no_go=true
+loop_226_role_change_no_go=true
+loop_226_cluster_change_no_go=true
+loop_226_psql_executed=false
+loop_226_restore_executed=false
+loop_226_pg_restore_executed=false
+loop_226_target_db_created=false
+loop_226_target_db_modified=false
+loop_226_role_created=false
+loop_226_role_modified=false
+loop_226_cluster_modified=false
+loop_226_firewall_modified=false
+loop_226_diagnostic_log_displayed=false
+loop_226_object_name_displayed=false
+loop_226_sql_statement_displayed=false
+loop_226_role_name_displayed=false
+loop_226_secrets_recorded=false
+loop_226_supabase_connection_executed=false
+loop_226_production_restore_executed=false
+loop_226_selected_next_loop=Loop 227 local restore cluster listen scope read-only inspection
+loop_226_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

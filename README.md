@@ -535,6 +535,8 @@ Loop 224 local target privilege alignment gate without restoreでは、pre-data 
 
 Loop 225 local target privilege alignment inspection without changesでは、VPS上のlocal isolated PostgreSQL targetについてmetadata-only確認を行いました。clusterは存在しonlineですが、listen scopeはloopback-onlyと証明できず、owner-aligned target DB作成やpre-data retryはまだNo-Goです。psqlはlocal-only metadata確認に限定し、DB変更、role変更、restore、pg_restore、raw log表示、row content表示、Supabase/production接続は行っていません。詳細は [docs/11_codex_tasks/225_local_target_privilege_alignment_inspection_without_changes.md](docs/11_codex_tasks/225_local_target_privilege_alignment_inspection_without_changes.md) と [docs/16_obsidian/loop_225_local_target_privilege_alignment_inspection_without_changes.md](docs/16_obsidian/loop_225_local_target_privilege_alignment_inspection_without_changes.md) を参照してください。
 
+Loop 226 pre-data permission blocked follow-upでは、Loop 225の `local_cluster_loopback_only=false` をblockerとして整理し、owner-aligned target DB作成やpre-data retryへ進まない方針をdocs化しました。次は `Loop 227: local restore cluster listen scope read-only inspection` とし、psql、restore、pg_restore、target DB作成/変更、role変更、cluster変更、firewall変更、raw log表示、Supabase/production接続は行っていません。詳細は [docs/11_codex_tasks/226_pre_data_permission_blocked_follow_up.md](docs/11_codex_tasks/226_pre_data_permission_blocked_follow_up.md) と [docs/16_obsidian/loop_226_pre_data_permission_blocked_follow_up.md](docs/16_obsidian/loop_226_pre_data_permission_blocked_follow_up.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

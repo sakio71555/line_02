@@ -1990,3 +1990,86 @@ privilege_alignment_gate_created=true
 next_loop_selected=true
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 30. Loop 226 Pre-Data Permission Blocked Follow-Up
+
+Loop 226 is a docs-only follow-up gate for the Loop 225 `local_cluster_loopback_only=false` result. It does not run `psql`, restore, `pg_restore`, target DB creation, role changes, package changes, cluster changes, reload/restart, firewall changes, Supabase connection, or production operations.
+
+### 30.1 Loop 225 Inputs
+
+```txt
+local_cluster_exists=true
+local_cluster_online=true
+postgres_version=17
+cluster_port=55432
+psql_metadata_inspection_executed=true
+psql_connection_scope=local_only
+metadata_database_count=3
+metadata_restore_drill_database_count=0
+metadata_role_count=16
+metadata_superuser_role_count=1
+metadata_createdb_role_count=1
+owner_aligned_target_possible=true
+local_cluster_loopback_only=false
+target_db_creation_no_go=true
+restore_retry_no_go=true
+role_change_no_go=true
+```
+
+### 30.2 Blocker Interpretation
+
+`local_cluster_loopback_only=false` means the current sanitized check did not prove a loopback-only restore drill target. It may reflect real non-loopback listening, a strict classifier, IPv4/IPv6 loopback handling, Unix socket behavior, or another listen-scope ambiguity.
+
+The next action should gather read-only evidence before any cluster remediation, DB creation, or restore retry.
+
+### 30.3 Candidate Decision
+
+| candidate | decision | reason |
+| --- | --- | --- |
+| Read-only listen scope inspection | Selected | Low-risk and directly addresses the blocker. |
+| Loopback-only config remediation plan | Deferred | May require config changes, reload/restart, and rollback planning. |
+| Owner-aligned target DB provisioning despite blocker | No-Go | Target is not yet proven safe enough for DB creation or retry. |
+| Unix socket only restore target design | Future candidate | Potentially safer, but requires its own connection design gate. |
+
+### 30.4 Selected Next Loop Boundary
+
+```txt
+selected_next_loop=Loop 227: local restore cluster listen scope read-only inspection
+read_only_listen_scope_inspection_required=true
+cluster_config_change_no_go=true
+target_db_creation_no_go=true
+restore_retry_no_go=true
+role_change_no_go=true
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 227 should allow only read-only listen-scope checks such as `pg_lsclusters`, `ss`/`netstat` classification for port `55432`, and config path metadata without full config display. It should still prohibit cluster changes, reload/restart, package changes, firewall changes, DB creation, restore, role changes, raw logs, object names, SQL statements, role names, DB URLs, and secrets.
+
+### 30.5 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+role_created=false
+role_modified=false
+cluster_modified=false
+cluster_reloaded=false
+firewall_modified=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+object_name_displayed=false
+sql_statement_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_restore_executed=false
+loopback_blocker_recorded=true
+next_loop_selected=true
+dr_readiness_status=not_ready_restore_failed
+```

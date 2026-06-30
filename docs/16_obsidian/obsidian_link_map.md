@@ -95,6 +95,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 224 Obsidian Log](loop_224_local_target_privilege_alignment_gate_without_restore.md)
 - [Loop 225 Local Target Privilege Alignment Inspection Without Changes](../11_codex_tasks/225_local_target_privilege_alignment_inspection_without_changes.md)
 - [Loop 225 Obsidian Log](loop_225_local_target_privilege_alignment_inspection_without_changes.md)
+- [Loop 226 Pre-Data Permission Blocked Follow-Up](../11_codex_tasks/226_pre_data_permission_blocked_follow_up.md)
+- [Loop 226 Obsidian Log](loop_226_pre_data_permission_blocked_follow_up.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -159,6 +161,8 @@ Loop 220 status: `pg_restore_list_executed=true`, `pg_restore_list_exit_code=0`,
 Loop 221 status: `pre_data_diagnostic_gate_created=true`, `loop_222_pre_data_execution_ready=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `target_db_created=false`, `diagnostic_log_displayed=false`, `object_name_displayed=false`, `secrets_recorded=false`, `production_restore_executed=false`, `next=Loop 222 pre-data only restore diagnostic execution`.
 
 Loop 222 status: `restore_stage=pre_data`, `restore_attempt_count=1`, `pg_restore_exit_code=1`, `pre_data_diagnostic_status=failed`, `failure_category=pre_data_permission_error_detected`, `permission_or_auth_error_count=1`, `restore_target_dropped=true`, `target_db_exists_after_drop=false`, `cleanup_required=false`, `raw_log_displayed=false`, `secrets_recorded=false`, `production_restore_executed=false`, `next=Loop 223 pre-data permission/auth remediation gate`.
+
+Loop 226 status: `local_cluster_loopback_only=false`, `loopback_blocker_recorded=true`, `read_only_listen_scope_inspection_required=true`, `target_db_creation_no_go=true`, `restore_retry_no_go=true`, `role_change_no_go=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `cluster_modified=false`, `firewall_modified=false`, `secrets_recorded=false`, `next=Loop 227 local restore cluster listen scope read-only inspection`.
 
 ## Obsidian Helpers
 
