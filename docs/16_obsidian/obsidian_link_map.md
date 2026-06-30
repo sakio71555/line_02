@@ -155,6 +155,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 257 Obsidian Log](loop_257_operator_env_injection_dry_run_approval_gate.md)
 - [Loop 258 Operator Env Injection Dry-Run Without Secret Values](../11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md)
 - [Loop 258 Obsidian Log](loop_258_operator_env_injection_dry_run_without_secret_values.md)
+- [Loop 259 Env Inventory Mismatch Cleanup](../11_codex_tasks/259_env_inventory_mismatch_cleanup.md)
+- [Loop 259 Obsidian Log](loop_259_env_inventory_mismatch_cleanup.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -283,6 +285,8 @@ Loop 256 status: `operator_env_injection_dry_run_checklist_created=true`, `runti
 Loop 257 status: `operator_env_injection_dry_run_approval_gate_completed=true`, `operator_approval_status=not_provided`, `env_dry_run_approval_status=not_approved`, `approved_scope=none`, `human_input_required=true`, `next_execution_allowed=false`, `env_injection_execution_allowed=false`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 258 wait for operator env dry-run approval decision`.
 
 Loop 258 status: `operator_env_dry_run_approval_consumed=true`, `operator_approval_status=provided`, `env_dry_run_approval_status=approved`, `approved_scope=env_inventory_and_presence_check_dry_run_only`, `env_dry_run_execution_status=partial`, `runtime_env_inventory_rechecked=true`, `env_inventory_alignment_status=partial`, `missing_inventory_entries_count=2`, `placeholder_only_dry_run_execution_status=pass`, `env_presence_check_execution_allowed=false`, `env_injection_execution_allowed=false`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 259 env inventory mismatch cleanup`.
+
+Loop 259 status: `env_inventory_mismatch_cleanup_status=complete`, `env_inventory_alignment_status=aligned`, `admin_app_env_category_mismatch_status=resolved`, `admin_public_env_category_mismatch_status=resolved`, `runtime_env_inventory_updated=true`, `env_presence_check_permission_gate_prepared=true`, `env_presence_check_execution_allowed=false`, `env_injection_execution_allowed=false`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 260 operator env presence check permission gate`.
 
 ## Obsidian Helpers
 

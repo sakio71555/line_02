@@ -6,6 +6,64 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 259 Current Status Override
+
+Loop 259 resolved the Loop 258 admin env inventory mismatch using category-only docs cleanup. No env presence check, actual env injection, env file operation, external runtime, VPS operation, public smoke, or production change was executed.
+
+```txt
+loop_259_current_status_override=true
+env_inventory_mismatch_cleanup_completed=true
+env_inventory_mismatch_cleanup_status=complete
+env_inventory_alignment_status=aligned
+admin_app_env_category_mismatch_status=resolved
+admin_public_env_category_mismatch_status=resolved
+runtime_env_inventory_updated=true
+post_cleanup_env_inventory_alignment_status=aligned
+remaining_mismatch_reason=none
+env_presence_check_permission_gate_prepared=true
+env_presence_check_execution_allowed=false
+actual_secret_injection_executed=false
+env_file_operation_executed=false
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 260 operator env presence check permission gate
+```
+
+Safe operator reply format if approving the next presence-check permission gate:
+
+```txt
+approval_decision=approve_operator_env_presence_check_without_value_output
+approval_scope=presence_boolean_only_for_required_runtime_categories
+secret_values_provided=false
+env_value_output_allowed=false
+env_value_length_output_allowed=false
+env_value_hash_output_allowed=false
+external_runtime_execution_allowed=false
+vps_operation_allowed=false
+public_smoke_allowed=false
+production_go_allowed=false
+actual_env_injection_allowed=false
+```
+
+Safe operator reply format if not approving yet:
+
+```txt
+approval_decision=do_not_approve_env_presence_check_yet
+approval_scope=none
+secret_values_provided=false
+external_runtime_execution_allowed=false
+vps_operation_allowed=false
+public_smoke_allowed=false
+production_go_allowed=false
+actual_env_injection_allowed=false
+```
+
+Do not run presence checks, actual env injection, VPS operations, public smoke, external runtime, or production Go until separately approved.
+
 ## Loop 258 Current Status Override
 
 Loop 258 consumed the operator approval for a value-free env dry-run only. Safe inspection and placeholder-only validation completed without secret values, env file operations, external connections, VPS operations, or production changes. The inventory alignment result is partial, so the next action is inventory mismatch cleanup before any real presence check.

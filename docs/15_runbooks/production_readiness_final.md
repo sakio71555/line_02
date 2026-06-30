@@ -6,6 +6,45 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 259 Current Status Override
+
+Loop 259 cleaned up the admin env inventory mismatch with category-only documentation. The env inventory is aligned after cleanup, but all execution gates remain closed.
+
+```txt
+loop_259_current_status_override=true
+env_inventory_mismatch_cleanup_completed=true
+env_inventory_mismatch_cleanup_status=complete
+env_inventory_alignment_status=aligned
+admin_app_env_category_mismatch_status=resolved
+admin_public_env_category_mismatch_status=resolved
+runtime_env_inventory_updated=true
+post_cleanup_env_inventory_alignment_status=aligned
+env_presence_check_permission_gate_prepared=true
+env_presence_check_execution_allowed=false
+actual_secret_injection_executed=false
+env_file_operation_executed=false
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 260 operator env presence check permission gate
+```
+
+Current env cleanup Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| env mismatch cleanup | `complete` | Admin env inventory categories are represented without values. |
+| inventory alignment | `aligned` | Presence-check permission gate can be prepared. |
+| env presence check | `not_allowed` | Future operator approval required. |
+| env injection | `not_allowed` | No mutation, helper execution, secret input, or process runtime change. |
+| external runtime | `not_allowed` | No LINE/OpenAI/Supabase/public smoke/VPS operation. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Restore drill is still not successful. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 258 Current Status Override
 
 Loop 258 executed the approved value-free env dry-run. It found partial explicit inventory alignment and keeps all execution gates closed.

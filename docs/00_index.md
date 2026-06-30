@@ -88,6 +88,7 @@
 - Loop 256 operator env injection dry-run checklist: `11_codex_tasks/256_operator_env_injection_dry_run_checklist.md`
 - Loop 257 operator env injection dry-run approval gate: `11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md`
 - Loop 258 operator env injection dry-run without secret values: `11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md`
+- Loop 259 env inventory mismatch cleanup: `11_codex_tasks/259_env_inventory_mismatch_cleanup.md`
 
 ## Prompts and Templates
 

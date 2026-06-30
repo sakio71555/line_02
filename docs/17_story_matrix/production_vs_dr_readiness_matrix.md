@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 259 env inventory mismatch cleanup | Not final Go |
-| External runtime readiness | `env_dry_run_partial_inventory_cleanup_required` | Loop 258 value-free dry-run completed partially and found inventory cleanup needed | `docs/11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md` | Loop 259 env inventory mismatch cleanup | Not final Go |
-| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env inventory cleanup, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md` | Loop 259 env inventory mismatch cleanup | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 260 env presence check permission gate | Not final Go |
+| External runtime readiness | `env_inventory_aligned_presence_gate_required` | Loop 259 resolved the admin env inventory mismatch, but env presence check and injection remain unapproved | `docs/11_codex_tasks/259_env_inventory_mismatch_cleanup.md` | Loop 260 env presence check permission gate | Not final Go |
+| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env presence check approval, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/259_env_inventory_mismatch_cleanup.md` | Loop 260 env presence check permission gate | `production_no_go` maintained |
 
 ## Current State
 
@@ -40,8 +40,10 @@ next_execution_allowed=false
 operator_env_dry_run_approval_consumed=true
 env_dry_run_execution_status=partial
 runtime_env_inventory_rechecked=true
-env_inventory_alignment_status=partial
-requires_follow_up_cleanup=true
+env_inventory_mismatch_cleanup_status=complete
+env_inventory_alignment_status=aligned
+requires_follow_up_cleanup=false
+env_presence_check_permission_gate_prepared=true
 placeholder_only_dry_run_execution_status=pass
 env_presence_check_execution_allowed=false
 env_injection_execution_allowed=false
@@ -51,6 +53,36 @@ production_readiness_status=production_no_go_external_runtime_and_dr
 production_no_go=true
 production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 259 Env Inventory Mismatch Cleanup
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Mismatch cleanup | `complete` | Admin env inventory mismatch resolved with category-only docs cleanup. |
+| Inventory alignment | `aligned` | Implementation env candidates are represented by safe explicit or category rows. |
+| Presence check gate | `prepared` | Future approval can be requested, but no presence check ran. |
+| Execution | `not_allowed` | No actual env injection, env file operation, external runtime, VPS operation, public smoke, or production change. |
+| Next action | `selected` | Loop 260 operator env presence check permission gate. |
+
+```txt
+loop_259_env_inventory_mismatch_cleanup_status=complete
+loop_259_env_inventory_alignment_status=aligned
+loop_259_admin_app_env_category_mismatch_status=resolved
+loop_259_admin_public_env_category_mismatch_status=resolved
+loop_259_runtime_env_inventory_updated=true
+loop_259_post_cleanup_env_inventory_alignment_status=aligned
+loop_259_env_presence_check_permission_gate_prepared=true
+loop_259_env_presence_check_execution_allowed=false
+loop_259_actual_secret_injection_executed=false
+loop_259_env_file_operation_executed=false
+loop_259_env_injection_execution_allowed=false
+loop_259_external_runtime_execution_allowed=false
+loop_259_production_no_go=true
+loop_259_production_go_changed=false
+loop_259_dr_readiness_status=not_ready_restore_failed
+loop_259_classifier_route_status=frozen
+loop_259_next_minimal_action=Loop 260 operator env presence check permission gate
 ```
 
 ## Loop 258 Operator Env Injection Dry-Run Without Secret Values

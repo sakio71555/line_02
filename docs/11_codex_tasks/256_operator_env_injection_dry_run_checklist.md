@@ -69,6 +69,7 @@ Inventory source:
 | api_server | `NODE_ENV` | implementation_boundary | true | false |
 | admin_app | `API_BASE_URL` | implementation_and_docs_boundary | true | false |
 | admin_app | `TENANT_ID` / `TENANT_SLUG` | implementation_and_docs_boundary | true | false |
+| admin_app | admin staff identity category | implementation_boundary | true_for_category | false |
 | line_runtime | `LINE_CHANNEL_ID` | implementation_boundary | true | false |
 | line_runtime | `LINE_CHANNEL_SECRET` | implementation_boundary | true | false |
 | line_runtime | `LINE_CHANNEL_ACCESS_TOKEN` | implementation_boundary | true | false |
@@ -85,6 +86,7 @@ Inventory source:
 | auth_tenant_guard | tenant selector / selected tenant transport category | implementation_and_docs_boundary | true_for_category | false |
 | role_guard | admin role guard runtime category | implementation_and_docs_boundary | true_for_category | false |
 | public_admin_runtime | `APP_BASE_URL` / `API_BASE_URL` / `LIFF_BASE_URL` | implementation_and_docs_boundary | true | false |
+| public_admin_runtime | admin dev tenant header policy category | implementation_boundary | true_for_category | false |
 | vps_process_runtime | process manager env update category | docs_runbook_boundary | true_for_category | false |
 | nginx_or_reverse_proxy_runtime | reverse proxy runtime category | docs_runbook_boundary | true_for_category | false |
 
@@ -102,6 +104,7 @@ Notes:
 | api_server | `REPOSITORY_RUNTIME` | implementation | false | true | true | false | true | false | true | true | default may stay local-only |
 | api_server | `API_HOST` / `API_PORT` | docs/start boundary | true_for_local_start | true | true | false | true | false | true_for_runtime_target | true | bind/port boundary ambiguous |
 | admin_app | `API_BASE_URL` | implementation/docs | true | true | true | false | true | false | true | true | admin cannot target API |
+| admin_app | admin staff identity category | implementation | true_for_local_dev | true | true | false | true_for_category | false | true | true | admin staff context ambiguous |
 | line_runtime | `LINE_CHANNEL_ID` | implementation | false | true | true | false | true | false | true | true | LINE runtime cannot identify channel |
 | line_runtime | `LINE_CHANNEL_SECRET` | implementation | false | true | true | true | true | false | true | presence_only_future | webhook signature verification unavailable |
 | line_runtime | `LINE_CHANNEL_ACCESS_TOKEN` | implementation | false | true | true | true | true | false | true | presence_only_future | real LINE transport unavailable |
@@ -119,6 +122,7 @@ Notes:
 | auth_tenant_guard | tenant selector / selected tenant category | implementation/docs | true_for_local_dev | true | true | false | true_for_category | false | true | true | tenant context cannot be verified |
 | role_guard | admin role guard runtime category | docs | false | true | true | false | true_for_category | false | true | true | role authorization unclear |
 | public_admin_runtime | public URL category | docs | false | true | true | false_but_sensitive_by_policy | true_for_category | false | true | true | browser/API public boundary unclear |
+| public_admin_runtime | admin dev tenant header policy category | implementation | true_for_local_dev | true | true | false | true_for_category | false | true | true | tenant header policy ambiguous |
 | vps_process_runtime | process manager env update category | docs | false | true | true | true_by_category | true_for_category | false | true | false_in_loop_256 | process runtime env not approved |
 | nginx_or_reverse_proxy_runtime | reverse proxy runtime category | docs | false | true | true | false | true_for_category | false | true | true | proxy/public boundary not approved |
 
