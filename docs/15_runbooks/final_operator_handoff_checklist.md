@@ -6,6 +6,53 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 257 Current Status Override
+
+Loop 257 promoted the env dry-run checklist into an approval gate and decision pack. No operator approval block was provided, so the safe result is human input required and no execution.
+
+```txt
+loop_257_current_status_override=true
+operator_env_injection_dry_run_approval_gate_completed=true
+operator_approval_status=not_provided
+env_dry_run_approval_status=not_approved
+approved_scope=none
+human_input_required=true
+next_execution_allowed=false
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 258 wait for operator env dry-run approval decision
+```
+
+Safe operator reply format if approving only the value-free dry-run:
+
+```txt
+approval_decision=approve_env_injection_dry_run_without_secret_values
+approval_scope=env_inventory_and_presence_check_only
+secret_values_provided=false
+external_runtime_execution_allowed=false
+vps_operation_allowed=false
+public_smoke_allowed=false
+production_go_allowed=false
+```
+
+Safe operator reply format if not approving yet:
+
+```txt
+approval_decision=do_not_approve_env_injection_yet
+approval_scope=none
+secret_values_provided=false
+external_runtime_execution_allowed=false
+vps_operation_allowed=false
+public_smoke_allowed=false
+production_go_allowed=false
+```
+
+Stop if approval is missing, free-form text includes secret values or raw output, more than one category is approved, external runtime/VPS/public smoke is enabled, or production Go is granted.
+
 ## Loop 256 Current Status Override
 
 Loop 256 prepared the operator env injection dry-run checklist and runtime input readiness gate. It did not inject env values, request secrets, display secret files, connect externally, or change production runtime.

@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 257 operator env injection dry-run approval gate | Not final Go |
-| External runtime readiness | `env_dry_run_checklist_ready` | Loop 256 env inventory and dry-run checklist exist; no env injection or external runtime executed | `docs/11_codex_tasks/256_operator_env_injection_dry_run_checklist.md` | Loop 257 operator env injection dry-run approval gate | Not final Go |
-| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/256_operator_env_injection_dry_run_checklist.md` | Loop 257 operator env injection dry-run approval gate | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 258 wait for operator env dry-run approval decision | Not final Go |
+| External runtime readiness | `env_dry_run_approval_required` | Loop 257 approval gate exists, but no operator approval block was provided | `docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md` | Loop 258 wait for operator env dry-run approval decision | Not final Go |
+| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env approval, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md` | Loop 258 wait for operator env dry-run approval decision | `production_no_go` maintained |
 
 ## Current State
 
@@ -31,6 +31,12 @@ runtime_env_inventory_created=true
 runtime_input_category_matrix_created=true
 secret_redaction_policy_confirmed=true
 env_injection_validation_plan_created=true
+operator_env_injection_dry_run_approval_gate_completed=true
+operator_approval_status=not_provided
+env_dry_run_approval_status=not_approved
+approved_scope=none
+human_input_required=true
+next_execution_allowed=false
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
@@ -38,6 +44,33 @@ production_readiness_status=production_no_go_external_runtime_and_dr
 production_no_go=true
 production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 257 Operator Env Injection Dry-Run Approval Gate
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Approval gate | `created` | Loop 256 checklist promoted to human-input approval gate. |
+| Operator approval | `not_provided` | No scoped approval block was included in Loop 257. |
+| Env dry-run | `not_approved` | No dry-run execution is allowed yet. |
+| Approved scope | `none` | Only a future strict sanitized reply can approve a value-free dry-run. |
+| Execution | `not_allowed` | No env injection, external runtime, VPS operation, public smoke, or production change. |
+| Next action | `human_input_required` | Wait for operator approval decision. |
+
+```txt
+loop_257_operator_env_injection_dry_run_approval_gate_completed=true
+loop_257_operator_approval_status=not_provided
+loop_257_env_dry_run_approval_status=not_approved
+loop_257_approved_scope=none
+loop_257_human_input_required=true
+loop_257_next_execution_allowed=false
+loop_257_env_injection_execution_allowed=false
+loop_257_external_runtime_execution_allowed=false
+loop_257_production_no_go=true
+loop_257_production_go_changed=false
+loop_257_dr_readiness_status=not_ready_restore_failed
+loop_257_classifier_route_status=frozen
+loop_257_next_minimal_action=Loop 258 wait for operator env dry-run approval decision
 ```
 
 ## Loop 256 Operator Env Injection Dry-Run Readiness

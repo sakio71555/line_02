@@ -140,6 +140,8 @@ Loop 255ではfinal external runtime approval request pack and staged execution 
 
 Loop 256ではoperator env injection dry-run checklist and runtime input readiness gateを追加しました。既存コード/docsからruntime env key/categoryを値なしで棚卸しし、dry-run checklist、redaction policy、validation plan、approval options、Go/No-Go、anti-waste guardをdocs-onlyで整理しています。実secret注入、env file表示、外部runtime接続、VPS操作、production反映は行わず、`env_injection_execution_allowed=false`、`external_runtime_execution_allowed=false`、`production_no_go=true` を維持しています。詳細は [docs/11_codex_tasks/256_operator_env_injection_dry_run_checklist.md](docs/11_codex_tasks/256_operator_env_injection_dry_run_checklist.md) を参照してください。
 
+Loop 257ではoperator env injection dry-run approval gateを追加しました。Loop 256のdry-run checklistを承認ゲートへ昇格し、承認ブロック未提供のため `operator_approval_status=not_provided` / `human_input_required=true` / `next_execution_allowed=false` として安全に停止しています。secret注入、env file表示、外部runtime接続、VPS操作、production反映は行わず、`production_no_go=true` と `dr_readiness_status=not_ready_restore_failed` を維持しています。詳細は [docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md](docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md) を参照してください。
+
 1. `docs/11_codex_tasks/` の対象タスクを読む。
 2. Scopeに書かれた範囲だけ実装する。
 3. Out of scopeに書かれたものは実装しない。

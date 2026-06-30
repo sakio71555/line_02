@@ -151,6 +151,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 255 Obsidian Log](loop_255_final_external_runtime_approval_request_pack.md)
 - [Loop 256 Operator Env Injection Dry-Run Checklist](../11_codex_tasks/256_operator_env_injection_dry_run_checklist.md)
 - [Loop 256 Obsidian Log](loop_256_operator_env_injection_dry_run_checklist.md)
+- [Loop 257 Operator Env Injection Dry-Run Approval Gate](../11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md)
+- [Loop 257 Obsidian Log](loop_257_operator_env_injection_dry_run_approval_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -275,6 +277,8 @@ Loop 254 status: `final_pre_external_runtime_review_completed=true`, `local_app_
 Loop 255 status: `final_external_runtime_approval_request_pack_completed=true`, `staged_external_runtime_execution_plan_created=true`, `operator_permission_matrix_created=true`, `operator_input_category_matrix_created=true`, `go_no_go_matrix_finalized=true`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 256 operator env injection dry-run checklist`.
 
 Loop 256 status: `operator_env_injection_dry_run_checklist_created=true`, `runtime_env_inventory_created=true`, `runtime_input_category_matrix_created=true`, `secret_redaction_policy_confirmed=true`, `env_injection_validation_plan_created=true`, `env_injection_execution_allowed=false`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 257 operator env injection dry-run approval gate`.
+
+Loop 257 status: `operator_env_injection_dry_run_approval_gate_completed=true`, `operator_approval_status=not_provided`, `env_dry_run_approval_status=not_approved`, `approved_scope=none`, `human_input_required=true`, `next_execution_allowed=false`, `env_injection_execution_allowed=false`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 258 wait for operator env dry-run approval decision`.
 
 ## Obsidian Helpers
 

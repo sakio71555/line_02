@@ -6,6 +6,40 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 257 Current Status Override
+
+Loop 257 records the env dry-run approval gate. Because no operator approval block was provided, the current status is `human_input_required`; no dry-run execution, actual env injection, external runtime, or production Go is allowed.
+
+```txt
+loop_257_current_status_override=true
+operator_env_injection_dry_run_approval_gate_completed=true
+operator_approval_status=not_provided
+env_dry_run_approval_status=not_approved
+approved_scope=none
+human_input_required=true
+next_execution_allowed=false
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 258 wait for operator env dry-run approval decision
+```
+
+Current env approval Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| env approval block | `not_provided` | Human input is required before any dry-run execution. |
+| env dry-run | `not_approved` | Wait for strict sanitized approval or explicit non-approval. |
+| env injection | `not_allowed` | No mutation, helper execution, secret input, or process runtime change. |
+| secret handling | `no_go_for_value_output` | Values, lengths, hashes, prefixes, suffixes, env files, and secret files stay hidden. |
+| external runtime | `not_allowed` | No LINE/OpenAI/Supabase/public smoke/VPS operation. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Restore drill is still not successful. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 256 Current Status Override
 
 Loop 256 prepared the env injection dry-run path only. It keeps production and external runtime execution blocked.
