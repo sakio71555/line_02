@@ -90,6 +90,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 249 defines the strict operator payload collection protocol, allowed-key template, reject rules, and classifier retry readiness gate, keeps `ready_for_classifier_retry=false` until a real sanitized payload is collected, and keeps apt/package/restore/DB changes, Supabase, production, raw output, package/extension names, and secrets untouched.
 - Loop 250 checks the strict operator payload collection input, blocks because no valid payload is present, keeps `ready_for_classifier_retry=false`, and keeps classifier retry, apt/package/restore/DB changes, Supabase, production, raw output, package/extension names, and secrets untouched.
 - Loop 251 freezes the classifier route after repeated operator payload absence, separates DR readiness from app / production readiness, selects Loop 252 app production path review without DR blocker coupling, and keeps classifier retry, apt/package/restore/DB changes, Supabase, production runtime, raw output, package/extension names, and secrets untouched.
+- Loop 252 reviews the app production path separately from the frozen classifier / restore route, marks app path review complete, splits `production_no_go` reasons, selects local production start verification as the next minimal action, and keeps VPS, external APIs, Supabase, restore, DB changes, package changes, production runtime, raw logs, DB URLs, and secrets untouched.
 
 ## .obsidian Policy
 

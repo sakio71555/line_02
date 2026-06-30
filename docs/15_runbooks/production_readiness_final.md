@@ -6,6 +6,32 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 252 Current Status Override
+
+This file contains historical production readiness snapshots. The current active status after Loop 252 is:
+
+```txt
+loop_252_current_status_override=true
+classifier_route_status=frozen
+next_classifier_loop_allowed=false
+dr_readiness_status=not_ready_restore_failed
+app_production_path_review_completed=true
+app_readiness_status=separate_review_completed
+production_readiness_status=production_no_go_reason_split
+production_no_go=true
+production_no_go_reason_scope=split
+production_go_changed=false
+selected_next_minimal_action=local_production_start_verification_checklist_execution
+```
+
+Current `production_no_go` reason buckets:
+
+- DR restore drill has not succeeded.
+- Classifier / package route is frozen after repeated operator payload absence.
+- Supabase, LINE, OpenAI, and production auth context still need separate approved runtime verification.
+- Local production start verification checklist has not yet been executed.
+- Final production Go was not requested in Loop 252.
+
 ## Current State
 
 | area | status |

@@ -42,6 +42,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-032 | Strict package classifier input collection | docs-only review of Loop 249 collection protocol, allowed-key template, reject rules, and retry readiness gate | input protocol created, ready_for_classifier_retry=false, payload collection selected | true | false | false | false | false | false | false | false | pending_loop_249_verification | Does not run classifier retry, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
 | V-033 | Strict package classifier payload collection | docs-only review of Loop 250 payload presence check and blocked result | operator payload absent, ready_for_classifier_retry=false, later superseded by route freeze | true | false | false | false | false | false | false | false | pending_loop_250_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
 | V-034 | Classifier route freeze and readiness split | docs-only review of Loop 251 route freeze, repeated-blocker rule, and readiness split | classifier route frozen, next classifier loop disallowed, DR/app/production readiness separated | true | false | false | false | false | false | false | false | pending_loop_251_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, change DB state, or change production runtime. |
+| V-035 | App production path review and readiness cleanup | docs-only review of Loop 252 app path, No-Go reason split, cleanup batch, and next minimal action | app production path reviewed, production_no_go reason split, classifier route frozen, local start verification selected | true | false | false | false | false | false | false | false | pending_loop_252_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, or production runtime changes. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1394,6 +1395,48 @@ loop_251_production_readiness_status=separate_review_required
 loop_251_production_no_go=true
 loop_251_production_no_go_reason_scope=must_be_split
 loop_251_selected_next_loop=Loop 252 app production path review without DR blocker coupling
+```
+
+## Loop 252 Verification Note
+
+```txt
+loop_252_docs_only=true
+loop_252_status=complete
+loop_252_classifier_route_status=frozen
+loop_252_next_classifier_loop_allowed=false
+loop_252_dr_readiness_status=not_ready_restore_failed
+loop_252_app_production_path_review_completed=true
+loop_252_app_readiness_status=separate_review_completed
+loop_252_production_readiness_status=production_no_go_reason_split
+loop_252_production_no_go=true
+loop_252_production_no_go_reason_scope=split
+loop_252_selected_readiness_cleanup_count=3
+loop_252_local_code_or_test_cleanup_count=0
+loop_252_selected_next_minimal_action=local_production_start_verification_checklist_execution
+loop_252_vps_operation_executed=false
+loop_252_nginx_operation_executed=false
+loop_252_dns_operation_executed=false
+loop_252_https_or_certbot_operation_executed=false
+loop_252_public_smoke_executed=false
+loop_252_line_real_send_executed=false
+loop_252_openai_api_executed=false
+loop_252_supabase_connection_executed=false
+loop_252_psql_executed=false
+loop_252_pg_restore_executed=false
+loop_252_restore_executed=false
+loop_252_target_db_created=false
+loop_252_target_db_modified=false
+loop_252_schema_modified=false
+loop_252_role_modified=false
+loop_252_extension_created=false
+loop_252_cluster_modified=false
+loop_252_package_operation_executed=false
+loop_252_production_runtime_changed=false
+loop_252_secrets_recorded=false
+loop_252_db_url_recorded=false
+loop_252_raw_log_recorded=false
+loop_252_package_name_recorded=false
+loop_252_extension_name_recorded=false
 ```
 
 ## Stage 2 Rule

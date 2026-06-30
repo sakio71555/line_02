@@ -5,13 +5,17 @@ Copy the block below into ChatGPT. It already includes the sanitized latest Code
 Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, package names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ```text
+まずLoop結果をレビューしてください。
+次LoopのCodex文章はまだ作らないでください。
+
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 251 の classifier route freeze and DR-production readiness split をレビューしてください。
-- Loop 248〜250で同じ operator payload absent blocker が繰り返されたため、classifier route を frozen にした判断が妥当か確認してください。
-- DR readiness と app / production readiness を分離できているか確認してください。
-- 次Loop候補が payload recollection / protocol fix / classifier retry / blocked follow-up になっていないか確認してください。
+- Loop 252 の app production path review and readiness cleanup をレビューしてください。
+- classifier / package / restore route が frozen のまま維持されているか確認してください。
+- DR readiness と app production path readiness が分離されているか確認してください。
+- production_no_go の理由がDRだけに寄っておらず、外部runtime/secret、local verification、operator decisionへ分割されているか確認してください。
+- 次Loop候補が classifier retry / payload recollection / protocol fix / restore retry / package install / apt operation / DR fallback plan になっていないか確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -24,70 +28,80 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 251 classifier route freeze and DR-production readiness split
+- Loop: Loop 252 app production path review and readiness cleanup
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only route freeze and readiness split
+- Scope type: docs-only app production path review and readiness cleanup
 
-## Loop 251 Result
+## Loop 252 Result
 
+- loop_252_status=complete
 - classifier_route_status=frozen
-- classifier_route_frozen_reason=repeated_operator_payload_absent
-- operator_payload_present=false
-- ready_for_classifier_retry=false
 - next_classifier_loop_allowed=false
-- classifier_route_resume_condition=human_provided_valid_strict_sanitized_payload
-- self_growth_prevention_rule_added=true
-
-## Readiness Split
-
 - dr_readiness_status=not_ready_restore_failed
-- classifier_route_status=frozen
-- app_readiness_status=separate_review_required
-- production_readiness_status=separate_review_required
+- app_production_path_review_completed=true
+- app_readiness_status=separate_review_completed
+- production_readiness_status=production_no_go_reason_split
 - production_no_go=true
-- production_no_go_reason_scope=must_be_split
-- production_go_changed=false
+- production_no_go_reason_scope=split
+- selected_readiness_cleanup_count=3
+- local_code_or_test_cleanup_count=0
+
+## Production No-Go Reason Split
+
+- production_no_go_dr_reason=restore_drill_not_successful
+- production_no_go_classifier_reason=classifier_route_frozen_repeated_operator_payload_absent
+- production_no_go_external_runtime_reason=real_supabase_line_openai_auth_context_requires_separate_approved_verification
+- production_no_go_local_docs_test_reason=local_production_start_verification_not_yet_executed
+- production_no_go_operator_decision_reason=final_go_not_requested_in_this_loop
 
 ## Safety
 
 - docs_only=true
-- operator_payload_recollection_executed=false
-- classifier_retry_executed=false
-- classifier_protocol_fix_added=false
-- classifier_readiness_gate_added=false
-- package_candidate_classified=false
-- package_candidate_confirmed=false
-- package_exploration_executed=false
-- apt_cache_executed=false
-- apt_update_executed=false
-- apt_upgrade_executed=false
-- apt_install_executed=false
-- package_install_executed=false
-- restore_executed=false
-- pg_restore_executed=false
-- psql_executed=false
-- extension_created=false
-- schema_modified=false
-- role_modified=false
-- cluster_modified=false
-- supabase_connection_executed=false
+- vps_operation_executed=false
+- nginx_operation_executed=false
+- dns_operation_executed=false
+- https_or_certbot_operation_executed=false
+- public_smoke_executed=false
 - line_real_send_executed=false
 - openai_api_executed=false
+- supabase_connection_executed=false
+- psql_executed=false
+- pg_restore_executed=false
+- restore_executed=false
+- target_db_created=false
+- target_db_modified=false
+- schema_modified=false
+- role_modified=false
+- extension_created=false
+- cluster_modified=false
+- package_operation_executed=false
 - production_runtime_changed=false
 - secrets_recorded=false
 - db_url_recorded=false
 - raw_log_recorded=false
-- command_output_body_recorded=false
+- dump_content_recorded=false
+- row_content_recorded=false
 - package_name_recorded=false
 - extension_name_recorded=false
 - production_readiness=production_no_go
 
 ## Next Loop Candidate
 
-- Loop 252: app production path review without DR blocker coupling
-- Secondary candidate: Loop 252 minimum DR fallback plan
+- Loop 253: local production start verification checklist execution
+- Reason: proves the app start path locally without external runtime or DR restore coupling.
 ---
+
+必ず以下の順で判定してください。
+
+1. このLoopは complete / blocked / failed のどれか
+2. blockedの場合、同じblockerが過去に何回出ているか
+3. Codexが提案した次Loop候補を採用するか、却下するか
+4. 却下する場合、理由は何か
+5. 次に取るべき方針は go / no-go / route freeze / alternative path / human input required のどれか
+6. 次LoopのCodex文章を作ってよいか
+
+同じblockerが2回以上出ている場合は、protocol追加・recollection・readiness gate追加を次Loop候補にしないでください。
 
 出力形式:
 
@@ -97,13 +111,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### classifier route freeze確認
 -
 
-### repeated blocker確認
--
-
 ### readiness split確認
 -
 
 ### production_no_go確認
+-
+
+### app production path確認
+-
+
+### cleanup batch確認
 -
 
 ### safety確認

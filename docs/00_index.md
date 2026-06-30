@@ -81,6 +81,7 @@
 - Loop 249 strict operator package classifier input collection: `11_codex_tasks/249_strict_operator_package_classifier_input_collection.md`
 - Loop 250 strict operator package classifier payload collection: `11_codex_tasks/250_strict_operator_package_classifier_payload_collection.md`
 - Loop 251 classifier route freeze and DR-production readiness split: `11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md`
+- Loop 252 app production path review and readiness cleanup: `11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md`
 
 ## Prompts and Templates
 

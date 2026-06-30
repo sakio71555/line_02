@@ -6,19 +6,43 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `separate_review_required` | app path not evaluated in Loop 251 | `docs/16_handoff/latest_codex_result.md` | Loop 252 app production path review without DR blocker coupling | Not decided |
-| Production readiness | `separate_review_required` | `production_no_go` reasons must be split before final decision | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | Loop 252 app production path review without DR blocker coupling | `production_no_go` maintained |
+| App readiness | `separate_review_completed` | Loop 252 reviewed app path separately from DR | `docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md` | Loop 253 local production start verification checklist execution | Not final Go |
+| Production readiness | `production_no_go_reason_split` | DR, classifier, external runtime, local verification, and operator decision reasons are split | `docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md` | Loop 253 local production start verification checklist execution | `production_no_go` maintained |
 
 ## Current State
 
 ```txt
 dr_readiness_status=not_ready_restore_failed
 classifier_route_status=frozen
-app_readiness_status=separate_review_required
-production_readiness_status=separate_review_required
+app_readiness_status=separate_review_completed
+app_production_path_review_completed=true
+production_readiness_status=production_no_go_reason_split
 production_no_go=true
-production_no_go_reason_scope=must_be_split
+production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 252 App Production Path Review
+
+| reason_bucket | status | current_reading | next_minimal_action |
+| --- | --- | --- | --- |
+| DR restore | `known_no_go_risk` | restore drill has not succeeded; keep `dr_readiness_status=not_ready_restore_failed` | Do not resume DR route without explicit review. |
+| Classifier / package route | `frozen` | repeated operator payload absence froze the route | Resume only with human-provided valid strict sanitized payload. |
+| App start path | `reviewed_docs_only` | API/Admin start scripts and local production boundary docs exist | Loop 253 local production start verification checklist execution. |
+| Runtime defaults | `reviewed_docs_only` | safe defaults remain in-memory repository, mock AI, LINE real push disabled | Verify locally before external runtime changes. |
+| External runtime / secrets | `separate_approval_required` | Supabase, LINE, OpenAI, and auth context need dedicated approved checks | Keep out of Loop 252 and Loop 253 unless explicitly approved later. |
+| Operator Go / No-Go | `not_requested` | final production Go was not requested in Loop 252 | Keep `production_no_go=true`. |
+
+```txt
+loop_252_status=complete
+classifier_route_status=frozen
+next_classifier_loop_allowed=false
+dr_readiness_status=not_ready_restore_failed
+app_production_path_review_completed=true
+selected_readiness_cleanup_count=3
+production_no_go=true
+production_no_go_reason_scope=split
+selected_next_minimal_action=local_production_start_verification_checklist_execution
 ```
 
 ## Safety

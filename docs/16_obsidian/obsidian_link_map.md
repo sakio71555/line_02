@@ -17,7 +17,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Latest Codex Result Template](../16_handoff/latest_codex_result.md)
 - [Latest GPT Review Prompt Template](../16_handoff/latest_gpt_review_prompt.md)
 - [Latest Dev Log: 2026-06-28](../14_dev_logs/2026-06-28.md)
-- [Current Dev Log: 2026-06-29](../14_dev_logs/2026-06-29.md)
+- [Current Dev Log: 2026-06-30](../14_dev_logs/2026-06-30.md)
 
 ## Current Production / Operations
 
@@ -135,6 +135,14 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 244 Obsidian Log](loop_244_operator_extension_identifier_retry_and_manual_sanitized_preflight.md)
 - [Loop 245 Supabase Extension Package Risk Gate](../11_codex_tasks/245_supabase_extension_package_risk_gate.md)
 - [Loop 245 Obsidian Log](loop_245_supabase_extension_package_risk_gate.md)
+- [Loop 246 Operator-Only Package Candidate Classifier](../11_codex_tasks/246_operator_only_package_candidate_classifier.md)
+- [Loop 247 Package Classifier Blocked Follow-Up](../11_codex_tasks/247_package_classifier_blocked_follow_up.md)
+- [Loop 248 Strict Operator-Only Package Candidate Classifier Retry](../11_codex_tasks/248_strict_operator_only_package_candidate_classifier_retry.md)
+- [Loop 249 Strict Operator Package Classifier Input Collection](../11_codex_tasks/249_strict_operator_package_classifier_input_collection.md)
+- [Loop 250 Strict Operator Package Classifier Payload Collection](../11_codex_tasks/250_strict_operator_package_classifier_payload_collection.md)
+- [Loop 251 Classifier Route Freeze And DR-Production Readiness Split](../11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md)
+- [Loop 252 App Production Path Review And Readiness Cleanup](../11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md)
+- [Loop 252 Obsidian Log](loop_252_app_production_path_review_and_readiness_cleanup.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -249,6 +257,8 @@ Loop 249 status: `docs_only=true`, `operator_input_collection_protocol_created=t
 Loop 250 status: `docs_only=true`, `operator_payload_collection_status=blocked`, `operator_payload_present=false`, `operator_payload_valid=false`, `ready_for_classifier_retry=false`, `blocked_reason=operator_payload_absent`, `codex_generated_payload=false`, `payload_inferred_by_codex=false`, `classifier_retry_executed=false`, `package_candidate_classified=false`, `apt_cache_executed=false`, `apt_update_executed=false`, `apt_upgrade_executed=false`, `apt_install_executed=false`, `package_install_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next_superseded_by=Loop 251 classifier route freeze and DR-production readiness split`.
 
 Loop 251 status: `docs_only=true`, `classifier_route_status=frozen`, `classifier_route_frozen_reason=repeated_operator_payload_absent`, `operator_payload_present=false`, `ready_for_classifier_retry=false`, `next_classifier_loop_allowed=false`, `classifier_route_resume_condition=human_provided_valid_strict_sanitized_payload`, `dr_readiness_status=not_ready_restore_failed`, `app_readiness_status=separate_review_required`, `production_readiness_status=separate_review_required`, `production_no_go=true`, `production_no_go_reason_scope=must_be_split`, `classifier_retry_executed=false`, `apt_cache_executed=false`, `apt_update_executed=false`, `apt_install_executed=false`, `package_install_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 252 app production path review without DR blocker coupling`.
+
+Loop 252 status: `docs_only=true`, `classifier_route_status=frozen`, `next_classifier_loop_allowed=false`, `dr_readiness_status=not_ready_restore_failed`, `app_production_path_review_completed=true`, `app_readiness_status=separate_review_completed`, `production_readiness_status=production_no_go_reason_split`, `production_no_go=true`, `production_no_go_reason_scope=split`, `selected_readiness_cleanup_count=3`, `local_code_or_test_cleanup_count=0`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `line_real_send_executed=false`, `openai_api_executed=false`, `production_runtime_changed=false`, `secrets_recorded=false`, `next=Loop 253 local production start verification checklist execution`.
 
 ## Obsidian Helpers
 

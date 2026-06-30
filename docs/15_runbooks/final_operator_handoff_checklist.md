@@ -6,6 +6,32 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 252 Current Status Override
+
+Older sections in this file preserve historical Loop snapshots, including past `production readiness: Go` text. The current active reading is the Loop 252 split status below.
+
+```txt
+loop_252_current_status_override=true
+classifier_route_status=frozen
+next_classifier_loop_allowed=false
+dr_readiness_status=not_ready_restore_failed
+app_production_path_review_completed=true
+app_readiness_status=separate_review_completed
+production_readiness_status=production_no_go_reason_split
+production_no_go=true
+production_no_go_reason_scope=split
+production_go_changed=false
+selected_next_minimal_action=local_production_start_verification_checklist_execution
+```
+
+Current No-Go reasons are split as follows:
+
+- DR: restore drill has not succeeded.
+- Classifier / package route: frozen because the same operator payload blocker repeated.
+- External runtime: Supabase, LINE, OpenAI, and production auth context need separate approved verification.
+- Local verification: local production start checklist has not yet been executed.
+- Operator decision: final production Go was not requested in Loop 252.
+
 ## Current Review State
 
 ```txt
