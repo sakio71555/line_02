@@ -1,96 +1,125 @@
 # Latest Codex Result
 
-This file summarizes Loop 235 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 236 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 235 restore cluster listen classifier refinement without changes
+- Loop: Loop 236 owner-aligned pre-data retry gate resume
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: read-only inspection plus docs update
+- Scope type: docs-only gate
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
-## Background
-
-Loop 229 recorded the restore drill cluster as loopback-only after remediation.
-
-Loop 233 later blocked owner-aligned pre-data retry before restore because a preflight classified the cluster as not loopback-only.
-
-Loop 234 selected this Loop as a read-only classifier refinement before any further remediation or restore retry.
-
-## Read-Only Inspection Result
+## Loop 235 Result
 
 ```txt
-pg_lsclusters_checked=true
-target_cluster_found=true
-cluster_online=true
-cluster_port=55432
-ss_checked=true
-netstat_checked=false
+loop235_listen_scope_confirmed=true
+local_cluster_loopback_only=true
+external_interface_listen_detected=false
 listen_entry_count=2
 loopback_ipv4_count=2
-loopback_ipv6_count=0
 wildcard_ipv4_count=0
 wildcard_ipv6_count=0
 non_loopback_count=0
-unknown_listen_count=0
-external_interface_listen_detected=false
-local_cluster_loopback_only=true
-```
-
-Config key classification:
-
-```txt
-config_key_check_rerun=true
-listen_addresses_configured=true
 listen_addresses_category=localhost_or_loopback
-port_key_present=true
-port_configured=55432
-unix_socket_directories_configured=true
+classifier_false_positive_likely=true
 ```
 
-## Refined Classifier Result
+## Loop 233 Blocker Re-Evaluation
 
 ```txt
-listen_classifier_refined=true
-classifier_false_positive_likely=true
+loop233_restore_attempt_count=0
+loop233_pg_restore_exit_code=not_executed
+loop233_blocker_false_positive_likely=true
 confirmed_external_listen=false
-loop_233_external_listen_result_reclassified=true
+retry_gate_can_resume=true
+immediate_restore_allowed=false
 ```
 
-Loop 233 likely used a simpler or different classifier and treated one entry as non-loopback. The refined category/count check found no wildcard or non-loopback entries.
+## Target DB Current State
+
+```txt
+target_db_currently_absent=true
+target_db_exists_after_drop=false
+cleanup_required=false
+prior_target_db_name=amami_line_crm_restore_drill_loop231_20260630
+next_target_db_candidate=amami_line_crm_restore_drill_loop237_20260630
+```
 
 ## Selected Next Loop
 
 ```txt
-selected_next_loop=Loop 236: owner-aligned pre-data retry gate resume
-selected_next_loop_reason=restore_cluster_listen_scope_reclassified_loopback_only
+selected_next_loop=Loop 237: owner-aligned target DB reprovision and pre-data retry execution
+selected_next_loop_reason=loop235_loopback_confirmed_and_loop233_target_db_dropped
+loop237_restore_attempt_limit=1
+loop237_push_split_required=true
+loop237_pre_data_retry_options=--section=pre-data --no-owner --no-privileges
 ```
 
-Loop 236 should remain a gate/resume Loop, not an execution Loop. The owner-aligned target DB from Loop 231 was dropped in Loop 233.
+## Loop 237 Boundary
+
+Allowed:
+
+- Reconfirm local cluster listen safety.
+- Confirm backup artifact metadata/checksum.
+- Create one fresh local-only disposable owner-aligned target DB.
+- Verify target DB identity and owner alignment.
+- Confirm explicit `pg_restore` path/version.
+- Run exactly one pre-data restore retry.
+- Save raw stdout/stderr repo-external root-only.
+- Record sanitized metadata only.
+- Drop target DB after retry by default.
+- Commit locally.
+
+Forbidden:
+
+- Supabase/production DB connection.
+- Production restore.
+- `SUPABASE_DB_URL` use.
+- Role creation/change.
+- Cluster config change.
+- Restart/reload.
+- Package/firewall change.
+- Backup artifact copy into repo.
+- Raw log, dump content, row content, object name, SQL statement, or role name display.
+- Multiple restore retries.
+- Push.
 
 ## Go / No-Go
 
-Go for Loop 236 gate resume:
+Go requires:
 
-- Target cluster is found and online.
-- Target cluster port is `55432`.
-- Refined classifier shows only loopback entries.
-- No wildcard or non-loopback entries are detected.
-- Config category is `localhost_or_loopback`.
+- git clean.
+- local cluster online.
+- `local_cluster_loopback_only=true`.
+- `external_interface_listen_detected=false`.
+- artifact exists.
+- artifact permission `600`.
+- artifact parent dir permission `700`.
+- artifact checksum match.
+- target DB candidate absent.
+- owner alignment possible.
+- repo-external root-only raw log directory creation possible.
 
-No-Go for immediate restore:
+No-Go if any of those fail or if secret/raw log/DB URL/Supabase/production exposure risk appears.
 
-- Owner-aligned target DB was dropped in Loop 233.
-- Restore drill has not succeeded.
-- DR readiness remains `not_ready_restore_failed`.
+## Cleanup Policy
+
+```txt
+loop237_drop_target_db_by_default=true
+restore_target_dropped_required=true
+target_db_exists_after_drop_required=true
+cleanup_required_required=true
+cleanup_failure_next_loop=Loop 238: restore target cleanup-only
+```
 
 ## Safety Boundary
 
+- docs_only=true
 - restore_executed=false
 - pg_restore_executed=false
 - psql_executed=false
@@ -99,22 +128,19 @@ No-Go for immediate restore:
 - role_created=false
 - role_modified=false
 - cluster_modified=false
-- cluster_reloaded=false
 - cluster_restarted=false
-- firewall_modified=false
-- package_modified=false
+- cluster_reloaded=false
 - backup_artifact_used=false
 - backup_artifact_copied_into_repo=false
-- supabase_connection_executed=false
-- production_db_connection_executed=false
-- production_restore_executed=false
 - diagnostic_log_displayed=false
 - raw_log_displayed=false
-- raw_listen_output_recorded=false
 - db_url_displayed=false
 - secrets_recorded=false
 - dump_content_displayed=false
 - row_content_displayed=false
+- supabase_connection_executed=false
+- production_db_connection_executed=false
+- production_restore_executed=false
 
 ## Verification
 
@@ -129,12 +155,11 @@ No-Go for immediate restore:
 ## DR Readiness
 
 - backup_export_status=success
-- restore_drill_status=blocked_until_retry_gate_resume
-- local_cluster_loopback_only=true
-- external_interface_listen_detected=false
+- restore_drill_status=gate_resumed_pending_loop237
+- target_db_currently_absent=true
 - cleanup_required=false
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 236: owner-aligned pre-data retry gate resume
+- Loop 237: owner-aligned target DB reprovision and pre-data retry execution

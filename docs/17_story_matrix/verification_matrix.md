@@ -642,6 +642,36 @@ loop_235_selected_next_loop=Loop 236 owner-aligned pre-data retry gate resume
 loop_235_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 236 Verification Note
+
+```txt
+loop_236_loop235_listen_scope_confirmed=true
+loop_236_loop235_local_cluster_loopback_only=true
+loop_236_loop235_external_interface_listen_detected=false
+loop_236_loop233_blocker_false_positive_likely=true
+loop_236_target_db_currently_absent=true
+loop_236_target_db_exists_after_drop=false
+loop_236_cleanup_required=false
+loop_236_next_target_db_candidate=amami_line_crm_restore_drill_loop237_20260630
+loop_236_selected_next_loop=Loop 237 owner-aligned target DB reprovision and pre-data retry execution
+loop_236_loop237_pre_data_retry_options=section_pre_data_no_owner_no_privileges
+loop_236_loop237_restore_attempt_limit=1
+loop_236_loop237_push_split_required=true
+loop_236_restore_executed=false
+loop_236_pg_restore_executed=false
+loop_236_psql_executed=false
+loop_236_target_db_created=false
+loop_236_target_db_modified=false
+loop_236_cluster_modified=false
+loop_236_cluster_restarted=false
+loop_236_cluster_reloaded=false
+loop_236_backup_artifact_used=false
+loop_236_supabase_connection_executed=false
+loop_236_production_restore_executed=false
+loop_236_secrets_recorded=false
+loop_236_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.
