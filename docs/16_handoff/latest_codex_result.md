@@ -1,82 +1,96 @@
 # Latest Codex Result
 
-This file summarizes Loop 234 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 235 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 234 owner-aligned pre-data retry blocked follow-up
+- Loop: Loop 235 restore cluster listen classifier refinement without changes
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only blocked follow-up
+- Scope type: read-only inspection plus docs update
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
-## Loop 229 / Loop 233 Difference
+## Background
 
-| Item | Loop 229 | Loop 233 |
-| --- | --- | --- |
-| target cluster | `17/restore_drill_loop2091` | `17/restore_drill_loop2091` |
-| port | `55432` | `55432` |
-| listen entry count | `2` | `2` |
-| loopback listen count | `2` | `1` |
-| wildcard listen count | `0` | `0` |
-| non-loopback listen count | `0` | `1` |
-| local cluster loopback only | `true` | `false` |
-| external interface listen detected | `false` | `true` |
-| restore attempted | `false` | `false` |
+Loop 229 recorded the restore drill cluster as loopback-only after remediation.
 
-## Candidate Comparison
+Loop 233 later blocked owner-aligned pre-data retry before restore because a preflight classified the cluster as not loopback-only.
+
+Loop 234 selected this Loop as a read-only classifier refinement before any further remediation or restore retry.
+
+## Read-Only Inspection Result
 
 ```txt
-candidate_a=listen_classifier_refinement_without_changes
-candidate_a_recommended=true
-candidate_b=force_listen_addresses_127_0_0_1_only_plan
-candidate_b_deferred=true_requires_cluster_change
-candidate_c=unix_socket_only_restore_plan
-candidate_c_deferred=true_changes_connection_method
-candidate_d=firewall_block_supplemental_plan
-candidate_d_deferred=true_not_primary_fix
-candidate_e=owner_aligned_pre_data_retry_despite_blocker
-candidate_e_no_go=true
+pg_lsclusters_checked=true
+target_cluster_found=true
+cluster_online=true
+cluster_port=55432
+ss_checked=true
+netstat_checked=false
+listen_entry_count=2
+loopback_ipv4_count=2
+loopback_ipv6_count=0
+wildcard_ipv4_count=0
+wildcard_ipv6_count=0
+non_loopback_count=0
+unknown_listen_count=0
+external_interface_listen_detected=false
+local_cluster_loopback_only=true
 ```
+
+Config key classification:
+
+```txt
+config_key_check_rerun=true
+listen_addresses_configured=true
+listen_addresses_category=localhost_or_loopback
+port_key_present=true
+port_configured=55432
+unix_socket_directories_configured=true
+```
+
+## Refined Classifier Result
+
+```txt
+listen_classifier_refined=true
+classifier_false_positive_likely=true
+confirmed_external_listen=false
+loop_233_external_listen_result_reclassified=true
+```
+
+Loop 233 likely used a simpler or different classifier and treated one entry as non-loopback. The refined category/count check found no wildcard or non-loopback entries.
 
 ## Selected Next Loop
 
 ```txt
-selected_next_loop=Loop 235: restore cluster listen classifier refinement without changes
-selected_next_loop_reason=compare_loop229_and_loop233_classifier_before_remediation
+selected_next_loop=Loop 236: owner-aligned pre-data retry gate resume
+selected_next_loop_reason=restore_cluster_listen_scope_reclassified_loopback_only
 ```
 
-## Loop 235 Boundary
+Loop 236 should remain a gate/resume Loop, not an execution Loop. The owner-aligned target DB from Loop 231 was dropped in Loop 233.
 
-Allowed:
+## Go / No-Go
 
-- Read-only `pg_lsclusters`.
-- Read-only `ss` listen check.
-- Read-only config key/category check.
-- Sanitized loopback/non-loopback/wildcard counts.
-- IPv4/IPv6 loopback category handling.
-- Docs/runbook/dev log/Obsidian/handoff/matrix updates.
+Go for Loop 236 gate resume:
 
-Forbidden:
+- Target cluster is found and online.
+- Target cluster port is `55432`.
+- Refined classifier shows only loopback entries.
+- No wildcard or non-loopback entries are detected.
+- Config category is `localhost_or_loopback`.
 
-- `psql`.
-- Restore or `pg_restore`.
-- Target DB creation/change.
-- Role creation/change.
-- Cluster config changes.
-- Restart/reload.
-- Firewall/package changes.
-- Backup artifact operations.
-- Supabase/production DB connection.
-- Raw listen output, IP details, config full content, `pg_hba` content, DB URL, secrets, raw logs, dump content, or row content display.
+No-Go for immediate restore:
+
+- Owner-aligned target DB was dropped in Loop 233.
+- Restore drill has not succeeded.
+- DR readiness remains `not_ready_restore_failed`.
 
 ## Safety Boundary
 
-- docs_only=true
 - restore_executed=false
 - pg_restore_executed=false
 - psql_executed=false
@@ -85,6 +99,7 @@ Forbidden:
 - role_created=false
 - role_modified=false
 - cluster_modified=false
+- cluster_reloaded=false
 - cluster_restarted=false
 - firewall_modified=false
 - package_modified=false
@@ -95,12 +110,11 @@ Forbidden:
 - production_restore_executed=false
 - diagnostic_log_displayed=false
 - raw_log_displayed=false
+- raw_listen_output_recorded=false
 - db_url_displayed=false
 - secrets_recorded=false
 - dump_content_displayed=false
 - row_content_displayed=false
-- listen_regression_reviewed=true
-- next_loop_selected=true
 
 ## Verification
 
@@ -115,11 +129,12 @@ Forbidden:
 ## DR Readiness
 
 - backup_export_status=success
-- restore_drill_status=blocked_preflight
-- pre_data_retry_status=blocked
+- restore_drill_status=blocked_until_retry_gate_resume
+- local_cluster_loopback_only=true
+- external_interface_listen_detected=false
 - cleanup_required=false
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 235: restore cluster listen classifier refinement without changes
+- Loop 236: owner-aligned pre-data retry gate resume

@@ -603,6 +603,45 @@ loop_234_secrets_recorded=false
 loop_234_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 235 Verification Note
+
+```txt
+loop_235_pg_lsclusters_checked=true
+loop_235_target_cluster_found=true
+loop_235_cluster_online=true
+loop_235_cluster_port=55432
+loop_235_ss_checked=true
+loop_235_netstat_checked=false
+loop_235_listen_entry_count=2
+loop_235_loopback_ipv4_count=2
+loop_235_loopback_ipv6_count=0
+loop_235_wildcard_ipv4_count=0
+loop_235_wildcard_ipv6_count=0
+loop_235_non_loopback_count=0
+loop_235_unknown_listen_count=0
+loop_235_external_interface_listen_detected=false
+loop_235_local_cluster_loopback_only=true
+loop_235_listen_addresses_configured=true
+loop_235_listen_addresses_category=localhost_or_loopback
+loop_235_port_configured=55432
+loop_235_unix_socket_directories_configured=true
+loop_235_restore_executed=false
+loop_235_pg_restore_executed=false
+loop_235_psql_executed=false
+loop_235_target_db_created=false
+loop_235_target_db_modified=false
+loop_235_cluster_modified=false
+loop_235_cluster_restarted=false
+loop_235_firewall_modified=false
+loop_235_backup_artifact_used=false
+loop_235_supabase_connection_executed=false
+loop_235_production_restore_executed=false
+loop_235_raw_listen_output_recorded=false
+loop_235_secrets_recorded=false
+loop_235_selected_next_loop=Loop 236 owner-aligned pre-data retry gate resume
+loop_235_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

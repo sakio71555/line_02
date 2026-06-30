@@ -2957,3 +2957,135 @@ owner_aligned_target_db_gate_created=true
 next_loop_selected=true
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 39. Loop 235 Restore Cluster Listen Classifier Refinement Without Changes
+
+Loop 235 is a read-only inspection after Loop 234 selected classifier refinement as the safest next step. It does not change cluster configuration, reload/restart PostgreSQL, modify firewall rules, run `psql`, run restore, run `pg_restore`, create or modify a target DB, change roles, touch backup artifacts, connect to Supabase/production DB, or display secrets/raw logs/dump contents/row contents.
+
+### 39.1 Inputs
+
+```txt
+loop_229_local_cluster_loopback_only=true
+loop_229_external_interface_listen_detected=false
+loop_233_local_cluster_loopback_only=false
+loop_233_external_interface_listen_detected=true
+loop_234_selected_next_loop=Loop 235: restore cluster listen classifier refinement without changes
+target_cluster_version=17
+target_cluster_name=restore_drill_loop2091
+target_cluster_port=55432
+expected_listen_addresses=localhost
+dr_readiness_status=not_ready_restore_failed
+```
+
+### 39.2 Refined Listen Classifier Rule
+
+Treat as loopback:
+
+- IPv4 loopback on the target port.
+- IPv6 loopback on the target port.
+- `localhost` when categorized as loopback only.
+- Unix socket only mode.
+
+Treat as external or non-loopback:
+
+- IPv4 wildcard on the target port.
+- IPv6 wildcard on the target port.
+- Any public or private non-loopback address on the target port.
+- Any unknown listen address that cannot be safely categorized.
+
+Record only booleans, counts, and categories. Do not record raw listen output, IP details, full config content, or `pg_hba` content.
+
+### 39.3 Read-Only Result
+
+```txt
+pg_lsclusters_checked=true
+target_cluster_found=true
+cluster_online=true
+cluster_port=55432
+ss_checked=true
+netstat_checked=false
+listen_entry_count=2
+loopback_ipv4_count=2
+loopback_ipv6_count=0
+wildcard_ipv4_count=0
+wildcard_ipv6_count=0
+non_loopback_count=0
+unknown_listen_count=0
+external_interface_listen_detected=false
+local_cluster_loopback_only=true
+listen_addresses_configured=true
+listen_addresses_category=localhost_or_loopback
+port_key_present=true
+port_configured=55432
+unix_socket_directories_configured=true
+```
+
+### 39.4 Interpretation
+
+```txt
+listen_classifier_refined=true
+classifier_false_positive_likely=true
+confirmed_external_listen=false
+loop_233_external_listen_result_reclassified=true
+```
+
+Loop 233 likely used a simpler or different classifier and treated one entry as non-loopback. The refined category/count check found no wildcard or non-loopback entries.
+
+### 39.5 Selected Next Loop
+
+```txt
+selected_next_loop=Loop 236: owner-aligned pre-data retry gate resume
+selected_next_loop_reason=restore_cluster_listen_scope_reclassified_loopback_only
+```
+
+Loop 236 should remain a gate/resume Loop, not an execution Loop. The owner-aligned target DB from Loop 231 was dropped in Loop 233, so the flow must re-gate target DB provisioning or retry readiness before any restore attempt.
+
+### 39.6 Go / No-Go
+
+Go for Loop 236 gate resume:
+
+- Target cluster is found and online.
+- Target cluster port is `55432`.
+- Refined classifier shows only loopback entries.
+- No wildcard or non-loopback entries are detected.
+- Config category is `localhost_or_loopback`.
+
+No-Go for immediate restore:
+
+- Loop 235 did not re-create the owner-aligned target DB.
+- Loop 235 did not run restore or `pg_restore`.
+- DR readiness is still `not_ready_restore_failed`.
+
+### 39.7 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+role_created=false
+role_modified=false
+cluster_modified=false
+cluster_reloaded=false
+cluster_restarted=false
+firewall_modified=false
+package_modified=false
+backup_artifact_used=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+raw_listen_output_recorded=false
+db_url_displayed=false
+secrets_recorded=false
+dump_content_displayed=false
+row_content_displayed=false
+listen_classifier_refined=true
+local_cluster_loopback_only=true
+external_interface_listen_detected=false
+next_loop_selected=true
+dr_readiness_status=not_ready_restore_failed
+```

@@ -8,17 +8,17 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 234 の owner-aligned pre-data retry blocked follow-up をレビューしてください。
+- Loop 235 の restore cluster listen classifier refinement without changes をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- Loop 229 / Loop 233 のlisten判定差分整理が妥当か確認してください。
-- next Loopを read-only classifier refinement に絞った判断が妥当か確認してください。
-- retry despite blocker をNo-Goにしているか確認してください。
-- raw listen output / IP詳細 / config全文 / secret / DB URL / raw logが記録されていないか確認してください。
+- raw listen output / IP詳細 / config全文 / pg_hba / secret / DB URL / raw logが記録されていないか確認してください。
+- category/countだけで `local_cluster_loopback_only=true` とした判断が妥当か確認してください。
+- 次Loopを owner-aligned pre-data retry gate resume に戻す判断が妥当か確認してください。
+- immediate restoreをNo-Goにしているか確認してください。
 - 次Loopも小さく分ける方針でレビューしてください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
-- Loop 234はdocs-onlyです。
+- Loop 235はread-only inspection plus docs updateです。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -28,47 +28,58 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 234 owner-aligned pre-data retry blocked follow-up
+- Loop: Loop 235 restore cluster listen classifier refinement without changes
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
 - Start git status: main...origin/main
-- Scope type: docs-only blocked follow-up
+- Scope type: read-only inspection plus docs update
 
-## Loop 229 / Loop 233 Difference
+## Read-Only Inspection Result
 
-| Item | Loop 229 | Loop 233 |
-| --- | --- | --- |
-| target cluster | 17/restore_drill_loop2091 | 17/restore_drill_loop2091 |
-| port | 55432 | 55432 |
-| listen entry count | 2 | 2 |
-| loopback listen count | 2 | 1 |
-| wildcard listen count | 0 | 0 |
-| non-loopback listen count | 0 | 1 |
-| local cluster loopback only | true | false |
-| external interface listen detected | false | true |
-| restore attempted | false | false |
+- pg_lsclusters_checked=true
+- target_cluster_found=true
+- cluster_online=true
+- cluster_port=55432
+- ss_checked=true
+- netstat_checked=false
+- listen_entry_count=2
+- loopback_ipv4_count=2
+- loopback_ipv6_count=0
+- wildcard_ipv4_count=0
+- wildcard_ipv6_count=0
+- non_loopback_count=0
+- unknown_listen_count=0
+- external_interface_listen_detected=false
+- local_cluster_loopback_only=true
 
-## Candidate Comparison
+## Config Key Classification
 
-- candidate_a=listen_classifier_refinement_without_changes
-- candidate_a_recommended=true
-- candidate_b=force_listen_addresses_127_0_0_1_only_plan
-- candidate_b_deferred=true_requires_cluster_change
-- candidate_c=unix_socket_only_restore_plan
-- candidate_c_deferred=true_changes_connection_method
-- candidate_d=firewall_block_supplemental_plan
-- candidate_d_deferred=true_not_primary_fix
-- candidate_e=owner_aligned_pre_data_retry_despite_blocker
-- candidate_e_no_go=true
+- listen_addresses_configured=true
+- listen_addresses_category=localhost_or_loopback
+- port_key_present=true
+- port_configured=55432
+- unix_socket_directories_configured=true
+
+## Refined Classifier Result
+
+- listen_classifier_refined=true
+- classifier_false_positive_likely=true
+- confirmed_external_listen=false
+- loop_233_external_listen_result_reclassified=true
 
 ## Selected Next Loop
 
-- selected_next_loop=Loop 235: restore cluster listen classifier refinement without changes
-- selected_next_loop_reason=compare_loop229_and_loop233_classifier_before_remediation
+- selected_next_loop=Loop 236: owner-aligned pre-data retry gate resume
+- selected_next_loop_reason=restore_cluster_listen_scope_reclassified_loopback_only
+
+## Go / No-Go
+
+- go_for_loop_236_gate_resume=true
+- immediate_restore_no_go=true
+- immediate_restore_no_go_reason=owner_aligned_target_db_was_dropped_and_restore_drill_not_ready
 
 ## Safety Boundary
 
-- docs_only=true
 - restore_executed=false
 - pg_restore_executed=false
 - psql_executed=false
@@ -77,6 +88,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - role_created=false
 - role_modified=false
 - cluster_modified=false
+- cluster_reloaded=false
 - cluster_restarted=false
 - firewall_modified=false
 - package_modified=false
@@ -87,24 +99,24 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - production_restore_executed=false
 - diagnostic_log_displayed=false
 - raw_log_displayed=false
+- raw_listen_output_recorded=false
 - db_url_displayed=false
 - secrets_recorded=false
 - dump_content_displayed=false
 - row_content_displayed=false
-- listen_regression_reviewed=true
-- next_loop_selected=true
 
 ## DR Readiness
 
 - backup_export_status=success
-- restore_drill_status=blocked_preflight
-- pre_data_retry_status=blocked
+- restore_drill_status=blocked_until_retry_gate_resume
+- local_cluster_loopback_only=true
+- external_interface_listen_detected=false
 - cleanup_required=false
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 235: restore cluster listen classifier refinement without changes
+- Loop 236: owner-aligned pre-data retry gate resume
 ---
 
 出力形式:
@@ -115,16 +127,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### Loop 229 / 233差分確認
+### listen classifier確認
 -
 
-### blocker再発候補確認
+### config key確認
 -
 
-### 推奨方針確認
+### refined classifier判断確認
 -
 
-### Loop 235境界確認
+### Go / No-Go確認
 -
 
 ### safety確認

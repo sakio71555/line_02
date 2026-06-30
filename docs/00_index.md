@@ -64,6 +64,7 @@
 - Loop 232 owner-aligned pre-data restore retry gate: `11_codex_tasks/232_owner_aligned_pre_data_restore_retry_gate.md`
 - Loop 233 owner-aligned pre-data restore retry execution: `11_codex_tasks/233_owner_aligned_pre_data_restore_retry_execution.md`
 - Loop 234 owner-aligned pre-data retry blocked follow-up: `11_codex_tasks/234_owner_aligned_pre_data_retry_blocked_follow_up.md`
+- Loop 235 restore cluster listen classifier refinement without changes: `11_codex_tasks/235_restore_cluster_listen_classifier_refinement_without_changes.md`
 
 ## Prompts and Templates
 

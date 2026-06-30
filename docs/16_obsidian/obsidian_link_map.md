@@ -113,6 +113,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 233 Obsidian Log](loop_233_owner_aligned_pre_data_restore_retry_execution.md)
 - [Loop 234 Owner-Aligned Pre-Data Retry Blocked Follow-Up](../11_codex_tasks/234_owner_aligned_pre_data_retry_blocked_follow_up.md)
 - [Loop 234 Obsidian Log](loop_234_owner_aligned_pre_data_retry_blocked_follow_up.md)
+- [Loop 235 Restore Cluster Listen Classifier Refinement Without Changes](../11_codex_tasks/235_restore_cluster_listen_classifier_refinement_without_changes.md)
+- [Loop 235 Obsidian Log](loop_235_restore_cluster_listen_classifier_refinement_without_changes.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -195,6 +197,8 @@ Loop 232 status: `owner_aligned_pre_data_retry_gate_created=true`, `target_db=am
 Loop 233 status: `artifact_checksum_match=true`, `target_db_exists=true`, `target_db_owner_aligned=true`, `local_cluster_loopback_only=false`, `external_interface_listen_detected=true`, `precheck_ok=false`, `restore_attempt_count=0`, `pg_restore_exit_code=not_executed`, `pre_data_retry_status=blocked`, `restore_target_dropped=true`, `cleanup_required=false`, `restore_executed=false`, `pg_restore_restore_executed=false`, `raw_log_displayed=false`, `secrets_recorded=false`, `next=Loop 234 owner-aligned pre-data retry blocked follow-up`.
 
 Loop 234 status: `listen_regression_reviewed=true`, `loop_229_local_cluster_loopback_only=true`, `loop_233_local_cluster_loopback_only=false`, `recommended_next=Loop 235 restore cluster listen classifier refinement without changes`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `target_db_created=false`, `target_db_modified=false`, `cluster_modified=false`, `cluster_restarted=false`, `firewall_modified=false`, `secrets_recorded=false`.
+
+Loop 235 status: `listen_classifier_refined=true`, `pg_lsclusters_checked=true`, `ss_checked=true`, `listen_entry_count=2`, `loopback_ipv4_count=2`, `loopback_ipv6_count=0`, `wildcard_ipv4_count=0`, `wildcard_ipv6_count=0`, `non_loopback_count=0`, `local_cluster_loopback_only=true`, `external_interface_listen_detected=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `target_db_created=false`, `target_db_modified=false`, `cluster_modified=false`, `cluster_restarted=false`, `firewall_modified=false`, `secrets_recorded=false`, `next=Loop 236 owner-aligned pre-data retry gate resume`.
 
 ## Obsidian Helpers
 
