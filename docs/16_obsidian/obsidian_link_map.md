@@ -238,6 +238,8 @@ Loop 244 status: `read_only_inspection=true`, `operator_extension_identifier_ava
 
 Loop 245 status: `docs_only=true`, `extension_control_available=false`, `package_search_count=106`, `package_candidate_maybe_available=true`, `package_candidate_confirmed=false`, `package_install_no_go=true`, `apt_update_no_go=true`, `apt_upgrade_no_go=true`, `apt_install_no_go=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `package_installed=false`, `secrets_recorded=false`, `next=Loop 246 operator-only package candidate classifier`.
 
+Loop 246 status: `operator_package_classifier_executed=true`, `operator_package_classifier_result_valid=false`, `package_classifier_input_malformed=true`, `package_candidate_count=106`, `package_candidate_confidence=unknown`, `package_candidate_dependency_risk=unknown`, `package_candidate_names_disclosed=false`, `extension_name_disclosed=false`, `package_install_executed=false`, `apt_update_executed=false`, `apt_upgrade_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `compatibility_path=package_classifier_blocked`, `next=Loop 247 package classifier blocked follow-up`.
+
 ## Obsidian Helpers
 
 - [Obsidian README](README.md)

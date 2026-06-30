@@ -8,11 +8,11 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 245 の Supabase extension package risk gate をレビューしてください。
+- Loop 246 の operator-only package candidate classifier 結果をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- extension名 / package名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
-- package_search_count=106 を導入候補確定ではなく broad count として扱い、package installをNo-Goにした判断が妥当か確認してください。
-- 次Loopを operator-only package candidate classifier にする判断が妥当か確認してください。
+- package名 / extension名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
+- operator結果が malformed だったため、candidate confidence を unknown とし package_classifier_blocked にした判断が妥当か確認してください。
+- 次Loopを package classifier blocked follow-up にする判断が妥当か確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -25,47 +25,65 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 245 Supabase extension package risk gate
+- Loop: Loop 246 operator-only package candidate classifier
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only package risk gate
+- Scope type: docs-only operator classifier result record
 
-## Baseline
+## Loop 245 Baseline
 
-- operator_extension_identifier_available=true
-- operator_extension_identifier_shell_safe=true
 - extension_control_available=false
 - package_search_count=106
 - package_candidate_maybe_available=true
-- compatibility_preflight_status=completed
-- compatibility_path=package_preflight_required
-- dr_readiness_status=not_ready_restore_failed
-
-## Risk Gate Result
-
-- package_candidate_misidentification_risk=true
 - package_search_count_broad=true
 - package_candidate_confirmed=false
-- package_install_risk=true
-- package_dependency_risk=true
-- extension_creation_success_unproven=true
-- supabase_extension_full_local_reproduction_unproven=true
 - package_install_no_go=true
 - apt_update_no_go=true
 - apt_upgrade_no_go=true
 - apt_install_no_go=true
+- dr_readiness_status=not_ready_restore_failed
 
-## Remediation Candidate Comparison
+## Sanitized Operator Result
 
-- candidate_a_operator_only_package_candidate_classifier=recommended
-- candidate_b_package_install_risk_plan=later
-- candidate_c_local_extension_unavailable_decision_gate=conditional
-- candidate_d_immediate_apt_install=no_go
-- candidate_e_immediate_restore_retry=no_go
+- operator_package_classifier_executed=true
+- operator_package_classifier_result_valid=false
+- package_classifier_input_malformed=true
+- operator_extension_identifier_available=true
+- operator_extension_identifier_shell_safe=true
+- apt_cache_available=true
+- package_candidate_count=106
+- package_candidate_exact_match_found=unknown
+- package_candidate_confidence=unknown
+- package_candidate_source_category=unknown
+- package_candidate_requires_install=unknown
+- package_candidate_requires_apt_update=unknown
+- package_candidate_show_reviewed=unknown
+- package_candidate_dependency_risk=unknown
+- package_candidate_names_disclosed=false
+- extension_name_disclosed=false
+- package_install_executed=false
+- apt_update_executed=false
+- apt_upgrade_executed=false
 
-## Recommended Next Loop
+## Compatibility Decision
 
-- selected_next_loop=Loop 246: operator-only package candidate classifier
+- compatibility_path=package_classifier_blocked
+- selected_next_loop=Loop 247: package classifier blocked follow-up
+
+## Go / No-Go
+
+- read_only_classifier_attempted=true
+- operator_result_accepted=false
+- package_install_go=false
+- apt_update_go=false
+- apt_upgrade_go=false
+- apt_install_go=false
+- restore_retry_go=false
+- extension_creation_go=false
+- schema_change_go=false
+- cluster_change_go=false
+- supabase_connection_go=false
+- production_db_connection_go=false
 
 ## Safety
 
@@ -76,6 +94,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - target_db_modified=false
 - extension_created=false
 - package_installed=false
+- package_removed=false
 - apt_update_executed=false
 - apt_upgrade_executed=false
 - apt_install_executed=false
@@ -106,7 +125,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 246: operator-only package candidate classifier
+- Loop 247: package classifier blocked follow-up
 ---
 
 出力形式:
@@ -117,16 +136,13 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### package risk確認
+### operator result確認
 -
 
-### remediation候補確認
+### package classifier確認
 -
 
 ### selected next Loop確認
--
-
-### Loop 246境界確認
 -
 
 ### Go / No-Go確認

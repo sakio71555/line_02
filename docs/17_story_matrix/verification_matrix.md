@@ -36,6 +36,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-026 | Operator extension identifier collection | read-only review of Loop 243 identifier availability and metadata checks | identifier remains unavailable, extension name hidden, compatibility remains blocked safely | true | false | false | false | false | false | false | false | pending_loop_243_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-027 | Operator extension compatibility preflight | read-only review of Loop 244 identifier, control, and package availability metadata | identifier shell-safe, control unavailable, package candidate count recorded, names hidden, package risk gate selected | true | false | false | false | false | false | false | false | pending_loop_244_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-028 | Supabase extension package risk gate | docs-only review of Loop 245 package risk, remediation comparison, and Loop 246 boundary | broad package count treated as unconfirmed, install remains No-Go, operator-only classifier selected | true | false | false | false | false | false | false | false | pending_loop_245_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
+| V-029 | Operator-only package candidate classifier | docs-only review of Loop 246 sanitized classifier result and blocked follow-up decision | malformed classifier result recorded safely, exact names hidden, package classifier blocked | true | false | false | false | false | false | false | false | pending_loop_246_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1078,6 +1079,62 @@ loop_245_secrets_recorded=false
 loop_245_supabase_connection_executed=false
 loop_245_production_restore_executed=false
 loop_245_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 246 Verification Note
+
+```txt
+loop_246_operator_package_classifier_executed=true
+loop_246_operator_package_classifier_result_valid=false
+loop_246_package_classifier_input_malformed=true
+loop_246_operator_extension_identifier_available=true
+loop_246_operator_extension_identifier_shell_safe=true
+loop_246_apt_cache_available=true
+loop_246_package_candidate_count=106
+loop_246_package_candidate_exact_match_found=unknown
+loop_246_package_candidate_confidence=unknown
+loop_246_package_candidate_source_category=unknown
+loop_246_package_candidate_requires_install=unknown
+loop_246_package_candidate_requires_apt_update=unknown
+loop_246_package_candidate_show_reviewed=unknown
+loop_246_package_candidate_dependency_risk=unknown
+loop_246_package_candidate_names_disclosed=false
+loop_246_extension_name_disclosed=false
+loop_246_package_install_executed=false
+loop_246_apt_update_executed=false
+loop_246_apt_upgrade_executed=false
+loop_246_compatibility_path=package_classifier_blocked
+loop_246_selected_next_loop=Loop 247 package classifier blocked follow-up
+loop_246_target_db_currently_absent=true
+loop_246_cleanup_required=false
+loop_246_restore_executed=false
+loop_246_pg_restore_executed=false
+loop_246_psql_executed=false
+loop_246_target_db_created=false
+loop_246_target_db_modified=false
+loop_246_extension_created=false
+loop_246_package_installed=false
+loop_246_package_removed=false
+loop_246_apt_update_executed=false
+loop_246_apt_upgrade_executed=false
+loop_246_apt_install_executed=false
+loop_246_schema_modified=false
+loop_246_role_modified=false
+loop_246_cluster_modified=false
+loop_246_cluster_restarted=false
+loop_246_cluster_reloaded=false
+loop_246_diagnostic_log_displayed=false
+loop_246_raw_log_displayed=false
+loop_246_sql_displayed=false
+loop_246_extension_name_displayed=false
+loop_246_package_name_displayed=false
+loop_246_object_name_displayed=false
+loop_246_role_name_displayed=false
+loop_246_backup_artifact_touched=false
+loop_246_secrets_recorded=false
+loop_246_supabase_connection_executed=false
+loop_246_production_restore_executed=false
+loop_246_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

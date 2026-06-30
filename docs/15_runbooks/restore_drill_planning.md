@@ -3938,6 +3938,93 @@ compatibility_path=blocked_missing_operator_extension_identifier
 dr_readiness_status=not_ready_restore_failed
 ```
 
+### 48.2 Read-Only Metadata Result
+
+```txt
+operator_extension_identifier_available=true
+operator_extension_identifier_recorded=false
+operator_extension_identifier_shell_safe=true
+target_cluster_found=true
+cluster_online=true
+cluster_port=55432
+pg_config_available=true
+postgres_major_version=17
+pg_sharedir_detected=true
+extension_control_available=false
+extension_control_path_exists=false
+extension_control_permission=unknown
+apt_cache_available=true
+package_search_count=106
+package_candidate_maybe_available=true
+```
+
+### 48.3 Compatibility Decision
+
+```txt
+compatibility_preflight_status=completed
+compatibility_path=package_preflight_required
+local_control_available=false
+package_candidate_maybe_available=true
+selected_next_loop=Loop 245: Supabase extension package risk gate
+selected_next_loop_reason=package_candidates_exist_but_install_requires_separate_gate
+```
+
+### 48.4 Go / No-Go
+
+```txt
+read_only_identifier_check_completed=true
+compatibility_preflight_completed=true
+restore_retry_go=false
+extension_creation_go=false
+package_install_go=false
+schema_change_go=false
+cluster_change_go=false
+supabase_connection_go=false
+production_db_connection_go=false
+```
+
+### 48.5 Cleanup State
+
+```txt
+target_db_currently_absent=true
+cleanup_required=false
+backup_artifact_touched=false
+```
+
+### 48.6 Safety Boundary
+
+```txt
+read_only_inspection=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+extension_created=false
+package_installed=false
+apt_update_executed=false
+apt_upgrade_executed=false
+schema_modified=false
+role_modified=false
+cluster_modified=false
+cluster_restarted=false
+cluster_reloaded=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+sql_displayed=false
+extension_name_displayed=false
+package_name_displayed=false
+object_name_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+backup_artifact_touched=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_restore_executed=false
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## 49. Loop 245 Supabase Extension Package Risk Gate
 
 Loop 245 records the package risk gate before any package installation. Loop 244 found no local extension control file and a broad package candidate count, but the package candidate is not confirmed and package install remains No-Go.
@@ -4071,63 +4158,82 @@ production_restore_executed=false
 dr_readiness_status=not_ready_restore_failed
 ```
 
-### 48.2 Read-Only Metadata Result
+## 50. Loop 246 Operator-Only Package Candidate Classifier
+
+Loop 246 attempted the operator-only package candidate classifier. The pasted sanitized result contained malformed prompt text in classifier fields, so the result is recorded as invalid and the classifier remains blocked. Package names and extension names are not recorded.
+
+### 50.1 Loop 245 Result Summary
 
 ```txt
-operator_extension_identifier_available=true
-operator_extension_identifier_recorded=false
-operator_extension_identifier_shell_safe=true
-target_cluster_found=true
-cluster_online=true
-cluster_port=55432
-pg_config_available=true
-postgres_major_version=17
-pg_sharedir_detected=true
 extension_control_available=false
-extension_control_path_exists=false
-extension_control_permission=unknown
-apt_cache_available=true
 package_search_count=106
 package_candidate_maybe_available=true
+package_search_count_broad=true
+package_candidate_confirmed=false
+package_install_no_go=true
+apt_update_no_go=true
+apt_upgrade_no_go=true
+apt_install_no_go=true
+selected_next_loop=Loop 246: operator-only package candidate classifier
+dr_readiness_status=not_ready_restore_failed
 ```
 
-### 48.3 Compatibility Decision
+### 50.2 Sanitized Classifier Result
 
 ```txt
-compatibility_preflight_status=completed
-compatibility_path=package_preflight_required
-local_control_available=false
-package_candidate_maybe_available=true
-selected_next_loop=Loop 245: Supabase extension package risk gate
-selected_next_loop_reason=package_candidates_exist_but_install_requires_separate_gate
+operator_package_classifier_executed=true
+operator_package_classifier_result_valid=false
+package_classifier_input_malformed=true
+operator_extension_identifier_available=true
+operator_extension_identifier_shell_safe=true
+apt_cache_available=true
+package_candidate_count=106
+package_candidate_exact_match_found=unknown
+package_candidate_confidence=unknown
+package_candidate_source_category=unknown
+package_candidate_requires_install=unknown
+package_candidate_requires_apt_update=unknown
+package_candidate_show_reviewed=unknown
+package_candidate_dependency_risk=unknown
+package_candidate_names_disclosed=false
+extension_name_disclosed=false
+package_install_executed=false
+apt_update_executed=false
+apt_upgrade_executed=false
 ```
 
-### 48.4 Go / No-Go
+### 50.3 Compatibility Decision
 
 ```txt
-read_only_identifier_check_completed=true
-compatibility_preflight_completed=true
+compatibility_path=package_classifier_blocked
+selected_next_loop=Loop 247: package classifier blocked follow-up
+selected_next_loop_reason=sanitized_operator_classifier_result_was_malformed
+```
+
+### 50.4 Go / No-Go
+
+```txt
+read_only_classifier_attempted=true
+operator_result_accepted=false
 restore_retry_go=false
 extension_creation_go=false
 package_install_go=false
+apt_update_go=false
+apt_upgrade_go=false
+apt_install_go=false
 schema_change_go=false
 cluster_change_go=false
 supabase_connection_go=false
 production_db_connection_go=false
 ```
 
-### 48.5 Cleanup State
+### 50.5 Cleanup And Safety
 
 ```txt
 target_db_currently_absent=true
 cleanup_required=false
 backup_artifact_touched=false
-```
-
-### 48.6 Safety Boundary
-
-```txt
-read_only_inspection=true
+docs_only=true
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
@@ -4135,8 +4241,10 @@ target_db_created=false
 target_db_modified=false
 extension_created=false
 package_installed=false
+package_removed=false
 apt_update_executed=false
 apt_upgrade_executed=false
+apt_install_executed=false
 schema_modified=false
 role_modified=false
 cluster_modified=false
@@ -4151,7 +4259,6 @@ object_name_displayed=false
 role_name_displayed=false
 dump_content_displayed=false
 row_content_displayed=false
-backup_artifact_touched=false
 secrets_recorded=false
 supabase_connection_executed=false
 production_restore_executed=false
