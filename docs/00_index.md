@@ -71,6 +71,7 @@
 - Loop 239 operator-only sanitized schema extension classifier: `11_codex_tasks/239_operator_only_sanitized_schema_extension_classifier.md`
 - Loop 240 operator sanitized schema extension result collection: `11_codex_tasks/240_operator_sanitized_schema_extension_result_collection.md`
 - Loop 241 Supabase-specific extension compatibility gate: `11_codex_tasks/241_supabase_specific_extension_compatibility_gate.md`
+- Loop 242 Supabase extension local compatibility preflight: `11_codex_tasks/242_supabase_extension_local_compatibility_preflight.md`
 
 ## Prompts and Templates
 

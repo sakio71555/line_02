@@ -127,6 +127,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 240 Obsidian Log](loop_240_operator_sanitized_schema_extension_result_collection.md)
 - [Loop 241 Supabase-Specific Extension Compatibility Gate](../11_codex_tasks/241_supabase_specific_extension_compatibility_gate.md)
 - [Loop 241 Obsidian Log](loop_241_supabase_specific_extension_compatibility_gate.md)
+- [Loop 242 Supabase Extension Local Compatibility Preflight](../11_codex_tasks/242_supabase_extension_local_compatibility_preflight.md)
+- [Loop 242 Obsidian Log](loop_242_supabase_extension_local_compatibility_preflight.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -221,6 +223,8 @@ Loop 238 status: `docs_only=true`, `loop237_permission_auth_resolved=true`, `loo
 Loop 239 status: `operator_protocol_created=true`, `operator_schema_extension_review_status=pending_operator_input`, `operator_sanitized_result_recorded=false`, `extension_missing_count=2`, `schema_error_count=1`, `schema_error_category=unknown_pending_operator_input`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `schema_modified=false`, `raw_log_displayed=false`, `extension_names_displayed=false`, `secrets_recorded=false`, `next=Loop 240 operator sanitized schema extension result collection`.
 
 Loop 240 status: `operator_sanitized_result_recorded=true`, `extension_category_supabase_related=true`, `schema_error_category=extension_dependency`, `schema_error_confidence=high`, `raw_content_recorded_in_repo=false`, `extension_name_recorded=false`, `object_name_recorded=false`, `role_name_recorded=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `schema_modified=false`, `secrets_recorded=false`, `next=Loop 241 Supabase-specific extension compatibility gate`.
+
+Loop 242 status: `read_only_inspection=true`, `target_cluster_found=true`, `cluster_online=true`, `cluster_port=55432`, `pg_config_available=true`, `postgres_major_version=17`, `operator_extension_identifier_available=false`, `extension_control_available=unknown`, `package_candidate_maybe_available=unknown`, `compatibility_preflight_status=blocked`, `compatibility_path=blocked_missing_operator_extension_identifier`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `package_installed=false`, `secrets_recorded=false`, `next=Loop 243 operator extension identifier collection`.
 
 ## Obsidian Helpers
 

@@ -1,16 +1,16 @@
 # Latest Codex Result
 
-This file summarizes Loop 241 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 242 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 241 Supabase-specific extension compatibility gate
+- Loop: Loop 242 Supabase extension local compatibility preflight
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only compatibility gate
+- Scope type: read-only compatibility preflight
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
@@ -20,63 +20,51 @@ Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, di
 extension_category_supabase_related=true
 schema_error_category=extension_dependency
 schema_error_confidence=high
-permission_or_auth_error_count=0
-role_owner_acl_error_count=0
-schema_or_sql_statement_error_count=1
-extension_missing_count=2
-target_db_dropped=true
 target_db_currently_absent=true
 cleanup_required=false
 dr_readiness_status=not_ready_restore_failed
 ```
 
-## Compatibility Comparison
+## Read-Only Result
 
 ```txt
-candidate_a_local_isolated_compatible_extension_introduction=later_gated
-candidate_b_supabase_managed_skip_compat=fallback_only
-candidate_c_exclude_extension_dependent_objects=no_go_for_now
-candidate_d_supabase_like_non_production_restore_environment=no_go_without_separate_approval
-candidate_e_immediate_retry=no_go
+pg_lsclusters_checked=true
+target_cluster_found=true
+cluster_online=true
+cluster_port=55432
+pg_config_available=true
+postgres_major_version=17
+pg_sharedir_detected=true
+operator_extension_identifier_available=false
+extension_control_available=unknown
+extension_control_path_exists=unknown
+extension_control_permission=unknown
+apt_cache_available=true
+package_search_count=unknown
+package_candidate_maybe_available=unknown
+compatibility_preflight_status=blocked
+compatibility_path=blocked_missing_operator_extension_identifier
 ```
 
-## Recommended Next Loop
+## Compatibility Decision
 
 ```txt
-selected_next_loop=Loop 242: Supabase extension local compatibility preflight
-selected_next_loop_reason=read_only_feasibility_check_before_package_or_extension_changes
+local_control_available=unknown
+package_candidate_maybe_available=unknown
+selected_next_loop=Loop 243: operator extension identifier collection
+selected_next_loop_reason=collect_identifier_safely_before_control_or_package_preflight
 ```
-
-## Loop 242 Boundary
-
-Allowed:
-
-- Local restore cluster status check.
-- PostgreSQL version check.
-- Read-only package availability check.
-- Read-only extension control availability check.
-- Sanitized category/count/boolean output only.
-
-Forbidden:
-
-- Extension creation.
-- Package installation.
-- Restore retry or `pg_restore`.
-- DB-changing `psql`.
-- Target DB creation or modification.
-- Role or cluster changes.
-- Supabase or production DB connection.
-- Exact extension names, object names, SQL statements, raw logs, DB URLs, or secrets.
 
 ## Go / No-Go
 
 ```txt
-loop_242_read_only_go=true
-extension_install_execution_go=false
-extension_creation_go=false
+read_only_preflight_completed=true
+compatibility_preflight_completed=false
 restore_retry_go=false
+extension_creation_go=false
 package_install_go=false
 schema_change_go=false
+cluster_change_go=false
 supabase_connection_go=false
 production_db_connection_go=false
 ```
@@ -92,7 +80,7 @@ backup_artifact_touched=false
 ## Safety Boundary
 
 ```txt
-docs_only=true
+read_only_inspection=true
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
@@ -100,10 +88,14 @@ target_db_created=false
 target_db_modified=false
 extension_created=false
 package_installed=false
+apt_update_executed=false
+apt_upgrade_executed=false
+apt_install_executed=false
 schema_modified=false
-role_created=false
 role_modified=false
 cluster_modified=false
+cluster_restarted=false
+cluster_reloaded=false
 backup_artifact_touched=false
 backup_artifact_copied_into_repo=false
 diagnostic_log_displayed=false
@@ -144,4 +136,4 @@ dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 242: Supabase extension local compatibility preflight
+- Loop 243: operator extension identifier collection

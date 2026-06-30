@@ -8,11 +8,11 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 241 の Supabase-specific extension compatibility gate をレビューしてください。
+- Loop 242 の Supabase extension local compatibility preflight をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- raw log / exact SQL / extension名 / object名 / role名が記録されていないか確認してください。
-- Supabase-related extension dependency に対して、次Loopを read-only local compatibility preflight にする判断が妥当か確認してください。
-- extension creation / package install / restore retry / schema change をまだNo-Goにしていることが妥当か確認してください。
+- extension名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
+- operator extension identifierが未設定だったため compatibility_preflight_status=blocked とした判断が妥当か確認してください。
+- 次Loopを operator extension identifier collection にする判断が妥当か確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -25,51 +25,49 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 241 Supabase-specific extension compatibility gate
+- Loop: Loop 242 Supabase extension local compatibility preflight
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only compatibility gate
+- Scope type: read-only compatibility preflight
 
 ## Baseline
 
 - extension_category_supabase_related=true
 - schema_error_category=extension_dependency
 - schema_error_confidence=high
-- permission_or_auth_error_count=0
-- role_owner_acl_error_count=0
-- schema_or_sql_statement_error_count=1
-- extension_missing_count=2
-- target_db_dropped=true
 - target_db_currently_absent=true
 - cleanup_required=false
 - dr_readiness_status=not_ready_restore_failed
 
-## Compatibility Comparison
+## Read-Only Result
 
-- candidate_a_local_isolated_compatible_extension_introduction=later_gated
-- candidate_b_supabase_managed_skip_compat=fallback_only
-- candidate_c_exclude_extension_dependent_objects=no_go_for_now
-- candidate_d_supabase_like_non_production_restore_environment=no_go_without_separate_approval
-- candidate_e_immediate_retry=no_go
+- pg_lsclusters_checked=true
+- target_cluster_found=true
+- cluster_online=true
+- cluster_port=55432
+- pg_config_available=true
+- postgres_major_version=17
+- pg_sharedir_detected=true
+- operator_extension_identifier_available=false
+- extension_control_available=unknown
+- extension_control_path_exists=unknown
+- extension_control_permission=unknown
+- apt_cache_available=true
+- package_search_count=unknown
+- package_candidate_maybe_available=unknown
+- compatibility_preflight_status=blocked
+- compatibility_path=blocked_missing_operator_extension_identifier
 
-## Selected Next Loop
+## Compatibility Decision
 
-- selected_next_loop=Loop 242: Supabase extension local compatibility preflight
-- selected_next_loop_reason=read_only_feasibility_check_before_package_or_extension_changes
-
-## Loop 242 Boundary
-
-- read_only_preflight_go=true
-- extension_creation_go=false
-- package_install_go=false
-- restore_retry_go=false
-- schema_change_go=false
-- supabase_connection_go=false
-- production_db_connection_go=false
+- local_control_available=unknown
+- package_candidate_maybe_available=unknown
+- selected_next_loop=Loop 243: operator extension identifier collection
+- selected_next_loop_reason=collect_identifier_safely_before_control_or_package_preflight
 
 ## Safety
 
-- docs_only=true
+- read_only_inspection=true
 - restore_executed=false
 - pg_restore_executed=false
 - psql_executed=false
@@ -77,9 +75,13 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - target_db_modified=false
 - extension_created=false
 - package_installed=false
+- apt_update_executed=false
+- apt_upgrade_executed=false
 - schema_modified=false
 - role_modified=false
 - cluster_modified=false
+- cluster_restarted=false
+- cluster_reloaded=false
 - diagnostic_log_displayed=false
 - raw_log_displayed=false
 - sql_displayed=false
@@ -101,7 +103,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 242: Supabase extension local compatibility preflight
+- Loop 243: operator extension identifier collection
 ---
 
 出力形式:
@@ -112,10 +114,13 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### compatibility方針確認
+### read-only preflight確認
 -
 
-### Supabase-related extension判断
+### extension identifier safety確認
+-
+
+### compatibility判定確認
 -
 
 ### selected next Loop確認

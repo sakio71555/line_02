@@ -3706,3 +3706,105 @@ supabase_connection_executed=false
 production_restore_executed=false
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 46. Loop 242 Supabase Extension Local Compatibility Preflight
+
+Loop 242 performed a read-only local compatibility preflight for the Supabase-related extension dependency. The exact extension identifier remains operator-only and is not displayed or recorded.
+
+### 46.1 Loop 241 Baseline
+
+```txt
+extension_category_supabase_related=true
+schema_error_category=extension_dependency
+schema_error_confidence=high
+target_db_currently_absent=true
+cleanup_required=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+### 46.2 Read-Only Metadata Result
+
+```txt
+pg_lsclusters_checked=true
+target_cluster_found=true
+cluster_online=true
+cluster_port=55432
+pg_config_available=true
+postgres_major_version=17
+pg_sharedir_detected=true
+operator_extension_identifier_available=false
+extension_control_available=unknown
+extension_control_path_exists=unknown
+extension_control_permission=unknown
+apt_cache_available=true
+package_search_count=unknown
+package_candidate_maybe_available=unknown
+compatibility_preflight_status=blocked
+compatibility_path=blocked_missing_operator_extension_identifier
+```
+
+### 46.3 Compatibility Decision
+
+```txt
+local_control_available=unknown
+package_candidate_maybe_available=unknown
+selected_next_loop=Loop 243: operator extension identifier collection
+selected_next_loop_reason=collect_identifier_safely_before_control_or_package_preflight
+```
+
+The local restore drill cluster and PostgreSQL 17 tooling are present, but the operator-only extension identifier was unavailable to this read-only check. Control-file and package checks are therefore intentionally left as `unknown`.
+
+### 46.4 Go / No-Go
+
+```txt
+read_only_preflight_completed=true
+compatibility_preflight_completed=false
+restore_retry_go=false
+extension_creation_go=false
+package_install_go=false
+schema_change_go=false
+cluster_change_go=false
+supabase_connection_go=false
+production_db_connection_go=false
+```
+
+### 46.5 Cleanup State
+
+```txt
+target_db_currently_absent=true
+cleanup_required=false
+backup_artifact_touched=false
+```
+
+### 46.6 Safety Boundary
+
+```txt
+read_only_inspection=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+extension_created=false
+package_installed=false
+apt_update_executed=false
+apt_upgrade_executed=false
+schema_modified=false
+role_modified=false
+cluster_modified=false
+cluster_restarted=false
+cluster_reloaded=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+sql_displayed=false
+extension_name_displayed=false
+object_name_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+backup_artifact_touched=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_restore_executed=false
+dr_readiness_status=not_ready_restore_failed
+```
