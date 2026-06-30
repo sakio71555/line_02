@@ -2100,6 +2100,103 @@ firewall_change_no_go_in_loop_227=true
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## 32. Loop 228 Restore Drill Cluster Loopback Remediation Plan
+
+Loop 228 is a docs-only remediation plan after Loop 227 recorded `external_interface_listen_detected=true`. It does not change cluster configuration, reload/restart PostgreSQL, modify firewall rules, run `psql`, run restore, run `pg_restore`, create a target DB, change roles, connect to Supabase, or touch production.
+
+### 32.1 Loop 227 Inputs
+
+```txt
+cluster_online=true
+cluster_port=55432
+listen_entry_count=2
+listen_loopback_ipv4_count=1
+listen_loopback_ipv6_count=0
+listen_wildcard_count=0
+listen_other_count=1
+local_cluster_loopback_only=false
+external_interface_listen_detected=true
+config_listen_addresses_key_present=false
+config_listen_addresses_category=default_or_unset
+config_port_matches_55432=true
+config_unix_socket_directories_key_present=true
+```
+
+### 32.2 Remediation Candidate Decision
+
+| candidate | decision | reason |
+| --- | --- | --- |
+| Set `listen_addresses` to `localhost` | Selected primary plan | Limits PostgreSQL network listening to loopback semantics and keeps restore drill TCP tooling simple. |
+| Set `listen_addresses` to `127.0.0.1,::1` | Fallback plan | More explicit IPv4/IPv6 loopback if `localhost` classification remains ambiguous. |
+| Unix socket only operation | Future candidate | Stronger network isolation, but changes connection and restore command assumptions. |
+| Firewall block for port `55432` | Defense-in-depth only | Does not fix PostgreSQL listen scope itself. |
+| Drop/recreate cluster | Deferred | Heavy-handed and should follow targeted remediation failure only. |
+| Keep current state | No-Go | External listen remains a safety blocker. |
+
+### 32.3 Recommended Direction
+
+```txt
+recommended_remediation=postgresql_listen_addresses_loopback
+primary_setting_plan=listen_addresses_localhost
+fallback_setting_plan=listen_addresses_127_0_0_1_and_ipv6_loopback
+firewall_only_plan=no_go_as_primary
+cluster_drop_recreate_plan=deferred
+current_state_plan=no_go
+```
+
+### 32.4 Rollback Requirements
+
+- Record pre-change sanitized state with `pg_lsclusters` and listen-scope counts.
+- Create a root-only backup of the target cluster config before editing.
+- Edit only the approved `listen_addresses` key.
+- Treat restart as likely required for `listen_addresses`.
+- Verify post-change with `pg_lsclusters` and sanitized listen-scope counts.
+- If the cluster fails to come online or loopback-only verification fails, restore the config backup and restart back to the previous state.
+- Record only booleans/counts/categories.
+
+### 32.5 Loop 229 Boundary
+
+```txt
+selected_next_loop=Loop 229: restore drill cluster loopback remediation execution gate
+operator_approval_required=true
+config_backup_required=true
+restart_likely_required=true
+rollback_required=true
+db_creation_no_go=true
+restore_retry_no_go=true
+role_change_no_go=true
+```
+
+Loop 229 may handle the actual config remediation in a small approved Loop. It should not include target DB creation, restore retry, role changes, Supabase connection, production restore, firewall changes, package changes, raw output exposure, or push unless explicitly authorized.
+
+### 32.6 Safety Boundary
+
+```txt
+docs_only=true
+cluster_modified=false
+cluster_reloaded=false
+cluster_restarted=false
+firewall_modified=false
+package_modified=false
+psql_executed=false
+restore_executed=false
+pg_restore_executed=false
+target_db_created=false
+target_db_modified=false
+role_created=false
+role_modified=false
+supabase_connection_executed=false
+production_restore_executed=false
+raw_listen_output_displayed=false
+public_ip_recorded=false
+private_ip_recorded=false
+config_full_content_displayed=false
+pg_hba_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+dr_readiness_status=not_ready_restore_failed
+```
+
 Loop 228 should plan the loopback remediation before any actual setting change, reload/restart, firewall change, DB creation, or restore retry.
 
 ### 31.4 Safety Boundary

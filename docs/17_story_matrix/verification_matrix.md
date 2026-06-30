@@ -339,6 +339,45 @@ loop_227_selected_next_loop=Loop 228 restore drill cluster loopback remediation 
 loop_227_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 228 Verification Note
+
+```txt
+loop_228_loop_227_result_summarized=true
+loop_228_external_listen_blocker_recorded=true
+loop_228_owner_aligned_target_db_creation_ready=false
+loop_228_restore_retry_ready=false
+loop_228_recommended_remediation=postgresql_listen_addresses_loopback
+loop_228_primary_setting_plan=listen_addresses_localhost
+loop_228_fallback_setting_plan=listen_addresses_127_0_0_1_and_ipv6_loopback
+loop_228_firewall_only_plan=no_go_as_primary
+loop_228_cluster_drop_recreate_plan=deferred
+loop_228_current_state_plan=no_go
+loop_228_rollback_plan_created=true
+loop_228_selected_next_loop=Loop 229 restore drill cluster loopback remediation execution gate
+loop_228_docs_only=true
+loop_228_cluster_modified=false
+loop_228_cluster_reloaded=false
+loop_228_cluster_restarted=false
+loop_228_firewall_modified=false
+loop_228_package_modified=false
+loop_228_psql_executed=false
+loop_228_restore_executed=false
+loop_228_pg_restore_executed=false
+loop_228_target_db_created=false
+loop_228_target_db_modified=false
+loop_228_role_created=false
+loop_228_role_modified=false
+loop_228_supabase_connection_executed=false
+loop_228_production_restore_executed=false
+loop_228_raw_listen_output_displayed=false
+loop_228_public_ip_recorded=false
+loop_228_private_ip_recorded=false
+loop_228_config_full_content_displayed=false
+loop_228_pg_hba_displayed=false
+loop_228_secrets_recorded=false
+loop_228_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.
