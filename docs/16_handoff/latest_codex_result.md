@@ -1,101 +1,117 @@
 # Latest Codex Result
 
-This file summarizes Loop 255 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 256 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, package names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 255 final external runtime approval request pack and staged execution plan
+- Loop: Loop 256 operator env injection dry-run checklist and runtime input readiness gate
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only operator approval request pack
+- Scope type: docs-only env dry-run readiness gate
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
 ## Baseline
 
 ```txt
-loop_253_local_production_verification_status=pass
-loop_254_final_pre_external_runtime_review_completed=true
-loop_254_local_app_readiness_status=pass
-loop_254_external_runtime_readiness_status=operator_approval_required
-loop_254_operator_approval_pack_created=true
-loop_254_production_no_go=true
-loop_254_dr_readiness_status=not_ready_restore_failed
-loop_254_classifier_route_status=frozen
+loop_255_final_external_runtime_approval_request_pack_completed=true
+loop_255_staged_external_runtime_execution_plan_created=true
+loop_255_operator_permission_matrix_created=true
+loop_255_operator_input_category_matrix_created=true
+loop_255_go_no_go_matrix_finalized=true
+loop_255_external_runtime_execution_allowed=false
+loop_255_production_no_go=true
+loop_255_production_go_changed=false
+loop_255_dr_readiness_status=not_ready_restore_failed
+loop_255_classifier_route_status=frozen
 ```
 
-## Loop 255 Result
+## Loop 256 Result
 
 ```txt
-final_external_runtime_approval_request_pack_completed=true
-staged_external_runtime_execution_plan_created=true
-operator_permission_matrix_created=true
-operator_input_category_matrix_created=true
-go_no_go_matrix_finalized=true
-rollback_owner_and_stop_conditions_documented=true
+operator_env_injection_dry_run_checklist_created=true
+runtime_env_inventory_created=true
+runtime_input_category_matrix_created=true
+secret_redaction_policy_confirmed=true
+env_injection_validation_plan_created=true
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
 production_no_go=true
 production_go_changed=false
-external_runtime_execution_allowed=false
-next_loop_requires_explicit_operator_approval=true
 dr_readiness_status=not_ready_restore_failed
 classifier_route_status=frozen
-next_minimal_action=Loop 256 operator env injection dry-run checklist
+next_loop_requires_explicit_operator_approval=true
+next_minimal_action=Loop 257 operator env injection dry-run approval gate
 ```
 
-## Approval Pack Summary
+## Env Inventory Summary
 
-- Current local evidence is pass.
-- External runtime remains approval-required.
-- Operator must choose one next category.
-- Approval options are category-only.
-- Secret values and raw outputs are not safe to record.
-- Missing repeated input becomes `human_input_required`, not more prep loops.
+- Runtime env inventory was created from repo code/docs only.
+- Env key names are documented only when already present in repo code/docs.
+- Values are never safe to document.
+- Risky future values stay category-only until a separate approved Loop.
 
-## Permission / Input Categories
+Runtime areas covered:
 
 ```txt
-permission_categories=vps_access,nginx_change,dns_change,https_certbot,public_smoke,line_runtime,openai_runtime,supabase_runtime,operator_env_injection,rollback_execution,monitoring_or_operational_check
-input_categories=vps_access_permission,nginx_change_permission,dns_change_permission,https_certbot_permission,public_smoke_permission,line_runtime_secret_or_permission,openai_runtime_secret_or_permission,supabase_runtime_secret_or_permission,operator_env_injection_permission,rollback_owner_confirmation,maintenance_window_confirmation,post_deploy_monitoring_owner_confirmation
-recording_policy=sanitized_category_only
-safe_to_record_value=false
+runtime_areas=api_server,admin_app,line_runtime,openai_runtime,supabase_runtime,auth_tenant_guard,role_guard,public_admin_runtime,vps_process_runtime,nginx_or_reverse_proxy_runtime
+safe_to_document_value=false
+```
+
+## Approval Options
+
+```txt
+approve_env_inventory_review_only
+approve_env_injection_dry_run_without_secret_values
+approve_operator_env_presence_check_without_value_output
+approve_vps_env_injection_permission_gate
+do_not_approve_env_injection_yet
+request_more_review
+recommended_approval_scope=approve_env_injection_dry_run_without_secret_values
 ```
 
 ## Go / No-Go Summary
 
 ```txt
-local_app_go_conditions=pass
-operator_approval_go_conditions=approval_required
-external_runtime_go_conditions=not_allowed_in_loop_255
-env_injection_go_conditions=dry_run_checklist_required
-vps_go_conditions=approval_required
-nginx_dns_https_go_conditions=approval_required
-line_openai_go_conditions=approval_required
-supabase_go_conditions=approval_required
-public_smoke_go_conditions=approval_required
-rollback_go_conditions=owner_required
+env_inventory_go_conditions=created_value_free
+env_dry_run_go_conditions=operator_approval_required
+env_injection_go_conditions=no_go_in_loop_256
+secret_handling_no_go_conditions=active
+operator_approval_no_go_conditions=active_until_scoped_approval
+external_runtime_no_go_conditions=active
+rollback_env_go_conditions=required_before_mutation
 production_go_conditions=not_requested
 dr_known_risk_conditions=not_ready_restore_failed
 classifier_route_frozen_conditions=frozen
-no_go_conditions=active
 ```
 
-## Stop Conditions
+## Anti-Waste Guard
 
 ```txt
-same_blocker_twice_route_freeze=true
-missing_required_operator_input_human_input_required=true
-no_protocol_loop_without_new_input=true
-no_recollection_loop_without_new_input=true
-no_readiness_gate_loop_without_decision_change=true
+missing_operator_approval_human_input_required=true
+missing_secret_human_input_required=true
+same_env_blocker_twice_route_freeze_or_human_input_required=true
+no_env_protocol_loop_without_new_operator_input=true
+no_env_recollection_loop_without_new_operator_input=true
+no_secret_handling_loop_without_explicit_approval=true
 each_next_loop_must_end_in_go_no_go_route_freeze_or_human_input_required=true
 ```
 
 ## Safety Boundary
 
 ```txt
+docs_only=true
+actual_env_injection_executed=false
+secret_collection_executed=false
+secret_value_displayed=false
+secret_value_recorded=false
+env_file_created=false
+env_file_modified=false
+env_file_displayed=false
+secret_file_displayed=false
 vps_operation_executed=false
 nginx_operation_executed=false
 dns_operation_executed=false
@@ -114,18 +130,7 @@ extension_created=false
 cluster_changed=false
 package_operation_executed=false
 apt_operation_executed=false
-env_file_created=false
-env_file_modified=false
-env_file_displayed=false
-secret_recorded=false
-db_url_recorded=false
-raw_log_recorded=false
-command_output_body_recorded=false
-sql_recorded=false
-db_object_name_recorded=false
-role_name_recorded=false
-package_name_recorded=false
-extension_name_recorded=false
+runtime_code_changed=false
 production_runtime_changed=false
 ```
 
@@ -143,5 +148,5 @@ test=skipped_docs_only
 
 ## Next Loop Candidate
 
-- Loop 256: operator env injection dry-run checklist
-- Reason: before any external runtime action, confirm operator-side secret handling and dry-run checklist without entering or displaying values.
+- Loop 257: operator env injection dry-run approval gate
+- Reason: the next action should only confirm whether the operator approves a value-free env dry-run. It must not collect secrets, inject env, connect externally, run public smoke, resume classifier/package/restore, or change production Go.

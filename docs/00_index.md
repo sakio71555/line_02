@@ -85,6 +85,7 @@
 - Loop 253 local production start verification checklist execution: `11_codex_tasks/253_local_production_start_verification_checklist_execution.md`
 - Loop 254 final pre-external-runtime readiness review: `11_codex_tasks/254_final_pre_external_runtime_readiness_review.md`
 - Loop 255 final external runtime approval request pack: `11_codex_tasks/255_final_external_runtime_approval_request_pack.md`
+- Loop 256 operator env injection dry-run checklist: `11_codex_tasks/256_operator_env_injection_dry_run_checklist.md`
 
 ## Prompts and Templates
 

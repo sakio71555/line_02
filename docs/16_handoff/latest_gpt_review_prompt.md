@@ -11,9 +11,9 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 255 の final external runtime approval request pack and staged execution plan をレビューしてください。
-- operatorが次に何を承認すればよいか、1つの次Loopに絞れているか確認してください。
-- production_no_go、external_runtime_execution_allowed=false、DR not ready、classifier route frozen、secret/raw log非記録が守られているか確認してください。
+- Loop 256 の operator env injection dry-run checklist and runtime input readiness gate をレビューしてください。
+- env inventory、classification matrix、redaction policy、validation plan、approval options、anti-waste guard が十分か確認してください。
+- production_no_go、external_runtime_execution_allowed=false、env_injection_execution_allowed=false、DR not ready、classifier route frozen、secret/raw log非記録が守られているか確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -26,55 +26,78 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 255 final external runtime approval request pack and staged execution plan
+- Loop: Loop 256 operator env injection dry-run checklist and runtime input readiness gate
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only operator approval request pack
+- Scope type: docs-only env dry-run readiness gate
 
-## Loop 255 Result
+## Loop 256 Result
 
-- final_external_runtime_approval_request_pack_completed=true
-- staged_external_runtime_execution_plan_created=true
-- operator_permission_matrix_created=true
-- operator_input_category_matrix_created=true
-- go_no_go_matrix_finalized=true
-- rollback_owner_and_stop_conditions_documented=true
+- operator_env_injection_dry_run_checklist_created=true
+- runtime_env_inventory_created=true
+- runtime_input_category_matrix_created=true
+- secret_redaction_policy_confirmed=true
+- env_injection_validation_plan_created=true
+- env_injection_execution_allowed=false
+- external_runtime_execution_allowed=false
 - production_no_go=true
 - production_go_changed=false
-- external_runtime_execution_allowed=false
-- next_loop_requires_explicit_operator_approval=true
 - dr_readiness_status=not_ready_restore_failed
 - classifier_route_status=frozen
-- next_minimal_action=Loop 256 operator env injection dry-run checklist
+- next_loop_requires_explicit_operator_approval=true
+- next_minimal_action=Loop 257 operator env injection dry-run approval gate
 
-## Operator Approval Pack Summary
+## Env Inventory Summary
 
-- Current local evidence is pass.
-- External runtime remains approval-required.
-- Operator must choose one next category.
-- Approval options are category-only.
-- Secret values and raw outputs are not safe to record.
-- Missing repeated input becomes human_input_required, not more prep loops.
+- Runtime env inventory was created from repo code/docs only.
+- Env key names are documented only when already present in repo code/docs.
+- Values are never safe to document.
+- Runtime areas covered: api_server, admin_app, line_runtime, openai_runtime, supabase_runtime, auth_tenant_guard, role_guard, public_admin_runtime, vps_process_runtime, nginx_or_reverse_proxy_runtime.
+
+## Approval Options
+
+- approve_env_inventory_review_only
+- approve_env_injection_dry_run_without_secret_values
+- approve_operator_env_presence_check_without_value_output
+- approve_vps_env_injection_permission_gate
+- do_not_approve_env_injection_yet
+- request_more_review
+- recommended_approval_scope=approve_env_injection_dry_run_without_secret_values
 
 ## Go / No-Go Summary
 
-- local_app_go_conditions=pass
-- operator_approval_go_conditions=approval_required
-- external_runtime_go_conditions=not_allowed_in_loop_255
-- env_injection_go_conditions=dry_run_checklist_required
-- vps_go_conditions=approval_required
-- nginx_dns_https_go_conditions=approval_required
-- line_openai_go_conditions=approval_required
-- supabase_go_conditions=approval_required
-- public_smoke_go_conditions=approval_required
-- rollback_go_conditions=owner_required
+- env_inventory_go_conditions=created_value_free
+- env_dry_run_go_conditions=operator_approval_required
+- env_injection_go_conditions=no_go_in_loop_256
+- secret_handling_no_go_conditions=active
+- operator_approval_no_go_conditions=active_until_scoped_approval
+- external_runtime_no_go_conditions=active
+- rollback_env_go_conditions=required_before_mutation
 - production_go_conditions=not_requested
 - dr_known_risk_conditions=not_ready_restore_failed
 - classifier_route_frozen_conditions=frozen
-- no_go_conditions=active
+
+## Anti-Waste Guard
+
+- missing_operator_approval_human_input_required=true
+- missing_secret_human_input_required=true
+- same_env_blocker_twice_route_freeze_or_human_input_required=true
+- no_env_protocol_loop_without_new_operator_input=true
+- no_env_recollection_loop_without_new_operator_input=true
+- no_secret_handling_loop_without_explicit_approval=true
+- each_next_loop_must_end_in_go_no_go_route_freeze_or_human_input_required=true
 
 ## Safety
 
+- docs_only=true
+- actual_env_injection_executed=false
+- secret_collection_executed=false
+- secret_value_displayed=false
+- secret_value_recorded=false
+- env_file_created=false
+- env_file_modified=false
+- env_file_displayed=false
+- secret_file_displayed=false
 - vps_operation_executed=false
 - nginx_operation_executed=false
 - dns_operation_executed=false
@@ -93,23 +116,12 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - cluster_changed=false
 - package_operation_executed=false
 - apt_operation_executed=false
-- env_file_created=false
-- env_file_modified=false
-- env_file_displayed=false
-- secret_recorded=false
-- db_url_recorded=false
-- raw_log_recorded=false
-- command_output_body_recorded=false
-- sql_recorded=false
-- db_object_name_recorded=false
-- role_name_recorded=false
-- package_name_recorded=false
-- extension_name_recorded=false
+- runtime_code_changed=false
 - production_runtime_changed=false
 
 ## Next Loop Candidate
 
-- Loop 256: operator env injection dry-run checklist
+- Loop 257: operator env injection dry-run approval gate
 ---
 
 必ず以下の順で判定してください。
@@ -128,13 +140,19 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### レビュー結果
 -
 
-### approval request pack確認
+### env inventory確認
 -
 
-### staged execution plan確認
+### classification matrix確認
 -
 
-### permission / input matrix確認
+### redaction policy確認
+-
+
+### validation plan確認
+-
+
+### approval options確認
 -
 
 ### Go / No-Go確認

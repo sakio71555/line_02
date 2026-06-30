@@ -6,6 +6,46 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 256 Current Status Override
+
+Loop 256 prepared the operator env injection dry-run checklist and runtime input readiness gate. It did not inject env values, request secrets, display secret files, connect externally, or change production runtime.
+
+```txt
+loop_256_current_status_override=true
+operator_env_injection_dry_run_checklist_created=true
+runtime_env_inventory_created=true
+runtime_input_category_matrix_created=true
+secret_redaction_policy_confirmed=true
+env_injection_validation_plan_created=true
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_loop_requires_explicit_operator_approval=true
+selected_next_minimal_action=Loop 257 operator env injection dry-run approval gate
+```
+
+Operator approval options for the next review:
+
+```txt
+[ ] approve_env_inventory_review_only
+[ ] approve_env_injection_dry_run_without_secret_values
+[ ] approve_operator_env_presence_check_without_value_output
+[ ] approve_vps_env_injection_permission_gate
+[ ] do_not_approve_env_injection_yet
+[ ] request_more_review
+```
+
+Recommended next approval scope:
+
+```txt
+recommended_approval_scope=approve_env_injection_dry_run_without_secret_values
+```
+
+Stop if approval is missing, a secret value would need to be entered or shown, `.env` or secret files would need to be displayed, external runtime connectivity is required, or more than one action category is being combined.
+
 ## Loop 255 Current Status Override
 
 Loop 255 completed the final external runtime approval request pack and staged execution plan. It does not approve execution. It defines what the operator must approve next and where to stop.

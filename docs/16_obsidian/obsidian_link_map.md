@@ -149,6 +149,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 254 Obsidian Log](loop_254_final_pre_external_runtime_readiness_review.md)
 - [Loop 255 Final External Runtime Approval Request Pack](../11_codex_tasks/255_final_external_runtime_approval_request_pack.md)
 - [Loop 255 Obsidian Log](loop_255_final_external_runtime_approval_request_pack.md)
+- [Loop 256 Operator Env Injection Dry-Run Checklist](../11_codex_tasks/256_operator_env_injection_dry_run_checklist.md)
+- [Loop 256 Obsidian Log](loop_256_operator_env_injection_dry_run_checklist.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -271,6 +273,8 @@ Loop 253 status: `local_production_verification_status=pass`, `api_local_start_s
 Loop 254 status: `final_pre_external_runtime_review_completed=true`, `local_app_readiness_status=pass`, `external_runtime_readiness_status=operator_approval_required`, `operator_approval_pack_created=true`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 255 final external runtime approval request pack`.
 
 Loop 255 status: `final_external_runtime_approval_request_pack_completed=true`, `staged_external_runtime_execution_plan_created=true`, `operator_permission_matrix_created=true`, `operator_input_category_matrix_created=true`, `go_no_go_matrix_finalized=true`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 256 operator env injection dry-run checklist`.
+
+Loop 256 status: `operator_env_injection_dry_run_checklist_created=true`, `runtime_env_inventory_created=true`, `runtime_input_category_matrix_created=true`, `secret_redaction_policy_confirmed=true`, `env_injection_validation_plan_created=true`, `env_injection_execution_allowed=false`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 257 operator env injection dry-run approval gate`.
 
 ## Obsidian Helpers
 

@@ -6,6 +6,40 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 256 Current Status Override
+
+Loop 256 prepared the env injection dry-run path only. It keeps production and external runtime execution blocked.
+
+```txt
+loop_256_current_status_override=true
+operator_env_injection_dry_run_checklist_created=true
+runtime_env_inventory_created=true
+runtime_input_category_matrix_created=true
+secret_redaction_policy_confirmed=true
+env_injection_validation_plan_created=true
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+next_loop_requires_explicit_operator_approval=true
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 257 operator env injection dry-run approval gate
+```
+
+Current env injection Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| env inventory | `created` | Key/category inventory exists, values are not recorded. |
+| env dry-run | `approval_required` | Operator must approve a value-free dry-run before any check. |
+| env injection | `not_allowed_in_loop_256` | No mutation, helper execution, secret input, or process runtime change. |
+| secret handling | `no_go_for_value_output` | Values, lengths, hashes, prefixes, suffixes, env files, and secret files stay hidden. |
+| external runtime | `not_allowed` | No LINE/OpenAI/Supabase/public smoke/VPS operation. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Restore drill is still not successful. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 255 Current Status Override
 
 Loop 255 completed the final external runtime approval request pack. It keeps execution blocked until a future Loop has explicit operator approval for one category.

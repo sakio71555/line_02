@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 256 operator env injection dry-run checklist | Not final Go |
-| External runtime readiness | `approval_request_pack_ready` | Loop 255 final approval request pack and staged plan exist; no external runtime executed | `docs/11_codex_tasks/255_final_external_runtime_approval_request_pack.md` | Loop 256 operator env injection dry-run checklist | Not final Go |
-| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/255_final_external_runtime_approval_request_pack.md` | Loop 256 operator env injection dry-run checklist | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 257 operator env injection dry-run approval gate | Not final Go |
+| External runtime readiness | `env_dry_run_checklist_ready` | Loop 256 env inventory and dry-run checklist exist; no env injection or external runtime executed | `docs/11_codex_tasks/256_operator_env_injection_dry_run_checklist.md` | Loop 257 operator env injection dry-run approval gate | Not final Go |
+| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/256_operator_env_injection_dry_run_checklist.md` | Loop 257 operator env injection dry-run approval gate | `production_no_go` maintained |
 
 ## Current State
 
@@ -26,12 +26,44 @@ staged_external_runtime_execution_plan_created=true
 operator_permission_matrix_created=true
 operator_input_category_matrix_created=true
 go_no_go_matrix_finalized=true
+operator_env_injection_dry_run_checklist_created=true
+runtime_env_inventory_created=true
+runtime_input_category_matrix_created=true
+secret_redaction_policy_confirmed=true
+env_injection_validation_plan_created=true
+env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
 production_readiness_status=production_no_go_external_runtime_and_dr
 production_no_go=true
 production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 256 Operator Env Injection Dry-Run Readiness
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Env inventory | `created` | Runtime env keys/categories reviewed from repo code/docs only. |
+| Env classification matrix | `created` | Each area records whether operator input, external runtime, and secret value are required. |
+| Redaction policy | `confirmed` | Values, lengths, hashes, prefixes, suffixes, env file contents, and secret files are not recorded. |
+| Dry-run checklist | `created` | Pre-injection, dry-run, validation preview, stop conditions, and rollback categories are documented. |
+| Execution | `not_allowed` | No actual env injection, external connection, or production change. |
+| Next action | `selected` | Loop 257 operator env injection dry-run approval gate. |
+
+```txt
+loop_256_operator_env_injection_dry_run_checklist_created=true
+loop_256_runtime_env_inventory_created=true
+loop_256_runtime_input_category_matrix_created=true
+loop_256_secret_redaction_policy_confirmed=true
+loop_256_env_injection_validation_plan_created=true
+loop_256_env_injection_execution_allowed=false
+loop_256_external_runtime_execution_allowed=false
+loop_256_production_no_go=true
+loop_256_production_go_changed=false
+loop_256_dr_readiness_status=not_ready_restore_failed
+loop_256_classifier_route_status=frozen
+loop_256_next_minimal_action=Loop 257 operator env injection dry-run approval gate
 ```
 
 ## Loop 255 Final External Runtime Approval Request Pack
