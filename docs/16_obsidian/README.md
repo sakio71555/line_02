@@ -87,6 +87,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 246 records the operator-only package candidate classifier attempt, treats the malformed sanitized result as invalid, keeps package/extension names hidden, selects Loop 247 package classifier blocked follow-up, and keeps apt/package/restore/DB changes, Supabase, production, and secrets untouched.
 - Loop 247 records the package classifier blocked follow-up, defines strict sanitized result and validation rules for the next retry, selects Loop 248 strict operator-only package candidate classifier retry, and keeps apt/package/restore/DB changes, Supabase, production, and secrets untouched.
 - Loop 248 applies the strict package classifier retry protocol, blocks because no strict operator sanitized result payload was provided, selects Loop 249 strict operator package classifier input collection, and keeps apt/package/restore/DB changes, Supabase, production, raw output, package/extension names, and secrets untouched.
+- Loop 249 defines the strict operator payload collection protocol, allowed-key template, reject rules, and classifier retry readiness gate, keeps `ready_for_classifier_retry=false` until a real sanitized payload is collected, and keeps apt/package/restore/DB changes, Supabase, production, raw output, package/extension names, and secrets untouched.
 
 ## .obsidian Policy
 

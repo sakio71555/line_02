@@ -39,6 +39,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-029 | Operator-only package candidate classifier | docs-only review of Loop 246 sanitized classifier result and blocked follow-up decision | malformed classifier result recorded safely, exact names hidden, package classifier blocked | true | false | false | false | false | false | false | false | pending_loop_246_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-030 | Package classifier blocked follow-up | docs-only review of Loop 247 blocked cause, strict result format, validation rule, and Loop 248 boundary | strict retry protocol created, install remains No-Go, exact names hidden | true | false | false | false | false | false | false | false | pending_loop_247_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-031 | Strict package classifier retry | docs-only review of Loop 248 strict retry outcome and blocked reason | operator sanitized payload absent, classifier retry blocked, input collection selected | true | false | false | false | false | false | false | false | pending_loop_248_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
+| V-032 | Strict package classifier input collection | docs-only review of Loop 249 collection protocol, allowed-key template, reject rules, and retry readiness gate | input protocol created, ready_for_classifier_retry=false, payload collection selected | true | false | false | false | false | false | false | false | pending_loop_249_verification | Does not run classifier retry, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1241,6 +1242,51 @@ loop_248_supabase_connection_executed=false
 loop_248_production_restore_executed=false
 loop_248_production_readiness=production_no_go
 loop_248_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 249 Verification Note
+
+```txt
+loop_249_docs_only=true
+loop_249_operator_input_collection_protocol_created=true
+loop_249_operator_input_template_created=true
+loop_249_reject_rule_created=true
+loop_249_future_classifier_retry_gate_created=true
+loop_249_operator_sanitized_payload_collected=false
+loop_249_ready_for_classifier_retry=false
+loop_249_not_ready_reason=operator_payload_not_collected_in_docs_only_gate
+loop_249_selected_next_loop=Loop 250 strict operator package classifier payload collection
+loop_249_classifier_retry_executed=false
+loop_249_apt_cache_executed=false
+loop_249_apt_update_executed=false
+loop_249_apt_upgrade_executed=false
+loop_249_apt_install_executed=false
+loop_249_package_install_executed=false
+loop_249_package_removed=false
+loop_249_restore_executed=false
+loop_249_pg_restore_executed=false
+loop_249_psql_executed=false
+loop_249_target_db_created=false
+loop_249_target_db_modified=false
+loop_249_extension_created=false
+loop_249_schema_modified=false
+loop_249_role_modified=false
+loop_249_cluster_modified=false
+loop_249_cluster_restarted=false
+loop_249_cluster_reloaded=false
+loop_249_package_candidate_names_disclosed=false
+loop_249_extension_name_disclosed=false
+loop_249_raw_package_output_disclosed=false
+loop_249_raw_log_displayed=false
+loop_249_sql_displayed=false
+loop_249_object_name_displayed=false
+loop_249_role_name_displayed=false
+loop_249_backup_artifact_touched=false
+loop_249_secrets_recorded=false
+loop_249_supabase_connection_executed=false
+loop_249_production_restore_executed=false
+loop_249_production_readiness=production_no_go
+loop_249_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

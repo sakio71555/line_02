@@ -8,10 +8,9 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 248 の strict operator-only package candidate classifier retry をレビューしてください。
-- Scope外の作業が混ざっていないか確認してください。
-- operator sanitized result payloadが無いため blocked にした判断が妥当か確認してください。
-- 次Loopを input re-collection に分離し、install / restore / DB変更へ進めない判断が妥当か確認してください。
+- Loop 249 の strict operator package classifier input collection をレビューしてください。
+- classifier retryを実行せず、input collection protocol / allowed-key template / reject rule / readiness gateだけに留めた判断が妥当か確認してください。
+- `ready_for_classifier_retry=false` を維持し、次Loopを payload collection に分離した判断が妥当か確認してください。
 - package名 / extension名 / raw output / SQL文 / object名 / role名 / DB URL / secret が記録されていないか確認してください。
 
 レビュー時の注意:
@@ -25,45 +24,52 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 248 strict operator-only package candidate classifier retry
+- Loop: Loop 249 strict operator package classifier input collection
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only classifier retry result recording
+- Scope type: docs-only input collection protocol and readiness gate
 
-## Loop 247 Baseline
+## Baseline
 
-- strict_classifier_retry_protocol_created=true
-- strict_sanitized_key_value_only=true
+- loop_247_strict_classifier_retry_protocol_created=true
+- loop_248_classifier_retry_status=blocked
+- loop_248_blocked_reason=operator_sanitized_result_absent
+- valid_operator_payload_received=false
+- package_install_no_go=true
+- apt_update_no_go=true
+- apt_upgrade_no_go=true
+- apt_install_no_go=true
+- restore_retry_no_go=true
+- db_change_no_go=true
+
+## Loop 249 Result
+
+- operator_input_collection_protocol_created=true
+- operator_input_template_created=true
+- reject_rule_created=true
+- future_classifier_retry_gate_created=true
+- operator_sanitized_payload_collected=false
+- ready_for_classifier_retry=false
+- not_ready_reason=operator_payload_not_collected_in_docs_only_gate
+- selected_next_loop=Loop 250: strict operator package classifier payload collection
+
+## Future Retry Readiness Gate
+
+- operator_sanitized_payload_present_required=true
+- strict_key_value_format_required=true
 - allowed_keys_only_required=true
-- prompt_body_allowed=false
-- package_name_recording_allowed=false
-- extension_name_recording_allowed=false
-- raw_package_output_disclosed_must_be_false=true
-- invalid_result_handling=blocked_without_retry
-
-## Loop 248 Result
-
-- classifier_retry_status=blocked
-- classifier_result_valid=false
-- blocked_reason=operator_sanitized_result_absent
-- operator_sanitized_result_present=false
-- strict_key_value_payload_received=false
-- allowed_key_validation_executed=false
-- package_candidate_confidence=unknown
-- package_candidate_dependency_risk=unknown
-- compatibility_path=package_classifier_blocked
+- forbidden_content_absent_required=true
+- secret_or_db_url_absent_required=true
+- raw_log_or_command_output_absent_required=true
+- sql_or_object_or_role_absent_required=true
+- package_or_extension_identifier_absent_required=true
+- codex_validation_pass_required=true
+- dangerous_content_recorded_in_docs_required=false
 
 ## Safety
 
-- package_candidate_names_disclosed=false
-- extension_name_disclosed=false
-- raw_package_output_disclosed=false
-- raw_log_displayed=false
-- sql_displayed=false
-- object_name_displayed=false
-- role_name_displayed=false
-- db_url_displayed=false
-- secrets_recorded=false
+- docs_only=true
+- classifier_retry_executed=false
 - apt_cache_executed=false
 - apt_update_executed=false
 - apt_upgrade_executed=false
@@ -76,6 +82,15 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - schema_modified=false
 - role_modified=false
 - cluster_modified=false
+- package_candidate_names_disclosed=false
+- extension_name_disclosed=false
+- raw_package_output_disclosed=false
+- raw_log_displayed=false
+- sql_displayed=false
+- object_name_displayed=false
+- role_name_displayed=false
+- db_url_displayed=false
+- secrets_recorded=false
 - supabase_connection_executed=false
 - production_restore_executed=false
 - production_runtime_changed=false
@@ -87,7 +102,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 249: strict operator package classifier input collection
+- Loop 250: strict operator package classifier payload collection
 ---
 
 出力形式:
@@ -98,13 +113,13 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### blocked理由確認
+### input collection protocol確認
 -
 
-### strict protocol確認
+### reject rule確認
 -
 
-### input re-collection分離確認
+### ready_for_classifier_retry確認
 -
 
 ### Go / No-Go確認
