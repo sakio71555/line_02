@@ -35,6 +35,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-025 | Supabase extension local compatibility preflight | read-only review of Loop 242 local cluster/tooling metadata and identifier availability | cluster/tooling metadata recorded, identifier unavailable, compatibility preflight blocked safely | true | false | false | false | false | false | false | false | pending_loop_242_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-026 | Operator extension identifier collection | read-only review of Loop 243 identifier availability and metadata checks | identifier remains unavailable, extension name hidden, compatibility remains blocked safely | true | false | false | false | false | false | false | false | pending_loop_243_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-027 | Operator extension compatibility preflight | read-only review of Loop 244 identifier, control, and package availability metadata | identifier shell-safe, control unavailable, package candidate count recorded, names hidden, package risk gate selected | true | false | false | false | false | false | false | false | pending_loop_244_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
+| V-028 | Supabase extension package risk gate | docs-only review of Loop 245 package risk, remediation comparison, and Loop 246 boundary | broad package count treated as unconfirmed, install remains No-Go, operator-only classifier selected | true | false | false | false | false | false | false | false | pending_loop_245_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1026,6 +1027,57 @@ loop_244_secrets_recorded=false
 loop_244_supabase_connection_executed=false
 loop_244_production_restore_executed=false
 loop_244_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 245 Verification Note
+
+```txt
+loop_245_docs_only=true
+loop_245_extension_control_available=false
+loop_245_package_search_count=106
+loop_245_package_candidate_maybe_available=true
+loop_245_package_search_count_broad=true
+loop_245_package_candidate_confirmed=false
+loop_245_package_candidate_misidentification_risk=true
+loop_245_package_install_risk=true
+loop_245_package_dependency_risk=true
+loop_245_extension_creation_success_unproven=true
+loop_245_supabase_extension_full_local_reproduction_unproven=true
+loop_245_candidate_a_operator_only_package_candidate_classifier=recommended
+loop_245_candidate_b_package_install_risk_plan=later
+loop_245_candidate_c_local_extension_unavailable_decision_gate=conditional
+loop_245_candidate_d_immediate_apt_install=no_go
+loop_245_candidate_e_immediate_restore_retry=no_go
+loop_245_selected_next_loop=Loop 246 operator-only package candidate classifier
+loop_245_target_db_currently_absent=true
+loop_245_cleanup_required=false
+loop_245_restore_executed=false
+loop_245_pg_restore_executed=false
+loop_245_psql_executed=false
+loop_245_target_db_created=false
+loop_245_target_db_modified=false
+loop_245_extension_created=false
+loop_245_package_installed=false
+loop_245_apt_update_executed=false
+loop_245_apt_upgrade_executed=false
+loop_245_apt_install_executed=false
+loop_245_schema_modified=false
+loop_245_role_modified=false
+loop_245_cluster_modified=false
+loop_245_cluster_restarted=false
+loop_245_cluster_reloaded=false
+loop_245_diagnostic_log_displayed=false
+loop_245_raw_log_displayed=false
+loop_245_sql_displayed=false
+loop_245_extension_name_displayed=false
+loop_245_package_name_displayed=false
+loop_245_object_name_displayed=false
+loop_245_role_name_displayed=false
+loop_245_backup_artifact_touched=false
+loop_245_secrets_recorded=false
+loop_245_supabase_connection_executed=false
+loop_245_production_restore_executed=false
+loop_245_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

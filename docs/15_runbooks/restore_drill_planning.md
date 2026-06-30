@@ -3938,6 +3938,139 @@ compatibility_path=blocked_missing_operator_extension_identifier
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## 49. Loop 245 Supabase Extension Package Risk Gate
+
+Loop 245 records the package risk gate before any package installation. Loop 244 found no local extension control file and a broad package candidate count, but the package candidate is not confirmed and package install remains No-Go.
+
+### 49.1 Loop 244 Result Summary
+
+```txt
+operator_extension_identifier_available=true
+operator_extension_identifier_recorded=false
+operator_extension_identifier_shell_safe=true
+extension_control_available=false
+extension_control_path_exists=false
+extension_control_permission=unknown
+apt_cache_available=true
+package_search_count=106
+package_candidate_maybe_available=true
+compatibility_preflight_status=completed
+compatibility_path=package_preflight_required
+```
+
+### 49.2 Risk Summary
+
+```txt
+package_candidate_misidentification_risk=true
+package_search_count_broad=true
+package_candidate_confirmed=false
+package_install_risk=true
+package_dependency_risk=true
+extension_creation_success_unproven=true
+supabase_extension_full_local_reproduction_unproven=true
+package_install_no_go=true
+apt_update_no_go=true
+apt_upgrade_no_go=true
+apt_install_no_go=true
+```
+
+### 49.3 Remediation Candidate Comparison
+
+```txt
+candidate_a_operator_only_package_candidate_classifier=recommended
+candidate_b_package_install_risk_plan=later
+candidate_c_local_extension_unavailable_decision_gate=conditional
+candidate_d_immediate_apt_install=no_go
+candidate_e_immediate_restore_retry=no_go
+```
+
+### 49.4 Recommended Next Loop
+
+```txt
+selected_next_loop=Loop 246: operator-only package candidate classifier
+selected_next_loop_reason=package_candidate_count_is_broad_and_install_requires_operator_only_narrowing
+```
+
+### 49.5 Loop 246 Boundary
+
+```txt
+loop_246_read_only=true
+operator_only_extension_identifier_use=true
+apt_cache_search_allowed=true
+apt_cache_show_allowed=true
+package_candidate_count_allowed=true
+package_candidate_confidence_allowed=true
+package_candidate_source_category_allowed=true
+package_names_disclosed=false
+extension_name_disclosed=false
+apt_update_allowed=false
+apt_upgrade_allowed=false
+apt_install_allowed=false
+package_install_allowed=false
+package_remove_allowed=false
+psql_allowed=false
+restore_allowed=false
+pg_restore_allowed=false
+target_db_creation_allowed=false
+create_extension_allowed=false
+supabase_connection_allowed=false
+production_db_connection_allowed=false
+```
+
+### 49.6 Sanitized Package Classifier Format
+
+```txt
+operator_package_classifier_executed=true/false
+package_candidate_count=<number>
+package_candidate_exact_match_found=true/false
+package_candidate_confidence=high/medium/low/unknown
+package_candidate_source_category=pgdg/ubuntu/third_party/unknown
+package_candidate_requires_install=true/false/unknown
+package_candidate_requires_apt_update=true/false/unknown
+package_candidate_names_disclosed=false
+extension_name_disclosed=false
+package_install_executed=false
+apt_update_executed=false
+apt_upgrade_executed=false
+```
+
+### 49.7 Cleanup And Safety
+
+```txt
+target_db_currently_absent=true
+cleanup_required=false
+backup_artifact_touched=false
+docs_only=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+extension_created=false
+package_installed=false
+apt_update_executed=false
+apt_upgrade_executed=false
+apt_install_executed=false
+schema_modified=false
+role_modified=false
+cluster_modified=false
+cluster_restarted=false
+cluster_reloaded=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+sql_displayed=false
+extension_name_displayed=false
+package_name_displayed=false
+object_name_displayed=false
+role_name_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_restore_executed=false
+dr_readiness_status=not_ready_restore_failed
+```
+
 ### 48.2 Read-Only Metadata Result
 
 ```txt

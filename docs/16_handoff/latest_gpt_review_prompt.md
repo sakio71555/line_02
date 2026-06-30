@@ -8,11 +8,11 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 244 の operator extension identifier retry and manual sanitized preflight をレビューしてください。
+- Loop 245 の Supabase extension package risk gate をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
 - extension名 / package名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
-- extension control unavailable かつ package candidate maybe available のため compatibility_preflight_status=completed / compatibility_path=package_preflight_required とした判断が妥当か確認してください。
-- 次Loopを Supabase extension package risk gate にする判断が妥当か確認してください。
+- package_search_count=106 を導入候補確定ではなく broad count として扱い、package installをNo-Goにした判断が妥当か確認してください。
+- 次Loopを operator-only package candidate classifier にする判断が妥当か確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -25,49 +25,50 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 244 operator extension identifier retry and manual sanitized preflight
+- Loop: Loop 245 Supabase extension package risk gate
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: read-only operator identifier and compatibility preflight
+- Scope type: docs-only package risk gate
 
 ## Baseline
 
-- operator_extension_identifier_available=false
-- extension_control_available=unknown
-- package_candidate_maybe_available=unknown
-- compatibility_preflight_status=blocked
-- compatibility_path=blocked_missing_operator_extension_identifier
-- dr_readiness_status=not_ready_restore_failed
-
-## Read-Only Result
-
 - operator_extension_identifier_available=true
-- operator_extension_identifier_recorded=false
 - operator_extension_identifier_shell_safe=true
-- target_cluster_found=true
-- cluster_online=true
-- cluster_port=55432
-- pg_config_available=true
-- postgres_major_version=17
-- pg_sharedir_detected=true
 - extension_control_available=false
-- extension_control_path_exists=false
-- extension_control_permission=unknown
-- apt_cache_available=true
 - package_search_count=106
 - package_candidate_maybe_available=true
-
-## Compatibility Decision
-
 - compatibility_preflight_status=completed
 - compatibility_path=package_preflight_required
-- local_control_available=false
-- package_candidate_maybe_available=true
-- selected_next_loop=Loop 245: Supabase extension package risk gate
+- dr_readiness_status=not_ready_restore_failed
+
+## Risk Gate Result
+
+- package_candidate_misidentification_risk=true
+- package_search_count_broad=true
+- package_candidate_confirmed=false
+- package_install_risk=true
+- package_dependency_risk=true
+- extension_creation_success_unproven=true
+- supabase_extension_full_local_reproduction_unproven=true
+- package_install_no_go=true
+- apt_update_no_go=true
+- apt_upgrade_no_go=true
+- apt_install_no_go=true
+
+## Remediation Candidate Comparison
+
+- candidate_a_operator_only_package_candidate_classifier=recommended
+- candidate_b_package_install_risk_plan=later
+- candidate_c_local_extension_unavailable_decision_gate=conditional
+- candidate_d_immediate_apt_install=no_go
+- candidate_e_immediate_restore_retry=no_go
+
+## Recommended Next Loop
+
+- selected_next_loop=Loop 246: operator-only package candidate classifier
 
 ## Safety
 
-- read_only_inspection=true
 - restore_executed=false
 - pg_restore_executed=false
 - psql_executed=false
@@ -77,6 +78,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - package_installed=false
 - apt_update_executed=false
 - apt_upgrade_executed=false
+- apt_install_executed=false
 - schema_modified=false
 - role_modified=false
 - cluster_modified=false
@@ -104,7 +106,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 245: Supabase extension package risk gate
+- Loop 246: operator-only package candidate classifier
 ---
 
 出力形式:
@@ -115,16 +117,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### identifier safety確認
+### package risk確認
 -
 
-### read-only preflight確認
--
-
-### compatibility判定確認
+### remediation候補確認
 -
 
 ### selected next Loop確認
+-
+
+### Loop 246境界確認
 -
 
 ### Go / No-Go確認

@@ -74,6 +74,7 @@
 - Loop 242 Supabase extension local compatibility preflight: `11_codex_tasks/242_supabase_extension_local_compatibility_preflight.md`
 - Loop 243 operator extension identifier collection: `11_codex_tasks/243_operator_extension_identifier_collection.md`
 - Loop 244 operator extension identifier retry and manual sanitized preflight: `11_codex_tasks/244_operator_extension_identifier_retry_and_manual_sanitized_preflight.md`
+- Loop 245 Supabase extension package risk gate: `11_codex_tasks/245_supabase_extension_package_risk_gate.md`
 
 ## Prompts and Templates
 
