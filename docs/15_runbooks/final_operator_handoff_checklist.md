@@ -6,6 +6,58 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 262 Current Status Override
+
+Loop 262 created the operator permission gate for `line_runtime_env_category`. It did not inject secrets, display env values, display env file contents, connect to LINE, send messages, change runtime, or change production Go.
+
+```txt
+loop_262_current_status_override=true
+line_runtime_env_injection_permission_gate_created=true
+target_missing_category=line_runtime_env_category
+line_runtime_env_category_status=missing_known_category
+operator_permission_required=true
+actual_secret_value_required=true
+actual_injection_allowed_in_loop_262=false
+line_runtime_env_injection_execution_allowed=false
+actual_secret_injection_executed=false
+env_file_operation_executed=false
+secret_file_operation_executed=false
+line_runtime_execution_allowed=false
+line_message_send_allowed=false
+external_runtime_execution_allowed=false
+external_api_connection_attempted=false
+vps_change_executed=false
+production_no_go=true
+production_go_changed=false
+production_go_judgement_ready=true
+unknown_blocker_count=0
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 263 wait for operator line runtime env injection approval decision
+```
+
+Safe operator reply if approving the future injection:
+
+```txt
+approval_decision=approve_line_runtime_env_category_injection
+approval_scope=line_runtime_env_category_only
+secret_values_provided=false
+secret_values_will_be_injected_by_operator_outside_docs=true
+env_value_output_allowed=false
+env_value_length_output_allowed=false
+env_value_hash_output_allowed=false
+env_prefix_suffix_output_allowed=false
+env_file_display_allowed=false
+secret_file_display_allowed=false
+external_api_connection_allowed=false
+line_runtime_execution_allowed=false
+line_message_send_allowed=false
+public_smoke_allowed=false
+production_go_allowed=false
+```
+
+Do not run actual injection, LINE runtime, LINE message send, public smoke, or production Go until separately approved.
+
 ## Loop 261 Current Status Override
 
 Loop 261 consumed the operator approval for an actual-runtime env presence boolean-only check. The check completed with sanitized category-only output and found one known missing runtime category. No env value, length, hash, prefix, suffix, env file content, secret file content, external API call, DB operation, runtime mutation, or production Go change occurred.

@@ -90,6 +90,7 @@
 - Loop 258 operator env injection dry-run without secret values: `11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md`
 - Loop 259 env inventory mismatch cleanup: `11_codex_tasks/259_env_inventory_mismatch_cleanup.md`
 - Loop 261 actual runtime env presence check: `11_codex_tasks/261_actual_runtime_env_presence_check.md`
+- Loop 262 line runtime env injection permission gate: `11_codex_tasks/262_line_runtime_env_injection_permission_gate.md`
 
 ## Prompts and Templates
 

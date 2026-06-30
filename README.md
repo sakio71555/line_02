@@ -148,6 +148,8 @@ Loop 259ではLoop 258でpartialだったadmin系env inventory mismatchを、sec
 
 Loop 261ではoperator承認済みのactual-runtime env presence boolean-only checkを実施し、カテゴリ単位で `9 present / 1 missing` を記録しました。missingは `line_runtime_env_category` の既知blockerで、env値・長さ・hash・prefix/suffix・env/secret file内容・外部API接続・DB操作・runtime変更は行っていません。`production_go_judgement_ready=true` は判断材料が整理されたという意味で、`production_no_go=true` は維持しています。詳細は [docs/11_codex_tasks/261_actual_runtime_env_presence_check.md](docs/11_codex_tasks/261_actual_runtime_env_presence_check.md) を参照してください。
 
+Loop 262では `line_runtime_env_category` のactual runtime注入に進む前のoperator permission gateを追加しました。実secret注入、env file操作、LINE runtime実行、LINE送信、外部API接続、VPS変更、production Go変更は行っていません。次はoperatorが注入を許可するかどうかの判断待ちです。詳細は [docs/11_codex_tasks/262_line_runtime_env_injection_permission_gate.md](docs/11_codex_tasks/262_line_runtime_env_injection_permission_gate.md) を参照してください。
+
 1. `docs/11_codex_tasks/` の対象タスクを読む。
 2. Scopeに書かれた範囲だけ実装する。
 3. Out of scopeに書かれたものは実装しない。

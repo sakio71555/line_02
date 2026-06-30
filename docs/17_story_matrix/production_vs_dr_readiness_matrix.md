@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 262 operator env injection permission gate | Not final Go |
-| External runtime readiness | `actual_runtime_presence_checked_known_missing_category` | Loop 261 completed category-only actual runtime env presence checking; one known runtime category remains missing | `docs/11_codex_tasks/261_actual_runtime_env_presence_check.md` | Loop 262 operator env injection permission gate | Not final Go |
-| Production readiness | `production_no_go_known_env_external_runtime_and_dr` | DR, classifier, missing runtime category, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/261_actual_runtime_env_presence_check.md` | Loop 262 operator env injection permission gate | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 263 wait for operator line runtime env injection approval decision | Not final Go |
+| External runtime readiness | `line_runtime_env_injection_permission_gate_created` | Loop 262 created the permission gate for the single missing line runtime category | `docs/11_codex_tasks/262_line_runtime_env_injection_permission_gate.md` | Loop 263 wait for operator line runtime env injection approval decision | Not final Go |
+| Production readiness | `production_no_go_line_runtime_env_permission_required` | DR, classifier, line runtime env injection approval, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/262_line_runtime_env_injection_permission_gate.md` | Loop 263 wait for operator line runtime env injection approval decision | `production_no_go` maintained |
 
 ## Current State
 
@@ -48,6 +48,8 @@ actual_runtime_env_presence_check_status=complete
 required_categories_present_count=9
 required_categories_missing_count=1
 missing_required_categories=line_runtime_env_category
+line_runtime_env_injection_permission_gate_created=true
+line_runtime_env_injection_execution_allowed=false
 production_go_judgement_ready=true
 unknown_blocker_count=0
 next_execution_sequence_status=operator_env_input_required
@@ -55,10 +57,47 @@ placeholder_only_dry_run_execution_status=pass
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
-production_readiness_status=production_no_go_known_env_external_runtime_and_dr
+production_readiness_status=production_no_go_line_runtime_env_permission_required
 production_no_go=true
 production_no_go_reason_scope=fully_split
 production_go_changed=false
+```
+
+## Loop 262 Line Runtime Env Injection Permission Gate
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Permission gate | `created` | `line_runtime_env_category` only. |
+| Actual injection | `not_allowed` | Requires explicit future operator approval. |
+| LINE runtime execution | `not_allowed` | No LINE API call or message send. |
+| Secret handling | `no_value_output` | No values, lengths, hashes, prefixes, suffixes, env files, or secret files. |
+| Production judgement readiness | `ready_to_review` | This is not production Go approval. |
+| Execution | `not_allowed` | No env injection, env file operation, external runtime, public smoke, DB operation, or production change. |
+| Next action | `selected` | Loop 263 wait for operator line runtime env injection approval decision. |
+
+```txt
+loop_262_line_runtime_env_injection_permission_gate_created=true
+loop_262_target_missing_category=line_runtime_env_category
+loop_262_line_runtime_env_category_status=missing_known_category
+loop_262_operator_permission_required=true
+loop_262_actual_secret_value_required=true
+loop_262_actual_injection_allowed_in_loop_262=false
+loop_262_line_runtime_env_injection_execution_allowed=false
+loop_262_actual_secret_injection_executed=false
+loop_262_env_file_operation_executed=false
+loop_262_secret_file_operation_executed=false
+loop_262_line_runtime_execution_allowed=false
+loop_262_line_message_send_allowed=false
+loop_262_external_runtime_execution_allowed=false
+loop_262_external_api_connection_attempted=false
+loop_262_vps_change_executed=false
+loop_262_production_no_go=true
+loop_262_production_go_changed=false
+loop_262_production_go_judgement_ready=true
+loop_262_unknown_blocker_count=0
+loop_262_dr_readiness_status=not_ready_restore_failed
+loop_262_classifier_route_status=frozen
+loop_262_next_minimal_action=Loop 263 wait for operator line runtime env injection approval decision
 ```
 
 ## Loop 261 Actual Runtime Env Presence Check
