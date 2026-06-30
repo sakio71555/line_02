@@ -579,6 +579,8 @@ Loop 246 operator-only package candidate classifierでは、operator-only classi
 
 Loop 247 package classifier blocked follow-upでは、Loop 246のblocked原因を整理し、次回operator入力を許可keyだけのstrict sanitized `key=value` 形式に限定するretry protocolをdocs-onlyで追加しました。apt-cache、apt操作、package install、restore、pg_restore、psql、DB変更、extension作成、cluster変更は行っていません。次は Loop 248: strict operator-only package candidate classifier retry です。詳細は [Loop 247 task doc](docs/11_codex_tasks/247_package_classifier_blocked_follow_up.md) を参照してください。
 
+Loop 248 strict operator-only package candidate classifier retryでは、Loop 247のstrict sanitized `key=value` protocolを確認しましたが、operator result payloadが未提供だったため `operator_sanitized_result_absent` としてblockedにしました。package名・extension名・raw output・secretは記録せず、package install、apt操作、restore、pg_restore、psql、DB変更、extension作成、cluster変更は行っていません。次は Loop 249: strict operator package classifier input collection です。詳細は [Loop 248 task doc](docs/11_codex_tasks/248_strict_operator_only_package_candidate_classifier_retry.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

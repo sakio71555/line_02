@@ -38,6 +38,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-028 | Supabase extension package risk gate | docs-only review of Loop 245 package risk, remediation comparison, and Loop 246 boundary | broad package count treated as unconfirmed, install remains No-Go, operator-only classifier selected | true | false | false | false | false | false | false | false | pending_loop_245_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-029 | Operator-only package candidate classifier | docs-only review of Loop 246 sanitized classifier result and blocked follow-up decision | malformed classifier result recorded safely, exact names hidden, package classifier blocked | true | false | false | false | false | false | false | false | pending_loop_246_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-030 | Package classifier blocked follow-up | docs-only review of Loop 247 blocked cause, strict result format, validation rule, and Loop 248 boundary | strict retry protocol created, install remains No-Go, exact names hidden | true | false | false | false | false | false | false | false | pending_loop_247_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
+| V-031 | Strict package classifier retry | docs-only review of Loop 248 strict retry outcome and blocked reason | operator sanitized payload absent, classifier retry blocked, input collection selected | true | false | false | false | false | false | false | false | pending_loop_248_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1191,6 +1192,55 @@ loop_247_secrets_recorded=false
 loop_247_supabase_connection_executed=false
 loop_247_production_restore_executed=false
 loop_247_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 248 Verification Note
+
+```txt
+loop_248_docs_only=true
+loop_248_classifier_retry_status=blocked
+loop_248_classifier_result_valid=false
+loop_248_blocked_reason=operator_sanitized_result_absent
+loop_248_operator_sanitized_result_present=false
+loop_248_strict_key_value_payload_received=false
+loop_248_allowed_key_validation_executed=false
+loop_248_package_candidate_confidence=unknown
+loop_248_package_candidate_dependency_risk=unknown
+loop_248_compatibility_path=package_classifier_blocked
+loop_248_package_candidate_names_disclosed=false
+loop_248_extension_name_disclosed=false
+loop_248_raw_package_output_disclosed=false
+loop_248_selected_next_loop=Loop 249 strict operator package classifier input collection
+loop_248_target_db_currently_absent=true
+loop_248_cleanup_required=false
+loop_248_apt_cache_executed=false
+loop_248_apt_update_executed=false
+loop_248_apt_upgrade_executed=false
+loop_248_apt_install_executed=false
+loop_248_package_install_executed=false
+loop_248_package_removed=false
+loop_248_restore_executed=false
+loop_248_pg_restore_executed=false
+loop_248_psql_executed=false
+loop_248_target_db_created=false
+loop_248_target_db_modified=false
+loop_248_extension_created=false
+loop_248_schema_modified=false
+loop_248_role_modified=false
+loop_248_cluster_modified=false
+loop_248_cluster_restarted=false
+loop_248_cluster_reloaded=false
+loop_248_diagnostic_log_displayed=false
+loop_248_raw_log_displayed=false
+loop_248_sql_displayed=false
+loop_248_object_name_displayed=false
+loop_248_role_name_displayed=false
+loop_248_backup_artifact_touched=false
+loop_248_secrets_recorded=false
+loop_248_supabase_connection_executed=false
+loop_248_production_restore_executed=false
+loop_248_production_readiness=production_no_go
+loop_248_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

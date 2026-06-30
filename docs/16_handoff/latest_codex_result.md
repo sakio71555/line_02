@@ -1,125 +1,77 @@
 # Latest Codex Result
 
-This file summarizes Loop 247 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 248 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, package names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 247 package classifier blocked follow-up
+- Loop: Loop 248 strict operator-only package candidate classifier retry
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only blocked follow-up and strict retry protocol
+- Scope type: docs-only classifier retry result recording
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
-## Loop 246 Result
+## Loop 247 Baseline
 
 ```txt
-operator_extension_identifier_available=true
-operator_extension_identifier_shell_safe=true
-apt_cache_available=true
-package_search_count=106
-package_search_count_broad=true
-operator_package_classifier_result_valid=false
-package_classifier_input_malformed=true
+strict_classifier_retry_protocol_created=true
+strict_sanitized_key_value_only=true
+allowed_keys_only_required=true
+prompt_body_allowed=false
+package_name_recording_allowed=false
+extension_name_recording_allowed=false
+raw_package_output_disclosed_must_be_false=true
+invalid_result_handling=blocked_without_retry
+selected_next_loop=Loop 248: strict operator-only package candidate classifier retry
+```
+
+## Loop 248 Result
+
+```txt
+classifier_retry_status=blocked
+classifier_result_valid=false
+blocked_reason=operator_sanitized_result_absent
+operator_sanitized_result_present=false
+strict_key_value_payload_received=false
+allowed_key_validation_executed=false
 package_candidate_confidence=unknown
 package_candidate_dependency_risk=unknown
 compatibility_path=package_classifier_blocked
-package_candidate_names_disclosed=false
-extension_name_disclosed=false
-package_install_executed=false
-apt_update_executed=false
-apt_upgrade_executed=false
-apt_install_executed=false
 ```
 
-## Blocked Cause
+## Blocked Reason
 
 ```txt
-package_search_count_broad=true
-package_candidate_confirmed=false
-operator_result_contained_prompt_text=true
-operator_package_classifier_result_valid=false
-package_classifier_input_malformed=true
-package_candidate_confidence=unknown
-package_candidate_dependency_risk=unknown
+operator_sanitized_result_absent=true
+codex_cannot_validate_allowed_keys=true
+codex_cannot_validate_value_domains=true
+codex_cannot_validate_disclosure_booleans=true
 package_install_no_go=true
 apt_update_no_go=true
 apt_upgrade_no_go=true
 apt_install_no_go=true
 extension_creation_no_go=true
 restore_retry_no_go=true
-package_name_recorded=false
-extension_name_recorded=false
 ```
 
-## Strict Sanitized Result Format
+## Disclosure Safety
 
 ```txt
-operator_package_classifier_executed=true/false
-operator_package_classifier_result_valid=true/false
-operator_package_review_scope=apt_cache_search_only/apt_cache_search_and_show/none
-package_candidate_count=<number>
-package_candidate_exact_match_found=true/false/unknown
-package_candidate_confidence=high/medium/low/unknown
-package_candidate_source_category=pgdg/ubuntu/third_party/unknown
-package_candidate_dependency_risk=low/medium/high/unknown
-package_candidate_requires_install=true/false/unknown
-package_candidate_requires_apt_update=true/false/unknown
 package_candidate_names_disclosed=false
 extension_name_disclosed=false
-apt_update_executed=false
-apt_upgrade_executed=false
-apt_install_executed=false
-package_install_executed=false
 raw_package_output_disclosed=false
-```
-
-## Validation Rule
-
-```txt
-allowed_keys_only_required=true
-package_like_names_allowed=false
-extension_like_names_allowed=false
-prompt_body_allowed=false
-package_candidate_confidence_allowed_values=high,medium,low,unknown
-package_candidate_dependency_risk_allowed_values=low,medium,high,unknown
-apt_update_executed_must_be_false=true
-apt_upgrade_executed_must_be_false=true
-apt_install_executed_must_be_false=true
-package_install_executed_must_be_false=true
-raw_package_output_disclosed_must_be_false=true
-invalid_result_handling=blocked_without_retry
-```
-
-## Loop 248 Boundary
-
-```txt
-selected_next_loop=Loop 248: strict operator-only package candidate classifier retry
-loop_248_operator_only=true
-loop_248_apt_cache_search_show_read_only=true
-package_name_recording_allowed=false
-extension_name_recording_allowed=false
-strict_sanitized_key_value_only=true
-apt_update_allowed=false
-apt_upgrade_allowed=false
-apt_install_allowed=false
-package_install_allowed=false
-psql_allowed=false
-restore_allowed=false
-pg_restore_allowed=false
-extension_creation_allowed=false
-db_change_allowed=false
-prompt_body_allowed=false
-```
-
-## Cleanup
-
-```txt
-target_db_currently_absent=true
-cleanup_required=false
+raw_log_displayed=false
+sql_displayed=false
+object_name_displayed=false
+role_name_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+dump_content_displayed=false
+row_content_displayed=false
+backup_artifact_touched=false
 ```
 
 ## Safety Boundary
@@ -143,21 +95,10 @@ role_modified=false
 cluster_modified=false
 cluster_restarted=false
 cluster_reloaded=false
-backup_artifact_touched=false
-diagnostic_log_displayed=false
-raw_log_displayed=false
-sql_displayed=false
-extension_name_displayed=false
-package_name_displayed=false
-object_name_displayed=false
-role_name_displayed=false
-dump_content_displayed=false
-row_content_displayed=false
-db_url_displayed=false
-secrets_recorded=false
 supabase_connection_executed=false
 production_restore_executed=false
 production_runtime_changed=false
+production_readiness=production_no_go
 ```
 
 ## Verification
@@ -182,4 +123,4 @@ dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 248: strict operator-only package candidate classifier retry
+- Loop 249: strict operator package classifier input collection

@@ -242,6 +242,8 @@ Loop 246 status: `operator_package_classifier_executed=true`, `operator_package_
 
 Loop 247 status: `docs_only=true`, `operator_package_classifier_result_valid=false`, `package_classifier_input_malformed=true`, `strict_classifier_retry_protocol_created=true`, `package_name_displayed=false`, `extension_name_displayed=false`, `apt_cache_executed=false`, `apt_update_executed=false`, `apt_upgrade_executed=false`, `apt_install_executed=false`, `package_install_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 248 strict operator-only package candidate classifier retry`.
 
+Loop 248 status: `docs_only=true`, `classifier_retry_status=blocked`, `classifier_result_valid=false`, `blocked_reason=operator_sanitized_result_absent`, `operator_sanitized_result_present=false`, `strict_key_value_payload_received=false`, `allowed_key_validation_executed=false`, `package_candidate_names_disclosed=false`, `extension_name_disclosed=false`, `raw_package_output_disclosed=false`, `apt_cache_executed=false`, `apt_update_executed=false`, `apt_upgrade_executed=false`, `apt_install_executed=false`, `package_install_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 249 strict operator package classifier input collection`.
+
 ## Obsidian Helpers
 
 - [Obsidian README](README.md)

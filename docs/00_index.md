@@ -77,6 +77,7 @@
 - Loop 245 Supabase extension package risk gate: `11_codex_tasks/245_supabase_extension_package_risk_gate.md`
 - Loop 246 operator-only package candidate classifier: `11_codex_tasks/246_operator_only_package_candidate_classifier.md`
 - Loop 247 package classifier blocked follow-up: `11_codex_tasks/247_package_classifier_blocked_follow_up.md`
+- Loop 248 strict operator-only package candidate classifier retry: `11_codex_tasks/248_strict_operator_only_package_candidate_classifier_retry.md`
 
 ## Prompts and Templates
 
