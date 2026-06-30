@@ -463,6 +463,48 @@ loop_230_backup_artifact_copied_into_repo=false
 loop_230_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 231 Verification Note
+
+```txt
+loop_231_local_cluster_confirmed=true
+loop_231_cluster_row_found=true
+loop_231_cluster_online=true
+loop_231_local_cluster_loopback_only=true
+loop_231_external_interface_listen_detected=false
+loop_231_target_db_name_contains_restore_drill=true
+loop_231_target_db_name_contains_loop231=true
+loop_231_target_db_exists_before=false
+loop_231_target_db_created=true
+loop_231_target_db_exists_after_create=true
+loop_231_target_db_owner_aligned=true
+loop_231_future_restore_execution_user_matches_owner=true
+loop_231_target_db_local_only=true
+loop_231_provisioning_status=success
+loop_231_target_db_retained=true
+loop_231_target_db_restricted=true_by_loopback_cluster
+loop_231_cleanup_required=true
+loop_231_cleanup_reason=retained_for_next_pre_data_retry
+loop_231_restore_executed=false
+loop_231_pg_restore_executed=false
+loop_231_backup_artifact_used=false
+loop_231_supabase_connection_executed=false
+loop_231_production_db_connection_executed=false
+loop_231_production_restore_executed=false
+loop_231_target_db_other_than_candidate_modified=false
+loop_231_role_created=false
+loop_231_role_modified=false
+loop_231_cluster_modified=false
+loop_231_restart_or_reload_executed=false
+loop_231_psql_metadata_executed=true
+loop_231_psql_scope=local_metadata_only
+loop_231_row_content_displayed=false
+loop_231_db_url_displayed=false
+loop_231_secrets_recorded=false
+loop_231_push_performed=false
+loop_231_selected_next_loop=Loop 232 owner-aligned pre-data restore retry gate
+loop_231_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

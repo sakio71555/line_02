@@ -60,6 +60,7 @@
 - Loop 228 restore drill cluster loopback remediation plan: `11_codex_tasks/228_restore_drill_cluster_loopback_remediation_plan.md`
 - Loop 229 restore drill cluster loopback remediation execution: `11_codex_tasks/229_restore_drill_cluster_loopback_remediation_execution.md`
 - Loop 230 owner-aligned target DB provisioning gate: `11_codex_tasks/230_owner_aligned_target_db_provisioning_gate.md`
+- Loop 231 owner-aligned target DB provisioning execution: `11_codex_tasks/231_owner_aligned_target_db_provisioning_execution.md`
 
 ## Prompts and Templates
 

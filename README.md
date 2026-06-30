@@ -545,6 +545,8 @@ Loop 229 restore drill cluster loopback remediation executionでは、restore dr
 
 Loop 230 owner-aligned target DB provisioning gateでは、Loop 229でloopback-onlyになったrestore drill clusterに対して、次のfresh local disposable target DB作成だけを安全に行うためのgateをdocs-onlyで整理しました。DB名は `restore_drill` / `loop231` を含め、DB ownerと将来のrestore実行userを揃える方針です。このLoopではDB作成、psql、restore、pg_restore、role変更、cluster変更、Supabase/production接続、secret表示は行っていません。詳細は [docs/11_codex_tasks/230_owner_aligned_target_db_provisioning_gate.md](docs/11_codex_tasks/230_owner_aligned_target_db_provisioning_gate.md) と [docs/16_obsidian/loop_230_owner_aligned_target_db_provisioning_gate.md](docs/16_obsidian/loop_230_owner_aligned_target_db_provisioning_gate.md) を参照してください。
 
+Loop 231 owner-aligned target DB provisioning executionでは、restore drill local PostgreSQL clusterの安全条件を確認し、fresh local disposable target DB `amami_line_crm_restore_drill_loop231_20260630` を作成しました。owner alignmentはlocal metadataのみで確認し、次のpre-data retry gate用に短期保持します。restore、pg_restore、backup artifact使用、Supabase/production接続、role変更、cluster変更、raw log/dump/row content表示、secret表示は行っていません。詳細は [docs/11_codex_tasks/231_owner_aligned_target_db_provisioning_execution.md](docs/11_codex_tasks/231_owner_aligned_target_db_provisioning_execution.md) と [docs/16_obsidian/loop_231_owner_aligned_target_db_provisioning_execution.md](docs/16_obsidian/loop_231_owner_aligned_target_db_provisioning_execution.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

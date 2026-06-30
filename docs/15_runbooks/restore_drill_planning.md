@@ -533,6 +533,116 @@ restore_retry_requires_new_approval=true
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## 35. Loop 231 Owner-Aligned Target DB Provisioning Execution
+
+Loop 231 provisions one fresh owner-aligned target DB for the next pre-data retry. It does not run restore, `pg_restore`, backup artifact restore, Supabase connection, production DB connection, production restore, role creation, role modification, cluster changes, package changes, reload/restart, firewall changes, application runtime changes, LINE/OpenAI operations, or push.
+
+### 35.1 Local Cluster Confirmation
+
+```txt
+cluster_row_found=true
+cluster_version_matches=true
+cluster_name_matches=true
+cluster_port_matches_55432=true
+cluster_online=true
+listen_scope_checked=true
+listen_entry_count=2
+loopback_listen_count=2
+wildcard_listen_count=0
+non_loopback_listen_count=0
+local_cluster_loopback_only=true
+external_interface_listen_detected=false
+```
+
+### 35.2 Existing DB Check
+
+```txt
+target_db_candidate=amami_line_crm_restore_drill_loop231_20260630
+target_db_name_contains_restore_drill=true
+target_db_name_contains_loop231=true
+target_db_exists_before=false
+```
+
+The same target DB did not already exist. No DB was overwritten or dropped before creation.
+
+### 35.3 Provisioning Result
+
+```txt
+target_db_created=true
+target_db_exists_after_create=true
+target_db_owner_aligned=true
+future_restore_execution_user_matches_owner=true
+target_db_local_only=true
+target_db_connection_metadata_check=passed
+provisioning_status=success
+```
+
+Owner alignment was verified by local metadata only. Role details and SQL statements were not recorded.
+
+### 35.4 Retention / Cleanup
+
+```txt
+target_db_retained=true
+target_db_restricted=true_by_loopback_cluster
+cleanup_required=true
+cleanup_reason=retained_for_next_pre_data_retry
+cleanup_deadline=after_loop232_or_before_2026-07-01
+```
+
+The DB is retained only as a short-lived target for the next gate. If Loop 232 does not proceed promptly, create a cleanup Loop and drop this target DB.
+
+### 35.5 Next Boundary
+
+```txt
+selected_next_loop=Loop 232: owner-aligned pre-data restore retry gate
+selected_next_loop_reason=owner_aligned_target_db_ready
+pre_data_retry_gate_ready=true
+restore_retry_executed=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 232 should be a gate before any restore retry. It should keep role changes, cluster changes, Supabase/production connection, and backup artifact content display prohibited.
+
+### 35.6 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+backup_artifact_used=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+target_db_created=true
+target_db_modified=true_creation_only
+target_db_other_than_candidate_modified=false
+role_created=false
+role_modified=false
+grant_revoke_executed=false
+alter_role_executed=false
+alter_database_executed=false
+cluster_modified=false
+package_modified=false
+restart_or_reload_executed=false
+firewall_modified=false
+application_runtime_changed=false
+line_real_send_executed=false
+openai_api_charged=false
+nginx_dns_https_certbot_public_smoke_executed=false
+psql_metadata_executed=true
+psql_scope=local_metadata_only
+row_content_displayed=false
+schema_object_details_displayed=false
+role_details_displayed=false
+sql_statement_recorded=false
+db_url_displayed=false
+secrets_recorded=false
+raw_log_displayed=false
+diagnostic_log_displayed=false
+dump_content_displayed=false
+push_performed=false
+```
+
 ## 20. Loop 216 Sanitized Role ACL Subcategory Classifier
 
 Loop 216 ran a category-only classifier against the repo-external root-only Loop 213 diagnostic log. It did not rerun restore, run `pg_restore`, run `psql`, create a target DB, create or modify roles, copy diagnostic logs into the repo, display raw logs, display matching lines, display role names, display SQL statements, display object names, touch the backup artifact, connect to Supabase, or change production runtime.
