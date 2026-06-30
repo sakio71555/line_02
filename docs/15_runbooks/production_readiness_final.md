@@ -6,6 +6,48 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 254 Current Status Override
+
+Loop 254 completed the final pre-external-runtime readiness review. Local app readiness is pass from Loop 253, but external runtime, operator env injection, public smoke, and production activation remain blocked until an explicit operator approval pack is accepted.
+
+```txt
+loop_254_current_status_override=true
+final_pre_external_runtime_review_completed=true
+local_app_readiness_status=pass
+external_runtime_readiness_status=operator_approval_required
+operator_approval_pack_created=true
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 255 final external runtime approval request pack
+```
+
+Current Go / No-Go matrix:
+
+| bucket | status | active decision |
+| --- | --- | --- |
+| local app Go conditions | `satisfied` | Loop 253 local verification passed. |
+| external runtime Go conditions | `operator_approval_required` | No VPS / LINE / OpenAI / Supabase / public smoke execution yet. |
+| operator approval Go conditions | `operator_approval_required` | Loop 255 should request approval only. |
+| production Go conditions | `not_requested` | `production_no_go=true`. |
+| DR known risk conditions | `not_ready_restore_failed` | Known risk remains. |
+| rollback Go conditions | `review_required_before_execution` | Rollback owner/scope must be confirmed before any external action. |
+| No-Go conditions | `active` | External runtime and production activation are blocked until approval. |
+
+External runtime categories requiring approval before execution:
+
+- VPS deployment.
+- Nginx validation / reload / restart.
+- DNS.
+- HTTPS / certbot.
+- Public smoke.
+- LINE runtime.
+- OpenAI runtime.
+- Supabase runtime.
+- Operator env injection.
+- Rollback permission.
+
 ## Loop 253 Current Status Override
 
 Loop 253 completed local-only production start verification. This confirms the local app start path with safe defaults, but it does not authorize production Go.

@@ -6,8 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 254 final pre-external-runtime readiness review | Not final Go |
-| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 254 final pre-external-runtime readiness review | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 255 final external runtime approval request pack | Not final Go |
+| External runtime readiness | `operator_approval_required` | Loop 254 approval pack exists; no external runtime executed | `docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md` | Loop 255 final external runtime approval request pack | Not final Go |
+| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md` | Loop 255 final external runtime approval request pack | `production_no_go` maintained |
 
 ## Current State
 
@@ -17,10 +18,36 @@ classifier_route_status=frozen
 app_readiness_status=local_production_start_verified
 app_production_path_review_completed=true
 local_production_verification_status=pass
+final_pre_external_runtime_review_completed=true
+external_runtime_readiness_status=operator_approval_required
+operator_approval_pack_created=true
 production_readiness_status=production_no_go_external_runtime_and_dr
 production_no_go=true
 production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 254 Final Pre-External-Runtime Readiness Review
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Local app readiness | `pass` | Loop 253 evidence accepted. |
+| External runtime readiness | `operator_approval_required` | VPS / Nginx / DNS / HTTPS / LINE / OpenAI / Supabase / public smoke blocked until approval. |
+| Operator approval pack | `created` | Approval categories and No-Go list documented. |
+| Production Go | `not_changed` | `production_no_go=true`. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains. |
+| Classifier route | `frozen` | No classifier / payload / package / restore resume. |
+
+```txt
+loop_254_final_pre_external_runtime_review_completed=true
+loop_254_local_app_readiness_status=pass
+loop_254_external_runtime_readiness_status=operator_approval_required
+loop_254_operator_approval_pack_created=true
+loop_254_production_no_go=true
+loop_254_production_go_changed=false
+loop_254_dr_readiness_status=not_ready_restore_failed
+loop_254_classifier_route_status=frozen
+loop_254_next_minimal_action=Loop 255 final external runtime approval request pack
 ```
 
 ## Loop 253 Local Production Start Verification

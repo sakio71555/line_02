@@ -134,6 +134,8 @@ Loop 252ではclassifier / package / restore routeを凍結したまま、DR rea
 
 Loop 253ではlocal-only production start verification checklistを実行し、API/Admin build、127.0.0.1限定のlocal start、local curl、process停止確認がpassしました。外部API、Supabase、VPS、Nginx、DNS、HTTPS、DB変更、secret表示は行わず、`production_no_go=true` と `dr_readiness_status=not_ready_restore_failed` は維持しています。詳細は [docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md](docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md) を参照してください。
 
+Loop 254ではfinal pre-external-runtime readiness reviewを実施し、Loop 253のlocal app passを前提に、VPS/Nginx/DNS/HTTPS/public smoke/LINE/OpenAI/Supabase/operator env injection/rollbackの承認待ち状態をoperator approval packとして整理しました。外部runtime実行、secret入力、DB操作、production反映は行わず、`production_no_go=true`、`dr_readiness_status=not_ready_restore_failed`、`classifier_route_status=frozen` を維持しています。詳細は [docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md](docs/11_codex_tasks/254_final_pre_external_runtime_readiness_review.md) を参照してください。
+
 1. `docs/11_codex_tasks/` の対象タスクを読む。
 2. Scopeに書かれた範囲だけ実装する。
 3. Out of scopeに書かれたものは実装しない。

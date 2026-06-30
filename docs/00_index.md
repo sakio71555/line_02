@@ -83,6 +83,7 @@
 - Loop 251 classifier route freeze and DR-production readiness split: `11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md`
 - Loop 252 app production path review and readiness cleanup: `11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md`
 - Loop 253 local production start verification checklist execution: `11_codex_tasks/253_local_production_start_verification_checklist_execution.md`
+- Loop 254 final pre-external-runtime readiness review: `11_codex_tasks/254_final_pre_external_runtime_readiness_review.md`
 
 ## Prompts and Templates
 

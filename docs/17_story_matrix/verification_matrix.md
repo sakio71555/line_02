@@ -44,6 +44,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-034 | Classifier route freeze and readiness split | docs-only review of Loop 251 route freeze, repeated-blocker rule, and readiness split | classifier route frozen, next classifier loop disallowed, DR/app/production readiness separated | true | false | false | false | false | false | false | false | pending_loop_251_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, change DB state, or change production runtime. |
 | V-035 | App production path review and readiness cleanup | docs-only review of Loop 252 app path, No-Go reason split, cleanup batch, and next minimal action | app production path reviewed, production_no_go reason split, classifier route frozen, local start verification selected | true | false | false | false | false | false | false | false | pending_loop_252_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, or production runtime changes. |
 | V-036 | Local production start verification checklist | local-only build/start/curl verification for API and Admin on loopback with safe defaults | API/Admin build and local start pass, local curl pass, processes stopped, production_no_go maintained | true | false | false | false | false | false | false | false | pending_loop_253_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, or production runtime changes. |
+| V-037 | Final pre-external-runtime readiness review | docs-only review of Loop 253 local pass plus external runtime approval categories | local app pass accepted, operator approval pack created, production_no_go maintained | true | false | false | false | false | false | false | false | pending_loop_254_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, secret injection, or production runtime changes. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1501,6 +1502,53 @@ loop_253_dr_readiness_status=not_ready_restore_failed
 loop_253_classifier_route_status=frozen
 loop_253_production_no_go=true
 loop_253_selected_next_loop=Loop 254 final pre-external-runtime readiness review
+```
+
+## Loop 254 Verification Note
+
+```txt
+loop_254_final_pre_external_runtime_review_completed=true
+loop_254_local_app_readiness_status=pass
+loop_254_external_runtime_readiness_status=operator_approval_required
+loop_254_operator_approval_pack_created=true
+loop_254_production_no_go=true
+loop_254_production_go_changed=false
+loop_254_dr_readiness_status=not_ready_restore_failed
+loop_254_classifier_route_status=frozen
+loop_254_vps_operation_executed=false
+loop_254_nginx_operation_executed=false
+loop_254_dns_operation_executed=false
+loop_254_https_or_certbot_operation_executed=false
+loop_254_public_smoke_executed=false
+loop_254_line_real_send_executed=false
+loop_254_openai_api_executed=false
+loop_254_supabase_connection_executed=false
+loop_254_psql_executed=false
+loop_254_pg_restore_executed=false
+loop_254_restore_executed=false
+loop_254_target_db_created=false
+loop_254_target_db_modified=false
+loop_254_schema_modified=false
+loop_254_role_modified=false
+loop_254_extension_created=false
+loop_254_cluster_modified=false
+loop_254_package_install_executed=false
+loop_254_package_remove_executed=false
+loop_254_pnpm_install_executed=false
+loop_254_pnpm_add_executed=false
+loop_254_apt_operation_executed=false
+loop_254_env_file_created=false
+loop_254_env_file_modified=false
+loop_254_env_file_displayed=false
+loop_254_secret_recorded=false
+loop_254_db_url_recorded=false
+loop_254_raw_log_recorded=false
+loop_254_dump_content_recorded=false
+loop_254_row_content_recorded=false
+loop_254_package_name_recorded=false
+loop_254_extension_name_recorded=false
+loop_254_production_runtime_changed=false
+loop_254_selected_next_loop=Loop 255 final external runtime approval request pack
 ```
 
 ## Stage 2 Rule

@@ -11,10 +11,10 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 253 の local production start verification checklist execution をレビューしてください。
-- API/Adminのlocal-only production start verificationが妥当か確認してください。
-- process停止確認、外部接続なし、secret記録なし、production_no_go維持が守られているか確認してください。
-- 次Loop候補が classifier retry / payload recollection / protocol fix / restore retry / package install / apt operation / DR fallback plan になっていないか確認してください。
+- Loop 254 の final pre-external-runtime readiness review をレビューしてください。
+- Loop 253のlocal app passを前提に、外部runtimeへ進む前のoperator approval packが十分か確認してください。
+- production_no_go、DR not ready、classifier route frozen、secret/raw log非記録が守られているか確認してください。
+- 次Loop候補が実行Loopではなく、approval request packに限定されているか確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -27,41 +27,40 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 253 local production start verification checklist execution
+- Loop: Loop 254 final pre-external-runtime readiness review
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: local-only production start verification checklist
+- Scope type: docs-only readiness review and operator approval pack
 
-## Loop 253 Result
+## Loop 254 Result
 
-- local_production_verification_status=pass
-- api_start_script_present=true
-- admin_start_script_present=true
-- api_production_bind_boundary_checked=true
-- admin_production_start_boundary_checked=true
-- local_start_without_external_runtime_possible=true
-- api_build_status=pass
-- admin_build_status=pass
-- build_status=pass_api_admin
-- api_local_start_status=pass
-- api_local_health_check=pass
-- admin_local_start_status=pass
-- admin_local_login_check=pass
-- api_process_stop_check=pass
-- admin_process_stop_check=pass
-- lint_status=pass
-- typecheck_status=pass
-- test_status=pass
-
-## Still Separate / Blocked
-
-- supabase_real_runtime_status=blocked_requires_external_runtime_and_operator_env
-- line_real_send_status=blocked_requires_separate_approval
-- openai_real_api_status=blocked_requires_separate_approval
-- production_go_status=blocked_not_requested
-- classifier_route_status=frozen
-- dr_readiness_status=not_ready_restore_failed
+- final_pre_external_runtime_review_completed=true
+- local_app_readiness_status=pass
+- external_runtime_readiness_status=operator_approval_required
+- operator_approval_pack_created=true
 - production_no_go=true
+- production_go_changed=false
+- dr_readiness_status=not_ready_restore_failed
+- classifier_route_status=frozen
+- next_minimal_action=Loop 255 final external runtime approval request pack
+
+## External Runtime Areas Reviewed
+
+- VPS deployment: operator_approval_required
+- Nginx: operator_approval_required
+- DNS: operator_approval_required
+- HTTPS/certbot: operator_approval_required
+- public smoke: operator_approval_required
+- LINE runtime: operator_approval_required
+- OpenAI runtime: operator_approval_required
+- Supabase runtime: operator_approval_required
+- operator env injection: operator_input_required
+- rollback: review_required_before_execution
+- No-Go checklist: reviewed_docs_only
+- final operator handoff: approval_pack_created
+- monitoring/ops checks: review_required_before_execution
+- DR known risk: not_ready_restore_failed
+- classifier route: frozen
 
 ## Safety
 
@@ -98,11 +97,10 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - package_name_recorded=false
 - extension_name_recorded=false
 - production_runtime_changed=false
-- production_go_changed=false
 
 ## Next Loop Candidate
 
-- Loop 254: final pre-external-runtime readiness review
+- Loop 255: final external runtime approval request pack
 ---
 
 必ず以下の順で判定してください。
@@ -121,22 +119,25 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### レビュー結果
 -
 
-### local production verification確認
+### local app readiness確認
 -
 
-### process停止確認
+### external runtime readiness確認
 -
 
-### external runtime / secret safety確認
+### operator approval pack確認
 -
 
-### classifier route freeze確認
+### production_no_go確認
 -
 
 ### DR readiness確認
 -
 
-### production_no_go確認
+### classifier route freeze確認
+-
+
+### secret / raw log safety確認
 -
 
 ### Obsidian確認

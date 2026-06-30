@@ -6,6 +6,55 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 254 Current Status Override
+
+Loop 254 completed the final pre-external-runtime readiness review. Loop 253 proved the local app start path, but external runtime work now requires an explicit operator approval pack before any action is executed.
+
+```txt
+loop_254_current_status_override=true
+final_pre_external_runtime_review_completed=true
+local_app_readiness_status=pass
+external_runtime_readiness_status=operator_approval_required
+operator_approval_pack_created=true
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 255 final external runtime approval request pack
+```
+
+Current operator approval pack categories:
+
+- VPS deployment permission.
+- Nginx validation / reload / restart permission.
+- DNS operation permission.
+- HTTPS / certbot permission.
+- Public smoke permission.
+- LINE runtime permission.
+- OpenAI runtime permission.
+- Supabase runtime permission.
+- Operator env injection permission.
+- Rollback permission and owner confirmation.
+
+Do not execute until approved:
+
+- VPS, Nginx, DNS, HTTPS/certbot, and public smoke.
+- LINE send or LINE runtime mutation.
+- OpenAI API call or paid smoke.
+- Supabase connection or runtime switch.
+- Secret injection helper execution.
+- `psql`, `pg_restore`, restore retry, DB/schema/role/extension/cluster/package/apt changes.
+- Production Go.
+
+Current Go / No-Go summary:
+
+- Local app conditions: satisfied by Loop 253.
+- External runtime conditions: operator approval required.
+- Operator approval conditions: approval request pack required next.
+- Production conditions: No-Go, not requested.
+- DR condition: known risk, `not_ready_restore_failed`.
+- Rollback condition: must be confirmed before execution.
+
 ## Loop 253 Current Status Override
 
 Loop 253 completed the local production start verification checklist. This supersedes the Loop 252 "local verification pending" item but does not change production Go / No-Go.

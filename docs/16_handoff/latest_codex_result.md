@@ -1,63 +1,81 @@
 # Latest Codex Result
 
-This file summarizes Loop 253 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 254 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, package names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 253 local production start verification checklist execution
+- Loop: Loop 254 final pre-external-runtime readiness review
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: local-only production start verification checklist
+- Scope type: docs-only readiness review and operator approval pack
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
 ## Baseline
 
 ```txt
-loop_252_classifier_route_status=frozen
-loop_252_dr_readiness_status=not_ready_restore_failed
-loop_252_app_production_path_review_completed=true
-loop_252_production_no_go=true
-loop_252_selected_next_minimal_action=local_production_start_verification_checklist_execution
+loop_253_local_production_verification_status=pass
+loop_253_api_local_start_status=pass
+loop_253_api_local_health_check=pass
+loop_253_admin_local_start_status=pass
+loop_253_admin_local_login_check=pass
+loop_253_process_stop_check=pass
+loop_253_lint_status=pass
+loop_253_typecheck_status=pass
+loop_253_test_status=pass
 ```
 
-## Loop 253 Result
+## Loop 254 Result
 
 ```txt
-local_production_verification_status=pass
-api_start_script_present=true
-admin_start_script_present=true
-api_production_bind_boundary_checked=true
-admin_production_start_boundary_checked=true
-local_start_without_external_runtime_possible=true
-api_build_status=pass
-admin_build_status=pass
-build_status=pass_api_admin
-api_local_start_status=pass
-api_local_health_check=pass
-admin_local_start_status=pass
-admin_local_login_check=pass
-api_process_stop_check=pass
-admin_process_stop_check=pass
-lint_status=pass
-typecheck_status=pass
-test_status=pass
+final_pre_external_runtime_review_completed=true
+local_app_readiness_status=pass
+external_runtime_readiness_status=operator_approval_required
+operator_approval_pack_created=true
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_minimal_action=Loop 255 final external runtime approval request pack
 ```
 
-## Blocked / Still Separate
+## External Runtime Areas Reviewed
 
 ```txt
-blocked_item_count=4
-supabase_real_runtime_status=blocked_requires_external_runtime_and_operator_env
-line_real_send_status=blocked_requires_separate_approval
-openai_real_api_status=blocked_requires_separate_approval
-production_go_status=blocked_not_requested
-external_runtime_required=false_for_local_safe_defaults
-operator_env_required=false_for_local_safe_defaults
-real_external_runtime_required=true_for_future_production_activation
+vps_deployment_readiness=operator_approval_required
+nginx_readiness=operator_approval_required
+dns_readiness=operator_approval_required
+https_certbot_readiness=operator_approval_required
+public_smoke_readiness=operator_approval_required
+line_runtime_readiness=operator_approval_required
+openai_runtime_readiness=operator_approval_required
+supabase_runtime_readiness=operator_approval_required
+operator_env_injection_readiness=operator_input_required
+rollback_readiness=review_required_before_execution
+no_go_checklist_readiness=reviewed_docs_only
+final_operator_handoff_readiness=approval_pack_created
+monitoring_ops_check_readiness=review_required_before_execution
+dr_known_risk_status=not_ready_restore_failed
+classifier_route_status=frozen
+```
+
+## Operator Approval Pack Summary
+
+```txt
+operator_approval_required=true
+operator_approval_pack_created=true
+approval_scope_candidates_present=true
+required_operator_inputs_sanitized=true
+required_external_runtime_permissions_documented=true
+expected_commands_by_category_without_raw_secret=true
+rollback_plan_summary_present=true
+no_go_conditions_present=true
+go_conditions_present=true
+known_risks_present=true
+do_not_execute_until_approved_list_present=true
 ```
 
 ## Safety Boundary
@@ -96,27 +114,21 @@ row_content_recorded=false
 package_name_recorded=false
 extension_name_recorded=false
 production_runtime_changed=false
-classifier_route_status=frozen
-dr_readiness_status=not_ready_restore_failed
-production_no_go=true
-production_go_changed=false
 ```
 
 ## Verification
 
 ```txt
 git_status_checked=true
-git_diff_check=pass
-lint=pass
-typecheck=pass
-test=pass
-api_build=pass
-admin_build=pass
+git_diff_check=required_after_changes
 docs_link_check=required_after_changes
 secret_pattern_boolean_check=required_after_changes
+lint=required_after_changes
+typecheck=skipped_docs_only
+test=skipped_docs_only
 ```
 
 ## Next Loop Candidate
 
-- Loop 254: final pre-external-runtime readiness review
-- Reason: local production start verification passed, so the next safe minimum action is to review what remains before any external runtime / operator env / production activation work.
+- Loop 255: final external runtime approval request pack
+- Reason: Loop 254 created the approval pack but did not collect approval or execute any external runtime action.
