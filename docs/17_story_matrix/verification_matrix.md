@@ -533,6 +533,44 @@ loop_232_secrets_recorded=false
 loop_232_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 233 Verification Note
+
+```txt
+loop_233_artifact_exists=true
+loop_233_artifact_file_permission=600
+loop_233_artifact_parent_dir_permission=700
+loop_233_artifact_size_match=true
+loop_233_artifact_checksum_match=true
+loop_233_target_db_exists=true
+loop_233_target_db_owner_aligned=true
+loop_233_local_cluster_loopback_only=false
+loop_233_external_interface_listen_detected=true
+loop_233_precheck_ok=false
+loop_233_diagnostic_log_created=true
+loop_233_diagnostic_log_dir_permission=700
+loop_233_diagnostic_log_file_permission=600
+loop_233_pg_restore_path_present=true
+loop_233_pg_restore_version_check_executed=true
+loop_233_restore_attempt_count=0
+loop_233_pg_restore_exit_code=not_executed
+loop_233_pre_data_retry_status=blocked
+loop_233_sanitized_validation_executed=false
+loop_233_restore_target_dropped=true
+loop_233_target_db_exists_after_drop=false
+loop_233_cleanup_required=false
+loop_233_restore_executed=false
+loop_233_pg_restore_restore_executed=false
+loop_233_backup_artifact_copied_into_repo=false
+loop_233_supabase_connection_executed=false
+loop_233_production_restore_executed=false
+loop_233_raw_log_displayed=false
+loop_233_dump_content_displayed=false
+loop_233_row_content_displayed=false
+loop_233_secrets_recorded=false
+loop_233_selected_next_loop=Loop 234 owner-aligned pre-data retry blocked follow-up
+loop_233_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

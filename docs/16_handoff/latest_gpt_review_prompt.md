@@ -8,17 +8,17 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 232 の owner-aligned pre-data restore retry gate をレビューしてください。
+- Loop 233 の owner-aligned pre-data restore retry execution をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- restore / pg_restore / psql / target DB変更 / role変更 / cluster変更が実行されていないか確認してください。
-- Loop 233で許可する境界が、pre-data 1回だけに絞られているか確認してください。
-- cleanup_required=true のtarget DBをどう扱うかが明確か確認してください。
-- Obsidian/dev log/handoff/matrixの記録漏れがあれば指摘してください。
-- 大きな実行へ進まず小さいLoopに分解する方針でレビューしてください。
+- artifact/target DB/pg_restore path確認は妥当か確認してください。
+- local_cluster_loopback_only=false によりpre-data retryを実行しなかった判断が妥当か確認してください。
+- target DBをdropして cleanup_required=false にした判断が妥当か確認してください。
+- raw log / dump内容 / row content / secret / DB URLが記録されていないか確認してください。
+- 次Loopを小さく分ける方針でレビューしてください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
-- Loop 232はdocs-only gateです。
+- Loop 233ではpreflightでblockedになったため、restore attempt countは0です。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -28,67 +28,74 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 232 owner-aligned pre-data restore retry gate
+- Loop: Loop 233 owner-aligned pre-data restore retry execution
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
 - Start git status: main...origin/main
-- Scope type: docs-only restore retry gate
+- Scope type: restore retry preflight and cleanup execution
 
-## Loop 231 Result Summary
+## Artifact Check
 
-- target_cluster=17/restore_drill_loop2091
-- target_cluster_port=55432
-- local_cluster_loopback_only=true
-- external_interface_listen_detected=false
-- target_db=amami_line_crm_restore_drill_loop231_20260630
-- target_db_exists_after_create=true
+- artifact_exists=true
+- artifact_file_permission=600
+- artifact_parent_dir_permission=700
+- artifact_size=259222
+- artifact_size_match=true
+- artifact_checksum_match=true
+- backup_artifact_copied_into_repo=false
+- dump_content_displayed=false
+
+## Target DB Check
+
+- target_db_name=amami_line_crm_restore_drill_loop231_20260630
+- target_db_name_contains_restore_drill=true
+- target_db_name_contains_loop231=true
+- target_db_exists=true
 - target_db_owner_aligned=true
 - future_restore_execution_user_matches_owner=true
-- target_db_local_only=true
-- target_db_retained=true
-- target_db_restricted=true_by_loopback_cluster
-- cleanup_required=true
-- cleanup_deadline=after_loop232_or_before_2026-07-01
-- restore_executed=false
-- pg_restore_executed=false
-- backup_artifact_used=false
-- supabase_connection_executed=false
-- production_restore_executed=false
+- target_db_is_not_supabase=true
+- target_db_is_not_production=true
 
-## Pre-Data Retry Execution Boundary
+## Cluster Listen Preflight
 
-- selected_next_loop=Loop 233: owner-aligned pre-data restore retry execution
-- target_db_reuse_allowed=true
-- target_db_name_required=amami_line_crm_restore_drill_loop231_20260630
-- target_db_must_exist_before_retry=true
-- target_db_owner_alignment_recheck_required=true
-- local_cluster_loopback_recheck_required=true
-- artifact_metadata_recheck_required=true
-- artifact_checksum_recheck_required=true
-- pg_restore_17_explicit_path_required=true
-- pg_restore_options=--section=pre-data --no-owner --no-privileges
-- restore_attempt_limit=1
-- raw_log_destination=repo_external_root_only
-- docs_recording=sanitized_metadata_only
+- cluster_row_found=true
+- cluster_online=true
+- cluster_port_matches_55432=true
+- listen_entry_count=2
+- loopback_listen_count=1
+- wildcard_listen_count=0
+- non_loopback_listen_count=1
+- local_cluster_loopback_only=false
+- external_interface_listen_detected=true
+- precheck_ok=false
 
-## Cleanup Policy
+## pg_restore Boundary
 
-- cleanup_policy_created=true
-- target_db_drop_after_retry_default=true
-- target_db_retain_after_retry_allowed=false_unless_next_gate_approves
-- target_db_drop_on_failed_preflight=true
-- target_db_drop_on_failed_owner_alignment=true
-- target_db_drop_on_restore_attempt_complete=true
-- cleanup_required_until_drop=true
+- pg_restore_path=/usr/lib/postgresql/17/bin/pg_restore
+- pg_restore_path_present=true
+- pg_restore_version=17.10-1.pgdg24.04+1
+- restore_stage=pre_data
+- owner_aligned_target_used=true
+- restore_options_pre_data_no_owner_no_privileges=false
+- restore_attempt_count=0
+- pg_restore_exit_code=not_executed
+- pre_data_retry_status=blocked
+
+## Cleanup
+
+- restore_target_dropped=true
+- target_db_exists_after_drop=false
+- cleanup_status=success
+- cleanup_required=false
 
 ## Safety Boundary
 
-- docs_only=true
 - restore_executed=false
-- pg_restore_executed=false
-- psql_executed=false
+- pg_restore_restore_executed=false
+- psql_scope=local_metadata_and_cleanup_only
 - target_db_created=false
-- target_db_modified=false
+- target_db_modified=true_drop_only
+- target_db_other_than_candidate_modified=false
 - role_created=false
 - role_modified=false
 - cluster_modified=false
@@ -103,20 +110,23 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - diagnostic_log_displayed=false
 - dump_content_displayed=false
 - row_content_displayed=false
-- owner_aligned_pre_data_retry_gate_created=true
-- next_loop_selected=true
+- object_name_displayed=false
+- sql_statement_displayed=false
+- role_name_displayed=false
+- production_runtime_changed=false
+- push_performed=false
 
 ## DR Readiness
 
 - backup_export_status=success
-- restore_drill_status=failed
-- owner_aligned_target_db_provisioned=true
-- owner_aligned_pre_data_retry_gate_created=true
+- restore_drill_status=blocked_preflight
+- pre_data_retry_status=blocked
+- cleanup_required=false
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 233: owner-aligned pre-data restore retry execution
+- Loop 234: owner-aligned pre-data retry blocked follow-up
 ---
 
 出力形式:
@@ -127,16 +137,19 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### Loop 231結果確認
+### artifact確認
 -
 
-### pre-data retry実行境界確認
+### target DB確認
 -
 
-### cleanup方針確認
+### cluster listen preflight確認
 -
 
-### Go/No-Go確認
+### retry未実行判断
+-
+
+### cleanup確認
 -
 
 ### safety確認
