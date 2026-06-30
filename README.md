@@ -569,6 +569,8 @@ Loop 241 Supabase-specific extension compatibility gateでは、Loop 240のsanit
 
 Loop 242 Supabase extension local compatibility preflightでは、Supabase-related extension dependencyのlocal互換性をread-onlyで確認しました。local restore drill clusterとPostgreSQL 17 toolingは確認できましたが、operator extension identifierが未設定だったため、extension control/package availabilityは `unknown`、preflightは `blocked_missing_operator_extension_identifier` として記録しました。次は Loop 243: operator extension identifier collection です。詳細は [Loop 242 task doc](docs/11_codex_tasks/242_supabase_extension_local_compatibility_preflight.md) を参照してください。このLoopではrestore、pg_restore、psql、target DB作成/変更、extension作成、package install、apt update/upgrade、cluster変更、Supabase/production接続、raw log、extension名、object名、SQL文、DB URL、secret表示は行っていません。
 
+Loop 243 operator extension identifier collectionでは、operator-only extension identifierのavailabilityを値なしで確認しましたが、今回も未設定だったため、extension control/package availabilityは `unknown` のまま、compatibility preflightは `blocked_missing_operator_extension_identifier` として継続しました。次は Loop 244: operator extension identifier retry or manual sanitized preflight です。詳細は [Loop 243 task doc](docs/11_codex_tasks/243_operator_extension_identifier_collection.md) を参照してください。このLoopではrestore、pg_restore、psql、target DB作成/変更、extension作成、package install、apt update/upgrade、cluster変更、Supabase/production接続、raw log、extension名、object名、SQL文、DB URL、secret表示は行っていません。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

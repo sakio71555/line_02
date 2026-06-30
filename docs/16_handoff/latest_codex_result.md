@@ -1,33 +1,41 @@
 # Latest Codex Result
 
-This file summarizes Loop 242 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 243 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 242 Supabase extension local compatibility preflight
+- Loop: Loop 243 operator extension identifier collection
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: read-only compatibility preflight
+- Scope type: read-only operator identifier availability check
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
 ## Baseline
 
 ```txt
-extension_category_supabase_related=true
-schema_error_category=extension_dependency
-schema_error_confidence=high
-target_db_currently_absent=true
-cleanup_required=false
+target_cluster_found=true
+cluster_online=true
+cluster_port=55432
+pg_config_available=true
+postgres_major_version=17
+operator_extension_identifier_available=false
+extension_control_available=unknown
+package_candidate_maybe_available=unknown
+compatibility_preflight_status=blocked
+compatibility_path=blocked_missing_operator_extension_identifier
 dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Read-Only Result
 
 ```txt
+operator_extension_identifier_available=false
+operator_extension_identifier_recorded=false
+operator_extension_identifier_shell_safe=unknown
 pg_lsclusters_checked=true
 target_cluster_found=true
 cluster_online=true
@@ -35,30 +43,29 @@ cluster_port=55432
 pg_config_available=true
 postgres_major_version=17
 pg_sharedir_detected=true
-operator_extension_identifier_available=false
+apt_cache_available=true
 extension_control_available=unknown
 extension_control_path_exists=unknown
 extension_control_permission=unknown
-apt_cache_available=true
 package_search_count=unknown
 package_candidate_maybe_available=unknown
-compatibility_preflight_status=blocked
-compatibility_path=blocked_missing_operator_extension_identifier
 ```
 
 ## Compatibility Decision
 
 ```txt
+compatibility_preflight_status=blocked
+compatibility_path=blocked_missing_operator_extension_identifier
 local_control_available=unknown
 package_candidate_maybe_available=unknown
-selected_next_loop=Loop 243: operator extension identifier collection
-selected_next_loop_reason=collect_identifier_safely_before_control_or_package_preflight
+selected_next_loop=Loop 244: operator extension identifier retry or manual sanitized preflight
+selected_next_loop_reason=identifier_required_before_control_or_package_preflight
 ```
 
 ## Go / No-Go
 
 ```txt
-read_only_preflight_completed=true
+read_only_identifier_check_completed=true
 compatibility_preflight_completed=false
 restore_retry_go=false
 extension_creation_go=false
@@ -136,4 +143,4 @@ dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 243: operator extension identifier collection
+- Loop 244: operator extension identifier retry or manual sanitized preflight

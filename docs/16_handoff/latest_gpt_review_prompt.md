@@ -8,11 +8,11 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 242 の Supabase extension local compatibility preflight をレビューしてください。
+- Loop 243 の operator extension identifier collection をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
 - extension名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
-- operator extension identifierが未設定だったため compatibility_preflight_status=blocked とした判断が妥当か確認してください。
-- 次Loopを operator extension identifier collection にする判断が妥当か確認してください。
+- operator extension identifier がまだ unavailable だったため compatibility_preflight_status=blocked を維持した判断が妥当か確認してください。
+- 次Loopを operator extension identifier retry or manual sanitized preflight にする判断が妥当か確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -25,22 +25,30 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 242 Supabase extension local compatibility preflight
+- Loop: Loop 243 operator extension identifier collection
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: read-only compatibility preflight
+- Scope type: read-only operator identifier availability check
 
 ## Baseline
 
-- extension_category_supabase_related=true
-- schema_error_category=extension_dependency
-- schema_error_confidence=high
-- target_db_currently_absent=true
-- cleanup_required=false
+- target_cluster_found=true
+- cluster_online=true
+- cluster_port=55432
+- pg_config_available=true
+- postgres_major_version=17
+- operator_extension_identifier_available=false
+- extension_control_available=unknown
+- package_candidate_maybe_available=unknown
+- compatibility_preflight_status=blocked
+- compatibility_path=blocked_missing_operator_extension_identifier
 - dr_readiness_status=not_ready_restore_failed
 
 ## Read-Only Result
 
+- operator_extension_identifier_available=false
+- operator_extension_identifier_recorded=false
+- operator_extension_identifier_shell_safe=unknown
 - pg_lsclusters_checked=true
 - target_cluster_found=true
 - cluster_online=true
@@ -48,22 +56,20 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - pg_config_available=true
 - postgres_major_version=17
 - pg_sharedir_detected=true
-- operator_extension_identifier_available=false
+- apt_cache_available=true
 - extension_control_available=unknown
 - extension_control_path_exists=unknown
 - extension_control_permission=unknown
-- apt_cache_available=true
 - package_search_count=unknown
 - package_candidate_maybe_available=unknown
-- compatibility_preflight_status=blocked
-- compatibility_path=blocked_missing_operator_extension_identifier
 
 ## Compatibility Decision
 
+- compatibility_preflight_status=blocked
+- compatibility_path=blocked_missing_operator_extension_identifier
 - local_control_available=unknown
 - package_candidate_maybe_available=unknown
-- selected_next_loop=Loop 243: operator extension identifier collection
-- selected_next_loop_reason=collect_identifier_safely_before_control_or_package_preflight
+- selected_next_loop=Loop 244: operator extension identifier retry or manual sanitized preflight
 
 ## Safety
 
@@ -103,7 +109,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 243: operator extension identifier collection
+- Loop 244: operator extension identifier retry or manual sanitized preflight
 ---
 
 出力形式:
@@ -114,10 +120,10 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### read-only preflight確認
+### identifier safety確認
 -
 
-### extension identifier safety確認
+### read-only preflight確認
 -
 
 ### compatibility判定確認

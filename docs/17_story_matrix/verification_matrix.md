@@ -33,6 +33,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-023 | Operator sanitized schema extension result | docs-only review of Loop 240 sanitized result and next compatibility gate | Supabase-related extension category recorded, extension dependency recorded, raw content/exact names hidden, restore remains No-Go | true | false | false | false | false | false | false | false | pending_loop_240_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-024 | Supabase extension compatibility gate | docs-only review of Loop 241 compatibility comparison and Loop 242 boundary | compatibility options compared, read-only preflight selected, restore/package/extension changes remain No-Go | true | false | false | false | false | false | false | false | pending_loop_241_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-025 | Supabase extension local compatibility preflight | read-only review of Loop 242 local cluster/tooling metadata and identifier availability | cluster/tooling metadata recorded, identifier unavailable, compatibility preflight blocked safely | true | false | false | false | false | false | false | false | pending_loop_242_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
+| V-026 | Operator extension identifier collection | read-only review of Loop 243 identifier availability and metadata checks | identifier remains unavailable, extension name hidden, compatibility remains blocked safely | true | false | false | false | false | false | false | false | pending_loop_243_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -925,6 +926,55 @@ loop_242_secrets_recorded=false
 loop_242_supabase_connection_executed=false
 loop_242_production_restore_executed=false
 loop_242_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 243 Verification Note
+
+```txt
+loop_243_read_only_inspection=true
+loop_243_operator_extension_identifier_available=false
+loop_243_operator_extension_identifier_recorded=false
+loop_243_operator_extension_identifier_shell_safe=unknown
+loop_243_pg_lsclusters_checked=true
+loop_243_target_cluster_found=true
+loop_243_cluster_online=true
+loop_243_cluster_port=55432
+loop_243_pg_config_available=true
+loop_243_postgres_major_version=17
+loop_243_pg_sharedir_detected=true
+loop_243_apt_cache_available=true
+loop_243_extension_control_available=unknown
+loop_243_extension_control_path_exists=unknown
+loop_243_package_search_count=unknown
+loop_243_package_candidate_maybe_available=unknown
+loop_243_compatibility_preflight_status=blocked
+loop_243_compatibility_path=blocked_missing_operator_extension_identifier
+loop_243_selected_next_loop=Loop 244 operator extension identifier retry or manual sanitized preflight
+loop_243_restore_executed=false
+loop_243_pg_restore_executed=false
+loop_243_psql_executed=false
+loop_243_target_db_created=false
+loop_243_target_db_modified=false
+loop_243_extension_created=false
+loop_243_package_installed=false
+loop_243_apt_update_executed=false
+loop_243_apt_upgrade_executed=false
+loop_243_schema_modified=false
+loop_243_role_modified=false
+loop_243_cluster_modified=false
+loop_243_cluster_restarted=false
+loop_243_cluster_reloaded=false
+loop_243_diagnostic_log_displayed=false
+loop_243_raw_log_displayed=false
+loop_243_sql_displayed=false
+loop_243_extension_name_displayed=false
+loop_243_object_name_displayed=false
+loop_243_role_name_displayed=false
+loop_243_backup_artifact_touched=false
+loop_243_secrets_recorded=false
+loop_243_supabase_connection_executed=false
+loop_243_production_restore_executed=false
+loop_243_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule
