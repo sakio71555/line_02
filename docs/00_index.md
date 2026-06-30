@@ -58,6 +58,7 @@
 - Loop 226 pre-data permission blocked follow-up: `11_codex_tasks/226_pre_data_permission_blocked_follow_up.md`
 - Loop 227 local restore cluster listen scope read-only inspection: `11_codex_tasks/227_local_restore_cluster_listen_scope_read_only_inspection.md`
 - Loop 228 restore drill cluster loopback remediation plan: `11_codex_tasks/228_restore_drill_cluster_loopback_remediation_plan.md`
+- Loop 229 restore drill cluster loopback remediation execution: `11_codex_tasks/229_restore_drill_cluster_loopback_remediation_execution.md`
 
 ## Prompts and Templates
 

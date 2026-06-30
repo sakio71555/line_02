@@ -101,6 +101,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 227 Obsidian Log](loop_227_local_restore_cluster_listen_scope_read_only_inspection.md)
 - [Loop 228 Restore Drill Cluster Loopback Remediation Plan](../11_codex_tasks/228_restore_drill_cluster_loopback_remediation_plan.md)
 - [Loop 228 Obsidian Log](loop_228_restore_drill_cluster_loopback_remediation_plan.md)
+- [Loop 229 Restore Drill Cluster Loopback Remediation Execution](../11_codex_tasks/229_restore_drill_cluster_loopback_remediation_execution.md)
+- [Loop 229 Obsidian Log](loop_229_restore_drill_cluster_loopback_remediation_execution.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -171,6 +173,8 @@ Loop 226 status: `local_cluster_loopback_only=false`, `loopback_blocker_recorded
 Loop 227 status: `pg_lsclusters_checked=true`, `listen_scope_checked=true`, `listen_entry_count=2`, `listen_loopback_ipv4_count=1`, `listen_other_count=1`, `local_cluster_loopback_only=false`, `external_interface_listen_detected=true`, `cluster_modified=false`, `firewall_modified=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 228 restore drill cluster loopback remediation plan`.
 
 Loop 228 status: `external_listen_blocker_recorded=true`, `recommended_remediation=postgresql_listen_addresses_loopback`, `primary_setting_plan=listen_addresses_localhost`, `rollback_plan_created=true`, `cluster_modified=false`, `cluster_reloaded=false`, `cluster_restarted=false`, `firewall_modified=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 229 restore drill cluster loopback remediation execution gate`.
+
+Loop 229 status: `target_cluster_identity_confirmed=true`, `config_backup_created=true`, `listen_addresses_changed=true`, `target_cluster_restart_result=success`, `local_cluster_loopback_only=true`, `external_interface_listen_detected=false`, `rollback_executed=false`, `psql_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `target_db_created=false`, `role_created=false`, `secrets_recorded=false`, `next=Loop 230 owner-aligned target DB provisioning gate`.
 
 ## Obsidian Helpers
 

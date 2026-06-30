@@ -378,6 +378,54 @@ loop_228_secrets_recorded=false
 loop_228_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 229 Verification Note
+
+```txt
+loop_229_target_cluster_identity_confirmed=true
+loop_229_config_backup_created=true
+loop_229_config_backup_repo_path=false
+loop_229_config_backup_permission=600
+loop_229_config_backup_dir_permission=700
+loop_229_listen_addresses_changed=true
+loop_229_listen_addresses_target=localhost
+loop_229_pg_hba_changed=false
+loop_229_port_changed=false
+loop_229_unix_socket_directories_changed=false
+loop_229_firewall_modified=false
+loop_229_package_modified=false
+loop_229_target_cluster_restart_attempted=true
+loop_229_target_cluster_restart_result=success
+loop_229_production_cluster_restarted=false
+loop_229_app_runtime_changed=false
+loop_229_post_change_cluster_online=true
+loop_229_post_change_config_listen_addresses_category=loopback_or_localhost
+loop_229_post_change_listen_entry_count=2
+loop_229_post_change_loopback_listen_count=2
+loop_229_post_change_wildcard_listen_count=0
+loop_229_post_change_non_loopback_listen_count=0
+loop_229_local_cluster_loopback_only=true
+loop_229_external_interface_listen_detected=false
+loop_229_rollback_executed=false
+loop_229_psql_executed=false
+loop_229_restore_executed=false
+loop_229_pg_restore_executed=false
+loop_229_target_db_created=false
+loop_229_target_db_modified=false
+loop_229_role_created=false
+loop_229_role_modified=false
+loop_229_supabase_connection_executed=false
+loop_229_production_restore_executed=false
+loop_229_raw_listen_output_displayed=false
+loop_229_public_ip_recorded=false
+loop_229_private_ip_recorded=false
+loop_229_config_full_content_displayed=false
+loop_229_pg_hba_displayed=false
+loop_229_secrets_recorded=false
+loop_229_backup_artifact_copied_into_repo=false
+loop_229_selected_next_loop=Loop 230 owner-aligned target DB provisioning gate
+loop_229_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

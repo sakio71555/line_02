@@ -1,102 +1,107 @@
 # Latest Codex Result
 
-This file summarizes Loop 228 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 229 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 228 restore drill cluster loopback remediation plan
+- Loop: Loop 229 restore drill cluster loopback remediation execution
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
-- Expected start git status: `main...origin/main`
-- Actual start git status: `main...origin/main [ahead 1]`
-- Ahead commit at start: `94a00e6 docs: record restore cluster listen inspection`
-- Scope type: docs-only remediation plan
+- Start git status: `main...origin/main`
+- Scope type: restore drill cluster config remediation
 - Commit hash: see final Codex report after commit
-- Push: see final Codex report after push
+- Push: not performed in this Loop
 
-## Loop 227 Result Summary
+## Target Cluster
 
 ```txt
-local_cluster_loopback_only=false
-external_interface_listen_detected=true
-listen_entry_count=2
-listen_loopback_ipv4_count=1
-listen_other_count=1
+target_cluster_identity_confirmed=true
+target_cluster_version=17
+target_cluster_name=restore_drill_loop2091
+target_cluster_port=55432
 cluster_online=true
-cluster_port=55432
-config_listen_addresses_key_present=false
-config_listen_addresses_category=default_or_unset
-config_port_matches_55432=true
-config_unix_socket_directories_key_present=true
 ```
 
-Raw listen addresses, public/private IP details, process command lines, config full content, and `pg_hba` content were not recorded.
+## Pre-Change Listen Scope
 
-## Blocker
+Loop 227 recorded an external listen blocker. Loop 229 used a stricter loopback classifier and the immediate pre-change check returned:
 
 ```txt
-external_listen_blocker_recorded=true
-owner_aligned_target_db_creation_ready=false
+pre_change_listen_entry_count=2
+pre_change_loopback_listen_count=2
+pre_change_wildcard_listen_count=0
+pre_change_non_loopback_listen_count=0
+pre_change_local_cluster_loopback_only=true
+pre_change_external_interface_listen_detected=false
+```
+
+Raw listen output, public/private IP details, process command lines, config full content, and `pg_hba` content were not recorded.
+
+## Config Backup
+
+```txt
+config_backup_created=true
+config_backup_path=/root/deploy-backups/amami-line-crm/loop229-loopback-remediation-20260630-093055/postgresql.conf.before
+config_backup_repo_path=false
+config_backup_permission=600
+config_backup_dir_permission=700
+config_backup_sha256=613d48ca8f5b0d4ac9183d5a64d23e4cdfc7f19b6f229331af35aa474c10fdc1
+```
+
+## Change And Restart
+
+```txt
+listen_addresses_changed=true
+listen_addresses_target=localhost
+pg_hba_changed=false
+port_changed=false
+unix_socket_directories_changed=false
+firewall_modified=false
+package_modified=false
+target_cluster_restart_attempted=true
+target_cluster_restart_result=success
+production_cluster_restarted=false
+app_runtime_changed=false
+```
+
+## Post-Change Listen Scope
+
+```txt
+post_change_cluster_online=true
+post_change_config_listen_addresses_category=loopback_or_localhost
+post_change_listen_entry_count=2
+post_change_loopback_listen_count=2
+post_change_wildcard_listen_count=0
+post_change_non_loopback_listen_count=0
+local_cluster_loopback_only=true
+external_interface_listen_detected=false
+remediation_status=success
+rollback_executed=false
+```
+
+## Selected Next Loop
+
+```txt
+selected_next_loop=Loop 230: owner-aligned target DB provisioning gate
+selected_next_loop_reason=restore_drill_cluster_loopback_only_confirmed
+owner_aligned_target_db_creation_gate_ready=true
 restore_retry_ready=false
-role_change_ready=false
 dr_readiness_status=not_ready_restore_failed
-```
-
-## Remediation Candidate Comparison
-
-| candidate | decision | reason |
-| --- | --- | --- |
-| Set `listen_addresses` to `localhost` | Selected primary plan | Limits PostgreSQL network listening to loopback semantics and keeps restore drill TCP tooling simple. |
-| Set `listen_addresses` to `127.0.0.1,::1` | Fallback plan | More explicit IPv4/IPv6 loopback if `localhost` classification remains ambiguous. |
-| Unix socket only operation | Future candidate | Stronger network isolation, but changes connection and restore command assumptions. |
-| Firewall block for port `55432` | Defense-in-depth only | Does not fix PostgreSQL listen scope itself. |
-| Drop/recreate cluster | Deferred | Heavy-handed; use only if targeted remediation fails. |
-| Keep current state | No-Go | External listen remains a safety blocker. |
-
-## Recommended Direction
-
-```txt
-recommended_remediation=postgresql_listen_addresses_loopback
-primary_setting_plan=listen_addresses_localhost
-fallback_setting_plan=listen_addresses_127_0_0_1_and_ipv6_loopback
-firewall_only_plan=no_go_as_primary
-cluster_drop_recreate_plan=deferred
-current_state_plan=no_go
-```
-
-## Rollback Plan
-
-- Record pre-change sanitized `pg_lsclusters` and listen-scope counts.
-- Create a root-only backup of the target cluster config before editing.
-- Edit only the approved `listen_addresses` key.
-- Treat restart as likely required for `listen_addresses`.
-- Verify post-change with `pg_lsclusters` and sanitized listen-scope counts.
-- If verification fails, restore the config backup and restart back to the previous state.
-- Record only booleans/counts/categories.
-
-## Loop 229 Boundary
-
-```txt
-selected_next_loop=Loop 229: restore drill cluster loopback remediation execution gate
-operator_approval_required=true
-config_backup_required=true
-restart_likely_required=true
-rollback_required=true
-db_creation_no_go=true
-restore_retry_no_go=true
-role_change_no_go=true
 ```
 
 ## Safety Boundary
 
-- docs_only=true
-- cluster_modified=false
-- cluster_reloaded=false
-- cluster_restarted=false
+- target_cluster_only=true
+- cluster_modified=true
+- listen_addresses_changed=true
+- cluster_restarted=true
+- production_cluster_restarted=false
 - firewall_modified=false
 - package_modified=false
+- pg_hba_changed=false
+- port_changed=false
 - psql_executed=false
 - restore_executed=false
 - pg_restore_executed=false
@@ -104,6 +109,7 @@ role_change_no_go=true
 - target_db_modified=false
 - role_created=false
 - role_modified=false
+- grant_revoke_executed=false
 - supabase_connection_executed=false
 - production_db_connection_executed=false
 - production_restore_executed=false
@@ -117,13 +123,14 @@ role_change_no_go=true
 - secrets_recorded=false
 - backup_artifact_copied_into_repo=false
 - production_runtime_changed=false
+- push_performed=false
 
 ## Verification
 
-- `git diff --check`: pending final validation
-- docs link check: pending final validation
-- changed-file secret pattern boolean check: pending final validation
-- `npx pnpm@10.12.1 lint`: pending final validation
+- `git diff --check`: passed
+- docs link check: passed
+- changed-file secret pattern boolean check: passed
+- `npx pnpm@10.12.1 lint`: passed
 - `npx pnpm@10.12.1 typecheck`: skipped_docs_only_runtime_code_unchanged
 - `npx pnpm@10.12.1 test`: skipped_docs_only_runtime_code_unchanged
 - `npx pnpm@10.12.1 test:integration`: skipped_docs_only_runtime_code_unchanged
@@ -132,11 +139,9 @@ role_change_no_go=true
 
 - backup_export_status=success
 - restore_drill_status=failed
-- listen_scope_inspection_completed=true
-- external_interface_listen_detected=true
-- remediation_plan_created=true
+- cluster_loopback_remediation_status=success
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 229: restore drill cluster loopback remediation execution gate
+- Loop 230: owner-aligned target DB provisioning gate
