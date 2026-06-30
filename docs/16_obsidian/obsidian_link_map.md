@@ -143,6 +143,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 251 Classifier Route Freeze And DR-Production Readiness Split](../11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md)
 - [Loop 252 App Production Path Review And Readiness Cleanup](../11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md)
 - [Loop 252 Obsidian Log](loop_252_app_production_path_review_and_readiness_cleanup.md)
+- [Loop 253 Local Production Start Verification Checklist Execution](../11_codex_tasks/253_local_production_start_verification_checklist_execution.md)
+- [Loop 253 Obsidian Log](loop_253_local_production_start_verification_checklist_execution.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -259,6 +261,8 @@ Loop 250 status: `docs_only=true`, `operator_payload_collection_status=blocked`,
 Loop 251 status: `docs_only=true`, `classifier_route_status=frozen`, `classifier_route_frozen_reason=repeated_operator_payload_absent`, `operator_payload_present=false`, `ready_for_classifier_retry=false`, `next_classifier_loop_allowed=false`, `classifier_route_resume_condition=human_provided_valid_strict_sanitized_payload`, `dr_readiness_status=not_ready_restore_failed`, `app_readiness_status=separate_review_required`, `production_readiness_status=separate_review_required`, `production_no_go=true`, `production_no_go_reason_scope=must_be_split`, `classifier_retry_executed=false`, `apt_cache_executed=false`, `apt_update_executed=false`, `apt_install_executed=false`, `package_install_executed=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 252 app production path review without DR blocker coupling`.
 
 Loop 252 status: `docs_only=true`, `classifier_route_status=frozen`, `next_classifier_loop_allowed=false`, `dr_readiness_status=not_ready_restore_failed`, `app_production_path_review_completed=true`, `app_readiness_status=separate_review_completed`, `production_readiness_status=production_no_go_reason_split`, `production_no_go=true`, `production_no_go_reason_scope=split`, `selected_readiness_cleanup_count=3`, `local_code_or_test_cleanup_count=0`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_executed=false`, `line_real_send_executed=false`, `openai_api_executed=false`, `production_runtime_changed=false`, `secrets_recorded=false`, `next=Loop 253 local production start verification checklist execution`.
+
+Loop 253 status: `local_production_verification_status=pass`, `api_local_start_status=pass`, `api_local_health_check=pass`, `admin_local_start_status=pass`, `admin_local_login_check=pass`, `api_process_stop_check=pass`, `admin_process_stop_check=pass`, `build_status=pass_api_admin`, `lint_status=pass`, `typecheck_status=pass`, `test_status=pass`, `classifier_route_status=frozen`, `dr_readiness_status=not_ready_restore_failed`, `production_no_go=true`, `vps_operation_executed=false`, `supabase_connection_executed=false`, `line_real_send_executed=false`, `openai_api_executed=false`, `psql_executed=false`, `pg_restore_executed=false`, `restore_executed=false`, `production_runtime_changed=false`, `secrets_recorded=false`, `next=Loop 254 final pre-external-runtime readiness review`.
 
 ## Obsidian Helpers
 

@@ -1,87 +1,68 @@
 # Latest Codex Result
 
-This file summarizes Loop 252 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 253 in a paste-ready, sanitized format for ChatGPT review.
 
 Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, package names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 252 app production path review and readiness cleanup
+- Loop: Loop 253 local production start verification checklist execution
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: docs-only app production path review and readiness cleanup
+- Scope type: local-only production start verification checklist
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
 ## Baseline
 
 ```txt
-loop_251_classifier_route_status=frozen
-loop_251_classifier_route_frozen_reason=repeated_operator_payload_absent
-loop_251_next_classifier_loop_allowed=false
-loop_251_dr_readiness_status=not_ready_restore_failed
-loop_251_app_readiness_status=separate_review_required
-loop_251_production_readiness_status=separate_review_required
-loop_251_production_no_go=true
-loop_251_production_no_go_reason_scope=must_be_split
+loop_252_classifier_route_status=frozen
+loop_252_dr_readiness_status=not_ready_restore_failed
+loop_252_app_production_path_review_completed=true
+loop_252_production_no_go=true
+loop_252_selected_next_minimal_action=local_production_start_verification_checklist_execution
 ```
 
-## Loop 252 Result
+## Loop 253 Result
 
 ```txt
-loop_252_status=complete
-classifier_route_status=frozen
-next_classifier_loop_allowed=false
-dr_readiness_status=not_ready_restore_failed
-app_production_path_review_completed=true
-app_readiness_status=separate_review_completed
-production_readiness_status=production_no_go_reason_split
-production_no_go=true
-production_no_go_reason_scope=split
-production_go_changed=false
-selected_readiness_cleanup_count=3
-local_code_or_test_cleanup_count=0
+local_production_verification_status=pass
+api_start_script_present=true
+admin_start_script_present=true
+api_production_bind_boundary_checked=true
+admin_production_start_boundary_checked=true
+local_start_without_external_runtime_possible=true
+api_build_status=pass
+admin_build_status=pass
+build_status=pass_api_admin
+api_local_start_status=pass
+api_local_health_check=pass
+admin_local_start_status=pass
+admin_local_login_check=pass
+api_process_stop_check=pass
+admin_process_stop_check=pass
+lint_status=pass
+typecheck_status=pass
+test_status=pass
 ```
 
-## Production No-Go Reason Split
+## Blocked / Still Separate
 
 ```txt
-production_no_go_dr_reason=restore_drill_not_successful
-production_no_go_classifier_reason=classifier_route_frozen_repeated_operator_payload_absent
-production_no_go_external_runtime_reason=real_supabase_line_openai_auth_context_requires_separate_approved_verification
-production_no_go_local_docs_test_reason=local_production_start_verification_not_yet_executed
-production_no_go_operator_decision_reason=final_go_not_requested_in_this_loop
-```
-
-## App Production Path Review Summary
-
-```txt
-api_start_path_classification=app_ready_now_without_external_runtime
-admin_start_path_classification=app_ready_now_without_external_runtime
-local_production_start_boundary_classification=app_ready_now_without_external_runtime
-runtime_safe_defaults_classification=app_ready_now_without_external_runtime
-env_injection_classification=app_blocked_by_external_runtime_or_secret
-auth_tenant_role_classification=app_blocked_by_external_runtime_or_secret
-line_runtime_classification=app_blocked_by_external_runtime_or_secret
-openai_runtime_classification=app_blocked_by_external_runtime_or_secret
-supabase_runtime_classification=app_blocked_by_external_runtime_or_secret
-local_demo_verification_classification=app_ready_now_without_external_runtime
-dr_restore_route_classification=app_blocked_by_dr_only
-```
-
-## Cleanup Batch
-
-```txt
-cleanup_1=production_vs_dr_matrix_updated_to_app_review_completed
-cleanup_2=final_operator_and_production_readiness_current_status_override_added
-cleanup_3=handoff_obsidian_index_devlog_consistency_updated
+blocked_item_count=4
+supabase_real_runtime_status=blocked_requires_external_runtime_and_operator_env
+line_real_send_status=blocked_requires_separate_approval
+openai_real_api_status=blocked_requires_separate_approval
+production_go_status=blocked_not_requested
+external_runtime_required=false_for_local_safe_defaults
+operator_env_required=false_for_local_safe_defaults
+real_external_runtime_required=true_for_future_production_activation
 ```
 
 ## Safety Boundary
 
 ```txt
-docs_only=true
 vps_operation_executed=false
 nginx_operation_executed=false
 dns_operation_executed=false
@@ -99,31 +80,43 @@ schema_modified=false
 role_modified=false
 extension_created=false
 cluster_modified=false
-package_operation_executed=false
-production_runtime_changed=false
-secrets_recorded=false
+package_install_executed=false
+package_remove_executed=false
+pnpm_install_executed=false
+pnpm_add_executed=false
+apt_operation_executed=false
+env_file_created=false
+env_file_modified=false
+env_file_displayed=false
+secret_recorded=false
 db_url_recorded=false
 raw_log_recorded=false
 dump_content_recorded=false
 row_content_recorded=false
 package_name_recorded=false
 extension_name_recorded=false
-production_readiness=production_no_go
+production_runtime_changed=false
+classifier_route_status=frozen
+dr_readiness_status=not_ready_restore_failed
+production_no_go=true
+production_go_changed=false
 ```
 
 ## Verification
 
 ```txt
 git_status_checked=true
-git_diff_check=passed_after_changes
-docs_link_check=passed_after_changes
-secret_pattern_boolean_check=passed_after_changes
-lint=passed_after_changes
-typecheck_skipped_reason=docs_only_runtime_code_unchanged
-test_skipped_reason=docs_only_runtime_code_unchanged
+git_diff_check=pass
+lint=pass
+typecheck=pass
+test=pass
+api_build=pass
+admin_build=pass
+docs_link_check=required_after_changes
+secret_pattern_boolean_check=required_after_changes
 ```
 
 ## Next Loop Candidate
 
-- Loop 253: local production start verification checklist execution
-- Reason: proves the app start path locally without external runtime or DR restore coupling.
+- Loop 254: final pre-external-runtime readiness review
+- Reason: local production start verification passed, so the next safe minimum action is to review what remains before any external runtime / operator env / production activation work.

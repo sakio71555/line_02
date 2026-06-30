@@ -43,6 +43,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-033 | Strict package classifier payload collection | docs-only review of Loop 250 payload presence check and blocked result | operator payload absent, ready_for_classifier_retry=false, later superseded by route freeze | true | false | false | false | false | false | false | false | pending_loop_250_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
 | V-034 | Classifier route freeze and readiness split | docs-only review of Loop 251 route freeze, repeated-blocker rule, and readiness split | classifier route frozen, next classifier loop disallowed, DR/app/production readiness separated | true | false | false | false | false | false | false | false | pending_loop_251_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, change DB state, or change production runtime. |
 | V-035 | App production path review and readiness cleanup | docs-only review of Loop 252 app path, No-Go reason split, cleanup batch, and next minimal action | app production path reviewed, production_no_go reason split, classifier route frozen, local start verification selected | true | false | false | false | false | false | false | false | pending_loop_252_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, or production runtime changes. |
+| V-036 | Local production start verification checklist | local-only build/start/curl verification for API and Admin on loopback with safe defaults | API/Admin build and local start pass, local curl pass, processes stopped, production_no_go maintained | true | false | false | false | false | false | false | false | pending_loop_253_verification | Does not run VPS, public smoke, external API, Supabase, `psql`, restore, package, cluster, DB, or production runtime changes. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1437,6 +1438,69 @@ loop_252_db_url_recorded=false
 loop_252_raw_log_recorded=false
 loop_252_package_name_recorded=false
 loop_252_extension_name_recorded=false
+```
+
+## Loop 253 Verification Note
+
+```txt
+loop_253_local_production_verification_status=pass
+loop_253_api_start_script_present=true
+loop_253_admin_start_script_present=true
+loop_253_api_production_bind_boundary_checked=true
+loop_253_admin_production_start_boundary_checked=true
+loop_253_local_start_without_external_runtime_possible=true
+loop_253_git_diff_check=pass
+loop_253_lint_status=pass
+loop_253_typecheck_status=pass
+loop_253_test_status=pass
+loop_253_api_build_status=pass
+loop_253_admin_build_status=pass
+loop_253_build_status=pass_api_admin
+loop_253_api_local_start_status=pass
+loop_253_api_local_health_check=pass
+loop_253_admin_local_start_status=pass
+loop_253_admin_local_login_check=pass
+loop_253_api_process_stop_check=pass
+loop_253_admin_process_stop_check=pass
+loop_253_curl_scope=local_only
+loop_253_external_runtime_required=false_for_local_safe_defaults
+loop_253_operator_env_required=false_for_local_safe_defaults
+loop_253_vps_operation_executed=false
+loop_253_nginx_operation_executed=false
+loop_253_dns_operation_executed=false
+loop_253_https_or_certbot_operation_executed=false
+loop_253_public_smoke_executed=false
+loop_253_line_real_send_executed=false
+loop_253_openai_api_executed=false
+loop_253_supabase_connection_executed=false
+loop_253_psql_executed=false
+loop_253_pg_restore_executed=false
+loop_253_restore_executed=false
+loop_253_target_db_created=false
+loop_253_target_db_modified=false
+loop_253_schema_modified=false
+loop_253_role_modified=false
+loop_253_extension_created=false
+loop_253_cluster_modified=false
+loop_253_package_install_executed=false
+loop_253_pnpm_install_executed=false
+loop_253_pnpm_add_executed=false
+loop_253_apt_operation_executed=false
+loop_253_env_file_created=false
+loop_253_env_file_modified=false
+loop_253_env_file_displayed=false
+loop_253_secret_recorded=false
+loop_253_db_url_recorded=false
+loop_253_raw_log_recorded=false
+loop_253_dump_content_recorded=false
+loop_253_row_content_recorded=false
+loop_253_package_name_recorded=false
+loop_253_extension_name_recorded=false
+loop_253_production_runtime_changed=false
+loop_253_dr_readiness_status=not_ready_restore_failed
+loop_253_classifier_route_status=frozen
+loop_253_production_no_go=true
+loop_253_selected_next_loop=Loop 254 final pre-external-runtime readiness review
 ```
 
 ## Stage 2 Rule

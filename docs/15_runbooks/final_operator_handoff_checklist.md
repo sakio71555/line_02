@@ -6,6 +6,37 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 253 Current Status Override
+
+Loop 253 completed the local production start verification checklist. This supersedes the Loop 252 "local verification pending" item but does not change production Go / No-Go.
+
+```txt
+loop_253_current_status_override=true
+local_production_verification_status=pass
+api_local_start_status=pass
+api_local_health_check=pass
+admin_local_start_status=pass
+admin_local_login_check=pass
+api_process_stop_check=pass
+admin_process_stop_check=pass
+build_status=pass_api_admin
+lint_status=pass
+typecheck_status=pass
+test_status=pass
+classifier_route_status=frozen
+dr_readiness_status=not_ready_restore_failed
+production_no_go=true
+production_go_changed=false
+selected_next_minimal_action=final_pre_external_runtime_readiness_review
+```
+
+Current No-Go reasons after Loop 253:
+
+- DR: restore drill has not succeeded.
+- Classifier / package route: frozen because the same operator payload blocker repeated.
+- External runtime: Supabase, LINE, OpenAI, and production auth context need separate approved verification.
+- Operator decision: final production Go was not requested in Loop 253.
+
 ## Loop 252 Current Status Override
 
 Older sections in this file preserve historical Loop snapshots, including past `production readiness: Go` text. The current active reading is the Loop 252 split status below.

@@ -6,20 +6,51 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `separate_review_completed` | Loop 252 reviewed app path separately from DR | `docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md` | Loop 253 local production start verification checklist execution | Not final Go |
-| Production readiness | `production_no_go_reason_split` | DR, classifier, external runtime, local verification, and operator decision reasons are split | `docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md` | Loop 253 local production start verification checklist execution | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 254 final pre-external-runtime readiness review | Not final Go |
+| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 254 final pre-external-runtime readiness review | `production_no_go` maintained |
 
 ## Current State
 
 ```txt
 dr_readiness_status=not_ready_restore_failed
 classifier_route_status=frozen
-app_readiness_status=separate_review_completed
+app_readiness_status=local_production_start_verified
 app_production_path_review_completed=true
-production_readiness_status=production_no_go_reason_split
+local_production_verification_status=pass
+production_readiness_status=production_no_go_external_runtime_and_dr
 production_no_go=true
 production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 253 Local Production Start Verification
+
+| item | status | scope |
+| --- | --- | --- |
+| API build | `pass` | local existing script |
+| Admin build | `pass` | local existing script |
+| API production start | `pass` | `127.0.0.1` only |
+| API health curl | `pass` | local-only sanitized outcome |
+| Admin production start | `pass` | `127.0.0.1` only |
+| Admin login curl | `pass` | local-only sanitized outcome |
+| Process cleanup | `pass` | local listeners stopped |
+| External runtime | `not_used` | Supabase / LINE / OpenAI not contacted |
+| Production Go | `not_changed` | `production_no_go=true` |
+
+```txt
+loop_253_local_production_verification_status=pass
+api_local_start_status=pass
+api_local_health_check=pass
+admin_local_start_status=pass
+admin_local_login_check=pass
+api_process_stop_check=pass
+admin_process_stop_check=pass
+build_status=pass_api_admin
+lint_status=pass
+typecheck_status=pass
+test_status=pass
+production_no_go=true
+selected_next_minimal_action=final_pre_external_runtime_readiness_review
 ```
 
 ## Loop 252 App Production Path Review

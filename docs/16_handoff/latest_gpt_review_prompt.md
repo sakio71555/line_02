@@ -11,10 +11,9 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 252 の app production path review and readiness cleanup をレビューしてください。
-- classifier / package / restore route が frozen のまま維持されているか確認してください。
-- DR readiness と app production path readiness が分離されているか確認してください。
-- production_no_go の理由がDRだけに寄っておらず、外部runtime/secret、local verification、operator decisionへ分割されているか確認してください。
+- Loop 253 の local production start verification checklist execution をレビューしてください。
+- API/Adminのlocal-only production start verificationが妥当か確認してください。
+- process停止確認、外部接続なし、secret記録なし、production_no_go維持が守られているか確認してください。
 - 次Loop候補が classifier retry / payload recollection / protocol fix / restore retry / package install / apt operation / DR fallback plan になっていないか確認してください。
 
 レビュー時の注意:
@@ -28,36 +27,44 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 252 app production path review and readiness cleanup
+- Loop: Loop 253 local production start verification checklist execution
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only app production path review and readiness cleanup
+- Scope type: local-only production start verification checklist
 
-## Loop 252 Result
+## Loop 253 Result
 
-- loop_252_status=complete
+- local_production_verification_status=pass
+- api_start_script_present=true
+- admin_start_script_present=true
+- api_production_bind_boundary_checked=true
+- admin_production_start_boundary_checked=true
+- local_start_without_external_runtime_possible=true
+- api_build_status=pass
+- admin_build_status=pass
+- build_status=pass_api_admin
+- api_local_start_status=pass
+- api_local_health_check=pass
+- admin_local_start_status=pass
+- admin_local_login_check=pass
+- api_process_stop_check=pass
+- admin_process_stop_check=pass
+- lint_status=pass
+- typecheck_status=pass
+- test_status=pass
+
+## Still Separate / Blocked
+
+- supabase_real_runtime_status=blocked_requires_external_runtime_and_operator_env
+- line_real_send_status=blocked_requires_separate_approval
+- openai_real_api_status=blocked_requires_separate_approval
+- production_go_status=blocked_not_requested
 - classifier_route_status=frozen
-- next_classifier_loop_allowed=false
 - dr_readiness_status=not_ready_restore_failed
-- app_production_path_review_completed=true
-- app_readiness_status=separate_review_completed
-- production_readiness_status=production_no_go_reason_split
 - production_no_go=true
-- production_no_go_reason_scope=split
-- selected_readiness_cleanup_count=3
-- local_code_or_test_cleanup_count=0
-
-## Production No-Go Reason Split
-
-- production_no_go_dr_reason=restore_drill_not_successful
-- production_no_go_classifier_reason=classifier_route_frozen_repeated_operator_payload_absent
-- production_no_go_external_runtime_reason=real_supabase_line_openai_auth_context_requires_separate_approved_verification
-- production_no_go_local_docs_test_reason=local_production_start_verification_not_yet_executed
-- production_no_go_operator_decision_reason=final_go_not_requested_in_this_loop
 
 ## Safety
 
-- docs_only=true
 - vps_operation_executed=false
 - nginx_operation_executed=false
 - dns_operation_executed=false
@@ -75,21 +82,27 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - role_modified=false
 - extension_created=false
 - cluster_modified=false
-- package_operation_executed=false
-- production_runtime_changed=false
-- secrets_recorded=false
+- package_install_executed=false
+- package_remove_executed=false
+- pnpm_install_executed=false
+- pnpm_add_executed=false
+- apt_operation_executed=false
+- env_file_created=false
+- env_file_modified=false
+- env_file_displayed=false
+- secret_recorded=false
 - db_url_recorded=false
 - raw_log_recorded=false
 - dump_content_recorded=false
 - row_content_recorded=false
 - package_name_recorded=false
 - extension_name_recorded=false
-- production_readiness=production_no_go
+- production_runtime_changed=false
+- production_go_changed=false
 
 ## Next Loop Candidate
 
-- Loop 253: local production start verification checklist execution
-- Reason: proves the app start path locally without external runtime or DR restore coupling.
+- Loop 254: final pre-external-runtime readiness review
 ---
 
 必ず以下の順で判定してください。
@@ -108,31 +121,28 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### レビュー結果
 -
 
+### local production verification確認
+-
+
+### process停止確認
+-
+
+### external runtime / secret safety確認
+-
+
 ### classifier route freeze確認
 -
 
-### readiness split確認
+### DR readiness確認
 -
 
 ### production_no_go確認
--
-
-### app production path確認
--
-
-### cleanup batch確認
--
-
-### safety確認
 -
 
 ### Obsidian確認
 -
 
 ### handoff確認
--
-
-### DR readiness確認
 -
 
 ### 次Loop候補確認
