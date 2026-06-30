@@ -2043,6 +2043,95 @@ role_change_no_go=true
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## 31. Loop 227 Local Restore Cluster Listen Scope Read-Only Inspection
+
+Loop 227 performs read-only VPS inspection for the restore drill PostgreSQL cluster listen scope. It does not change cluster configuration, reload/restart services, modify firewall, create databases, run restore, run `pg_restore`, run `psql`, touch backup artifacts, connect to Supabase, or connect to production.
+
+### 31.1 Inspection Result
+
+```txt
+pg_lsclusters_checked=true
+cluster_row_found=true
+cluster_version_matches=true
+cluster_name_matches=true
+cluster_port_matches_55432=true
+cluster_online=true
+listen_scope_checked=true
+listen_entry_count=2
+listen_loopback_ipv4_count=1
+listen_loopback_ipv6_count=0
+listen_wildcard_count=0
+listen_other_count=1
+local_cluster_loopback_only=false
+external_interface_listen_detected=true
+netstat_checked=false
+netstat_available=false
+config_keys_checked=true
+config_path_expected=true
+config_file_readable=true
+config_listen_addresses_key_present=false
+config_listen_addresses_category=default_or_unset
+config_port_key_present=true
+config_port_matches_55432=true
+config_unix_socket_directories_key_present=true
+```
+
+Raw listen addresses, public/private IP details, process command lines, config full content, and `pg_hba` content were not recorded.
+
+### 31.2 Judgement
+
+```txt
+local_cluster_loopback_only=false
+external_interface_listen_detected=true
+owner_aligned_target_db_creation_ready=false
+restore_retry_ready=false
+```
+
+The listen scope blocker is confirmed strongly enough to keep owner-aligned target DB creation and restore retry blocked.
+
+### 31.3 Selected Next Loop
+
+```txt
+selected_next_loop=Loop 228: restore drill cluster loopback remediation plan
+selected_next_loop_reason=external_interface_listen_detected
+cluster_config_change_no_go_in_loop_227=true
+reload_restart_no_go_in_loop_227=true
+firewall_change_no_go_in_loop_227=true
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 228 should plan the loopback remediation before any actual setting change, reload/restart, firewall change, DB creation, or restore retry.
+
+### 31.4 Safety Boundary
+
+```txt
+cluster_modified=false
+cluster_reloaded=false
+cluster_restarted=false
+firewall_modified=false
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+role_created=false
+role_modified=false
+diagnostic_log_displayed=false
+raw_listen_output_displayed=false
+public_ip_recorded=false
+private_ip_recorded=false
+config_full_content_displayed=false
+pg_hba_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+secrets_recorded=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_restore_executed=false
+push_performed=false
+dr_readiness_status=not_ready_restore_failed
+```
+
 Loop 227 should allow only read-only listen-scope checks such as `pg_lsclusters`, `ss`/`netstat` classification for port `55432`, and config path metadata without full config display. It should still prohibit cluster changes, reload/restart, package changes, firewall changes, DB creation, restore, role changes, raw logs, object names, SQL statements, role names, DB URLs, and secrets.
 
 ### 30.5 Safety Boundary

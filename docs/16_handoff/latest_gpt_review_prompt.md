@@ -2,23 +2,23 @@
 
 Copy the block below into ChatGPT. It already includes the sanitized latest Codex result from `latest_codex_result.md`.
 
-Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, or production logs.
+Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ```text
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 226 の pre-data permission blocked follow-up をレビューしてください。
+- Loop 227 の local restore cluster listen scope read-only inspection をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
 - safety boundary が守られているか確認してください。
-- local_cluster_loopback_only=false の解釈が妥当か確認してください。
-- owner-aligned target DB作成やpre-data retryへ進まず、Loop 227 read-only listen scope inspectionへ分ける判断が妥当か確認してください。
+- listen scope判定が妥当か確認してください。
+- external_interface_listen_detected=true を受けて、Loop 228を remediation plan に分ける判断が妥当か確認してください。
 - Obsidian/dev log/handoff の記録漏れがあれば指摘してください。
 - 大きな実行へ進まず小さいLoopに分解する方針でレビューしてください。
 
 レビュー時の注意:
-- secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、TOC本文、PII、本番ログの提示は求めないでください。
-- Loop 226ではdocs-only gateのみを実施しています。psql、restore、pg_restore、target DB作成/変更、role作成/変更、cluster変更、reload/restart、firewall変更、raw log表示、Supabase/production接続、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smokeは禁止です。
+- secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
+- Loop 227ではread-only VPS inspectionとdocs更新のみを実施しています。cluster変更、reload/restart、firewall変更、psql、restore、pg_restore、target DB作成/変更、role作成/変更、raw output表示、Supabase/production接続、LINE実送信、OpenAI API、Nginx/DNS/HTTPS/certbot/public smokeは禁止です。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -28,74 +28,63 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 226 pre-data permission blocked follow-up
+- Loop: Loop 227 local restore cluster listen scope read-only inspection
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
 - Start git status: main...origin/main
-- Scope type: docs-only gate
+- Scope type: read-only VPS inspection and docs update
 
-## Loop 225 Result Summary
+## Inspection Result
 
-- local_cluster_exists=true
-- local_cluster_online=true
-- postgres_version=17
-- cluster_port=55432
-- psql_metadata_inspection_executed=true
-- psql_connection_scope=local_only
-- metadata_database_count=3
-- metadata_restore_drill_database_count=0
-- metadata_role_count=16
-- metadata_superuser_role_count=1
-- metadata_createdb_role_count=1
-- owner_aligned_target_possible=true
+- pg_lsclusters_checked=true
+- cluster_row_found=true
+- cluster_version_matches=true
+- cluster_name_matches=true
+- cluster_port_matches_55432=true
+- cluster_online=true
+- listen_scope_checked=true
+- listen_entry_count=2
+- listen_loopback_ipv4_count=1
+- listen_loopback_ipv6_count=0
+- listen_wildcard_count=0
+- listen_other_count=1
 - local_cluster_loopback_only=false
-- target_db_creation_no_go=true
-- restore_retry_no_go=true
-- role_change_no_go=true
+- external_interface_listen_detected=true
+- netstat_checked=false
+- netstat_available=false
+- config_keys_checked=true
+- config_path_expected=true
+- config_file_readable=true
+- config_listen_addresses_key_present=false
+- config_listen_addresses_category=default_or_unset
+- config_port_key_present=true
+- config_port_matches_55432=true
+- config_unix_socket_directories_key_present=true
 
-## Blocker Analysis
+Raw listen addresses, public/private IP details, process command lines, config full content, and pg_hba content were not recorded.
 
-- loopback_blocker_recorded=true
-- loopback_false_meaning=undetermined_read_only_followup_required
-- external_exposure_confirmed=false
-- false_positive_possible=true
-- ipv4_ipv6_loopback_detection_issue_possible=true
-- unix_socket_design_possible=true
-- read_only_listen_scope_inspection_required=true
-- cluster_config_change_no_go=true
+## Listen Scope Judgement
 
-## Remediation Candidate Comparison
+- local_cluster_loopback_only=false
+- external_interface_listen_detected=true
+- owner_aligned_target_db_creation_ready=false
+- restore_retry_ready=false
 
-- Read-only listen scope inspection: selected.
-- Loopback-only config remediation plan: deferred.
-- Owner-aligned target DB provisioning despite blocker: No-Go.
-- Unix socket only restore target design: future candidate.
+## Selected Next Loop
 
-## Recommended Direction
-
-- selected_next_loop=Loop 227: local restore cluster listen scope read-only inspection
-- selected_next_loop_reason=local_cluster_loopback_only_false
-- target_db_creation_no_go=true
-- restore_retry_no_go=true
-- role_change_no_go=true
-- cluster_change_no_go=true
+- selected_next_loop=Loop 228: restore drill cluster loopback remediation plan
+- selected_next_loop_reason=external_interface_listen_detected
+- cluster_config_change_no_go_in_loop_227=true
+- reload_restart_no_go_in_loop_227=true
+- firewall_change_no_go_in_loop_227=true
 - dr_readiness_status=not_ready_restore_failed
-
-## Loop 227 Boundary
-
-Allowed candidates:
-- Read-only listen scope checks.
-- pg_lsclusters.
-- ss or netstat for port 55432 listen address classification.
-- Config file path check without full config display.
-- Boolean/count-only local-only classification.
-- psql only if explicitly needed and metadata-only.
-
-Forbidden:
-- Cluster config changes, reload/restart, package changes, firewall changes, target DB creation, restore, pg_restore, role changes, raw logs, diagnostic logs, object names, SQL statements, role names, DB URLs, secrets, Supabase connection, production DB connection, production restore, and runtime changes.
 
 ## Safety Boundary
 
+- cluster_modified=false
+- cluster_reloaded=false
+- cluster_restarted=false
+- firewall_modified=false
 - restore_executed=false
 - pg_restore_executed=false
 - psql_executed=false
@@ -103,11 +92,13 @@ Forbidden:
 - target_db_modified=false
 - role_created=false
 - role_modified=false
-- cluster_modified=false
-- cluster_reloaded=false
-- firewall_modified=false
+- grant_revoke_executed=false
 - diagnostic_log_displayed=false
-- raw_log_displayed=false
+- raw_listen_output_displayed=false
+- public_ip_recorded=false
+- private_ip_recorded=false
+- config_full_content_displayed=false
+- pg_hba_displayed=false
 - object_name_displayed=false
 - sql_statement_displayed=false
 - role_name_displayed=false
@@ -120,18 +111,19 @@ Forbidden:
 - production_db_connection_executed=false
 - production_restore_executed=false
 - production_runtime_changed=false
+- push_performed=false
 
 ## DR Readiness
 
 - backup_export_status=success
 - restore_drill_status=failed
-- pre_data_diagnostic_status=failed
-- listen_scope_blocker_recorded=true
+- listen_scope_inspection_completed=true
+- external_interface_listen_detected=true
 - dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 227: local restore cluster listen scope read-only inspection
+- Loop 228: restore drill cluster loopback remediation plan
 ---
 
 出力形式:
@@ -145,13 +137,10 @@ Forbidden:
 ### safety確認
 -
 
-### loopback blocker解釈
+### listen scope判定
 -
 
-### remediation候補比較
--
-
-### 次Loop選定確認
+### next Loop選定確認
 -
 
 ### Obsidian確認

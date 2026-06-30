@@ -97,6 +97,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 225 Obsidian Log](loop_225_local_target_privilege_alignment_inspection_without_changes.md)
 - [Loop 226 Pre-Data Permission Blocked Follow-Up](../11_codex_tasks/226_pre_data_permission_blocked_follow_up.md)
 - [Loop 226 Obsidian Log](loop_226_pre_data_permission_blocked_follow_up.md)
+- [Loop 227 Local Restore Cluster Listen Scope Read-Only Inspection](../11_codex_tasks/227_local_restore_cluster_listen_scope_read_only_inspection.md)
+- [Loop 227 Obsidian Log](loop_227_local_restore_cluster_listen_scope_read_only_inspection.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -163,6 +165,8 @@ Loop 221 status: `pre_data_diagnostic_gate_created=true`, `loop_222_pre_data_exe
 Loop 222 status: `restore_stage=pre_data`, `restore_attempt_count=1`, `pg_restore_exit_code=1`, `pre_data_diagnostic_status=failed`, `failure_category=pre_data_permission_error_detected`, `permission_or_auth_error_count=1`, `restore_target_dropped=true`, `target_db_exists_after_drop=false`, `cleanup_required=false`, `raw_log_displayed=false`, `secrets_recorded=false`, `production_restore_executed=false`, `next=Loop 223 pre-data permission/auth remediation gate`.
 
 Loop 226 status: `local_cluster_loopback_only=false`, `loopback_blocker_recorded=true`, `read_only_listen_scope_inspection_required=true`, `target_db_creation_no_go=true`, `restore_retry_no_go=true`, `role_change_no_go=true`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `cluster_modified=false`, `firewall_modified=false`, `secrets_recorded=false`, `next=Loop 227 local restore cluster listen scope read-only inspection`.
+
+Loop 227 status: `pg_lsclusters_checked=true`, `listen_scope_checked=true`, `listen_entry_count=2`, `listen_loopback_ipv4_count=1`, `listen_other_count=1`, `local_cluster_loopback_only=false`, `external_interface_listen_detected=true`, `cluster_modified=false`, `firewall_modified=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `secrets_recorded=false`, `next=Loop 228 restore drill cluster loopback remediation plan`.
 
 ## Obsidian Helpers
 

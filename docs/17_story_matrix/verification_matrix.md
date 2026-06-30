@@ -297,6 +297,48 @@ loop_226_selected_next_loop=Loop 227 local restore cluster listen scope read-onl
 loop_226_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 227 Verification Note
+
+```txt
+loop_227_pg_lsclusters_checked=true
+loop_227_cluster_row_found=true
+loop_227_cluster_port_matches_55432=true
+loop_227_cluster_online=true
+loop_227_listen_scope_checked=true
+loop_227_listen_entry_count=2
+loop_227_listen_loopback_ipv4_count=1
+loop_227_listen_loopback_ipv6_count=0
+loop_227_listen_wildcard_count=0
+loop_227_listen_other_count=1
+loop_227_local_cluster_loopback_only=false
+loop_227_external_interface_listen_detected=true
+loop_227_config_keys_checked=true
+loop_227_config_listen_addresses_category=default_or_unset
+loop_227_config_port_matches_55432=true
+loop_227_config_unix_socket_directories_key_present=true
+loop_227_cluster_modified=false
+loop_227_cluster_reloaded=false
+loop_227_cluster_restarted=false
+loop_227_firewall_modified=false
+loop_227_restore_executed=false
+loop_227_pg_restore_executed=false
+loop_227_psql_executed=false
+loop_227_target_db_created=false
+loop_227_target_db_modified=false
+loop_227_role_created=false
+loop_227_role_modified=false
+loop_227_raw_listen_output_displayed=false
+loop_227_public_ip_recorded=false
+loop_227_private_ip_recorded=false
+loop_227_config_full_content_displayed=false
+loop_227_pg_hba_displayed=false
+loop_227_secrets_recorded=false
+loop_227_supabase_connection_executed=false
+loop_227_production_restore_executed=false
+loop_227_selected_next_loop=Loop 228 restore drill cluster loopback remediation plan
+loop_227_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

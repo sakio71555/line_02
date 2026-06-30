@@ -537,6 +537,8 @@ Loop 225 local target privilege alignment inspection without changesでは、VPS
 
 Loop 226 pre-data permission blocked follow-upでは、Loop 225の `local_cluster_loopback_only=false` をblockerとして整理し、owner-aligned target DB作成やpre-data retryへ進まない方針をdocs化しました。次は `Loop 227: local restore cluster listen scope read-only inspection` とし、psql、restore、pg_restore、target DB作成/変更、role変更、cluster変更、firewall変更、raw log表示、Supabase/production接続は行っていません。詳細は [docs/11_codex_tasks/226_pre_data_permission_blocked_follow_up.md](docs/11_codex_tasks/226_pre_data_permission_blocked_follow_up.md) と [docs/16_obsidian/loop_226_pre_data_permission_blocked_follow_up.md](docs/16_obsidian/loop_226_pre_data_permission_blocked_follow_up.md) を参照してください。
 
+Loop 227 local restore cluster listen scope read-only inspectionでは、VPS上のrestore drill PostgreSQL clusterをread-onlyで確認し、port `55432` のlisten scopeをsanitized count/categoryだけで記録しました。結果は `local_cluster_loopback_only=false` / `external_interface_listen_detected=true` のため、次は `Loop 228: restore drill cluster loopback remediation plan` です。cluster変更、reload/restart、firewall変更、psql、restore、pg_restore、target DB作成/変更、role変更、raw output/IP詳細表示、Supabase/production接続は行っていません。詳細は [docs/11_codex_tasks/227_local_restore_cluster_listen_scope_read_only_inspection.md](docs/11_codex_tasks/227_local_restore_cluster_listen_scope_read_only_inspection.md) と [docs/16_obsidian/loop_227_local_restore_cluster_listen_scope_read_only_inspection.md](docs/16_obsidian/loop_227_local_restore_cluster_listen_scope_read_only_inspection.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
