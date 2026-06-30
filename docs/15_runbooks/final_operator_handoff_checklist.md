@@ -6,6 +6,45 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 258 Current Status Override
+
+Loop 258 consumed the operator approval for a value-free env dry-run only. Safe inspection and placeholder-only validation completed without secret values, env file operations, external connections, VPS operations, or production changes. The inventory alignment result is partial, so the next action is inventory mismatch cleanup before any real presence check.
+
+```txt
+loop_258_current_status_override=true
+operator_env_dry_run_approval_consumed=true
+operator_approval_status=provided
+env_dry_run_approval_status=approved
+approved_scope=env_inventory_and_presence_check_dry_run_only
+env_dry_run_execution_status=partial
+runtime_env_inventory_rechecked=true
+env_inventory_alignment_status=partial
+missing_inventory_entries_count=2
+missing_inventory_categories=admin_app_env_category,admin_public_env_category
+stale_inventory_entries_count=0
+unsafe_entries_found=false
+requires_follow_up_cleanup=true
+placeholder_only_dry_run_execution_status=pass
+actual_secret_injection_executed=false
+env_file_operation_executed=false
+env_presence_check_execution_allowed=false
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 259 env inventory mismatch cleanup
+```
+
+Recommended future approval after cleanup:
+
+```txt
+recommended_next_approval=approve_operator_env_presence_check_without_value_output
+```
+
+Do not run presence checks, actual env injection, VPS operations, public smoke, external runtime, or production Go until separately approved.
+
 ## Loop 257 Current Status Override
 
 Loop 257 promoted the env dry-run checklist into an approval gate and decision pack. No operator approval block was provided, so the safe result is human input required and no execution.

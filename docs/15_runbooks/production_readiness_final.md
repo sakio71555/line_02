@@ -6,6 +6,46 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 258 Current Status Override
+
+Loop 258 executed the approved value-free env dry-run. It found partial explicit inventory alignment and keeps all execution gates closed.
+
+```txt
+loop_258_current_status_override=true
+operator_env_dry_run_approval_consumed=true
+operator_approval_status=provided
+env_dry_run_approval_status=approved
+approved_scope=env_inventory_and_presence_check_dry_run_only
+env_dry_run_execution_status=partial
+runtime_env_inventory_rechecked=true
+env_inventory_alignment_status=partial
+missing_inventory_entries_count=2
+requires_follow_up_cleanup=true
+placeholder_only_dry_run_execution_status=pass
+env_presence_check_execution_allowed=false
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 259 env inventory mismatch cleanup
+```
+
+Current env dry-run Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| env dry-run approval | `approved` | Consumed for value-free inspection only. |
+| inventory alignment | `partial` | Cleanup is required before presence checks. |
+| placeholder-only plan | `pass` | In-memory placeholder-only check succeeded without env files or external connections. |
+| env presence check | `not_allowed` | Future approval required after inventory cleanup. |
+| env injection | `not_allowed` | No mutation, helper execution, secret input, or process runtime change. |
+| external runtime | `not_allowed` | No LINE/OpenAI/Supabase/public smoke/VPS operation. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Restore drill is still not successful. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 257 Current Status Override
 
 Loop 257 records the env dry-run approval gate. Because no operator approval block was provided, the current status is `human_input_required`; no dry-run execution, actual env injection, external runtime, or production Go is allowed.

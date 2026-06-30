@@ -87,6 +87,7 @@
 - Loop 255 final external runtime approval request pack: `11_codex_tasks/255_final_external_runtime_approval_request_pack.md`
 - Loop 256 operator env injection dry-run checklist: `11_codex_tasks/256_operator_env_injection_dry_run_checklist.md`
 - Loop 257 operator env injection dry-run approval gate: `11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md`
+- Loop 258 operator env injection dry-run without secret values: `11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md`
 
 ## Prompts and Templates
 

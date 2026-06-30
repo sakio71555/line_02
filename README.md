@@ -142,6 +142,8 @@ Loop 256ではoperator env injection dry-run checklist and runtime input readine
 
 Loop 257ではoperator env injection dry-run approval gateを追加しました。Loop 256のdry-run checklistを承認ゲートへ昇格し、承認ブロック未提供のため `operator_approval_status=not_provided` / `human_input_required=true` / `next_execution_allowed=false` として安全に停止しています。secret注入、env file表示、外部runtime接続、VPS操作、production反映は行わず、`production_no_go=true` と `dr_readiness_status=not_ready_restore_failed` を維持しています。詳細は [docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md](docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md) を参照してください。
 
+Loop 258ではoperator承認済みの範囲で、secret値なし・env file操作なし・外部接続なしのenv dry-runを実施しました。safe inspectionでは既存inventoryの安全ソース存在は確認できましたが、実装参照との明示key-level alignmentは `partial` となったため、次は [docs/11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md](docs/11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md) に記録した `Loop 259: env inventory mismatch cleanup` が最小アクションです。`env_injection_execution_allowed=false`、`external_runtime_execution_allowed=false`、`production_no_go=true` は維持しています。
+
 1. `docs/11_codex_tasks/` の対象タスクを読む。
 2. Scopeに書かれた範囲だけ実装する。
 3. Out of scopeに書かれたものは実装しない。

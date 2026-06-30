@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 258 wait for operator env dry-run approval decision | Not final Go |
-| External runtime readiness | `env_dry_run_approval_required` | Loop 257 approval gate exists, but no operator approval block was provided | `docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md` | Loop 258 wait for operator env dry-run approval decision | Not final Go |
-| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env approval, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/257_operator_env_injection_dry_run_approval_gate.md` | Loop 258 wait for operator env dry-run approval decision | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 259 env inventory mismatch cleanup | Not final Go |
+| External runtime readiness | `env_dry_run_partial_inventory_cleanup_required` | Loop 258 value-free dry-run completed partially and found inventory cleanup needed | `docs/11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md` | Loop 259 env inventory mismatch cleanup | Not final Go |
+| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env inventory cleanup, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/258_operator_env_injection_dry_run_without_secret_values.md` | Loop 259 env inventory mismatch cleanup | `production_no_go` maintained |
 
 ## Current State
 
@@ -37,6 +37,13 @@ env_dry_run_approval_status=not_approved
 approved_scope=none
 human_input_required=true
 next_execution_allowed=false
+operator_env_dry_run_approval_consumed=true
+env_dry_run_execution_status=partial
+runtime_env_inventory_rechecked=true
+env_inventory_alignment_status=partial
+requires_follow_up_cleanup=true
+placeholder_only_dry_run_execution_status=pass
+env_presence_check_execution_allowed=false
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
@@ -44,6 +51,43 @@ production_readiness_status=production_no_go_external_runtime_and_dr
 production_no_go=true
 production_no_go_reason_scope=split
 production_go_changed=false
+```
+
+## Loop 258 Operator Env Injection Dry-Run Without Secret Values
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Approval block | `provided` | Approved only value-free env inventory and presence-check dry-run scope. |
+| Env dry-run | `partial` | Safe inspection and placeholder-only plan passed, but explicit inventory alignment is partial. |
+| Inventory alignment | `partial` | Two explicit inventory entries require category-only cleanup. |
+| Placeholder plan | `pass` | Placeholder-only in-memory check used no env files and no external connections. |
+| Presence check | `not_allowed` | Requires future approval after cleanup. |
+| Execution | `not_allowed` | No actual env injection, external runtime, VPS operation, public smoke, or production change. |
+| Next action | `selected` | Loop 259 env inventory mismatch cleanup. |
+
+```txt
+loop_258_operator_env_dry_run_approval_consumed=true
+loop_258_operator_approval_status=provided
+loop_258_env_dry_run_approval_status=approved
+loop_258_approved_scope=env_inventory_and_presence_check_dry_run_only
+loop_258_env_dry_run_execution_status=partial
+loop_258_runtime_env_inventory_rechecked=true
+loop_258_env_inventory_alignment_status=partial
+loop_258_missing_inventory_entries_count=2
+loop_258_stale_inventory_entries_count=0
+loop_258_unsafe_entries_found=false
+loop_258_requires_follow_up_cleanup=true
+loop_258_placeholder_only_dry_run_execution_status=pass
+loop_258_actual_secret_injection_executed=false
+loop_258_env_file_operation_executed=false
+loop_258_env_presence_check_execution_allowed=false
+loop_258_env_injection_execution_allowed=false
+loop_258_external_runtime_execution_allowed=false
+loop_258_production_no_go=true
+loop_258_production_go_changed=false
+loop_258_dr_readiness_status=not_ready_restore_failed
+loop_258_classifier_route_status=frozen
+loop_258_next_minimal_action=Loop 259 env inventory mismatch cleanup
 ```
 
 ## Loop 257 Operator Env Injection Dry-Run Approval Gate
