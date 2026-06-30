@@ -157,6 +157,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 258 Obsidian Log](loop_258_operator_env_injection_dry_run_without_secret_values.md)
 - [Loop 259 Env Inventory Mismatch Cleanup](../11_codex_tasks/259_env_inventory_mismatch_cleanup.md)
 - [Loop 259 Obsidian Log](loop_259_env_inventory_mismatch_cleanup.md)
+- [Loop 261 Actual Runtime Env Presence Check](../11_codex_tasks/261_actual_runtime_env_presence_check.md)
+- [Loop 261 Obsidian Log](loop_261_actual_runtime_env_presence_check.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)

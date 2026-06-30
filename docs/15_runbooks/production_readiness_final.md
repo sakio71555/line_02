@@ -6,6 +6,57 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 261 Current Status Override
+
+Loop 261 consumed the operator approval for actual-runtime env presence boolean-only checking. Existing actual runtime access was available, the check completed with category-only output, and one required category remains missing. No env values, lengths, hashes, prefixes, suffixes, env file contents, secret file contents, external API calls, DB operations, runtime changes, or production Go changes occurred.
+
+```txt
+loop_261_current_status_override=true
+actual_runtime_env_presence_check_approval_consumed=true
+approval_scope=actual_runtime_presence_boolean_only_for_required_runtime_categories
+actual_runtime_access_status=available
+actual_runtime_presence_check_safe_to_attempt=true
+actual_runtime_env_presence_check_status=complete
+required_runtime_env_category_list_confirmed=true
+required_categories_present_count=9
+required_categories_missing_count=1
+missing_required_categories=line_runtime_env_category
+env_value_output_occurred=false
+env_value_length_output_occurred=false
+env_value_hash_output_occurred=false
+env_prefix_suffix_output_occurred=false
+env_file_operation_executed=false
+secret_file_operation_executed=false
+actual_secret_injection_executed=false
+external_api_connection_attempted=false
+vps_change_executed=false
+production_go_judgement_ready=true
+unknown_blocker_count=0
+remaining_known_blockers=line_runtime_env_category,operator_env_injection_permission,external_runtime_permission,dr_readiness_not_ready_restore_failed
+next_execution_sequence_status=operator_env_input_required
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 262 operator env injection permission gate
+```
+
+Current env presence Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| actual runtime presence check | `complete` | Category-level boolean check completed without values. |
+| missing runtime category | `known` | One known category blocks the next step until operator env injection permission. |
+| unknown blocker | `none` | Remaining blockers are categorized. |
+| production-go judgement readiness | `ready_to_review` | This is not production Go approval. |
+| env injection | `not_allowed` | No mutation, helper execution, secret input, or process runtime change. |
+| external runtime | `not_allowed` | No LINE/OpenAI/Supabase/public smoke/runtime connection. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Restore drill is still not successful. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 259 Current Status Override
 
 Loop 259 cleaned up the admin env inventory mismatch with category-only documentation. The env inventory is aligned after cleanup, but all execution gates remain closed.

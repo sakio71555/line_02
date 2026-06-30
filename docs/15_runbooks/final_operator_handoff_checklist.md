@@ -6,6 +6,51 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 261 Current Status Override
+
+Loop 261 consumed the operator approval for an actual-runtime env presence boolean-only check. The check completed with sanitized category-only output and found one known missing runtime category. No env value, length, hash, prefix, suffix, env file content, secret file content, external API call, DB operation, runtime mutation, or production Go change occurred.
+
+```txt
+loop_261_current_status_override=true
+actual_runtime_env_presence_check_approval_consumed=true
+approval_scope=actual_runtime_presence_boolean_only_for_required_runtime_categories
+actual_runtime_access_status=available
+actual_runtime_presence_check_safe_to_attempt=true
+actual_runtime_env_presence_check_status=complete
+required_runtime_env_category_list_confirmed=true
+required_categories_present_count=9
+required_categories_missing_count=1
+missing_required_categories=line_runtime_env_category
+env_value_output_occurred=false
+env_value_length_output_occurred=false
+env_value_hash_output_occurred=false
+env_prefix_suffix_output_occurred=false
+env_file_operation_executed=false
+secret_file_operation_executed=false
+actual_secret_injection_executed=false
+external_api_connection_attempted=false
+vps_change_executed=false
+production_go_judgement_ready=true
+unknown_blocker_count=0
+remaining_known_blockers=line_runtime_env_category,operator_env_injection_permission,external_runtime_permission,dr_readiness_not_ready_restore_failed
+next_execution_sequence_status=operator_env_input_required
+env_injection_execution_allowed=false
+external_runtime_execution_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 262 operator env injection permission gate
+```
+
+Safe operator decision now required:
+
+```txt
+next_required_operator_decision=operator_env_injection_permission_gate
+```
+
+Do not run actual env injection, external runtime, public smoke, or production Go until separately approved.
+
 ## Loop 259 Current Status Override
 
 Loop 259 resolved the Loop 258 admin env inventory mismatch using category-only docs cleanup. No env presence check, actual env injection, env file operation, external runtime, VPS operation, public smoke, or production change was executed.

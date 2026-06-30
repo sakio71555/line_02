@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 260 env presence check permission gate | Not final Go |
-| External runtime readiness | `env_inventory_aligned_presence_gate_required` | Loop 259 resolved the admin env inventory mismatch, but env presence check and injection remain unapproved | `docs/11_codex_tasks/259_env_inventory_mismatch_cleanup.md` | Loop 260 env presence check permission gate | Not final Go |
-| Production readiness | `production_no_go_external_runtime_and_dr` | DR, classifier, env presence check approval, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/259_env_inventory_mismatch_cleanup.md` | Loop 260 env presence check permission gate | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 262 operator env injection permission gate | Not final Go |
+| External runtime readiness | `actual_runtime_presence_checked_known_missing_category` | Loop 261 completed category-only actual runtime env presence checking; one known runtime category remains missing | `docs/11_codex_tasks/261_actual_runtime_env_presence_check.md` | Loop 262 operator env injection permission gate | Not final Go |
+| Production readiness | `production_no_go_known_env_external_runtime_and_dr` | DR, classifier, missing runtime category, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/261_actual_runtime_env_presence_check.md` | Loop 262 operator env injection permission gate | `production_no_go` maintained |
 
 ## Current State
 
@@ -44,15 +44,64 @@ env_inventory_mismatch_cleanup_status=complete
 env_inventory_alignment_status=aligned
 requires_follow_up_cleanup=false
 env_presence_check_permission_gate_prepared=true
+actual_runtime_env_presence_check_status=complete
+required_categories_present_count=9
+required_categories_missing_count=1
+missing_required_categories=line_runtime_env_category
+production_go_judgement_ready=true
+unknown_blocker_count=0
+next_execution_sequence_status=operator_env_input_required
 placeholder_only_dry_run_execution_status=pass
-env_presence_check_execution_allowed=false
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
-production_readiness_status=production_no_go_external_runtime_and_dr
+production_readiness_status=production_no_go_known_env_external_runtime_and_dr
 production_no_go=true
-production_no_go_reason_scope=split
+production_no_go_reason_scope=fully_split
 production_go_changed=false
+```
+
+## Loop 261 Actual Runtime Env Presence Check
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Approval consumed | `true` | Actual-runtime env presence boolean-only check. |
+| Actual runtime access | `available` | Existing access, read-only check. |
+| Presence check | `complete` | Category-level booleans only. |
+| Required categories | `9 present / 1 missing` | Missing category is known and sanitized. |
+| Unknown blocker | `0` | Remaining blockers are split by category. |
+| Production judgement readiness | `ready_to_review` | This is not production Go approval. |
+| Execution | `not_allowed` | No actual env injection, env file operation, external runtime, public smoke, DB operation, or production change. |
+| Next action | `selected` | Loop 262 operator env injection permission gate. |
+
+```txt
+loop_261_actual_runtime_env_presence_check_approval_consumed=true
+loop_261_actual_runtime_access_status=available
+loop_261_actual_runtime_presence_check_safe_to_attempt=true
+loop_261_actual_runtime_env_presence_check_status=complete
+loop_261_required_runtime_env_category_list_confirmed=true
+loop_261_required_categories_present_count=9
+loop_261_required_categories_missing_count=1
+loop_261_missing_required_categories=line_runtime_env_category
+loop_261_env_value_output_occurred=false
+loop_261_env_value_length_output_occurred=false
+loop_261_env_value_hash_output_occurred=false
+loop_261_env_prefix_suffix_output_occurred=false
+loop_261_env_file_operation_executed=false
+loop_261_secret_file_operation_executed=false
+loop_261_actual_secret_injection_executed=false
+loop_261_external_api_connection_attempted=false
+loop_261_vps_change_executed=false
+loop_261_production_go_judgement_ready=true
+loop_261_unknown_blocker_count=0
+loop_261_next_execution_sequence_status=operator_env_input_required
+loop_261_env_injection_execution_allowed=false
+loop_261_external_runtime_execution_allowed=false
+loop_261_production_no_go=true
+loop_261_production_go_changed=false
+loop_261_dr_readiness_status=not_ready_restore_failed
+loop_261_classifier_route_status=frozen
+loop_261_next_minimal_action=Loop 262 operator env injection permission gate
 ```
 
 ## Loop 259 Env Inventory Mismatch Cleanup

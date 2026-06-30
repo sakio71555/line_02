@@ -2,40 +2,59 @@
 
 ## Loop
 
-Loop 259: env inventory mismatch cleanup and env presence check permission gate preparation
+Loop 261: actual-runtime env presence boolean-only check and production-go judgement readiness
 
 ## Status
 
 ```txt
 loop_status=complete
-env_inventory_mismatch_cleanup_status=complete
-env_inventory_alignment_status=aligned
+actual_runtime_env_presence_check_status=complete
+required_categories_present_count=9
+required_categories_missing_count=1
+production_go_judgement_ready=true
+production_no_go=true
 ```
 
 ## Scope Completed
 
-- Reviewed Loop 258 value-free env dry-run result.
-- Analyzed the two admin env mismatch categories only.
-- Updated runtime env inventory with category-only admin entries.
-- Rechecked post-cleanup alignment by safe repo code/docs inspection.
-- Prepared the next env presence check permission gate.
+- Validated the operator approval block for actual-runtime category boolean-only presence checks.
+- Reviewed Loop 259 aligned env inventory evidence and Loop 260 review-only decision.
+- Classified actual runtime access as available through existing access.
+- Ran one read-only actual runtime presence check with sanitized category-only output.
+- Recorded one missing known runtime category.
+- Updated production-go judgement readiness without changing production Go.
 - Updated docs, runbooks, dev log, Obsidian, handoff, and matrices.
 
 ## Sanitized Result
 
 ```txt
-env_inventory_mismatch_cleanup_completed=true
-env_inventory_mismatch_cleanup_status=complete
-env_inventory_alignment_status=aligned
-admin_app_env_category_mismatch_status=resolved
-admin_public_env_category_mismatch_status=resolved
-runtime_env_inventory_updated=true
-post_cleanup_env_inventory_alignment_status=aligned
-remaining_mismatch_reason=none
-env_presence_check_permission_gate_prepared=true
-env_presence_check_execution_allowed=false
-actual_secret_injection_executed=false
+actual_runtime_env_presence_check_approval_consumed=true
+approval_scope=actual_runtime_presence_boolean_only_for_required_runtime_categories
+actual_runtime_access_status=available
+actual_runtime_access_method_category=existing_access
+actual_runtime_presence_check_safe_to_attempt=true
+actual_runtime_env_presence_check_status=complete
+required_runtime_env_category_list_confirmed=true
+required_runtime_env_category_count=10
+required_categories_present_count=9
+required_categories_missing_count=1
+missing_required_categories=line_runtime_env_category
+env_presence_result_recording_policy=category_boolean_only
+env_value_output_occurred=false
+env_value_length_output_occurred=false
+env_value_hash_output_occurred=false
+env_prefix_suffix_output_occurred=false
 env_file_operation_executed=false
+secret_file_operation_executed=false
+actual_secret_injection_executed=false
+external_api_connection_attempted=false
+vps_read_only_presence_check_executed=true
+vps_change_executed=false
+production_go_judgement_ready=true
+unknown_blocker_count=0
+remaining_known_blockers=line_runtime_env_category,operator_env_injection_permission,external_runtime_permission,dr_readiness_not_ready_restore_failed
+next_execution_sequence_status=operator_env_input_required
+next_minimal_action=Loop 262 operator env injection permission gate
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 production_no_go=true
@@ -44,58 +63,20 @@ dr_readiness_status=not_ready_restore_failed
 classifier_route_status=frozen
 ```
 
-## Env Presence Check Permission Gate
-
-Future approval may use:
-
-```txt
-approval_decision=approve_operator_env_presence_check_without_value_output
-approval_scope=presence_boolean_only_for_required_runtime_categories
-secret_values_provided=false
-env_value_output_allowed=false
-env_value_length_output_allowed=false
-env_value_hash_output_allowed=false
-external_runtime_execution_allowed=false
-vps_operation_allowed=false
-public_smoke_allowed=false
-production_go_allowed=false
-actual_env_injection_allowed=false
-```
-
-If not approving yet:
-
-```txt
-approval_decision=do_not_approve_env_presence_check_yet
-approval_scope=none
-secret_values_provided=false
-external_runtime_execution_allowed=false
-vps_operation_allowed=false
-public_smoke_allowed=false
-production_go_allowed=false
-actual_env_injection_allowed=false
-```
-
 ## Safety Boundary
 
 ```txt
-docs_only=true
 runtime_code_changed=false
 package_json_changed=false
 pnpm_lock_changed=false
-actual_secret_injection_executed=false
-secret_collection_executed=false
-secret_value_displayed=false
 secret_value_recorded=false
-env_file_created=false
-env_file_modified=false
-env_file_displayed=false
-secret_file_displayed=false
-env_presence_check_executed=false
-vps_operation_executed=false
-nginx_operation_executed=false
-dns_operation_executed=false
-https_or_certbot_operation_executed=false
-public_smoke_executed=false
+db_url_recorded=false
+env_file_opened=false
+secret_file_opened=false
+raw_log_recorded=false
+actual_secret_injection_executed=false
+external_runtime_execution_allowed=false
+external_api_connection_attempted=false
 line_real_send_executed=false
 openai_api_executed=false
 supabase_connection_executed=false
@@ -103,28 +84,22 @@ psql_executed=false
 pg_restore_executed=false
 restore_executed=false
 db_changed=false
-schema_changed=false
-role_changed=false
-extension_created=false
-cluster_changed=false
-package_operation_executed=false
-apt_operation_executed=false
-production_runtime_changed=false
+runtime_changed=false
+production_no_go=true
 ```
 
 ## Files Updated
 
 - `README.md`
 - `docs/00_index.md`
-- `docs/11_codex_tasks/256_operator_env_injection_dry_run_checklist.md`
-- `docs/11_codex_tasks/259_env_inventory_mismatch_cleanup.md`
+- `docs/11_codex_tasks/261_actual_runtime_env_presence_check.md`
 - `docs/14_dev_logs/2026-06-30.md`
 - `docs/15_runbooks/final_operator_handoff_checklist.md`
 - `docs/15_runbooks/production_readiness_final.md`
 - `docs/16_handoff/latest_codex_result.md`
 - `docs/16_handoff/latest_gpt_review_prompt.md`
 - `docs/16_obsidian/README.md`
-- `docs/16_obsidian/loop_259_env_inventory_mismatch_cleanup.md`
+- `docs/16_obsidian/loop_261_actual_runtime_env_presence_check.md`
 - `docs/16_obsidian/obsidian_link_map.md`
 - `docs/17_story_matrix/README.md`
 - `docs/17_story_matrix/production_vs_dr_readiness_matrix.md`
@@ -135,14 +110,14 @@ production_runtime_changed=false
 - `git status --short`
 - `git diff --check`
 - docs link check
-- changed-line secret pattern boolean check
+- changed-file secret pattern boolean check
 - `npx pnpm@10.12.1 lint`
-- Typecheck/test skipped because Loop 259 is docs-only and does not change runtime code, package files, or config.
+- Typecheck/test skipped because Loop 261 changes docs and performs a read-only boolean-only presence check only; no runtime code, package, lockfile, or config file changed.
 
 ## Next Minimal Action
 
 ```txt
-next_minimal_action=Loop 260 operator env presence check permission gate
+next_minimal_action=Loop 262 operator env injection permission gate
 ```
 
-Do not proceed automatically to Loop 260.
+Do not proceed automatically to Loop 262.
