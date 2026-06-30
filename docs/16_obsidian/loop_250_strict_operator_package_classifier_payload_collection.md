@@ -8,7 +8,7 @@
 - No strict sanitized operator payload is present in this Loop input.
 - The collection result is blocked with sanitized reason `operator_payload_absent`.
 - `ready_for_classifier_retry` remains `false`.
-- The next Loop is `Loop 251: strict operator package classifier payload recollection or protocol fix`.
+- The historical next Loop direction is superseded by `Loop 251: classifier route freeze and DR-production readiness split`.
 
 ## DevelopmentLog
 

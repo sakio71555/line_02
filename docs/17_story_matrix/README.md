@@ -9,6 +9,7 @@ The purpose is to keep user-facing behavior, operator workflows, backup/restore 
 - [user_story_status_matrix.md](user_story_status_matrix.md): customer, staff, admin, AI, LINE, and RAG product stories.
 - [ops_story_status_matrix.md](ops_story_status_matrix.md): deployment, monitoring, production, secret, handoff, and operator workflows.
 - [dr_readiness_story_matrix.md](dr_readiness_story_matrix.md): backup, export, restore, role/ACL remediation, and DR status.
+- [production_vs_dr_readiness_matrix.md](production_vs_dr_readiness_matrix.md): separated DR, classifier route, app, and production readiness statuses.
 - [verification_matrix.md](verification_matrix.md): safe-to-run verification list and blocked verification list.
 
 ## Rules
@@ -26,6 +27,9 @@ ops_status=partially_verified
 backup_export_status=success
 restore_drill_status=failed
 dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+app_readiness_status=separate_review_required
+production_readiness_status=separate_review_required
 safe_verification_available=true
 unsafe_verification_blocked=true
 production_runtime_change_allowed=false

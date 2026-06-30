@@ -40,7 +40,8 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-030 | Package classifier blocked follow-up | docs-only review of Loop 247 blocked cause, strict result format, validation rule, and Loop 248 boundary | strict retry protocol created, install remains No-Go, exact names hidden | true | false | false | false | false | false | false | false | pending_loop_247_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-031 | Strict package classifier retry | docs-only review of Loop 248 strict retry outcome and blocked reason | operator sanitized payload absent, classifier retry blocked, input collection selected | true | false | false | false | false | false | false | false | pending_loop_248_verification | Does not run `apt-cache`, inspect raw package output, run `psql`, run restore, create extensions, install packages, run apt, or change DB state. |
 | V-032 | Strict package classifier input collection | docs-only review of Loop 249 collection protocol, allowed-key template, reject rules, and retry readiness gate | input protocol created, ready_for_classifier_retry=false, payload collection selected | true | false | false | false | false | false | false | false | pending_loop_249_verification | Does not run classifier retry, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
-| V-033 | Strict package classifier payload collection | docs-only review of Loop 250 payload presence check and blocked result | operator payload absent, ready_for_classifier_retry=false, recollection/protocol fix selected | true | false | false | false | false | false | false | false | pending_loop_250_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
+| V-033 | Strict package classifier payload collection | docs-only review of Loop 250 payload presence check and blocked result | operator payload absent, ready_for_classifier_retry=false, later superseded by route freeze | true | false | false | false | false | false | false | false | pending_loop_250_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, or change DB state. |
+| V-034 | Classifier route freeze and readiness split | docs-only review of Loop 251 route freeze, repeated-blocker rule, and readiness split | classifier route frozen, next classifier loop disallowed, DR/app/production readiness separated | true | false | false | false | false | false | false | false | pending_loop_251_verification | Does not run classifier retry, package discovery, `apt-cache`, `psql`, restore, create extensions, install packages, run apt, change DB state, or change production runtime. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1307,7 +1308,8 @@ loop_250_forbidden_content_checked=false
 loop_250_codex_validation_result=not_run_payload_absent
 loop_250_operator_payload_recorded_in_docs=false
 loop_250_normalized_payload_recorded=false
-loop_250_selected_next_loop=Loop 251 strict operator package classifier payload recollection or protocol fix
+loop_250_historical_next_loop_superseded=true
+loop_250_superseded_by=Loop 251 classifier route freeze and DR-production readiness split
 loop_250_classifier_retry_executed=false
 loop_250_package_candidate_classified=false
 loop_250_package_candidate_confirmed=false
@@ -1341,6 +1343,57 @@ loop_250_supabase_connection_executed=false
 loop_250_production_restore_executed=false
 loop_250_production_readiness=production_no_go
 loop_250_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 251 Verification Note
+
+```txt
+loop_251_docs_only=true
+loop_251_classifier_route_status=frozen
+loop_251_classifier_route_frozen_reason=repeated_operator_payload_absent
+loop_251_operator_payload_present=false
+loop_251_ready_for_classifier_retry=false
+loop_251_next_classifier_loop_allowed=false
+loop_251_classifier_route_resume_condition=human_provided_valid_strict_sanitized_payload
+loop_251_self_growth_prevention_rule_added=true
+loop_251_same_blocker_docs_only_safety_gate_limit=1
+loop_251_operator_payload_recollection_executed=false
+loop_251_classifier_retry_executed=false
+loop_251_classifier_protocol_fix_added=false
+loop_251_classifier_readiness_gate_added=false
+loop_251_package_candidate_classified=false
+loop_251_package_candidate_confirmed=false
+loop_251_package_exploration_executed=false
+loop_251_apt_cache_executed=false
+loop_251_apt_update_executed=false
+loop_251_apt_upgrade_executed=false
+loop_251_apt_install_executed=false
+loop_251_package_install_executed=false
+loop_251_restore_executed=false
+loop_251_pg_restore_executed=false
+loop_251_psql_executed=false
+loop_251_target_db_created=false
+loop_251_target_db_modified=false
+loop_251_extension_created=false
+loop_251_schema_modified=false
+loop_251_role_modified=false
+loop_251_cluster_modified=false
+loop_251_supabase_connection_executed=false
+loop_251_line_real_send_executed=false
+loop_251_openai_api_executed=false
+loop_251_production_runtime_changed=false
+loop_251_secrets_recorded=false
+loop_251_db_url_recorded=false
+loop_251_raw_log_recorded=false
+loop_251_command_output_body_recorded=false
+loop_251_package_name_recorded=false
+loop_251_extension_name_recorded=false
+loop_251_dr_readiness_status=not_ready_restore_failed
+loop_251_app_readiness_status=separate_review_required
+loop_251_production_readiness_status=separate_review_required
+loop_251_production_no_go=true
+loop_251_production_no_go_reason_scope=must_be_split
+loop_251_selected_next_loop=Loop 252 app production path review without DR blocker coupling
 ```
 
 ## Stage 2 Rule

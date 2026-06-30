@@ -127,10 +127,12 @@ No-Go:
 ## Next Loop
 
 ```txt
-selected_next_loop=Loop 251: strict operator package classifier payload recollection or protocol fix
+historical_selected_next_loop_superseded=true
+superseded_next_loop=Loop 251: strict operator package classifier payload recollection or protocol fix
+selected_next_loop=Loop 251: classifier route freeze and DR-production readiness split
 ```
 
-Loop 251 should not run classifier retry unless the operator provides a valid strict sanitized payload. If payload remains absent or invalid, it must stay blocked.
+Loop 251 supersedes the historical payload recollection / protocol fix direction. The classifier route is frozen unless a human provides a valid strict sanitized payload.
 
 ## Readiness
 

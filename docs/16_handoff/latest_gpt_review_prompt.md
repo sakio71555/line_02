@@ -8,10 +8,10 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 250 の strict operator package classifier payload collection をレビューしてください。
-- 有効payloadが無いため `operator_payload_absent` でblockedにした判断が妥当か確認してください。
-- classifier retryやpackage候補分類に進めていないか確認してください。
-- package名 / extension名 / raw output / SQL文 / object名 / role名 / DB URL / secret が記録されていないか確認してください。
+- Loop 251 の classifier route freeze and DR-production readiness split をレビューしてください。
+- Loop 248〜250で同じ operator payload absent blocker が繰り返されたため、classifier route を frozen にした判断が妥当か確認してください。
+- DR readiness と app / production readiness を分離できているか確認してください。
+- 次Loop候補が payload recollection / protocol fix / classifier retry / blocked follow-up になっていないか確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -24,38 +24,41 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 250 strict operator package classifier payload collection
+- Loop: Loop 251 classifier route freeze and DR-production readiness split
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: docs-only payload presence check and blocked result recording
+- Scope type: docs-only route freeze and readiness split
 
-## Loop 250 Result
+## Loop 251 Result
 
-- operator_payload_collection_status=blocked
+- classifier_route_status=frozen
+- classifier_route_frozen_reason=repeated_operator_payload_absent
 - operator_payload_present=false
-- operator_payload_valid=false
 - ready_for_classifier_retry=false
-- blocked_reason=operator_payload_absent
-- codex_generated_payload=false
-- payload_inferred_by_codex=false
-- classifier_retry_executed=false
-- selected_next_loop=Loop 251: strict operator package classifier payload recollection or protocol fix
+- next_classifier_loop_allowed=false
+- classifier_route_resume_condition=human_provided_valid_strict_sanitized_payload
+- self_growth_prevention_rule_added=true
 
-## Validation Result
+## Readiness Split
 
-- strict_key_value_format_checked=false
-- allowed_keys_only_checked=false
-- forbidden_content_checked=false
-- codex_validation_result=not_run_payload_absent
-- operator_payload_recorded_in_docs=false
-- normalized_payload_recorded=false
+- dr_readiness_status=not_ready_restore_failed
+- classifier_route_status=frozen
+- app_readiness_status=separate_review_required
+- production_readiness_status=separate_review_required
+- production_no_go=true
+- production_no_go_reason_scope=must_be_split
+- production_go_changed=false
 
 ## Safety
 
 - docs_only=true
+- operator_payload_recollection_executed=false
 - classifier_retry_executed=false
+- classifier_protocol_fix_added=false
+- classifier_readiness_gate_added=false
 - package_candidate_classified=false
 - package_candidate_confirmed=false
+- package_exploration_executed=false
 - apt_cache_executed=false
 - apt_update_executed=false
 - apt_upgrade_executed=false
@@ -68,30 +71,22 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - schema_modified=false
 - role_modified=false
 - cluster_modified=false
-- package_candidate_names_disclosed=false
-- extension_name_disclosed=false
-- raw_package_output_disclosed=false
-- raw_log_displayed=false
-- command_output_body_recorded=false
-- sql_displayed=false
-- object_name_displayed=false
-- role_name_displayed=false
-- db_url_displayed=false
-- secrets_recorded=false
-- token_recorded=false
-- authorization_header_recorded=false
 - supabase_connection_executed=false
-- production_restore_executed=false
+- line_real_send_executed=false
+- openai_api_executed=false
 - production_runtime_changed=false
+- secrets_recorded=false
+- db_url_recorded=false
+- raw_log_recorded=false
+- command_output_body_recorded=false
+- package_name_recorded=false
+- extension_name_recorded=false
 - production_readiness=production_no_go
-
-## DR Readiness
-
-- dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 251: strict operator package classifier payload recollection or protocol fix
+- Loop 252: app production path review without DR blocker coupling
+- Secondary candidate: Loop 252 minimum DR fallback plan
 ---
 
 出力形式:
@@ -99,16 +94,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### レビュー結果
 -
 
-### Scope確認
+### classifier route freeze確認
 -
 
-### payload absent判定確認
+### repeated blocker確認
 -
 
-### ready_for_classifier_retry確認
+### readiness split確認
 -
 
-### Go / No-Go確認
+### production_no_go確認
 -
 
 ### safety確認
@@ -121,6 +116,9 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 -
 
 ### DR readiness確認
+-
+
+### 次Loop候補確認
 -
 
 ### 残リスク

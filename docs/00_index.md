@@ -80,6 +80,7 @@
 - Loop 248 strict operator-only package candidate classifier retry: `11_codex_tasks/248_strict_operator_only_package_candidate_classifier_retry.md`
 - Loop 249 strict operator package classifier input collection: `11_codex_tasks/249_strict_operator_package_classifier_input_collection.md`
 - Loop 250 strict operator package classifier payload collection: `11_codex_tasks/250_strict_operator_package_classifier_payload_collection.md`
+- Loop 251 classifier route freeze and DR-production readiness split: `11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md`
 
 ## Prompts and Templates
 
@@ -89,4 +90,4 @@
 
 ## Story Matrix
 
-- `17_story_matrix/`: user story、ops story、DR readiness、verification matrix。safe-to-run検証とoperator approval required項目を分けて管理します。
+- `17_story_matrix/`: user story、ops story、DR readiness、production-vs-DR readiness、verification matrix。safe-to-run検証とoperator approval required項目を分けて管理します。
