@@ -3432,3 +3432,115 @@ cleanup_required=false
 ```
 
 Loop 239 may only collect sanitized `key=value` fields from an operator-only review of the repo-external root-only diagnostic log. It must not run restore, `pg_restore`, `psql`, create extensions, change DB state, display raw logs, display extension names, display SQL, display object names, display role names, display dump content, display row content, or touch Supabase/production.
+
+## 43. Loop 239 Operator-Only Sanitized Schema Extension Classifier
+
+Loop 239 defines the operator-only protocol for classifying the remaining schema/extension signals without exposing raw diagnostic content.
+
+### 43.1 Loop 237 / 238 Result Summary
+
+```txt
+permission_or_auth_error_count=0
+role_owner_acl_error_count=0
+schema_or_sql_statement_error_count=1
+extension_missing_count=2
+target_db_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+loop_238_schema_extension_remediation_gate_created=true
+dr_readiness_status=not_ready_restore_failed
+```
+
+### 43.2 Operator-Only Protocol
+
+The operator may review the repo-external root-only diagnostic log outside Codex. Codex may receive only sanitized `key=value` output.
+
+Allowed sanitized fields include:
+
+```txt
+operator_raw_log_review_executed=true_or_false
+operator_raw_log_review_scope=loop237_pre_data_diagnostic_log
+operator_raw_log_shared_with_codex=false
+operator_raw_log_shared_with_chatgpt=false
+operator_raw_log_committed=false
+operator_raw_log_copied_into_repo=false
+extension_missing_count=2
+extension_name_disclosed=false
+extension_category_known=true_or_false
+extension_category_standard_postgres=true_or_false
+extension_category_supabase_related=true_or_false
+extension_category_optional_observability=true_or_false
+extension_category_unknown=true_or_false
+schema_error_count=1
+schema_error_category=extension_dependency_or_schema_exists_or_permission_or_function_language_or_type_or_domain_or_other_non_sensitive_category_or_unknown
+schema_error_confidence=high_or_medium_or_low
+sql_line_disclosed=false
+object_name_disclosed=false
+role_name_disclosed=false
+raw_log_disclosed=false
+dump_content_disclosed=false
+row_content_disclosed=false
+```
+
+Forbidden content:
+
+- Raw diagnostic log text.
+- Matching line.
+- Exact SQL statement.
+- Object, table, function, policy, extension, or role name.
+- Dump content or row content.
+- DB URL or secret value.
+
+### 43.3 Operator Result Status
+
+No operator sanitized result was provided during Loop 239.
+
+```txt
+operator_schema_extension_review_status=pending_operator_input
+operator_sanitized_result_recorded=false
+extension_category_known=false
+schema_error_category=unknown_pending_operator_input
+schema_error_confidence=unknown
+```
+
+### 43.4 Selected Next Loop
+
+```txt
+selected_next_loop=Loop 240: operator sanitized schema extension result collection
+selected_next_loop_reason=collect_operator_key_value_result_without_raw_log_or_exact_name_exposure
+restore_retry_no_go=true
+extension_creation_no_go=true
+schema_change_no_go=true
+```
+
+### 43.5 Safety Boundary
+
+```txt
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+extension_created=false
+schema_modified=false
+role_created=false
+role_modified=false
+cluster_modified=false
+diagnostic_log_displayed=false
+diagnostic_log_copied_into_repo=false
+raw_log_displayed=false
+matching_line_displayed=false
+sql_displayed=false
+object_names_displayed=false
+extension_names_displayed=false
+role_names_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+supabase_connection_executed=false
+production_restore_executed=false
+production_runtime_changed=false
+push_performed=false
+dr_readiness_status=not_ready_restore_failed
+```

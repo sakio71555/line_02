@@ -68,6 +68,7 @@
 - Loop 236 owner-aligned pre-data retry gate resume: `11_codex_tasks/236_owner_aligned_pre_data_retry_gate_resume.md`
 - Loop 237 owner-aligned target DB reprovision and pre-data retry execution: `11_codex_tasks/237_owner_aligned_target_db_reprovision_and_pre_data_retry_execution.md`
 - Loop 238 pre-data schema extension remediation gate: `11_codex_tasks/238_pre_data_schema_extension_remediation_gate.md`
+- Loop 239 operator-only sanitized schema extension classifier: `11_codex_tasks/239_operator_only_sanitized_schema_extension_classifier.md`
 
 ## Prompts and Templates
 

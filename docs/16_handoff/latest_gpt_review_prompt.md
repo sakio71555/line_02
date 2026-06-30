@@ -8,12 +8,12 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 238 の pre-data schema extension remediation gate をレビューしてください。
+- Loop 239 の operator-only sanitized schema extension classifier をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- Loop 237でpermission/auth・role/ACL系がcount=0になったため、残課題をschema/extension系に絞った判断が妥当か確認してください。
-- 次Loopを operator-only sanitized schema extension classifier にする判断が妥当か確認してください。
-- raw log / matching line / SQL文 / object名 / extension名 / role名 / secret / DB URLが記録されていないか確認してください。
-- restore retryをまだNo-Goにしていることが妥当か確認してください。
+- operator-only protocol が raw log / matching line / SQL文 / object名 / extension名 / role名を露出しない形になっているか確認してください。
+- operator result が pending_operator_input のまま扱われていることが妥当か確認してください。
+- 次Loopを operator sanitized schema extension result collection にしている判断が妥当か確認してください。
+- restore retry / extension creation / schema change をまだNo-Goにしていることが妥当か確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -26,17 +26,18 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 238 pre-data schema extension remediation gate
+- Loop: Loop 239 operator-only sanitized schema extension classifier
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
 - Start git status: main...origin/main
-- Scope type: docs-only gate
+- Scope type: docs-only classifier protocol
+- Push: not performed in this Loop
 
-## Loop 237 Result Summary
+## Loop 237 / 238 Result Summary
 
-- restore_attempt_count=1
-- pg_restore_exit_code=1
-- pre_data_retry_status=failed
+- loop_237_restore_attempt_count=1
+- loop_237_pg_restore_exit_code=1
+- loop_237_pre_data_retry_status=failed
 - permission_or_auth_error_count=0
 - role_owner_acl_error_count=0
 - schema_or_sql_statement_error_count=1
@@ -44,47 +45,39 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - target_db_dropped=true
 - target_db_exists_after_drop=false
 - cleanup_required=false
-- raw_log_displayed=false
-- object_names_displayed=false
-- sql_displayed=false
-- role_names_displayed=false
-- dump_content_displayed=false
-- row_content_displayed=false
-- supabase_connection_executed=false
-- production_restore_executed=false
+- loop_238_schema_extension_remediation_gate_created=true
+- loop_238_restore_retry_no_go=true
+- loop_238_data_restore_no_go=true
+- dr_readiness_status=not_ready_restore_failed
 
-## Re-Evaluation
+## Operator-Only Protocol
 
-- loop237_permission_auth_resolved=true
-- loop237_role_acl_resolved=true
-- owner_aligned_target_db_effective_likely=true
-- remaining_failure_area=schema_extension
+- operator_review_scope=loop237_pre_data_diagnostic_log
+- codex_may_read_raw_log=false
+- chatgpt_may_receive_raw_log=false
+- docs_may_record_raw_log=false
+- docs_may_record_matching_line=false
+- docs_may_record_sql=false
+- docs_may_record_object_name=false
+- docs_may_record_extension_name=false
+- docs_may_record_role_name=false
+- docs_may_record_dump_content=false
+- docs_may_record_row_content=false
 
-## Remaining Issues
+## Operator Result Status
 
-- extension_missing_count=2
-- extension_name_disclosed=false
+- operator_schema_extension_review_status=pending_operator_input
+- operator_sanitized_result_recorded=false
 - extension_category_known=false
-- schema_or_sql_statement_error_count=1
-- sql_line_disclosed=false
-- object_name_disclosed=false
-- schema_error_category=unknown
-- extension_dependency_possible=true
-- independent_schema_ddl_failure_possible=true
+- schema_error_category=unknown_pending_operator_input
+- schema_error_confidence=unknown
 
-## Candidate Comparison
+## Selected Next Loop
 
-- A. operator-only sanitized schema extension classifier: recommended
-- B. extension preflight without restore: later
-- C. create standard extensions in fresh target DB: later / gated
-- D. exclude extension-related objects or accept missing extension: No-Go for now
-- E. retry immediately: No-Go
-
-## Next Loop
-
-- selected_next_loop=Loop 239: operator-only sanitized schema extension classifier
+- selected_next_loop=Loop 240: operator sanitized schema extension result collection
 - restore_retry_no_go=true
-- data_restore_no_go=true
+- extension_creation_no_go=true
+- schema_change_no_go=true
 
 ## Safety
 
@@ -99,17 +92,23 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - role_created=false
 - role_modified=false
 - cluster_modified=false
+- backup_artifact_touched=false
 - diagnostic_log_displayed=false
+- diagnostic_log_copied_into_repo=false
 - raw_log_displayed=false
-- object_names_displayed=false
+- matching_line_displayed=false
 - sql_displayed=false
+- object_names_displayed=false
 - extension_names_displayed=false
 - role_names_displayed=false
 - dump_content_displayed=false
 - row_content_displayed=false
+- db_url_displayed=false
 - secrets_recorded=false
 - supabase_connection_executed=false
 - production_restore_executed=false
+- production_runtime_changed=false
+- push_performed=false
 
 ## DR Readiness
 
@@ -117,7 +116,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 239: operator-only sanitized schema extension classifier
+- Loop 240: operator sanitized schema extension result collection
 ---
 
 出力形式:
@@ -128,25 +127,22 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### Loop 237結果確認
+### Loop 237/238結果確認
 -
 
-### permission/auth・role/ACL再評価
+### operator-only protocol確認
 -
 
-### schema / extension残課題確認
+### sanitized key=value format確認
 -
 
-### remediation候補確認
+### operator result status確認
 -
 
-### Loop 239境界確認
+### selected next Loop確認
 -
 
 ### Go / No-Go確認
--
-
-### cleanup確認
 -
 
 ### safety確認

@@ -121,6 +121,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 237 Obsidian Log](loop_237_owner_aligned_target_db_reprovision_and_pre_data_retry_execution.md)
 - [Loop 238 Pre-Data Schema Extension Remediation Gate](../11_codex_tasks/238_pre_data_schema_extension_remediation_gate.md)
 - [Loop 238 Obsidian Log](loop_238_pre_data_schema_extension_remediation_gate.md)
+- [Loop 239 Operator-Only Sanitized Schema Extension Classifier](../11_codex_tasks/239_operator_only_sanitized_schema_extension_classifier.md)
+- [Loop 239 Obsidian Log](loop_239_operator_only_sanitized_schema_extension_classifier.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -211,6 +213,8 @@ Loop 236 status: `loop235_listen_scope_confirmed=true`, `loop233_blocker_false_p
 Loop 237 status: `local_cluster_loopback_only=true`, `artifact_checksum_match=true`, `target_db_created=true`, `target_db_owner_aligned=true`, `restore_attempt_count=1`, `pg_restore_exit_code=1`, `pre_data_retry_status=failed`, `failure_category=pre_data_schema_or_extension_error_detected`, `restore_target_dropped=true`, `cleanup_required=false`, `raw_log_displayed=false`, `secrets_recorded=false`, `next=Loop 238 pre-data schema extension remediation gate`.
 
 Loop 238 status: `docs_only=true`, `loop237_permission_auth_resolved=true`, `loop237_role_acl_resolved=true`, `schema_or_sql_statement_error_count=1`, `extension_missing_count=2`, `schema_extension_remediation_gate_created=true`, `target_db_currently_absent=true`, `cleanup_required=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `raw_log_displayed=false`, `extension_names_displayed=false`, `secrets_recorded=false`, `next=Loop 239 operator-only sanitized schema extension classifier`.
+
+Loop 239 status: `operator_protocol_created=true`, `operator_schema_extension_review_status=pending_operator_input`, `operator_sanitized_result_recorded=false`, `extension_missing_count=2`, `schema_error_count=1`, `schema_error_category=unknown_pending_operator_input`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `schema_modified=false`, `raw_log_displayed=false`, `extension_names_displayed=false`, `secrets_recorded=false`, `next=Loop 240 operator sanitized schema extension result collection`.
 
 ## Obsidian Helpers
 

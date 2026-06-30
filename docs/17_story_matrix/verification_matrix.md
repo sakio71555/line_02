@@ -29,6 +29,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-019 | Local target privilege alignment inspection | local-only metadata inspection with counts/booleans/categories only | psql metadata inspected, no restore or DB changes, next blocked follow-up selected | true | false | false | false | false | true | false | false | pending_loop_225_verification | Uses local-only `psql`; no row content, role details, object names, DB URLs, or secrets. |
 | V-020 | Owner-aligned pre-data retry execution record | sanitized review of Loop 237 execution metadata, classifier, and cleanup | one attempt recorded, schema/extension signal classified, target dropped | true | false | false | false | false | true | true | true | pending_loop_237_verification | Raw diagnostic log, object names, role names, SQL, row content, dump content, DB URLs, and secrets must remain hidden. |
 | V-021 | Pre-data schema extension remediation gate | docs-only review of Loop 238 schema/extension gate and Loop 239 operator-only classifier format | next Loop selected, restore remains No-Go, raw log/object/SQL/extension name exposure remains false | true | false | false | false | false | false | false | false | pending_loop_238_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, or change DB state. |
+| V-022 | Operator-only schema extension classifier | docs-only review of Loop 239 operator protocol, pending result status, and next result collection Loop | protocol exists, operator result pending, raw log/exact names remain hidden, restore remains No-Go | true | false | false | false | false | false | false | false | pending_loop_239_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -746,6 +747,46 @@ loop_238_secrets_recorded=false
 loop_238_supabase_connection_executed=false
 loop_238_production_restore_executed=false
 loop_238_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 239 Verification Note
+
+```txt
+loop_239_docs_only=true
+loop_239_operator_protocol_created=true
+loop_239_operator_schema_extension_review_status=pending_operator_input
+loop_239_operator_sanitized_result_recorded=false
+loop_239_extension_missing_count=2
+loop_239_schema_error_count=1
+loop_239_schema_error_category=unknown_pending_operator_input
+loop_239_selected_next_loop=Loop 240 operator sanitized schema extension result collection
+loop_239_restore_retry_no_go=true
+loop_239_extension_creation_no_go=true
+loop_239_schema_change_no_go=true
+loop_239_restore_executed=false
+loop_239_pg_restore_executed=false
+loop_239_psql_executed=false
+loop_239_target_db_created=false
+loop_239_target_db_modified=false
+loop_239_extension_created=false
+loop_239_schema_modified=false
+loop_239_role_created=false
+loop_239_role_modified=false
+loop_239_cluster_modified=false
+loop_239_diagnostic_log_displayed=false
+loop_239_raw_log_displayed=false
+loop_239_matching_line_displayed=false
+loop_239_sql_displayed=false
+loop_239_object_names_displayed=false
+loop_239_extension_names_displayed=false
+loop_239_role_names_displayed=false
+loop_239_dump_content_displayed=false
+loop_239_row_content_displayed=false
+loop_239_secrets_recorded=false
+loop_239_supabase_connection_executed=false
+loop_239_production_restore_executed=false
+loop_239_push_performed=false
+loop_239_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule
