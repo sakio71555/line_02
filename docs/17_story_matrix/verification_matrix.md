@@ -34,6 +34,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-024 | Supabase extension compatibility gate | docs-only review of Loop 241 compatibility comparison and Loop 242 boundary | compatibility options compared, read-only preflight selected, restore/package/extension changes remain No-Go | true | false | false | false | false | false | false | false | pending_loop_241_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-025 | Supabase extension local compatibility preflight | read-only review of Loop 242 local cluster/tooling metadata and identifier availability | cluster/tooling metadata recorded, identifier unavailable, compatibility preflight blocked safely | true | false | false | false | false | false | false | false | pending_loop_242_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 | V-026 | Operator extension identifier collection | read-only review of Loop 243 identifier availability and metadata checks | identifier remains unavailable, extension name hidden, compatibility remains blocked safely | true | false | false | false | false | false | false | false | pending_loop_243_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
+| V-027 | Operator extension compatibility preflight | read-only review of Loop 244 identifier, control, and package availability metadata | identifier shell-safe, control unavailable, package candidate count recorded, names hidden, package risk gate selected | true | false | false | false | false | false | false | false | pending_loop_244_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -975,6 +976,56 @@ loop_243_secrets_recorded=false
 loop_243_supabase_connection_executed=false
 loop_243_production_restore_executed=false
 loop_243_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 244 Verification Note
+
+```txt
+loop_244_read_only_inspection=true
+loop_244_operator_extension_identifier_available=true
+loop_244_operator_extension_identifier_recorded=false
+loop_244_operator_extension_identifier_shell_safe=true
+loop_244_target_cluster_found=true
+loop_244_cluster_online=true
+loop_244_cluster_port=55432
+loop_244_pg_config_available=true
+loop_244_postgres_major_version=17
+loop_244_pg_sharedir_detected=true
+loop_244_extension_control_available=false
+loop_244_extension_control_path_exists=false
+loop_244_extension_control_permission=unknown
+loop_244_apt_cache_available=true
+loop_244_package_search_count=106
+loop_244_package_candidate_maybe_available=true
+loop_244_compatibility_preflight_status=completed
+loop_244_compatibility_path=package_preflight_required
+loop_244_selected_next_loop=Loop 245 Supabase extension package risk gate
+loop_244_restore_executed=false
+loop_244_pg_restore_executed=false
+loop_244_psql_executed=false
+loop_244_target_db_created=false
+loop_244_target_db_modified=false
+loop_244_extension_created=false
+loop_244_package_installed=false
+loop_244_apt_update_executed=false
+loop_244_apt_upgrade_executed=false
+loop_244_schema_modified=false
+loop_244_role_modified=false
+loop_244_cluster_modified=false
+loop_244_cluster_restarted=false
+loop_244_cluster_reloaded=false
+loop_244_diagnostic_log_displayed=false
+loop_244_raw_log_displayed=false
+loop_244_sql_displayed=false
+loop_244_extension_name_displayed=false
+loop_244_package_name_displayed=false
+loop_244_object_name_displayed=false
+loop_244_role_name_displayed=false
+loop_244_backup_artifact_touched=false
+loop_244_secrets_recorded=false
+loop_244_supabase_connection_executed=false
+loop_244_production_restore_executed=false
+loop_244_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

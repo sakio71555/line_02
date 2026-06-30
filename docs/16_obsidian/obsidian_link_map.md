@@ -131,6 +131,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 242 Obsidian Log](loop_242_supabase_extension_local_compatibility_preflight.md)
 - [Loop 243 Operator Extension Identifier Collection](../11_codex_tasks/243_operator_extension_identifier_collection.md)
 - [Loop 243 Obsidian Log](loop_243_operator_extension_identifier_collection.md)
+- [Loop 244 Operator Extension Identifier Retry And Manual Sanitized Preflight](../11_codex_tasks/244_operator_extension_identifier_retry_and_manual_sanitized_preflight.md)
+- [Loop 244 Obsidian Log](loop_244_operator_extension_identifier_retry_and_manual_sanitized_preflight.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -229,6 +231,8 @@ Loop 240 status: `operator_sanitized_result_recorded=true`, `extension_category_
 Loop 242 status: `read_only_inspection=true`, `target_cluster_found=true`, `cluster_online=true`, `cluster_port=55432`, `pg_config_available=true`, `postgres_major_version=17`, `operator_extension_identifier_available=false`, `extension_control_available=unknown`, `package_candidate_maybe_available=unknown`, `compatibility_preflight_status=blocked`, `compatibility_path=blocked_missing_operator_extension_identifier`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `package_installed=false`, `secrets_recorded=false`, `next=Loop 243 operator extension identifier collection`.
 
 Loop 243 status: `read_only_inspection=true`, `operator_extension_identifier_available=false`, `operator_extension_identifier_recorded=false`, `operator_extension_identifier_shell_safe=unknown`, `target_cluster_found=true`, `cluster_online=true`, `cluster_port=55432`, `pg_config_available=true`, `postgres_major_version=17`, `extension_control_available=unknown`, `package_candidate_maybe_available=unknown`, `compatibility_preflight_status=blocked`, `compatibility_path=blocked_missing_operator_extension_identifier`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `package_installed=false`, `secrets_recorded=false`, `next=Loop 244 operator extension identifier retry or manual sanitized preflight`.
+
+Loop 244 status: `read_only_inspection=true`, `operator_extension_identifier_available=true`, `operator_extension_identifier_recorded=false`, `operator_extension_identifier_shell_safe=true`, `target_cluster_found=true`, `cluster_online=true`, `cluster_port=55432`, `pg_config_available=true`, `postgres_major_version=17`, `extension_control_available=false`, `package_candidate_maybe_available=true`, `package_search_count=106`, `compatibility_preflight_status=completed`, `compatibility_path=package_preflight_required`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `package_installed=false`, `secrets_recorded=false`, `next=Loop 245 Supabase extension package risk gate`.
 
 ## Obsidian Helpers
 

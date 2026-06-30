@@ -2,20 +2,20 @@
 
 Copy the block below into ChatGPT. It already includes the sanitized latest Codex result from `latest_codex_result.md`.
 
-Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
+Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, package names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ```text
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 243 の operator extension identifier collection をレビューしてください。
+- Loop 244 の operator extension identifier retry and manual sanitized preflight をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- extension名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
-- operator extension identifier がまだ unavailable だったため compatibility_preflight_status=blocked を維持した判断が妥当か確認してください。
-- 次Loopを operator extension identifier retry or manual sanitized preflight にする判断が妥当か確認してください。
+- extension名 / package名 / raw log / SQL文 / object名 / role名が記録されていないか確認してください。
+- extension control unavailable かつ package candidate maybe available のため compatibility_preflight_status=completed / compatibility_path=package_preflight_required とした判断が妥当か確認してください。
+- 次Loopを Supabase extension package risk gate にする判断が妥当か確認してください。
 
 レビュー時の注意:
-- secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
+- secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、package名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
 - ChatGPTの指摘は、そのまま実行せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -25,18 +25,13 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 243 operator extension identifier collection
+- Loop: Loop 244 operator extension identifier retry and manual sanitized preflight
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Scope type: read-only operator identifier availability check
+- Scope type: read-only operator identifier and compatibility preflight
 
 ## Baseline
 
-- target_cluster_found=true
-- cluster_online=true
-- cluster_port=55432
-- pg_config_available=true
-- postgres_major_version=17
 - operator_extension_identifier_available=false
 - extension_control_available=unknown
 - package_candidate_maybe_available=unknown
@@ -46,30 +41,29 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Read-Only Result
 
-- operator_extension_identifier_available=false
+- operator_extension_identifier_available=true
 - operator_extension_identifier_recorded=false
-- operator_extension_identifier_shell_safe=unknown
-- pg_lsclusters_checked=true
+- operator_extension_identifier_shell_safe=true
 - target_cluster_found=true
 - cluster_online=true
 - cluster_port=55432
 - pg_config_available=true
 - postgres_major_version=17
 - pg_sharedir_detected=true
-- apt_cache_available=true
-- extension_control_available=unknown
-- extension_control_path_exists=unknown
+- extension_control_available=false
+- extension_control_path_exists=false
 - extension_control_permission=unknown
-- package_search_count=unknown
-- package_candidate_maybe_available=unknown
+- apt_cache_available=true
+- package_search_count=106
+- package_candidate_maybe_available=true
 
 ## Compatibility Decision
 
-- compatibility_preflight_status=blocked
-- compatibility_path=blocked_missing_operator_extension_identifier
-- local_control_available=unknown
-- package_candidate_maybe_available=unknown
-- selected_next_loop=Loop 244: operator extension identifier retry or manual sanitized preflight
+- compatibility_preflight_status=completed
+- compatibility_path=package_preflight_required
+- local_control_available=false
+- package_candidate_maybe_available=true
+- selected_next_loop=Loop 245: Supabase extension package risk gate
 
 ## Safety
 
@@ -92,6 +86,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - raw_log_displayed=false
 - sql_displayed=false
 - extension_name_displayed=false
+- package_name_displayed=false
 - object_name_displayed=false
 - role_name_displayed=false
 - dump_content_displayed=false
@@ -109,7 +104,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 244: operator extension identifier retry or manual sanitized preflight
+- Loop 245: Supabase extension package risk gate
 ---
 
 出力形式:
@@ -148,8 +143,5 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 -
 
 ### 残リスク
--
-
-### next Loop候補
 -
 ```

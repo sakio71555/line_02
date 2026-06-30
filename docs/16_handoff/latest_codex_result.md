@@ -1,28 +1,30 @@
 # Latest Codex Result
 
-This file summarizes Loop 243 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 244 in a paste-ready, sanitized format for ChatGPT review.
 
-Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
+Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, package names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 243 operator extension identifier collection
+- Loop: Loop 244 operator extension identifier retry and manual sanitized preflight
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: read-only operator identifier availability check
+- Scope type: read-only operator identifier and compatibility preflight
 - Commit hash: see final Codex report after commit
 - Push: performed after validation
 
 ## Baseline
 
 ```txt
+operator_extension_identifier_available=false
+operator_extension_identifier_recorded=false
+operator_extension_identifier_shell_safe=unknown
 target_cluster_found=true
 cluster_online=true
 cluster_port=55432
 pg_config_available=true
 postgres_major_version=17
-operator_extension_identifier_available=false
 extension_control_available=unknown
 package_candidate_maybe_available=unknown
 compatibility_preflight_status=blocked
@@ -33,40 +35,39 @@ dr_readiness_status=not_ready_restore_failed
 ## Read-Only Result
 
 ```txt
-operator_extension_identifier_available=false
+operator_extension_identifier_available=true
 operator_extension_identifier_recorded=false
-operator_extension_identifier_shell_safe=unknown
-pg_lsclusters_checked=true
+operator_extension_identifier_shell_safe=true
 target_cluster_found=true
 cluster_online=true
 cluster_port=55432
 pg_config_available=true
 postgres_major_version=17
 pg_sharedir_detected=true
-apt_cache_available=true
-extension_control_available=unknown
-extension_control_path_exists=unknown
+extension_control_available=false
+extension_control_path_exists=false
 extension_control_permission=unknown
-package_search_count=unknown
-package_candidate_maybe_available=unknown
+apt_cache_available=true
+package_search_count=106
+package_candidate_maybe_available=true
 ```
 
 ## Compatibility Decision
 
 ```txt
-compatibility_preflight_status=blocked
-compatibility_path=blocked_missing_operator_extension_identifier
-local_control_available=unknown
-package_candidate_maybe_available=unknown
-selected_next_loop=Loop 244: operator extension identifier retry or manual sanitized preflight
-selected_next_loop_reason=identifier_required_before_control_or_package_preflight
+compatibility_preflight_status=completed
+compatibility_path=package_preflight_required
+local_control_available=false
+package_candidate_maybe_available=true
+selected_next_loop=Loop 245: Supabase extension package risk gate
+selected_next_loop_reason=package_candidates_exist_but_install_requires_separate_gate
 ```
 
 ## Go / No-Go
 
 ```txt
 read_only_identifier_check_completed=true
-compatibility_preflight_completed=false
+compatibility_preflight_completed=true
 restore_retry_go=false
 extension_creation_go=false
 package_install_go=false
@@ -110,6 +111,7 @@ diagnostic_log_copied_into_repo=false
 raw_log_displayed=false
 sql_displayed=false
 extension_name_displayed=false
+package_name_displayed=false
 object_name_displayed=false
 role_name_displayed=false
 dump_content_displayed=false
@@ -143,4 +145,4 @@ dr_readiness_status=not_ready_restore_failed
 
 ## Next Loop Candidate
 
-- Loop 244: operator extension identifier retry or manual sanitized preflight
+- Loop 245: Supabase extension package risk gate
