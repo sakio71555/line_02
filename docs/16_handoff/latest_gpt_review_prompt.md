@@ -8,17 +8,17 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 233 の owner-aligned pre-data restore retry execution をレビューしてください。
+- Loop 234 の owner-aligned pre-data retry blocked follow-up をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- artifact/target DB/pg_restore path確認は妥当か確認してください。
-- local_cluster_loopback_only=false によりpre-data retryを実行しなかった判断が妥当か確認してください。
-- target DBをdropして cleanup_required=false にした判断が妥当か確認してください。
-- raw log / dump内容 / row content / secret / DB URLが記録されていないか確認してください。
-- 次Loopを小さく分ける方針でレビューしてください。
+- Loop 229 / Loop 233 のlisten判定差分整理が妥当か確認してください。
+- next Loopを read-only classifier refinement に絞った判断が妥当か確認してください。
+- retry despite blocker をNo-Goにしているか確認してください。
+- raw listen output / IP詳細 / config全文 / secret / DB URL / raw logが記録されていないか確認してください。
+- 次Loopも小さく分ける方針でレビューしてください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
-- Loop 233ではpreflightでblockedになったため、restore attempt countは0です。
+- Loop 234はdocs-onlyです。
 - ChatGPTの指摘は、そのまま実装せず次Loop候補として整理してください。
 
 貼り付けるCodex結果:
@@ -28,93 +28,71 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 233 owner-aligned pre-data restore retry execution
+- Loop: Loop 234 owner-aligned pre-data retry blocked follow-up
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
 - Start git status: main...origin/main
-- Scope type: restore retry preflight and cleanup execution
+- Scope type: docs-only blocked follow-up
 
-## Artifact Check
+## Loop 229 / Loop 233 Difference
 
-- artifact_exists=true
-- artifact_file_permission=600
-- artifact_parent_dir_permission=700
-- artifact_size=259222
-- artifact_size_match=true
-- artifact_checksum_match=true
-- backup_artifact_copied_into_repo=false
-- dump_content_displayed=false
+| Item | Loop 229 | Loop 233 |
+| --- | --- | --- |
+| target cluster | 17/restore_drill_loop2091 | 17/restore_drill_loop2091 |
+| port | 55432 | 55432 |
+| listen entry count | 2 | 2 |
+| loopback listen count | 2 | 1 |
+| wildcard listen count | 0 | 0 |
+| non-loopback listen count | 0 | 1 |
+| local cluster loopback only | true | false |
+| external interface listen detected | false | true |
+| restore attempted | false | false |
 
-## Target DB Check
+## Candidate Comparison
 
-- target_db_name=amami_line_crm_restore_drill_loop231_20260630
-- target_db_name_contains_restore_drill=true
-- target_db_name_contains_loop231=true
-- target_db_exists=true
-- target_db_owner_aligned=true
-- future_restore_execution_user_matches_owner=true
-- target_db_is_not_supabase=true
-- target_db_is_not_production=true
+- candidate_a=listen_classifier_refinement_without_changes
+- candidate_a_recommended=true
+- candidate_b=force_listen_addresses_127_0_0_1_only_plan
+- candidate_b_deferred=true_requires_cluster_change
+- candidate_c=unix_socket_only_restore_plan
+- candidate_c_deferred=true_changes_connection_method
+- candidate_d=firewall_block_supplemental_plan
+- candidate_d_deferred=true_not_primary_fix
+- candidate_e=owner_aligned_pre_data_retry_despite_blocker
+- candidate_e_no_go=true
 
-## Cluster Listen Preflight
+## Selected Next Loop
 
-- cluster_row_found=true
-- cluster_online=true
-- cluster_port_matches_55432=true
-- listen_entry_count=2
-- loopback_listen_count=1
-- wildcard_listen_count=0
-- non_loopback_listen_count=1
-- local_cluster_loopback_only=false
-- external_interface_listen_detected=true
-- precheck_ok=false
-
-## pg_restore Boundary
-
-- pg_restore_path=/usr/lib/postgresql/17/bin/pg_restore
-- pg_restore_path_present=true
-- pg_restore_version=17.10-1.pgdg24.04+1
-- restore_stage=pre_data
-- owner_aligned_target_used=true
-- restore_options_pre_data_no_owner_no_privileges=false
-- restore_attempt_count=0
-- pg_restore_exit_code=not_executed
-- pre_data_retry_status=blocked
-
-## Cleanup
-
-- restore_target_dropped=true
-- target_db_exists_after_drop=false
-- cleanup_status=success
-- cleanup_required=false
+- selected_next_loop=Loop 235: restore cluster listen classifier refinement without changes
+- selected_next_loop_reason=compare_loop229_and_loop233_classifier_before_remediation
 
 ## Safety Boundary
 
+- docs_only=true
 - restore_executed=false
-- pg_restore_restore_executed=false
-- psql_scope=local_metadata_and_cleanup_only
+- pg_restore_executed=false
+- psql_executed=false
 - target_db_created=false
-- target_db_modified=true_drop_only
-- target_db_other_than_candidate_modified=false
+- target_db_modified=false
 - role_created=false
 - role_modified=false
 - cluster_modified=false
+- cluster_restarted=false
+- firewall_modified=false
+- package_modified=false
 - backup_artifact_used=false
 - backup_artifact_copied_into_repo=false
 - supabase_connection_executed=false
 - production_db_connection_executed=false
 - production_restore_executed=false
+- diagnostic_log_displayed=false
+- raw_log_displayed=false
 - db_url_displayed=false
 - secrets_recorded=false
-- raw_log_displayed=false
-- diagnostic_log_displayed=false
 - dump_content_displayed=false
 - row_content_displayed=false
-- object_name_displayed=false
-- sql_statement_displayed=false
-- role_name_displayed=false
-- production_runtime_changed=false
-- push_performed=false
+- listen_regression_reviewed=true
+- next_loop_selected=true
 
 ## DR Readiness
 
@@ -126,7 +104,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 234: owner-aligned pre-data retry blocked follow-up
+- Loop 235: restore cluster listen classifier refinement without changes
 ---
 
 出力形式:
@@ -137,19 +115,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### artifact確認
+### Loop 229 / 233差分確認
 -
 
-### target DB確認
+### blocker再発候補確認
 -
 
-### cluster listen preflight確認
+### 推奨方針確認
 -
 
-### retry未実行判断
--
-
-### cleanup確認
+### Loop 235境界確認
 -
 
 ### safety確認

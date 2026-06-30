@@ -813,6 +813,105 @@ production_runtime_changed=false
 push_performed=false
 ```
 
+## 38. Loop 234 Owner-Aligned Pre-Data Retry Blocked Follow-Up
+
+Loop 234 is a docs-only follow-up after Loop 233 blocked the owner-aligned pre-data retry before restore. It compares the Loop 229 and Loop 233 listen classification results and selects the next read-only check.
+
+### 38.1 Loop 229 / Loop 233 Difference
+
+| Item | Loop 229 | Loop 233 |
+| --- | --- | --- |
+| target cluster | `17/restore_drill_loop2091` | `17/restore_drill_loop2091` |
+| port | `55432` | `55432` |
+| listen entry count | `2` | `2` |
+| loopback listen count | `2` | `1` |
+| wildcard listen count | `0` | `0` |
+| non-loopback listen count | `0` | `1` |
+| local cluster loopback only | `true` | `false` |
+| external interface listen detected | `false` | `true` |
+| restore attempted | `false` | `false` |
+
+Loop 229 recorded that it used a stricter loopback classifier. Loop 233 recorded sanitized counts only and blocked before restore. The raw listen output and IP details remain undisplayed.
+
+### 38.2 Candidate Comparison
+
+```txt
+candidate_a=listen_classifier_refinement_without_changes
+candidate_a_recommended=true
+candidate_b=force_listen_addresses_127_0_0_1_only_plan
+candidate_b_deferred=true_requires_cluster_change
+candidate_c=unix_socket_only_restore_plan
+candidate_c_deferred=true_changes_connection_method
+candidate_d=firewall_block_supplemental_plan
+candidate_d_deferred=true_not_primary_fix
+candidate_e=owner_aligned_pre_data_retry_despite_blocker
+candidate_e_no_go=true
+```
+
+### 38.3 Selected Next Loop
+
+```txt
+selected_next_loop=Loop 235: restore cluster listen classifier refinement without changes
+selected_next_loop_reason=compare_loop229_and_loop233_classifier_before_remediation
+```
+
+Loop 235 should be read-only and should refine the listen classifier before any remediation or restore retry.
+
+### 38.4 Loop 235 Boundary
+
+Allowed:
+
+- `pg_lsclusters` read-only check.
+- `ss` read-only listen check.
+- Config key/category check without printing full config.
+- Sanitized loopback/non-loopback/wildcard counts.
+- IPv4/IPv6 loopback classification logic.
+- Docs/runbook/dev log/Obsidian/handoff/matrix updates.
+
+Forbidden:
+
+- `psql`.
+- Restore or `pg_restore`.
+- Target DB creation/change.
+- Role creation/change.
+- Cluster config changes.
+- Restart/reload.
+- Firewall/package changes.
+- Backup artifact operations.
+- Supabase/production DB connection.
+- Raw listen output, IP details, config full content, `pg_hba` content, DB URL, secrets, raw logs, dump content, or row content display.
+
+### 38.5 Safety Boundary
+
+```txt
+docs_only=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+role_created=false
+role_modified=false
+cluster_modified=false
+cluster_restarted=false
+firewall_modified=false
+package_modified=false
+backup_artifact_used=false
+backup_artifact_copied_into_repo=false
+supabase_connection_executed=false
+production_db_connection_executed=false
+production_restore_executed=false
+diagnostic_log_displayed=false
+raw_log_displayed=false
+db_url_displayed=false
+secrets_recorded=false
+dump_content_displayed=false
+row_content_displayed=false
+listen_regression_reviewed=true
+next_loop_selected=true
+dr_readiness_status=not_ready_restore_failed
+```
+
 ### 36.2 Future Pre-Data Retry Boundary
 
 ```txt

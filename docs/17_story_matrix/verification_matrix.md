@@ -571,6 +571,38 @@ loop_233_selected_next_loop=Loop 234 owner-aligned pre-data retry blocked follow
 loop_233_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 234 Verification Note
+
+```txt
+loop_234_listen_regression_reviewed=true
+loop_234_loop_229_listen_entry_count=2
+loop_234_loop_229_loopback_listen_count=2
+loop_234_loop_229_non_loopback_listen_count=0
+loop_234_loop_229_local_cluster_loopback_only=true
+loop_234_loop_229_external_interface_listen_detected=false
+loop_234_loop_233_listen_entry_count=2
+loop_234_loop_233_loopback_listen_count=1
+loop_234_loop_233_non_loopback_listen_count=1
+loop_234_loop_233_local_cluster_loopback_only=false
+loop_234_loop_233_external_interface_listen_detected=true
+loop_234_candidate_a_recommended=true
+loop_234_candidate_e_retry_despite_blocker_no_go=true
+loop_234_selected_next_loop=Loop 235 restore cluster listen classifier refinement without changes
+loop_234_restore_executed=false
+loop_234_pg_restore_executed=false
+loop_234_psql_executed=false
+loop_234_target_db_created=false
+loop_234_target_db_modified=false
+loop_234_cluster_modified=false
+loop_234_cluster_restarted=false
+loop_234_firewall_modified=false
+loop_234_backup_artifact_used=false
+loop_234_supabase_connection_executed=false
+loop_234_production_restore_executed=false
+loop_234_secrets_recorded=false
+loop_234_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

@@ -63,6 +63,7 @@
 - Loop 231 owner-aligned target DB provisioning execution: `11_codex_tasks/231_owner_aligned_target_db_provisioning_execution.md`
 - Loop 232 owner-aligned pre-data restore retry gate: `11_codex_tasks/232_owner_aligned_pre_data_restore_retry_gate.md`
 - Loop 233 owner-aligned pre-data restore retry execution: `11_codex_tasks/233_owner_aligned_pre_data_restore_retry_execution.md`
+- Loop 234 owner-aligned pre-data retry blocked follow-up: `11_codex_tasks/234_owner_aligned_pre_data_retry_blocked_follow_up.md`
 
 ## Prompts and Templates
 
