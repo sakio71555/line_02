@@ -27,6 +27,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-017 | Pre-data permission/auth remediation gate | docs-only check that Loop 223 compares remediation candidates and selects one next Loop | local target privilege alignment gate selected, no execution performed | true | false | false | false | false | false | false | false | pending_loop_223_verification | Does not run restore, `pg_restore`, `psql`, create or change target DB, change roles, or display raw logs. |
 | V-018 | Local target privilege alignment gate | docs-only check that Loop 224 creates the privilege checklist and selects one next inspection Loop | Loop 225 inspection-only selected, no execution performed | true | false | false | false | false | false | false | false | pending_loop_224_verification | Does not run `psql`, restore, `pg_restore`, create/change target DB, change roles, or display raw logs. |
 | V-019 | Local target privilege alignment inspection | local-only metadata inspection with counts/booleans/categories only | psql metadata inspected, no restore or DB changes, next blocked follow-up selected | true | false | false | false | false | true | false | false | pending_loop_225_verification | Uses local-only `psql`; no row content, role details, object names, DB URLs, or secrets. |
+| V-020 | Owner-aligned pre-data retry execution record | sanitized review of Loop 237 execution metadata, classifier, and cleanup | one attempt recorded, schema/extension signal classified, target dropped | true | false | false | false | false | true | true | true | pending_loop_237_verification | Raw diagnostic log, object names, role names, SQL, row content, dump content, DB URLs, and secrets must remain hidden. |
 
 ## Blocked Or Operator Approval Required
 
@@ -670,6 +671,42 @@ loop_236_supabase_connection_executed=false
 loop_236_production_restore_executed=false
 loop_236_secrets_recorded=false
 loop_236_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 237 Verification Note
+
+```txt
+loop_237_local_cluster_loopback_only=true
+loop_237_external_interface_listen_detected=false
+loop_237_artifact_checksum_match=true
+loop_237_target_db_exists_before=false
+loop_237_target_db_created=true
+loop_237_target_db_exists_after_create=true
+loop_237_target_db_owner_aligned=true
+loop_237_restore_stage=pre_data
+loop_237_restore_options_pre_data_no_owner_no_privileges=true
+loop_237_restore_attempt_count=1
+loop_237_pg_restore_exit_code=1
+loop_237_pre_data_retry_status=failed
+loop_237_failure_category=pre_data_schema_or_extension_error_detected
+loop_237_permission_or_auth_error_count=0
+loop_237_schema_or_sql_statement_error_count=1
+loop_237_extension_missing_count=2
+loop_237_role_owner_acl_error_count=0
+loop_237_restore_target_dropped=true
+loop_237_target_db_exists_after_drop=false
+loop_237_cleanup_required=false
+loop_237_raw_log_displayed=false
+loop_237_object_names_displayed=false
+loop_237_sql_displayed=false
+loop_237_role_names_displayed=false
+loop_237_dump_content_displayed=false
+loop_237_row_content_displayed=false
+loop_237_secrets_recorded=false
+loop_237_supabase_connection_executed=false
+loop_237_production_restore_executed=false
+loop_237_selected_next_loop=Loop 238 pre-data schema extension remediation gate
+loop_237_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

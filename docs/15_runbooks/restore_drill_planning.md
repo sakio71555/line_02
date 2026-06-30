@@ -3261,3 +3261,95 @@ external_interface_listen_detected=false
 next_loop_selected=true
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## 41. Loop 237 Owner-Aligned Target DB Reprovision And Pre-Data Retry Execution
+
+Loop 237 recreated a fresh owner-aligned local restore drill target DB and ran exactly one approved pre-data restore retry. The retry failed safely with a sanitized schema/extension-oriented classifier. The target DB was dropped and cleanup is not required.
+
+### 41.1 Preflight Result
+
+```txt
+cluster_online=true
+cluster_port=55432
+listen_entry_count=2
+local_cluster_loopback_only=true
+external_interface_listen_detected=false
+wildcard_ipv4_count=0
+wildcard_ipv6_count=0
+non_loopback_count=0
+artifact_exists=true
+artifact_file_permission=600
+artifact_parent_dir_permission=700
+artifact_size=259222
+artifact_checksum_match=true
+target_db_exists_before=false
+```
+
+Raw listen output, IP details, dump contents, DB URLs, and secrets were not displayed or recorded.
+
+### 41.2 Execution Result
+
+```txt
+target_db_name=amami_line_crm_restore_drill_loop237_20260630
+target_db_created=true
+target_db_exists_after_create=true
+target_db_owner_aligned=true
+target_db_local_only=true
+pg_restore_path=/usr/lib/postgresql/17/bin/pg_restore
+pg_restore_version=pg_restore (PostgreSQL) 17.10
+restore_stage=pre_data
+restore_options=--section=pre-data --no-owner --no-privileges
+restore_attempt_count=1
+pg_restore_exit_code=1
+pre_data_retry_status=failed
+failure_category=pre_data_schema_or_extension_error_detected
+```
+
+### 41.3 Sanitized Classifier Result
+
+```txt
+permission_or_auth_error_detected=false
+permission_or_auth_error_count=0
+schema_or_sql_statement_error_detected=true
+schema_or_sql_statement_error_count=1
+extension_missing_detected=true
+extension_missing_count=2
+role_owner_acl_error_detected=false
+role_owner_acl_error_count=0
+target_cluster_error_detected=false
+target_cluster_error_count=0
+unknown_error_detected=false
+raw_log_displayed=false
+object_names_displayed=false
+sql_displayed=false
+role_names_displayed=false
+row_content_displayed=false
+```
+
+The raw diagnostic log remains repo-external and root-only:
+
+```txt
+diagnostic_log_dir=/root/deploy-backups/amami-line-crm/loop237-owner-aligned-pre-data-20260630-144244
+diagnostic_log_path=/root/deploy-backups/amami-line-crm/loop237-owner-aligned-pre-data-20260630-144244/pg_restore-pre-data.log
+diagnostic_log_dir_permission=700
+diagnostic_log_permission=600
+diagnostic_log_displayed=false
+diagnostic_log_committed=false
+```
+
+### 41.4 Cleanup
+
+```txt
+restore_target_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+```
+
+### 41.5 Next Loop
+
+```txt
+selected_next_loop=Loop 238: pre-data schema extension remediation gate
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 238 should not proceed to data restore. It should first analyze the sanitized schema/extension signal without raw log display, object name disclosure, SQL disclosure, role name disclosure, dump content display, or row content display.
