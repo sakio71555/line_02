@@ -563,6 +563,8 @@ Loop 238 pre-data schema extension remediation gateでは、Loop 237でpermissio
 
 Loop 239 operator-only sanitized schema extension classifierでは、operator-onlyのsanitized `key=value` protocolを定義し、operator resultは `pending_operator_input` として記録しました。次は [Loop 240: operator sanitized schema extension result collection](docs/11_codex_tasks/239_operator_only_sanitized_schema_extension_classifier.md) とし、raw log、matching line、SQL文、object名、extension名、role名、dump内容、row content、DB URL、secretを記録せず、restore、pg_restore、psql、DB変更、extension作成、Supabase/production接続は行っていません。
 
+Loop 240 operator sanitized schema extension result collectionでは、operator review結果をsanitized metadataとして記録し、extension categoryはSupabase-related、schema error categoryはextension dependencyとして扱います。次は [Loop 241: Supabase-specific extension compatibility gate](docs/11_codex_tasks/240_operator_sanitized_schema_extension_result_collection.md) とし、raw content、exact SQL、extension名、object名、role名、dump内容、row content、DB URL、secretを記録せず、restore、pg_restore、psql、DB変更、extension作成、Supabase/production接続は行っていません。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

@@ -123,6 +123,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 238 Obsidian Log](loop_238_pre_data_schema_extension_remediation_gate.md)
 - [Loop 239 Operator-Only Sanitized Schema Extension Classifier](../11_codex_tasks/239_operator_only_sanitized_schema_extension_classifier.md)
 - [Loop 239 Obsidian Log](loop_239_operator_only_sanitized_schema_extension_classifier.md)
+- [Loop 240 Operator Sanitized Schema Extension Result Collection](../11_codex_tasks/240_operator_sanitized_schema_extension_result_collection.md)
+- [Loop 240 Obsidian Log](loop_240_operator_sanitized_schema_extension_result_collection.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
 - [Supabase Manual Backup Result Recording](../15_runbooks/supabase_manual_backup_result_recording.md)
@@ -215,6 +217,8 @@ Loop 237 status: `local_cluster_loopback_only=true`, `artifact_checksum_match=tr
 Loop 238 status: `docs_only=true`, `loop237_permission_auth_resolved=true`, `loop237_role_acl_resolved=true`, `schema_or_sql_statement_error_count=1`, `extension_missing_count=2`, `schema_extension_remediation_gate_created=true`, `target_db_currently_absent=true`, `cleanup_required=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `raw_log_displayed=false`, `extension_names_displayed=false`, `secrets_recorded=false`, `next=Loop 239 operator-only sanitized schema extension classifier`.
 
 Loop 239 status: `operator_protocol_created=true`, `operator_schema_extension_review_status=pending_operator_input`, `operator_sanitized_result_recorded=false`, `extension_missing_count=2`, `schema_error_count=1`, `schema_error_category=unknown_pending_operator_input`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `schema_modified=false`, `raw_log_displayed=false`, `extension_names_displayed=false`, `secrets_recorded=false`, `next=Loop 240 operator sanitized schema extension result collection`.
+
+Loop 240 status: `operator_sanitized_result_recorded=true`, `extension_category_supabase_related=true`, `schema_error_category=extension_dependency`, `schema_error_confidence=high`, `raw_content_recorded_in_repo=false`, `extension_name_recorded=false`, `object_name_recorded=false`, `role_name_recorded=false`, `restore_executed=false`, `pg_restore_executed=false`, `psql_executed=false`, `extension_created=false`, `schema_modified=false`, `secrets_recorded=false`, `next=Loop 241 Supabase-specific extension compatibility gate`.
 
 ## Obsidian Helpers
 

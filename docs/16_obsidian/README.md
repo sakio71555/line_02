@@ -78,6 +78,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 237 creates a fresh owner-aligned local target DB, runs exactly one pre-data `pg_restore` retry, records `pg_restore_exit_code=1` with sanitized schema/extension counts, drops the target DB, and keeps raw logs, dump contents, row contents, object names, SQL statements, role names, DB URLs, secrets, Supabase, production, and runtime untouched.
 - Loop 238 records the pre-data schema/extension remediation gate, treats permission/auth and role/ACL counts as `0`, selects operator-only sanitized schema extension classification as Loop 239, and keeps restore, `pg_restore`, `psql`, DB changes, extension creation, raw logs, object names, SQL, extension names, Supabase, production, and secrets untouched.
 - Loop 239 defines the operator-only sanitized schema/extension classifier protocol, records the operator result as pending, selects Loop 240 operator sanitized result collection, and keeps restore, `pg_restore`, `psql`, DB changes, extension creation, raw logs, matching lines, object names, SQL, extension names, role names, Supabase, production, and secrets untouched.
+- Loop 240 records the operator schema/extension result as sanitized metadata only: Supabase-related extension category and extension dependency schema category. It keeps raw content, exact SQL, extension names, object names, role names, restore, `pg_restore`, `psql`, DB changes, Supabase, production, and secrets untouched.
 
 ## .obsidian Policy
 

@@ -30,6 +30,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-020 | Owner-aligned pre-data retry execution record | sanitized review of Loop 237 execution metadata, classifier, and cleanup | one attempt recorded, schema/extension signal classified, target dropped | true | false | false | false | false | true | true | true | pending_loop_237_verification | Raw diagnostic log, object names, role names, SQL, row content, dump content, DB URLs, and secrets must remain hidden. |
 | V-021 | Pre-data schema extension remediation gate | docs-only review of Loop 238 schema/extension gate and Loop 239 operator-only classifier format | next Loop selected, restore remains No-Go, raw log/object/SQL/extension name exposure remains false | true | false | false | false | false | false | false | false | pending_loop_238_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, or change DB state. |
 | V-022 | Operator-only schema extension classifier | docs-only review of Loop 239 operator protocol, pending result status, and next result collection Loop | protocol exists, operator result pending, raw log/exact names remain hidden, restore remains No-Go | true | false | false | false | false | false | false | false | pending_loop_239_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, or change DB state. |
+| V-023 | Operator sanitized schema extension result | docs-only review of Loop 240 sanitized result and next compatibility gate | Supabase-related extension category recorded, extension dependency recorded, raw content/exact names hidden, restore remains No-Go | true | false | false | false | false | false | false | false | pending_loop_240_verification | Does not inspect raw logs, run `psql`, run restore, create extensions, install packages, or change DB state. |
 
 ## Blocked Or Operator Approval Required
 
@@ -787,6 +788,53 @@ loop_239_supabase_connection_executed=false
 loop_239_production_restore_executed=false
 loop_239_push_performed=false
 loop_239_dr_readiness_status=not_ready_restore_failed
+```
+
+## Loop 240 Verification Note
+
+```txt
+loop_240_docs_only=true
+loop_240_operator_raw_log_review_executed=true
+loop_240_operator_raw_log_review_scope=loop237_pre_data_diagnostic_log
+loop_240_operator_raw_log_committed=false
+loop_240_operator_raw_log_copied_into_repo=false
+loop_240_raw_content_recorded_in_repo=false
+loop_240_exact_sql_recorded=false
+loop_240_extension_name_recorded=false
+loop_240_object_name_recorded=false
+loop_240_role_name_recorded=false
+loop_240_extension_category_known=true
+loop_240_extension_category_supabase_related=true
+loop_240_extension_category_standard_postgres=false
+loop_240_extension_category_optional_observability=false
+loop_240_extension_category_unknown=false
+loop_240_schema_error_category=extension_dependency
+loop_240_schema_error_confidence=high
+loop_240_permission_or_auth_error_count=0
+loop_240_role_owner_acl_error_count=0
+loop_240_selected_next_loop=Loop 241 Supabase-specific extension compatibility gate
+loop_240_restore_retry_no_go=true
+loop_240_extension_creation_no_go=true
+loop_240_package_install_no_go=true
+loop_240_schema_change_no_go=true
+loop_240_restore_executed=false
+loop_240_pg_restore_executed=false
+loop_240_psql_executed=false
+loop_240_target_db_created=false
+loop_240_target_db_modified=false
+loop_240_extension_created=false
+loop_240_schema_modified=false
+loop_240_role_modified=false
+loop_240_cluster_modified=false
+loop_240_diagnostic_log_displayed=false
+loop_240_raw_log_displayed=false
+loop_240_raw_log_recorded_in_repo=false
+loop_240_dump_content_displayed=false
+loop_240_row_content_displayed=false
+loop_240_secrets_recorded=false
+loop_240_supabase_connection_executed=false
+loop_240_production_restore_executed=false
+loop_240_dr_readiness_status=not_ready_restore_failed
 ```
 
 ## Stage 2 Rule

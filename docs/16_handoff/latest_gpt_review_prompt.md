@@ -8,12 +8,12 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 以下は amami-line-crm の最新Codex Loop結果です。
 
 目的:
-- Loop 239 の operator-only sanitized schema extension classifier をレビューしてください。
+- Loop 240 の operator sanitized schema extension result collection をレビューしてください。
 - Scope外の作業が混ざっていないか確認してください。
-- operator-only protocol が raw log / matching line / SQL文 / object名 / extension名 / role名を露出しない形になっているか確認してください。
-- operator result が pending_operator_input のまま扱われていることが妥当か確認してください。
-- 次Loopを operator sanitized schema extension result collection にしている判断が妥当か確認してください。
-- restore retry / extension creation / schema change をまだNo-Goにしていることが妥当か確認してください。
+- raw log / exact SQL / extension名 / object名 / role名が記録されていないか確認してください。
+- sanitized resultとして Supabase-related extension category と extension dependency schema category を記録した判断が妥当か確認してください。
+- 次Loopを Supabase-specific extension compatibility gate にする判断が妥当か確認してください。
+- restore retry / extension creation / package install / schema change をまだNo-Goにしていることが妥当か確認してください。
 
 レビュー時の注意:
 - secret、DB URL、API key、.env値、LINE userId、raw log、diagnostic log、dump内容、row content、role名詳細、SQL文、object名、table名、function名、policy名、extension名、TOC本文、raw listen output、public/private IP詳細、config全文、pg_hba全文、PII、本番ログの提示は求めないでください。
@@ -26,57 +26,58 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Loop
 
-- Loop: Loop 239 operator-only sanitized schema extension classifier
+- Loop: Loop 240 operator sanitized schema extension result collection
 - Date: 2026-06-30
 - Work folder: /Users/sakio/Desktop/PROJECT/amami-line-crm
-- Start git status: main...origin/main
-- Scope type: docs-only classifier protocol
-- Push: not performed in this Loop
+- Scope type: docs-only sanitized result record
 
-## Loop 237 / 238 Result Summary
+## Baseline
 
-- loop_237_restore_attempt_count=1
-- loop_237_pg_restore_exit_code=1
-- loop_237_pre_data_retry_status=failed
 - permission_or_auth_error_count=0
 - role_owner_acl_error_count=0
 - schema_or_sql_statement_error_count=1
 - extension_missing_count=2
 - target_db_dropped=true
-- target_db_exists_after_drop=false
 - cleanup_required=false
-- loop_238_schema_extension_remediation_gate_created=true
-- loop_238_restore_retry_no_go=true
-- loop_238_data_restore_no_go=true
 - dr_readiness_status=not_ready_restore_failed
 
-## Operator-Only Protocol
+## Sanitized Operator Result
 
-- operator_review_scope=loop237_pre_data_diagnostic_log
-- codex_may_read_raw_log=false
-- chatgpt_may_receive_raw_log=false
-- docs_may_record_raw_log=false
-- docs_may_record_matching_line=false
-- docs_may_record_sql=false
-- docs_may_record_object_name=false
-- docs_may_record_extension_name=false
-- docs_may_record_role_name=false
-- docs_may_record_dump_content=false
-- docs_may_record_row_content=false
+- operator_raw_log_review_executed=true
+- operator_raw_log_review_scope=loop237_pre_data_diagnostic_log
+- operator_raw_log_committed=false
+- operator_raw_log_copied_into_repo=false
+- raw_content_recorded_in_repo=false
+- exact_sql_recorded=false
+- extension_name_recorded=false
+- object_name_recorded=false
+- role_name_recorded=false
+- extension_category_known=true
+- extension_category_supabase_related=true
+- extension_category_standard_postgres=false
+- extension_category_optional_observability=false
+- extension_category_unknown=false
+- schema_error_category=extension_dependency
+- schema_error_confidence=high
+- permission_or_auth_error_count=0
+- role_owner_acl_error_count=0
 
-## Operator Result Status
+## Safety Handling
 
-- operator_schema_extension_review_status=pending_operator_input
-- operator_sanitized_result_recorded=false
-- extension_category_known=false
-- schema_error_category=unknown_pending_operator_input
-- schema_error_confidence=unknown
+- raw_diagnostic_excerpt_accidentally_shared_in_chat=true
+- raw_content_repeated_in_docs=false
+- raw_content_committed=false
+- exact_sql_recorded=false
+- extension_name_recorded=false
+- object_name_recorded=false
+- role_name_recorded=false
 
 ## Selected Next Loop
 
-- selected_next_loop=Loop 240: operator sanitized schema extension result collection
+- selected_next_loop=Loop 241: Supabase-specific extension compatibility gate
 - restore_retry_no_go=true
 - extension_creation_no_go=true
+- package_install_no_go=true
 - schema_change_no_go=true
 
 ## Safety
@@ -89,18 +90,15 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - target_db_modified=false
 - extension_created=false
 - schema_modified=false
-- role_created=false
 - role_modified=false
 - cluster_modified=false
-- backup_artifact_touched=false
 - diagnostic_log_displayed=false
-- diagnostic_log_copied_into_repo=false
 - raw_log_displayed=false
-- matching_line_displayed=false
-- sql_displayed=false
-- object_names_displayed=false
-- extension_names_displayed=false
-- role_names_displayed=false
+- raw_log_recorded_in_repo=false
+- sql_recorded=false
+- extension_name_recorded=false
+- object_name_recorded=false
+- role_name_recorded=false
 - dump_content_displayed=false
 - row_content_displayed=false
 - db_url_displayed=false
@@ -108,7 +106,6 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 - supabase_connection_executed=false
 - production_restore_executed=false
 - production_runtime_changed=false
-- push_performed=false
 
 ## DR Readiness
 
@@ -116,7 +113,7 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 
 ## Next Loop Candidate
 
-- Loop 240: operator sanitized schema extension result collection
+- Loop 241: Supabase-specific extension compatibility gate
 ---
 
 出力形式:
@@ -127,16 +124,16 @@ Do not paste or request secrets, DB URLs, API keys, `.env` values, LINE userIds,
 ### Scope確認
 -
 
-### Loop 237/238結果確認
+### sanitized result確認
 -
 
-### operator-only protocol確認
+### raw content safety確認
 -
 
-### sanitized key=value format確認
+### Supabase-related extension判断
 -
 
-### operator result status確認
+### extension dependency判断
 -
 
 ### selected next Loop確認
