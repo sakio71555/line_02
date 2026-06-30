@@ -559,6 +559,8 @@ Loop 236 owner-aligned pre-data retry gate resumeでは、Loop 235のloopback-on
 
 Loop 237 owner-aligned target DB reprovision and pre-data retry executionでは、fresh local disposable target DB `amami_line_crm_restore_drill_loop237_20260630` を作成し、`/usr/lib/postgresql/17/bin/pg_restore --section=pre-data --no-owner --no-privileges` を1回だけ実行しました。結果は `pg_restore_exit_code=1` / `pre_data_retry_status=failed` / `failure_category=pre_data_schema_or_extension_error_detected` で、target DBはdrop済み、cleanup不要です。raw log、object名、SQL文、role名、dump内容、row content、DB URL、secretは記録していません。詳細は [docs/11_codex_tasks/237_owner_aligned_target_db_reprovision_and_pre_data_retry_execution.md](docs/11_codex_tasks/237_owner_aligned_target_db_reprovision_and_pre_data_retry_execution.md) と [docs/16_obsidian/loop_237_owner_aligned_target_db_reprovision_and_pre_data_retry_execution.md](docs/16_obsidian/loop_237_owner_aligned_target_db_reprovision_and_pre_data_retry_execution.md) を参照してください。
 
+Loop 238 pre-data schema extension remediation gateでは、Loop 237でpermission/auth・role/ACL countsが0になったことを前進として扱い、残課題をschema/extensionに絞りました。次は [Loop 239: operator-only sanitized schema extension classifier](docs/11_codex_tasks/238_pre_data_schema_extension_remediation_gate.md) とし、raw log、SQL文、object名、extension名、role名、dump内容、row content、DB URL、secretを記録せず、restore、pg_restore、psql、DB変更、extension作成、Supabase/production接続は行っていません。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

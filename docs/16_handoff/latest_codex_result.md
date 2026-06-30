@@ -1,95 +1,119 @@
 # Latest Codex Result
 
-This file summarizes Loop 237 in a paste-ready, sanitized format for ChatGPT review.
+This file summarizes Loop 238 in a paste-ready, sanitized format for ChatGPT review.
 
-Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
+Do not add secrets, DB URLs, API keys, `.env` values, LINE userIds, raw logs, diagnostic logs, dump contents, row contents, PII, credentials, role names, SQL statements, object names, table names, function names, policy names, extension names, TOC bodies, raw listen output, public/private IP details, config full content, `pg_hba` content, or production logs.
 
 ## Loop
 
-- Loop: Loop 237 owner-aligned target DB reprovision and pre-data retry execution
+- Loop: Loop 238 pre-data schema extension remediation gate
 - Date: 2026-06-30
 - Work folder: `/Users/sakio/Desktop/PROJECT/amami-line-crm`
 - Start git status: `main...origin/main`
-- Scope type: execution loop
+- Scope type: docs-only gate
 - Commit hash: see final Codex report after commit
-- Push: not performed; push is intentionally split to a later push-only Loop
+- Push: performed after validation
 
-## Listen Safety
-
-```txt
-cluster_online=true
-cluster_port=55432
-listen_entry_count=2
-local_cluster_loopback_only=true
-external_interface_listen_detected=false
-wildcard_ipv4_count=0
-wildcard_ipv6_count=0
-non_loopback_count=0
-```
-
-## Artifact Check
+## Loop 237 Result Summary
 
 ```txt
-artifact_exists=true
-file_permission=600
-parent_dir_permission=700
-artifact_size=259222
-artifact_checksum_match=true
-backup_artifact_copied_into_repo=false
-dump_content_displayed=false
-```
-
-## Target DB
-
-```txt
-target_db_name=amami_line_crm_restore_drill_loop237_20260630
-target_db_exists_before=false
-target_db_created=true
-target_db_exists_after_create=true
-target_db_owner_aligned=true
-target_db_local_only=true
-target_db_is_not_supabase=true
-target_db_is_not_production=true
-```
-
-## Restore Retry
-
-```txt
-pg_restore_path=/usr/lib/postgresql/17/bin/pg_restore
-pg_restore_version=pg_restore (PostgreSQL) 17.10
-restore_stage=pre_data
-restore_options=--section=pre-data --no-owner --no-privileges
 restore_attempt_count=1
 pg_restore_exit_code=1
 pre_data_retry_status=failed
-failure_category=pre_data_schema_or_extension_error_detected
-```
-
-## Sanitized Classifier
-
-```txt
-permission_or_auth_error_detected=false
 permission_or_auth_error_count=0
-schema_or_sql_statement_error_detected=true
-schema_or_sql_statement_error_count=1
-extension_missing_detected=true
-extension_missing_count=2
-role_owner_acl_error_detected=false
 role_owner_acl_error_count=0
-target_cluster_error_detected=false
-target_cluster_error_count=0
-unknown_error_detected=false
+schema_or_sql_statement_error_count=1
+extension_missing_count=2
+target_db_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
 raw_log_displayed=false
 object_names_displayed=false
 sql_displayed=false
 role_names_displayed=false
+dump_content_displayed=false
 row_content_displayed=false
+supabase_connection_executed=false
+production_restore_executed=false
 ```
+
+## Permission/Auth And Role/ACL Re-Evaluation
+
+```txt
+loop237_permission_auth_resolved=true
+loop237_role_acl_resolved=true
+permission_auth_current_count=0
+role_acl_current_count=0
+owner_aligned_target_db_effective_likely=true
+same_permission_auth_retry_no_go=true
+same_role_acl_retry_no_go=true
+```
+
+## Schema / Extension Remaining Issues
+
+```txt
+remaining_failure_area=schema_extension
+extension_missing_count=2
+extension_name_disclosed=false
+extension_category_known=false
+extension_category_standard_postgres=unknown
+extension_category_supabase_related=unknown
+extension_category_optional_observability=unknown
+schema_or_sql_statement_error_count=1
+sql_line_disclosed=false
+object_name_disclosed=false
+schema_error_category=unknown
+extension_dependency_possible=true
+independent_schema_ddl_failure_possible=true
+```
+
+## Remediation Candidate Comparison
+
+| Candidate | Decision |
+| --- | --- |
+| A. Operator-only sanitized schema extension classifier | Recommended |
+| B. Extension preflight without restore | Later |
+| C. Create standard extensions in fresh target DB | Later / gated |
+| D. Exclude extension-related objects or accept missing extension | No-Go for now |
+| E. Retry immediately | No-Go |
+
+## Recommended Next Loop
+
+```txt
+selected_next_loop=Loop 239: operator-only sanitized schema extension classifier
+selected_next_loop_reason=classify_schema_extension_without_restore_or_raw_log_exposure
+restore_retry_no_go=true
+data_restore_no_go=true
+```
+
+## Loop 239 Boundary
+
+Allowed:
+
+- Operator-only review of the repo-external root-only diagnostic log.
+- Return sanitized `key=value` only.
+- Record extension/schema category booleans and counts only.
+- Keep extension names, SQL, object names, role names, raw lines, dump content, row content, DB URLs, and secrets undisclosed.
+- No restore, `pg_restore`, `psql`, DB changes, extension creation, role changes, Supabase, or production connection.
+
+Forbidden:
+
+- Raw log paste.
+- Matching line display.
+- Exact extension name display.
+- SQL statement display.
+- Object/table/function/policy name display.
+- Role name display.
+- DB URL or secret display.
+- Restore retry.
+- Extension creation.
+- DB change.
+- Supabase or production DB connection.
 
 ## Cleanup
 
 ```txt
-restore_target_dropped=true
+target_db_currently_absent=true
 target_db_exists_after_drop=false
 cleanup_required=false
 ```
@@ -97,21 +121,43 @@ cleanup_required=false
 ## Safety Boundary
 
 ```txt
-diagnostic_log_repo_external=true
+docs_only=true
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+target_db_created=false
+target_db_modified=false
+extension_created=false
+schema_modified=false
+role_created=false
+role_modified=false
+cluster_modified=false
+backup_artifact_touched=false
 diagnostic_log_displayed=false
-backup_artifact_copied_into_repo=false
-dump_content_displayed=false
-row_content_displayed=false
+raw_log_displayed=false
 object_names_displayed=false
 sql_displayed=false
+extension_names_displayed=false
 role_names_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
 db_url_displayed=false
 secrets_recorded=false
 supabase_connection_executed=false
-production_db_connection_executed=false
 production_restore_executed=false
 production_runtime_changed=false
-push_performed=false
+```
+
+## Verification
+
+```txt
+git_status_checked=true
+git_diff_check=passed
+docs_link_check=passed
+secret_pattern_boolean_check=passed
+lint=passed
+typecheck_skipped_reason=docs_only_runtime_code_unchanged
+test_skipped_reason=docs_only_runtime_code_unchanged
 ```
 
 ## DR Readiness
@@ -119,11 +165,9 @@ push_performed=false
 ```txt
 backup_export_status=success
 restore_drill_status=failed_pre_data
-pre_data_retry_status=failed
 dr_readiness_status=not_ready_restore_failed
-data_restore_go=false
 ```
 
 ## Next Loop Candidate
 
-- Loop 238: pre-data schema extension remediation gate
+- Loop 239: operator-only sanitized schema extension classifier

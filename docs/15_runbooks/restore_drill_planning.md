@@ -3353,3 +3353,82 @@ dr_readiness_status=not_ready_restore_failed
 ```
 
 Loop 238 should not proceed to data restore. It should first analyze the sanitized schema/extension signal without raw log display, object name disclosure, SQL disclosure, role name disclosure, dump content display, or row content display.
+
+## 42. Loop 238 Pre-Data Schema Extension Remediation Gate
+
+Loop 238 is a docs-only remediation gate after Loop 237 moved the remaining pre-data restore failure into schema/extension signals.
+
+### 42.1 Loop 237 Result Summary
+
+```txt
+restore_attempt_count=1
+pg_restore_exit_code=1
+pre_data_retry_status=failed
+permission_or_auth_error_count=0
+role_owner_acl_error_count=0
+schema_or_sql_statement_error_count=1
+extension_missing_count=2
+target_db_dropped=true
+target_db_exists_after_drop=false
+cleanup_required=false
+raw_log_displayed=false
+object_names_displayed=false
+sql_displayed=false
+role_names_displayed=false
+dump_content_displayed=false
+row_content_displayed=false
+supabase_connection_executed=false
+production_restore_executed=false
+```
+
+### 42.2 Interpretation
+
+```txt
+permission_auth_current_count=0
+role_acl_current_count=0
+owner_aligned_target_db_effective_likely=true
+remaining_failure_area=schema_extension
+restore_retry_no_go=true
+data_restore_no_go=true
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 238 does not treat nonzero restore as acceptable. It only narrows the next remediation area.
+
+### 42.3 Extension And Schema Unknowns
+
+```txt
+extension_missing_count=2
+extension_name_disclosed=false
+extension_category_known=false
+extension_category_standard_postgres=unknown
+extension_category_supabase_related=unknown
+extension_category_optional_observability=unknown
+schema_or_sql_statement_error_count=1
+sql_line_disclosed=false
+object_name_disclosed=false
+schema_error_category=unknown
+extension_dependency_possible=true
+independent_schema_ddl_failure_possible=true
+```
+
+### 42.4 Candidate Comparison
+
+| Candidate | Decision | Reason |
+| --- | --- | --- |
+| Operator-only sanitized schema extension classifier | Recommended | Classifies the remaining signal without raw log/object/SQL/extension-name exposure. |
+| Extension preflight without restore | Later | Useful only after the category is known. |
+| Create standard extensions in fresh target DB | Later / gated | Requires DB changes and exact category confirmation. |
+| Exclude extension-related objects or accept missing extension | No-Go for now | Reduces restore fidelity and weakens DR readiness. |
+| Retry immediately | No-Go | No new remediation has happened. |
+
+### 42.5 Selected Next Loop
+
+```txt
+selected_next_loop=Loop 239: operator-only sanitized schema extension classifier
+selected_next_loop_reason=classify_schema_extension_without_restore_or_raw_log_exposure
+target_db_currently_absent=true
+cleanup_required=false
+```
+
+Loop 239 may only collect sanitized `key=value` fields from an operator-only review of the repo-external root-only diagnostic log. It must not run restore, `pg_restore`, `psql`, create extensions, change DB state, display raw logs, display extension names, display SQL, display object names, display role names, display dump content, display row content, or touch Supabase/production.
