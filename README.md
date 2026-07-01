@@ -613,6 +613,8 @@ Loop 265 line runtime env post-injection recordでは、operator提供のsanitiz
 
 Loop 266 line runtime permission gate without message sendでは、operator承認範囲をnon-send LINE runtime validationのみに限定し、status-onlyのloopback確認でAPI health、invalid-signature rejection、route shapeがpassすることを記録しました。LINE message send、reply/push/multicast/broadcast、外部LINE API接続、public smoke、service restart、env値/secret表示、production Goは未実施・未承認です。詳細は [Loop 266 task doc](docs/11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md) を参照してください。次は `Loop 267: line message send permission gate` です。
 
+Loop 267 line message send permission gateでは、Loop 266のnon-send validation passを前提として、実LINE送信へ進む前のoperator承認フォーマットと停止条件を整理しました。今回もLINE送信、reply/push/multicast/broadcast、外部LINE API接続、public smoke、service restart、production Goは未実施です。詳細は [Loop 267 task doc](docs/11_codex_tasks/267_line_message_send_permission_gate.md) を参照してください。次は `Loop 268: single controlled LINE message send approval decision` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

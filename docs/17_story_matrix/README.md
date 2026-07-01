@@ -106,3 +106,28 @@ dr_readiness_status=not_ready_restore_failed
 next_execution_sequence_status=ready_for_line_message_send_permission_gate
 selected_next_minimal_action=line_message_send_permission_gate
 ```
+
+## Loop 267 Line Message Send Permission Gate
+
+Loop 267 creates the operator decision pack for a future single controlled LINE message send. It keeps LINE send, external LINE API connection, public smoke, service restart, and production Go unexecuted.
+
+```txt
+line_message_send_permission_gate_created=true
+line_message_send_execution_allowed_in_loop_267=false
+line_message_send_requires_explicit_operator_approval=true
+line_message_send_scope_must_be_single_message=true
+line_message_send_target_must_be_operator_controlled=true
+line_message_send_target_must_not_be_customer=true
+line_message_body_recording_allowed=false
+line_identifier_recording_allowed=false
+existing_controlled_send_route_available=true
+existing_internal_cli_available=true
+existing_staff_reply_route_available=conditional
+line_message_send_executed=false
+line_external_api_connection_attempted=false
+public_smoke_executed=false
+production_no_go=true
+dr_readiness_status=not_ready_restore_failed
+next_execution_sequence_status=line_message_send_approval_required
+selected_next_minimal_action=single_controlled_LINE_message_send_approval_decision
+```

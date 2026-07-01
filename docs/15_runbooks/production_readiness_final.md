@@ -6,6 +6,50 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 267 Current Status Override
+
+Loop 267 creates the LINE message send permission gate and controlled send readiness pack. LINE send remains unapproved in this Loop; the only next action is an explicit operator decision for one controlled test message.
+
+```txt
+loop_267_current_status_override=true
+line_runtime_env_category_present_in_running_process=true
+line_runtime_non_send_validation_status=pass
+line_message_send_permission_gate_created=true
+line_message_send_execution_allowed_in_loop_267=false
+line_message_send_requires_explicit_operator_approval=true
+line_message_send_scope_must_be_single_message=true
+line_message_send_target_must_be_operator_controlled=true
+line_message_send_target_must_not_be_customer=true
+line_message_body_recording_allowed=false
+line_identifier_recording_allowed=false
+existing_controlled_send_route_available=true
+existing_internal_cli_available=true
+existing_staff_reply_route_available=conditional
+line_message_send_allowed=false
+line_message_send_executed=false
+line_external_api_connection_attempted=false
+public_smoke_executed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_operator_approval_required=true
+next_execution_sequence_status=line_message_send_approval_required
+selected_next_minimal_action=Loop 268 single controlled LINE message send approval decision
+```
+
+Current LINE send Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| line runtime non-send validation | `pass` | Loop 266 accepted as precondition. |
+| line message send | `approval_required` | Loop 267 does not send. |
+| send target | `operator_controlled_required` | Customer targets are No-Go. |
+| send count | `single_message_only` | Retry/bulk/multicast/broadcast are No-Go. |
+| identifier/body recording | `forbidden` | Do not provide or record values. |
+| public smoke | `not_allowed` | Separate approval required. |
+| production Go | `not_requested` | `production_no_go=true`. |
+
 ## Loop 266 Current Status Override
 
 Loop 266 validates the operator-approved LINE runtime permission gate without message send. Internal non-send validation passed, but LINE message send, external LINE API connection, public smoke, and production Go remain unapproved.

@@ -3,82 +3,77 @@
 まずLoop結果をレビューしてください。
 次LoopのCodex文章はまだ作らないでください。
 
-## Review Target
+対象:
 
-Loop 266: line runtime permission gate without message send
+```txt
+Loop 267: line message send permission gate and controlled send readiness pack
+```
 
-## Result Summary
+結果:
 
 ```txt
 loop_status=complete
-approval_block_present=true
-operator_approval_status=approved
-approval_scope=line_runtime_internal_non_send_validation_only
-line_runtime_env_category_present_in_running_process=true
-line_runtime_permission_gate_completed=true
-line_runtime_permission_gate_status=pass
-line_runtime_non_send_validation_status=pass
-api_health_check_status=pass
-line_webhook_invalid_signature_check_status=pass
-line_route_shape_check_status=pass
-line_external_api_connection_attempted=false
-line_message_send_executed=false
-public_smoke_executed=false
-production_no_go=true
-production_go_changed=false
-production_go_judgement_ready=true
-dr_readiness_status=not_ready_restore_failed
-classifier_route_status=frozen
-next_execution_sequence_status=ready_for_line_message_send_permission_gate
-next_minimal_action=Loop 267 line message send permission gate
-```
-
-## What Codex Changed
-
-- Validated the Loop 266 approval block.
-- Reviewed Loop 265 sanitized evidence and existing non-send LINE runtime validation docs.
-- Ran status-only internal non-send validation.
-- Recorded that API health, invalid-signature rejection, and route shape passed.
-- Kept LINE message send, external LINE API connection, public smoke, and production Go disallowed.
-- Updated task doc, runbooks, dev log, Obsidian, handoff, and matrices.
-
-## Safety Boundary To Review
-
-```txt
-secret_value_recorded=false
-db_url_recorded=false
-env_file_displayed=false
-secret_file_displayed=false
-raw_log_recorded=false
-line_identifier_recorded=false
-message_body_recorded=false
+anti_proliferation_check=pass
+is_this_loop_proliferation_risk=false
+forward_progress_type=operator_decision_pack
+line_message_send_permission_gate_created=true
+line_message_send_execution_allowed_in_loop_267=false
+line_message_send_requires_explicit_operator_approval=true
+line_message_send_scope_must_be_single_message=true
+line_message_send_target_must_be_operator_controlled=true
+line_message_send_target_must_not_be_customer=true
+line_message_body_recording_allowed=false
+line_identifier_recording_allowed=false
+existing_controlled_send_route_available=true
+existing_internal_cli_available=true
+existing_staff_reply_route_available=conditional
 line_message_send_allowed=false
 line_message_send_executed=false
 line_external_api_connection_attempted=false
 public_smoke_executed=false
-service_restart_executed=false
-vps_change_executed=false
-production_go_changed=false
 production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_operator_approval_required=true
+next_execution_sequence_status=line_message_send_approval_required
+selected_next_minimal_action=Loop 268 single controlled LINE message send approval decision
 ```
 
-## Review Questions
+Safety:
 
-1. このLoopは complete / blocked / failed のどれですか？
-2. non-send LINE runtime validationをpass扱いにした判断は妥当ですか？
-3. Codexが選んだ次Loop候補 `Loop 267: line message send permission gate` を採用しますか？
-4. 採用しない場合、理由は何ですか？
-5. 次に取るべき方針は go / no-go / route freeze / alternative path / human input required のどれですか？
-6. 次LoopのCodex文章を作ってよいですか？
+```txt
+secret_values_recorded=false
+env_value_output_occurred=false
+db_url_recorded=false
+raw_log_recorded=false
+line_identifier_recorded=false
+message_body_recorded=false
+line_message_send_executed=false
+line_external_api_connection_attempted=false
+public_smoke_executed=false
+production_go_changed=false
+runtime_code_changed=false
+package_json_changed=false
+pnpm_lock_changed=false
+config_changed=false
+```
 
-## Anti-Waste Rule
+必ず以下の順で判定してください。
+
+1. このLoopは complete / blocked / failed のどれか
+2. blockedの場合、同じblockerが過去に何回出ているか
+3. Codexが提案した次Loop候補を採用するか、却下するか
+4. 却下する場合、理由は何か
+5. 次に取るべき方針は go / no-go / route freeze / alternative path / human input required のどれか
+6. 次LoopのCodex文章を作ってよいか
 
 同じblockerが2回以上出ている場合は、protocol追加・recollection・readiness gate追加を次Loop候補にしないでください。
 
-## Candidate Next Loop
+レビュー観点:
 
-```txt
-Loop 267: line message send permission gate
-```
-
-Do not auto-progress. Review first.
+- Loop 267は送信せず、Loop 268のoperator decision packとして前進しているか。
+- `production_no_go=true` が維持されているか。
+- LINE identifier / message body / secret / env value / raw log が記録されていないか。
+- 次Loop候補を `Loop 268: single controlled LINE message send approval decision` のみにしてよいか。
+- Loop 268へ進む場合、operatorが approve / do-not-approve / request-more-review のどれを返すべきか。

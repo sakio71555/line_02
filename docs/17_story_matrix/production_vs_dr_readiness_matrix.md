@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 267 line message send permission gate | Not final Go |
-| External runtime readiness | `line_runtime_non_send_validation_passed` | Loop 266 validated API health, route shape, and invalid-signature handling without LINE send or external LINE API | `docs/11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md` | Loop 267 line message send permission gate | Not final Go |
-| Production readiness | `production_no_go_message_send_gate_required` | DR, classifier, public smoke, explicit message-send approval, and production Go decision reasons remain | `docs/11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md` | Loop 267 line message send permission gate | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 268 single controlled LINE message send approval decision | Not final Go |
+| External runtime readiness | `line_message_send_approval_required` | Loop 267 created the explicit single controlled LINE message send permission gate without sending | `docs/11_codex_tasks/267_line_message_send_permission_gate.md` | Loop 268 single controlled LINE message send approval decision | Not final Go |
+| Production readiness | `production_no_go_message_send_approval_required` | DR, classifier, public smoke, explicit message-send approval, and production Go decision reasons remain | `docs/11_codex_tasks/267_line_message_send_permission_gate.md` | Loop 268 single controlled LINE message send approval decision | `production_no_go` maintained |
 
 ## Current State
 
@@ -19,7 +19,7 @@ app_readiness_status=local_production_start_verified
 app_production_path_review_completed=true
 local_production_verification_status=pass
 final_pre_external_runtime_review_completed=true
-external_runtime_readiness_status=line_runtime_non_send_validation_passed
+external_runtime_readiness_status=line_message_send_approval_required
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
 staged_external_runtime_execution_plan_created=true
@@ -62,7 +62,7 @@ production_go_judgement_ready=true
 unknown_blocker_count=0
 known_env_blocker_count=0
 next_runtime_permission_gate_sequence_created=true
-next_execution_sequence_status=ready_for_line_message_send_permission_gate
+next_execution_sequence_status=line_message_send_approval_required
 line_runtime_permission_gate_completed=true
 line_runtime_permission_gate_status=pass
 line_runtime_non_send_validation_status=pass
@@ -72,14 +72,66 @@ line_route_shape_check_status=pass
 line_external_api_connection_attempted=false
 line_message_send_executed=false
 public_smoke_executed=false
+line_message_send_permission_gate_created=true
+line_message_send_execution_allowed_in_loop_267=false
+line_message_send_requires_explicit_operator_approval=true
+line_message_send_scope_must_be_single_message=true
+line_message_send_target_must_be_operator_controlled=true
+line_message_send_target_must_not_be_customer=true
+line_message_body_recording_allowed=false
+line_identifier_recording_allowed=false
+existing_controlled_send_route_available=true
+existing_internal_cli_available=true
+existing_staff_reply_route_available=conditional
 placeholder_only_dry_run_execution_status=pass
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
-production_readiness_status=production_no_go_message_send_gate_required
+production_readiness_status=production_no_go_message_send_approval_required
 production_no_go=true
 production_no_go_reason_scope=fully_split
 production_go_changed=false
+```
+
+## Loop 267 Line Message Send Permission Gate
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | New operator decision pack, not another env/readiness loop. |
+| Runtime non-send precondition | `pass` | Loop 266 accepted as precondition. |
+| Send permission gate | `created` | No send allowed in Loop 267. |
+| Existing controlled route | `available` | Internal one-message category documented. |
+| Staff reply route | `conditional` | Prior route auth constraint remains noted. |
+| Target rule | `operator_controlled_only` | Customer target is No-Go. |
+| Message count | `single_message_only` | Retry and bulk are No-Go. |
+| Identifier/body recording | `forbidden` | Values must not be provided to Codex or recorded. |
+| LINE external API | `not_attempted` | Explicitly disallowed in this Loop. |
+| Public smoke | `not_executed` | Still requires separate approval. |
+| Production Go | `not_changed` | `production_no_go=true`. |
+| Next action | `selected` | Loop 268 single controlled LINE message send approval decision. |
+
+```txt
+loop_267_line_message_send_permission_gate_created=true
+loop_267_line_message_send_execution_allowed_in_loop_267=false
+loop_267_line_message_send_requires_explicit_operator_approval=true
+loop_267_line_message_send_scope_must_be_single_message=true
+loop_267_line_message_send_target_must_be_operator_controlled=true
+loop_267_line_message_send_target_must_not_be_customer=true
+loop_267_line_message_body_recording_allowed=false
+loop_267_line_identifier_recording_allowed=false
+loop_267_existing_controlled_send_route_available=true
+loop_267_existing_internal_cli_available=true
+loop_267_existing_staff_reply_route_available=conditional
+loop_267_line_message_send_allowed=false
+loop_267_line_message_send_executed=false
+loop_267_line_external_api_connection_attempted=false
+loop_267_public_smoke_executed=false
+loop_267_production_no_go=true
+loop_267_production_go_changed=false
+loop_267_dr_readiness_status=not_ready_restore_failed
+loop_267_classifier_route_status=frozen
+loop_267_next_execution_sequence_status=line_message_send_approval_required
+loop_267_next_minimal_action=Loop 268 single controlled LINE message send approval decision
 ```
 
 ## Loop 266 Line Runtime Permission Gate Without Message Send

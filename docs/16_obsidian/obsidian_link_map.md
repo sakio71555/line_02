@@ -298,6 +298,8 @@ Loop 265 status: `line_runtime_env_post_injection_record_created=true`, `operato
 
 Loop 266 status: `line_runtime_permission_gate_completed=true`, `line_runtime_permission_gate_status=pass`, `line_runtime_non_send_validation_status=pass`, `api_health_check_status=pass`, `line_webhook_invalid_signature_check_status=pass`, `line_route_shape_check_status=pass`, `line_external_api_connection_attempted=false`, `line_message_send_executed=false`, `public_smoke_executed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 267 line message send permission gate`.
 
+Loop 267 status: `line_message_send_permission_gate_created=true`, `line_message_send_execution_allowed_in_loop_267=false`, `line_message_send_requires_explicit_operator_approval=true`, `line_message_send_scope_must_be_single_message=true`, `existing_controlled_send_route_available=true`, `existing_internal_cli_available=true`, `existing_staff_reply_route_available=conditional`, `line_message_send_executed=false`, `line_external_api_connection_attempted=false`, `public_smoke_executed=false`, `production_no_go=true`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 268 single controlled LINE message send approval decision`.
+
 ## Obsidian Helpers
 
 - [Obsidian README](README.md)
