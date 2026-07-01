@@ -18,6 +18,9 @@
 - Verified no-input preflight and execute modes block safely with sanitized key/value output only.
 - Added the guarded helper runbook and Loop 283 task doc.
 - Prepared the helper for commit/push before VPS sync.
+- Pushed the helper commit.
+- Attempted the allowed VPS git-based sync preflight.
+- Blocked before VPS helper preflight and restore execution because the VPS working directory did not satisfy the git repository prerequisite for the allowed `git pull --ff-only` sync path.
 
 ## Risks
 
@@ -25,6 +28,7 @@
 - A helper can still be unsafe if operator internal inputs point to the wrong target; target scope guard must remain mandatory.
 - A future VPS execution must stop if any secret/artifact/target/tool preflight is ambiguous.
 - Raw logs, artifact details, DB URLs, SQL, object names, role names, package names, and extension names must never be copied into docs or handoff.
+- VPS deployment may be a copy-based working tree rather than a git checkout; future restore helper availability needs a new operator-reviewed sync/runtime input path.
 
 ## Checklist
 
@@ -38,6 +42,27 @@ helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
 helper_local_validation_status=pass
 helper_default_mode=preflight_only
 helper_execute_mode_requires_explicit_confirm=true
+vps_direct_work_used=true
+vps_sync_status=blocked_vps_git_repository_unavailable
+vps_helper_available=false
+helper_preflight_status=not_run_vps_sync_blocked
+temporary_codex_direct_restore_execution_override_used=false
+ssh_access_available=true
+vps_working_directory_available=true
+api_service_active=true
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+operator_secret_context_available=not_checked_vps_sync_blocked
+operator_artifact_context_available=not_checked_vps_sync_blocked
+selected_artifact_candidate=not_checked_vps_sync_blocked
+artifact_exists=not_checked_vps_sync_blocked
+artifact_nonempty=not_checked_vps_sync_blocked
+artifact_access_status=not_checked_vps_sync_blocked
+restore_tool_selected=none
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=vps_git_repository_unavailable
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
@@ -58,4 +83,5 @@ production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
+next_loop_selected=true
 ```

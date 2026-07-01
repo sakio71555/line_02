@@ -3,32 +3,44 @@
 まずLoop結果をレビューしてください。
 次LoopのCodex文章はまだ作らないでください。
 
+必ず以下の順で判定してください。
+
+1. このLoopは complete / blocked / failed のどれか
+2. blockedの場合、同じblockerが過去に何回出ているか
+3. Codexが提案した次Loop候補を採用するか、却下するか
+4. 却下する場合、理由は何か
+5. 次に取るべき方針は go / no-go / route freeze / alternative path / human input required のどれか
+6. 次LoopのCodex文章を作ってよいか
+
 対象:
 
 ```txt
 loop=Loop 283 DR restore execution prerequisite resolution and guarded helper
-current_status=in_progress_after_helper_creation
+loop_status=blocked
+blocked_reason=vps_git_repository_unavailable
 ```
 
-確認してほしいこと:
-
-1. Loop 283 が Loop 282 の `restore_procedure_not_executable_safely` blocker を実質的に解消する方向へ進んでいるか。
-2. guarded helper の境界が十分か。
-3. secret / DB URL / artifact detail / raw log / SQL / object / role / package / extension / LINE data を記録していないか。
-4. VPS sync / helper preflight / conditional restore execution に進む条件が妥当か。
-5. 1つでも曖昧なら restore 実行せず blocked にする方針でよいか。
-
-Sanitized state:
+Sanitized result:
 
 ```txt
 anti_proliferation_check=pass
 restore_executable_helper_exists=true
 helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
 helper_local_validation_status=pass
-helper_preflight_without_inputs=blocked_safely
-vps_sync_status=pending
-helper_preflight_status=pending
-restore_retry_attempt_count=pending
+vps_direct_work_used=true
+vps_sync_status=blocked_vps_git_repository_unavailable
+vps_helper_available=false
+helper_preflight_status=not_run_vps_sync_blocked
+temporary_codex_direct_restore_execution_override_used=false
+ssh_access_available=true
+vps_working_directory_available=true
+api_service_active=true
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
@@ -47,4 +59,10 @@ package_name_recorded=false
 extension_name_recorded=false
 ```
 
-まだ次Loopへ進めないでください。Loop 283 はこのあと、helper commit/push、VPS sync、VPS preflight、条件が完全に揃う場合だけ1回restore retryへ進む予定です。
+Codex proposed next minimal action:
+
+```txt
+next_recommended_loop=Loop 284 guarded DR restore runtime input injection
+```
+
+同じblockerが2回以上出ている場合は、protocol追加・recollection・readiness gate追加を次Loop候補にしないでください。

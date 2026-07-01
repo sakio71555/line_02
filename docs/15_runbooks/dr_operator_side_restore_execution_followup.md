@@ -347,3 +347,21 @@ restricted_actions_remain_no_go=true
 ```
 
 Reference: [DR Guarded Restore Retry Helper](dr_guarded_restore_retry_helper.md).
+
+## Loop 283 VPS Sync Blocked
+
+```txt
+loop_283_status=blocked
+vps_sync_status=blocked_vps_git_repository_unavailable
+helper_preflight_status=not_run_vps_sync_blocked
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=vps_git_repository_unavailable
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+next_minimal_action=Loop 284 guarded DR restore runtime input injection
+```

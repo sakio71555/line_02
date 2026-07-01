@@ -626,6 +626,19 @@ loop_283_production_go_scope_expanded=false
 loop_283_dr_readiness_status=not_ready_restore_failed
 ```
 
+Loop 283 final result:
+
+```txt
+loop_283_status=blocked
+loop_283_vps_sync_status=blocked_vps_git_repository_unavailable
+loop_283_restore_retry_execution_status=blocked_before_execution
+loop_283_restore_retry_attempt_count=0
+loop_283_production_go=true
+loop_283_production_go_scope=line_api_admin_current_runtime
+loop_283_production_go_scope_expanded=false
+loop_283_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 271 Post-Go Monitoring Review
 
 | bucket | status | scope |

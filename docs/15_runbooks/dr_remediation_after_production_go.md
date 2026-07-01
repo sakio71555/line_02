@@ -18,6 +18,19 @@ post_go_monitoring_status=pass
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 283 Result
+
+```txt
+loop_283_status=blocked
+restore_executable_helper_exists=true
+restore_retry_execution_status=blocked_before_execution
+failure_reason=vps_git_repository_unavailable
+dr_readiness_status=not_ready_restore_failed
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+```
+
 ## Loop 272 Strategy Review
 
 ```txt

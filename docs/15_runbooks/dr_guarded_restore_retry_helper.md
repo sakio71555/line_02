@@ -127,7 +127,15 @@ Stop before restore execution when any of these are true:
 
 ```txt
 loop_283_helper_created=true
-vps_sync_status=pending
-vps_helper_preflight_status=pending
-restore_retry_execution_status=pending
+vps_sync_status=blocked_vps_git_repository_unavailable
+vps_helper_preflight_status=not_run_vps_sync_blocked
+restore_retry_execution_status=blocked_before_execution
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=vps_git_repository_unavailable
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
 ```

@@ -193,3 +193,20 @@ helper_raw_log_output_forbidden=true
 ```
 
 Reference: [DR Guarded Restore Retry Helper](dr_guarded_restore_retry_helper.md).
+
+## Loop 283 Result
+
+```txt
+loop_283_status=blocked
+restore_executable_helper_exists=true
+vps_sync_status=blocked_vps_git_repository_unavailable
+helper_preflight_status=not_run_vps_sync_blocked
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=vps_git_repository_unavailable
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+```

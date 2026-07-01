@@ -366,6 +366,8 @@ Loop 282 status: `loop_282_status=blocked`, `temporary_codex_direct_restore_exec
 
 Loop 283 helper status: `restore_executable_helper_exists=true`, `helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh`, `helper_default_mode=preflight_only`, `helper_execute_mode_requires_explicit_confirm=true`, `helper_attempt_limit=1`, `helper_retry_forbidden=true`, `production_go_scope_expanded=false`, `dr_readiness_status=not_ready_restore_failed`.
 
+Loop 283 result: `loop_283_status=blocked`, `vps_sync_status=blocked_vps_git_repository_unavailable`, `helper_preflight_status=not_run_vps_sync_blocked`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`.
+
 ## Obsidian Helpers
 
 - [Obsidian README](README.md)

@@ -379,3 +379,17 @@ codex_direct_secret_internal_use_allowed=true_if_required_but_never_output
 codex_direct_artifact_path_internal_use_allowed=true_if_required_but_never_output
 production_go_scope_expanded=false
 ```
+
+## Loop 283 Result
+
+The guarded helper was created, but restore execution did not start because the allowed VPS git sync prerequisite was not satisfied.
+
+```txt
+loop_283_status=blocked
+temporary_codex_direct_restore_execution_override_used=false
+restore_retry_execution_status=blocked_before_execution
+failure_reason=vps_git_repository_unavailable
+restore_retry_attempt_count=0
+retry_allowed=false
+production_go_scope_expanded=false
+```

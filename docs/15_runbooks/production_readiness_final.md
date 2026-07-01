@@ -3625,3 +3625,15 @@ loop_283_production_go_scope_expanded=false
 loop_283_dr_readiness_status=not_ready_restore_failed
 loop_283_restricted_actions_remain_no_go=true
 ```
+
+Loop 283 result:
+
+```txt
+loop_283_status=blocked
+loop_283_restore_retry_execution_status=blocked_before_execution
+loop_283_failure_reason=vps_git_repository_unavailable
+loop_283_restore_retry_attempt_count=0
+loop_283_restore_retry_success=not_attempted
+loop_283_production_go_scope_expanded=false
+loop_283_dr_readiness_status=not_ready_restore_failed
+```

@@ -2025,6 +2025,25 @@ loop_283_extension_name_recorded=false
 loop_283_dr_readiness_status=not_ready_restore_failed
 ```
 
+Loop 283 final result:
+
+```txt
+loop_283_status=blocked
+loop_283_vps_sync_status=blocked_vps_git_repository_unavailable
+loop_283_helper_preflight_status=not_run_vps_sync_blocked
+loop_283_restore_retry_attempt_count=0
+loop_283_pg_restore_executed=false
+loop_283_psql_executed=false
+loop_283_supabase_connection_attempted=false
+loop_283_db_change_performed=false
+loop_283_raw_log_recorded=false
+loop_283_secret_recorded=false
+loop_283_db_url_recorded=false
+loop_283_artifact_path_recorded=false
+loop_283_artifact_filename_recorded=false
+loop_283_artifact_content_recorded=false
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

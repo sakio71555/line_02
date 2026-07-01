@@ -69,34 +69,39 @@ raw_log_output=false
 
 ## VPS / Restore Result
 
-This section is updated after the helper commit is pushed and VPS sync/preflight has been attempted.
+The helper commit was pushed, then VPS sync was attempted using only the allowed git-based workflow. The target working directory was reachable and the API service was active, but the directory did not satisfy the git repository prerequisite for `git pull --ff-only`. Restore preflight and execution were therefore not attempted.
 
 ```txt
-vps_direct_work_used=pending
-vps_sync_status=pending
-vps_helper_available=pending
-helper_preflight_status=pending
-temporary_codex_direct_restore_execution_override_used=pending
-ssh_access_available=pending
-vps_working_directory_available=pending
-restore_target_scope_confirmed=pending
-restore_target_scope_category=pending
-operator_secret_context_available=pending
-operator_artifact_context_available=pending
-selected_artifact_candidate=pending
-artifact_exists=pending
-artifact_nonempty=pending
-artifact_access_status=pending
-restore_tool_selected=pending
-operator_side_restore_retry_execution_status=pending
-restore_retry_attempt_count=pending
-restore_retry_success=pending
-failure_reason=pending
+loop_283_status=blocked
+vps_direct_work_used=true
+vps_sync_status=blocked_vps_git_repository_unavailable
+vps_helper_available=false
+helper_preflight_status=not_run_vps_sync_blocked
+temporary_codex_direct_restore_execution_override_used=false
+ssh_access_available=true
+vps_working_directory_available=true
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+operator_secret_context_available=not_checked_vps_sync_blocked
+operator_artifact_context_available=not_checked_vps_sync_blocked
+selected_artifact_candidate=not_checked_vps_sync_blocked
+artifact_exists=not_checked_vps_sync_blocked
+artifact_nonempty=not_checked_vps_sync_blocked
+artifact_access_status=not_checked_vps_sync_blocked
+restore_tool_selected=none
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=vps_git_repository_unavailable
 restore_retry_retry_executed=false
-pg_restore_executed=pending
-psql_executed=pending
-supabase_connection_attempted=pending
-db_change_performed=pending
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+post_restore_public_api_health_current=not_run_restore_not_attempted
+post_restore_public_admin_root_current=not_run_restore_not_attempted
+post_restore_public_customers_no_auth_current=not_run_restore_not_attempted
+api_service_active=true
 ```
 
 ## Production And DR State
@@ -146,5 +151,6 @@ test_skipped_reason=helper_and_docs_only_no_runtime_app_code_package_or_config_c
 ## Next Minimal Action
 
 ```txt
-next_minimal_action=complete_loop_283_vps_sync_and_guarded_preflight
+next_minimal_action=Loop 284 guarded DR restore runtime input injection
+next_loop_requires_new_operator_input=true
 ```

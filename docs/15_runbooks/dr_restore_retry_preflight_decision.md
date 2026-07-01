@@ -314,3 +314,13 @@ execute_mode_requires_all_preflight_checks_pass=true
 restore_retry_attempt_limit=1
 retry_allowed=false
 ```
+
+## Loop 283 Result
+
+```txt
+helper_preflight_status=not_run_vps_sync_blocked
+restore_retry_execution_status=blocked_before_execution
+failure_reason=vps_git_repository_unavailable
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+```

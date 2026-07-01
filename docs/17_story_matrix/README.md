@@ -330,6 +330,17 @@ loop_283_restore_execution_status=pending_vps_preflight
 loop_283_dr_readiness_status=not_ready_restore_failed
 ```
 
+Loop 283 final result:
+
+```txt
+loop_283_status=blocked
+loop_283_vps_sync_status=blocked_vps_git_repository_unavailable
+loop_283_helper_preflight_status=not_run_vps_sync_blocked
+loop_283_restore_retry_attempt_count=0
+loop_283_restore_retry_success=not_attempted
+loop_283_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.
