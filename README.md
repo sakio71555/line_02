@@ -609,6 +609,8 @@ Loop 251 classifier route freeze and DR-production readiness splitでは、Loop 
 
 Loop 264 line runtime env category injection and boolean verificationでは、`line_runtime_env_category` のoperator承認を消費しましたが、operator-side injection完了確認が無いため `operator_side_injection_status=not_completed` とし、post-injection presence checkを安全にblocked分類しました。secret値、env値、長さ、hash、prefix/suffix、env file、secret fileは表示せず、LINE runtime実行、LINE送信、外部API接続、production Go変更も行っていません。詳細は [Loop 264 task doc](docs/11_codex_tasks/264_line_runtime_env_category_injection_and_boolean_verification.md) を参照してください。次は `Loop 265: operator line runtime env action required` です。
 
+Loop 265 line runtime env post-injection recordでは、operator提供のsanitized resultを正式に記録し、`line_runtime_env_category` がrunning API processに載った状態としてcurrent overrideを更新しました。`remaining_missing_required_categories_count=0`、`known_env_blocker_count=0` ですが、LINE runtime実行、LINE送信、外部API接続、public smoke、production Goはまだ未承認です。詳細は [Loop 265 task doc](docs/11_codex_tasks/265_line_runtime_env_post_injection_record.md) を参照してください。次は `Loop 266: line runtime permission gate without message send` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

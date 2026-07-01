@@ -294,6 +294,8 @@ Loop 259 status: `env_inventory_mismatch_cleanup_status=complete`, `env_inventor
 
 Loop 264 status: `line_runtime_env_injection_approval_consumed=true`, `operator_approval_status=approved`, `line_runtime_env_injection_approval_status=approved`, `operator_side_injection_status=not_completed`, `line_runtime_env_category_injection_status=blocked`, `post_injection_presence_check_status=blocked`, `line_runtime_env_category_present_after_injection=unknown`, `remaining_missing_required_categories_count=1`, `secret_values_recorded=false`, `env_value_output_occurred=false`, `line_runtime_execution_allowed=false`, `line_message_send_allowed=false`, `external_runtime_execution_allowed=false`, `production_no_go=true`, `production_go_judgement_ready=true`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 265 operator line runtime env action required`.
 
+Loop 265 status: `line_runtime_env_post_injection_record_created=true`, `operator_side_injection_status=completed`, `target_category=line_runtime_env_category`, `line_runtime_env_category_present_in_running_process=true`, `remaining_missing_required_categories_count=0`, `remaining_missing_required_categories=none`, `known_env_blocker_count=0`, `production_go_judgement_ready=true`, `unknown_blocker_count=0`, `line_runtime_execution_allowed=false`, `line_message_send_allowed=false`, `external_runtime_execution_allowed=false`, `public_smoke_allowed=false`, `production_no_go=true`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 266 line runtime permission gate without message send`.
+
 ## Obsidian Helpers
 
 - [Obsidian README](README.md)

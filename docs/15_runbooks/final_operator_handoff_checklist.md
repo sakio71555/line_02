@@ -6,6 +6,44 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 265 Current Status Override
+
+Loop 265 records the operator-provided sanitized post-injection result for `line_runtime_env_category`. It does not display values, env files, secret files, raw logs, LINE identifiers, or message bodies. It does not run LINE runtime, send LINE messages, connect externally, run public smoke, or change production Go.
+
+```txt
+loop_265_current_status_override=true
+line_runtime_env_post_injection_record_created=true
+operator_side_injection_status=completed
+target_category=line_runtime_env_category
+line_runtime_env_category_present_in_running_process=true
+remaining_missing_required_categories_count=0
+remaining_missing_required_categories=none
+known_env_blocker_count=0
+production_go_judgement_ready=true
+unknown_blocker_count=0
+line_runtime_execution_allowed=false
+line_message_send_allowed=false
+external_runtime_execution_allowed=false
+public_smoke_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_runtime_permission_gate_sequence_created=true
+selected_next_minimal_action=Loop 266 line runtime permission gate without message send
+```
+
+Runtime permission gate sequence:
+
+1. `line_runtime_permission_gate`
+2. `line_message_send_permission_gate`
+3. `openai_runtime_permission_gate`
+4. `supabase_runtime_permission_gate`
+5. `public_smoke_permission_gate`
+6. `production_go_decision_gate`
+
+Do not run LINE runtime, LINE message send, public smoke, OpenAI runtime, Supabase runtime, or production Go until separately approved.
+
 ## Loop 264 Current Status Override
 
 Loop 264 consumed the operator approval for `line_runtime_env_category` scope, but it did not receive a separate operator completion confirmation for the actual injection. It did not inject secrets by Codex, display env values, display env file contents, connect to LINE, send messages, change runtime, or change production Go.

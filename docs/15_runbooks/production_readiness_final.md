@@ -6,6 +6,48 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 265 Current Status Override
+
+Loop 265 records the operator-provided sanitized post-injection result for `line_runtime_env_category`. The env category is present in the running API process, but LINE runtime execution, LINE message send, external API connection, public smoke, and production Go remain unapproved.
+
+```txt
+loop_265_current_status_override=true
+line_runtime_env_post_injection_record_created=true
+operator_side_injection_status=completed
+target_category=line_runtime_env_category
+line_runtime_env_category_present_in_running_process=true
+remaining_missing_required_categories_count=0
+remaining_missing_required_categories=none
+known_env_blocker_count=0
+production_go_judgement_ready=true
+unknown_blocker_count=0
+line_runtime_execution_allowed=false
+line_message_send_allowed=false
+external_runtime_execution_allowed=false
+public_smoke_allowed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_runtime_permission_gate_sequence_created=true
+selected_next_minimal_action=Loop 266 line runtime permission gate without message send
+```
+
+Current runtime permission Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| line env category | `present` | Operator sanitized result records category presence in running process. |
+| env blocker | `resolved` | `remaining_missing_required_categories_count=0`. |
+| line runtime permission | `required` | Next gate must not send messages. |
+| line message send | `not_allowed` | Separate approval required. |
+| OpenAI runtime | `not_allowed` | Separate approval required. |
+| Supabase runtime | `not_allowed` | Separate approval required. |
+| public smoke | `not_allowed` | Separate approval required. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Restore drill is still not successful. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 264 Current Status Override
 
 Loop 264 consumed the operator approval for `line_runtime_env_category` scope. Actual operator-side injection completion was not confirmed, so post-injection boolean-only presence verification was blocked safely. Loop 264 did not inject secrets by Codex, display env values, display env file contents, connect to LINE, send messages, change runtime, or change production Go.
