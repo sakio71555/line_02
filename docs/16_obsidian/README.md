@@ -106,6 +106,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 267 creates the LINE message send permission gate and controlled send readiness pack, records existing controlled send route categories, keeps all LINE send/external API/public smoke/production Go actions unexecuted, and selects Loop 268 single controlled LINE message send approval decision.
 - Loop 268 validates the one-message operator approval and selects the existing internal CLI category, but blocks before sending because operator-controlled non-customer target proof cannot be independently confirmed without exposing a LINE identifier or message body. It keeps LINE send/external API/public smoke/production Go unexecuted and selects Loop 269 controlled LINE send route human decision.
 - Loop 269 accepts operator attestation for target control, selects the existing internal CLI category, runs dry-run route preflight only, blocks before send because target fetch fails in the current Codex execution environment, and selects Loop 270 controlled LINE send route review required.
+- Loop 270 records the operator final decision as scope-limited production Go for `line_api_admin_current_runtime`, records LINE/public smoke sanitized pass results, accepts DR as known risk, keeps restricted actions No-Go, and creates the post-Go monitoring baseline.
 
 ## .obsidian Policy
 

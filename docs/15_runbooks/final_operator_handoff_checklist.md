@@ -4,7 +4,47 @@
 
 Give the operator a short checklist after Loop 157-160.
 
-The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
+The system has a scope-limited production Go for the current LINE/API/Admin runtime. DR readiness remains incomplete and accepted as known risk. Restricted actions remain No-Go.
+
+## Loop 270 Current Status Override
+
+Loop 270 records the operator final decision and creates the post-Go monitoring baseline.
+
+```txt
+loop_270_current_status_override=true
+operator_final_decision=production_go
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_record_scope_limited=true
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+line_real_push_smoke_status=pass
+line_message_send_attempt_count=1
+line_message_send_success=true
+line_message_send_retry_executed=false
+post_send_api_health=200
+public_smoke_status=pass
+public_api_health=200
+public_admin_root=200
+public_customers_no_auth=401
+post_go_monitoring_baseline_created=true
+restricted_actions_remain_no_go=true
+additional_line_send_allowed=false
+retry_allowed=false
+bulk_send_allowed=false
+classifier_route_status=frozen
+next_recommended_action=post_go_monitoring_or_dr_remediation
+selected_next_minimal_action=Loop 271 post-Go monitoring review
+```
+
+Operator handoff:
+
+- Do not send additional LINE messages without a new explicit operator approval.
+- Do not retry, bulk send, multicast, or broadcast.
+- Do not record LINE identifiers, message bodies, LINE API response bodies, raw logs, secret values, env values, or DB URLs.
+- Continue post-Go monitoring using sanitized health/auth-guard statuses.
+- Treat DR restore readiness as a known accepted risk until a future DR remediation Loop resolves it.
 
 ## Loop 269 Current Status Override
 

@@ -1,14 +1,14 @@
 # Production Vs DR Readiness Matrix
 
-This matrix separates app / production readiness from disaster recovery readiness. It prevents a failed restore drill from being treated as the only production readiness signal, while still keeping `production_no_go` until a separate review is completed.
+This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate.
 
 | area | status | reason_scope | evidence | next_review | go_status |
 | --- | --- | --- | --- | --- | --- |
-| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
+| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md` | future DR remediation | Known risk accepted |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 270 controlled LINE send route review required | Not final Go |
-| External runtime readiness | `line_message_send_blocked_route_preflight` | Loop 269 accepted operator attestation but the internal CLI route could not fetch target from the current Codex environment | `docs/11_codex_tasks/269_single_controlled_line_message_send_with_operator_attestation.md` | Loop 270 controlled LINE send route review required | Not final Go |
-| Production readiness | `production_no_go_line_send_route_blocked` | DR, classifier, public smoke, route preflight blocker, and production Go decision reasons remain | `docs/11_codex_tasks/269_single_controlled_line_message_send_with_operator_attestation.md` | Loop 270 controlled LINE send route review required | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 271 post-Go monitoring review | Included in current runtime Go |
+| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed | `docs/11_codex_tasks/270_production_go_decision_record.md` | Loop 271 post-Go monitoring review | Go for current runtime |
+| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md` | Loop 271 post-Go monitoring review | `production_go` scoped |
 
 ## Current State
 
@@ -19,7 +19,25 @@ app_readiness_status=local_production_start_verified
 app_production_path_review_completed=true
 local_production_verification_status=pass
 final_pre_external_runtime_review_completed=true
-external_runtime_readiness_status=line_message_send_blocked_route_preflight
+external_runtime_readiness_status=line_real_push_and_public_smoke_pass
+operator_final_decision=production_go
+production_go_decision_record_created=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_record_scope_limited=true
+dr_risk_acceptance_status=accepted_with_known_risk
+line_real_push_smoke_status=pass
+line_message_send_attempt_count=1
+line_message_send_success=true
+line_message_send_retry_executed=false
+post_send_api_health=200
+public_smoke_status=pass
+public_api_health=200
+public_admin_root=200
+public_customers_no_auth=401
+post_go_monitoring_baseline_created=true
+restricted_actions_remain_no_go=true
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
 staged_external_runtime_execution_plan_created=true
@@ -62,30 +80,30 @@ production_go_judgement_ready=true
 unknown_blocker_count=0
 known_env_blocker_count=0
 next_runtime_permission_gate_sequence_created=true
-next_execution_sequence_status=controlled_send_route_review_required
+next_execution_sequence_status=post_go_monitoring_or_dr_remediation
 line_runtime_permission_gate_completed=true
 line_runtime_permission_gate_status=pass
 line_runtime_non_send_validation_status=pass
 api_health_check_status=pass
 line_webhook_invalid_signature_check_status=pass
 line_route_shape_check_status=pass
-line_external_api_connection_attempted=false
-line_message_send_executed=false
-line_message_send_execution_status=blocked
-line_message_send_attempt_count=0
+line_external_api_connection_attempted=true_for_single_controlled_send_only
+line_message_send_executed=true
+line_message_send_execution_status=sent
+line_message_send_attempt_count=1
 line_message_send_retry_executed=false
 operator_controlled_target_confirmed=operator_attested
 customer_target_confirmed=false
 line_identifier_recorded=false
 message_body_recorded=false
 line_api_response_body_recorded=false
-line_message_send_success=not_attempted
+line_message_send_success=true
 operator_attestation_used=true
-route_preflight_mode=dry_run
-route_preflight_status=blocked
-route_preflight_blocker=customer_list_fetch_failed
-required_execute_env_available_in_codex_shell=false
-public_smoke_executed=false
+operator_side_line_send_execution_status=sent
+send_attempt_lock_present=true
+send_attempt_count=1
+duplicate_send_detected=false
+public_smoke_executed=true
 line_message_send_permission_gate_created=true
 line_message_send_execution_allowed_in_loop_267=false
 line_message_send_requires_explicit_operator_approval=true
@@ -99,12 +117,75 @@ existing_internal_cli_available=true
 existing_staff_reply_route_available=conditional
 placeholder_only_dry_run_execution_status=pass
 env_injection_execution_allowed=false
-external_runtime_execution_allowed=false
-next_loop_requires_explicit_operator_approval=true
-production_readiness_status=production_no_go_line_send_route_blocked
-production_no_go=true
-production_no_go_reason_scope=fully_split
-production_go_changed=false
+external_runtime_execution_allowed=line_api_admin_current_runtime_only
+next_loop_requires_explicit_operator_approval=false
+production_readiness_status=production_go_line_api_admin_current_runtime
+production_no_go=false
+production_no_go_reason_scope=restricted_actions_only
+production_go_changed=true
+additional_line_send_allowed=false
+retry_allowed=false
+bulk_send_allowed=false
+multicast_allowed=false
+broadcast_allowed=false
+openai_auto_reply_production_allowed=false
+supabase_restore_allowed=false
+db_change_allowed=false
+nginx_change_allowed=false
+dns_change_allowed=false
+https_certbot_change_allowed=false
+package_install_allowed=false
+apt_operation_allowed=false
+```
+
+## Loop 270 Production Go Decision Record
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | Records final decision and monitoring baseline, not another gate. |
+| Operator final decision | `production_go` | Scope-limited to current LINE/API/Admin runtime. |
+| LINE real push smoke | `pass` | One controlled operator-side send, no retry. |
+| Post-send health | `pass` | Sanitized API health status recorded as `200`. |
+| Public smoke | `pass` | Public API health and admin root pass. |
+| Auth guard | `pass` | Unauthenticated customers endpoint returns `401`. |
+| DR readiness | `not_ready_restore_failed` | Accepted as known risk. |
+| Restricted actions | `no_go` | Additional send, retry, bulk, OpenAI activation, restore, DB/infra/package changes remain blocked. |
+| Next action | `selected` | Loop 271 post-Go monitoring review. |
+
+```txt
+loop_270_operator_final_decision=production_go
+loop_270_production_go_decision_record_created=true
+loop_270_production_go=true
+loop_270_production_no_go=false
+loop_270_production_go_scope=line_api_admin_current_runtime
+loop_270_production_go_record_scope_limited=true
+loop_270_dr_readiness_status=not_ready_restore_failed
+loop_270_dr_risk_acceptance_status=accepted_with_known_risk
+loop_270_line_real_push_smoke_status=pass
+loop_270_line_message_send_attempt_count=1
+loop_270_line_message_send_success=true
+loop_270_line_message_send_retry_executed=false
+loop_270_post_send_api_health=200
+loop_270_public_smoke_status=pass
+loop_270_public_api_health=200
+loop_270_public_admin_root=200
+loop_270_public_customers_no_auth=401
+loop_270_post_go_monitoring_baseline_created=true
+loop_270_restricted_actions_remain_no_go=true
+loop_270_additional_line_send_allowed=false
+loop_270_retry_allowed=false
+loop_270_bulk_send_allowed=false
+loop_270_public_smoke_rerun=false
+loop_270_openai_api_executed=false
+loop_270_supabase_restore_executed=false
+loop_270_db_changed=false
+loop_270_nginx_changed=false
+loop_270_dns_changed=false
+loop_270_https_certbot_operation_executed=false
+loop_270_package_install_executed=false
+loop_270_apt_operation_executed=false
+loop_270_next_execution_sequence_status=post_go_monitoring_or_dr_remediation
+loop_270_next_minimal_action=Loop 271 post-Go monitoring review
 ```
 
 ## Loop 269 Single Controlled LINE Message Send With Operator Attestation

@@ -4,7 +4,65 @@
 
 productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId、Admin UI token forwarding、LINE real push gate、OpenAI real API gateを一括で確認し、Go / No-Goを正直に判定する。
 
-このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
+このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。Loop 270では、operator側で実行済みのsanitized結果のみを記録する。
+
+## Loop 270 Current Status Override
+
+Loop 270 records the operator final decision as a scope-limited production Go for the current LINE/API/Admin runtime. DR restore readiness remains incomplete, but the risk is accepted as known risk. Restricted actions remain No-Go.
+
+```txt
+loop_270_current_status_override=true
+anti_proliferation_check=pass
+operator_final_decision=production_go
+production_go_decision_record_created=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_record_scope_limited=true
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+line_real_push_smoke_status=pass
+line_message_send_attempt_count=1
+line_message_send_success=true
+line_message_send_retry_executed=false
+post_send_api_health=200
+public_smoke_status=pass
+public_api_health=200
+public_admin_root=200
+public_customers_no_auth=401
+post_go_monitoring_baseline_created=true
+restricted_actions_remain_no_go=true
+additional_line_send_allowed=false
+retry_allowed=false
+bulk_send_allowed=false
+multicast_allowed=false
+broadcast_allowed=false
+openai_auto_reply_production_allowed=false
+supabase_restore_allowed=false
+db_change_allowed=false
+nginx_change_allowed=false
+dns_change_allowed=false
+https_certbot_change_allowed=false
+package_install_allowed=false
+apt_operation_allowed=false
+classifier_route_status=frozen
+next_execution_sequence_status=post_go_monitoring_or_dr_remediation
+selected_next_minimal_action=Loop 271 post-Go monitoring review
+```
+
+Current runtime Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | `line_api_admin_current_runtime` is production Go. |
+| LINE real push smoke | `pass` | One controlled send succeeded operator-side; no retry. |
+| public API health | `pass` | Sanitized public health status is `200`. |
+| admin root | `pass` | Sanitized public admin root status is `200`. |
+| unauthenticated customers guard | `pass` | Sanitized guard status is `401`. |
+| DR readiness | `not_ready_restore_failed` | Accepted as known risk, not fixed. |
+| additional LINE sends | `no_go` | New explicit approval required. |
+| retry / bulk / multicast / broadcast | `no_go` | Still forbidden. |
+| infra / DB / package / OpenAI activation | `no_go` | Separate future approvals required. |
 
 ## Loop 269 Current Status Override
 
