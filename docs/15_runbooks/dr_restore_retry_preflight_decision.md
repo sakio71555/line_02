@@ -280,3 +280,24 @@ db_change_performed=false
 dr_readiness_status=not_ready_restore_failed
 next_minimal_action=Loop 281 DR restore execution blocker resolution
 ```
+
+## Loop 282 Preflight Result
+
+Loop 282 reached the conditional execution preflight after Loop 281 resolved the missing procedure blocker, but it stopped before restore execution because the procedure was not safely executable in the checked VPS context.
+
+```txt
+loop_282_status=blocked
+restore_procedure_exists=true
+restore_procedure_source=new_operator_side_template
+restore_procedure_blocker_resolved=true
+restore_procedure_not_executable_safely=true
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+operator_secret_context_available=not_checked_procedure_blocked
+selected_artifact_candidate=not_checked_procedure_blocked
+restore_retry_execution_status=blocked_before_execution
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=restore_procedure_not_executable_safely
+next_minimal_action=Loop 283 DR restore execution prerequisite resolution
+```

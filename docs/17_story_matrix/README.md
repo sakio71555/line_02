@@ -305,6 +305,19 @@ loop_281_dr_readiness_status=not_ready_restore_failed
 loop_281_next_loop=Loop 282 conditional DR restore retry execution with resolved procedure
 ```
 
+## Loop 282 Conditional Restore Retry Blocked
+
+Loop 282 uses the resolved procedure for conditional execution preflight, but stops before restore because the checked VPS context does not have a safe executable restore procedure/helper/script.
+
+```txt
+loop_282_status=blocked
+loop_282_restore_procedure_not_executable_safely=true
+loop_282_restore_execution_status=blocked_before_execution
+loop_282_restore_retry_attempt_count=0
+loop_282_dr_readiness_status=not_ready_restore_failed
+loop_282_next_loop=Loop 283 DR restore execution prerequisite resolution
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

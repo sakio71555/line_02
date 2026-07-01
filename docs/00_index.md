@@ -116,6 +116,7 @@
 - Loop 280 conditional Codex-managed DR restore retry execution: `11_codex_tasks/280_conditional_dr_restore_retry_execution.md`
 - Loop 281 DR restore execution blocker resolution: `11_codex_tasks/281_dr_restore_execution_blocker_resolution.md`
 - DR operator-side restore retry procedure: `15_runbooks/dr_operator_side_restore_retry_procedure.md`
+- Loop 282 conditional DR restore retry execution with resolved procedure: `11_codex_tasks/282_conditional_dr_restore_retry_execution_with_resolved_procedure.md`
 
 ## Prompts and Templates
 

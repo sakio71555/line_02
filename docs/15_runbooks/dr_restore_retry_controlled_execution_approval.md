@@ -343,3 +343,23 @@ next_execution_sequence_status=ready_for_operator_side_restore_execution_result
 ```
 
 Use [DR Operator-Side Restore Retry Procedure](dr_operator_side_restore_retry_procedure.md) before any future operator-side attempt. The procedure is category-only and keeps actual commands, values, paths, URLs, secrets, identifiers, raw logs, SQL, object names, role names, package names, extension names, dump contents, row contents, LINE identifiers, and production logs out of docs.
+
+## Loop 282 Conditional Execution Blocked
+
+```txt
+loop_282_status=blocked
+restore_procedure_exists=true
+restore_procedure_source=new_operator_side_template
+restore_procedure_blocker_resolved=true
+restore_procedure_not_executable_safely=true
+restore_retry_execution_status=blocked_before_execution
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=restore_procedure_not_executable_safely
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+next_minimal_action=Loop 283 DR restore execution prerequisite resolution
+```

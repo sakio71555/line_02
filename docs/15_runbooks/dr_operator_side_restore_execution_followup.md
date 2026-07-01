@@ -310,3 +310,25 @@ next_minimal_action=Loop 282 conditional DR restore retry execution with resolve
 ```
 
 The Loop 281 procedure remains operator-side only. It must not record secrets, DB URLs, artifact paths, artifact filenames, raw logs, SQL, object names, role names, package names, extension names, dump content, row content, LINE identifiers, message bodies, or production logs.
+
+## Loop 282 Conditional Execution Blocked Before Restore
+
+Loop 282 used the one-time conditional approval for preflight only. It stopped before restore execution because the resolved procedure was not safely executable in the checked VPS context.
+
+```txt
+loop_282_status=blocked
+temporary_codex_direct_restore_execution_override_used=false
+restore_retry_execution_status=blocked_before_execution
+failure_reason=restore_procedure_not_executable_safely
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+next_minimal_action=Loop 283 DR restore execution prerequisite resolution
+```

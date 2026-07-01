@@ -188,6 +188,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 280 Obsidian Log](loop_280_conditional_dr_restore_retry_execution.md)
 - [Loop 281 DR Restore Execution Blocker Resolution](../11_codex_tasks/281_dr_restore_execution_blocker_resolution.md)
 - [Loop 281 Obsidian Log](loop_281_dr_restore_execution_blocker_resolution.md)
+- [Loop 282 Conditional DR Restore Retry Execution With Resolved Procedure](../11_codex_tasks/282_conditional_dr_restore_retry_execution_with_resolved_procedure.md)
+- [Loop 282 Obsidian Log](loop_282_conditional_dr_restore_retry_execution_with_resolved_procedure.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
 - [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
 - [DR Backup Artifact Validation Preflight](../15_runbooks/dr_backup_artifact_validation_preflight.md)
@@ -356,6 +358,8 @@ Loop 278 status: `operator_side_restore_execution_followup_created=true`, `opera
 Loop 280 status: `loop_280_status=blocked`, `temporary_codex_direct_restore_execution_override_granted=true`, `temporary_codex_direct_restore_execution_override_used=false`, `restore_procedure_exists=false`, `restore_retry_execution_status=blocked_before_execution`, `blocked_reason=restore_procedure_not_found`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `dr_readiness_status=not_ready_restore_failed`, `next=Loop 281 DR restore execution blocker resolution`.
 
 Loop 281 status: `loop_281_status=complete`, `restore_procedure_exists=true`, `restore_procedure_source=new_operator_side_template`, `restore_procedure_blocker_resolved=true`, `operator_side_execution_possible=true`, `procedure_allows_single_attempt=true`, `procedure_stop_on_first_failure=true`, `procedure_retry_forbidden=true`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `dr_readiness_status=not_ready_restore_failed`, `next=Loop 282 conditional DR restore retry execution with resolved procedure`.
+
+Loop 282 status: `loop_282_status=blocked`, `temporary_codex_direct_restore_execution_override_used=false`, `restore_procedure_exists=true`, `restore_procedure_source=new_operator_side_template`, `restore_procedure_blocker_resolved=true`, `restore_procedure_not_executable_safely=true`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `dr_readiness_status=not_ready_restore_failed`, `next=Loop 283 DR restore execution prerequisite resolution`.
 
 ## Obsidian Helpers
 

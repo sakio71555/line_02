@@ -144,3 +144,32 @@ restore_execution_status=not_executed
 next_execution_sequence_status=ready_for_operator_side_restore_execution_result
 next_recommended_loop=Loop 282 conditional DR restore retry execution with resolved procedure
 ```
+
+## Loop 282 Conditional Execution Result
+
+Loop 282 attempted the resolved-procedure conditional path but stopped before restore execution. The category-only procedure existed locally, but no safe executable procedure/helper/script was available in the checked VPS context.
+
+```txt
+loop_282_status=blocked
+temporary_codex_direct_restore_execution_override_used=false
+ssh_access_available=true
+vps_working_directory_available=true
+restore_procedure_exists=true
+restore_procedure_source=new_operator_side_template
+restore_procedure_blocker_resolved=true
+restore_procedure_not_executable_safely=true
+restore_retry_execution_status=blocked_before_execution
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=restore_procedure_not_executable_safely
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+next_minimal_action=Loop 283 DR restore execution prerequisite resolution
+```
+
+The procedure remains the operator-side boundary, but a future attempt must resolve the executable prerequisite without exposing secrets, DB URLs, artifact details, raw logs, SQL, object names, role names, package names, extension names, dump contents, row contents, LINE identifiers, message bodies, or production logs.

@@ -3589,3 +3589,25 @@ loop_281_restricted_actions_remain_no_go=true
 ```
 
 Reference: [DR Operator-Side Restore Retry Procedure](dr_operator_side_restore_retry_procedure.md).
+
+## Loop 282 Conditional Restore Retry Blocked
+
+Loop 282 did not change production runtime status and did not execute restore.
+
+```txt
+loop_282_status=blocked
+loop_282_temporary_codex_direct_restore_execution_override_used=false
+loop_282_restore_retry_execution_status=blocked_before_execution
+loop_282_failure_reason=restore_procedure_not_executable_safely
+loop_282_restore_retry_attempt_count=0
+loop_282_restore_retry_success=not_attempted
+loop_282_pg_restore_executed=false
+loop_282_psql_executed=false
+loop_282_supabase_connection_attempted=false
+loop_282_db_change_performed=false
+loop_282_production_go=true
+loop_282_production_go_scope=line_api_admin_current_runtime
+loop_282_production_go_scope_expanded=false
+loop_282_dr_readiness_status=not_ready_restore_failed
+loop_282_restricted_actions_remain_no_go=true
+```

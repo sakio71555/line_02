@@ -2,22 +2,22 @@
 
 ## Loop
 
-Loop 281: DR restore execution blocker resolution
+Loop 282: conditional DR restore retry execution with resolved procedure
 
 ## Status
 
 ```txt
-loop_status=complete
+loop_status=blocked
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=restore_procedure_blocker_resolution
-next_loop_requires_new_operator_input=false
+forward_progress_type=conditional_dr_restore_retry_execution_or_blocked
+next_loop_requires_new_operator_input=true
 ```
 
 ## Summary
 
-Loop 281 resolved the Loop 280 `restore_procedure_not_found` blocker by adding a category-only operator-side restore retry procedure.
+Loop 282 used the one-time conditional approval for preflight only. It did not execute restore because the resolved procedure was a category-only operator-side template and no safe executable restore helper/script was available in the checked VPS context.
 
 No restore, restore retry, `pg_restore`, `psql`, Supabase connection, DB/schema/role/extension/cluster change, package/apt operation, service restart, LINE send, OpenAI call, Nginx/DNS/HTTPS/certbot change, runtime code change, package change, or config change was executed.
 
@@ -38,24 +38,32 @@ dr_risk_acceptance_status=accepted_with_known_risk
 restricted_actions_remain_no_go=true
 ```
 
-## Procedure Resolution
+## Conditional Restore Result
 
 ```txt
-dr_restore_procedure_blocker_resolution_created=true
-repo_relative_restore_runbook_candidate_count=71
-repo_relative_restore_script_candidate_count=3
-vps_direct_work_used=false
-vps_discovery_status=not_attempted_not_required
+temporary_codex_direct_restore_execution_override_used=false
+ssh_access_available=true
+vps_working_directory_available=true
+vps_repo_status_clean=not_checked
+api_service_active=true
 restore_procedure_exists=true
 restore_procedure_source=new_operator_side_template
 restore_procedure_blocker_resolved=true
-operator_side_execution_possible=true
-procedure_requires_operator_secret_context=true
-procedure_requires_operator_artifact_context=true
-procedure_allows_single_attempt=true
-procedure_stop_on_first_failure=true
-procedure_retry_forbidden=true
-restore_execution_performed=false
+restore_procedure_not_executable_safely=true
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+production_restore_explicitly_approved=false
+operator_secret_context_available=not_checked_procedure_blocked
+selected_artifact_candidate=not_checked_procedure_blocked
+artifact_exists=not_checked_procedure_blocked
+artifact_nonempty=not_checked_procedure_blocked
+artifact_access_status=not_checked_procedure_blocked
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_execution_status=blocked_before_execution
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=restore_procedure_not_executable_safely
+restore_retry_retry_executed=false
 pg_restore_executed=false
 psql_executed=false
 supabase_connection_attempted=false
@@ -76,5 +84,5 @@ extension_name_recorded=false
 ## Next
 
 ```txt
-next_recommended_loop=Loop 282 conditional DR restore retry execution with resolved procedure
+next_recommended_loop=Loop 283 DR restore execution prerequisite resolution
 ```
