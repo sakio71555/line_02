@@ -195,6 +195,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [DR Guarded Restore Retry Helper](../15_runbooks/dr_guarded_restore_retry_helper.md)
 - [Loop 284 VPS Guarded Helper Delivery Sync Blocker Resolution](../11_codex_tasks/284_vps_guarded_helper_delivery_sync_blocker_resolution.md)
 - [Loop 284 Obsidian Log](loop_284_vps_guarded_helper_delivery_sync_blocker_resolution.md)
+- [Loop 285 Guarded DR Restore Runtime Input Injection](../11_codex_tasks/285_guarded_dr_restore_runtime_input_injection.md)
+- [Loop 285 Obsidian Log](loop_285_guarded_dr_restore_runtime_input_injection.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
 - [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
 - [DR Backup Artifact Validation Preflight](../15_runbooks/dr_backup_artifact_validation_preflight.md)
@@ -371,6 +373,8 @@ Loop 283 helper status: `restore_executable_helper_exists=true`, `helper_path_re
 Loop 283 result: `loop_283_status=blocked`, `vps_sync_status=blocked_vps_git_repository_unavailable`, `helper_preflight_status=not_run_vps_sync_blocked`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`.
 
 Loop 284 result: `loop_284_status=blocked`, `vps_git_repository_unavailable_blocker_resolved=true`, `vps_helper_delivery_status=success`, `vps_helper_available=true`, `vps_helper_no_input_preflight_status=blocked_safely`, `runtime_inputs_available_to_codex=false`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `next=Loop 285 guarded DR restore runtime input injection`.
+
+Loop 285 result: `loop_285_status=blocked`, `vps_helper_available=true`, `vps_helper_bash_validation_status=pass`, `vps_helper_no_input_preflight_status=blocked_safely`, `runtime_inputs_available_to_codex=false`, `runtime_input_injection_method=blocked`, `helper_preflight_status=not_run`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `failure_reason=runtime_inputs_not_available_to_codex`, `next=Loop 286 operator-provided runtime input handoff`.
 
 ## Obsidian Helpers
 

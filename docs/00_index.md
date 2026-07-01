@@ -120,6 +120,7 @@
 - Loop 283 DR restore execution prerequisite resolution and guarded helper: `11_codex_tasks/283_dr_restore_execution_prerequisite_resolution_and_guarded_helper.md`
 - DR guarded restore retry helper runbook: `15_runbooks/dr_guarded_restore_retry_helper.md`
 - Loop 284 VPS guarded helper delivery / sync blocker resolution: `11_codex_tasks/284_vps_guarded_helper_delivery_sync_blocker_resolution.md`
+- Loop 285 guarded DR restore runtime input injection: `11_codex_tasks/285_guarded_dr_restore_runtime_input_injection.md`
 
 ## Prompts and Templates
 

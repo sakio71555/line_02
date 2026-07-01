@@ -18,6 +18,22 @@ post_go_monitoring_status=pass
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 285 Result
+
+```txt
+loop_285_status=blocked
+runtime_inputs_available_to_codex=false
+runtime_input_injection_method=blocked
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_available_to_codex
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+```
+
 ## Loop 284 Result
 
 ```txt

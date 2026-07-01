@@ -2,48 +2,42 @@
 
 ## Loop
 
-Loop 284: VPS guarded helper delivery / sync blocker resolution
-
-## Status
-
 ```txt
-loop_status=blocked
-anti_proliferation_check=pass
-is_this_loop_proliferation_risk=false
-proliferation_reason=none
-forward_progress_type=vps_guarded_helper_delivery_and_preflight
-next_loop_requires_new_operator_input=true
+loop=Loop 285 guarded DR restore runtime input injection
+status=blocked
 ```
-
-## Summary
-
-Loop 284 resolved the Loop 283 `vps_git_repository_unavailable` blocker by using the approved non-git script-only delivery path for the guarded helper.
-
-The helper is now available on the VPS and passed VPS-side syntax validation. The no-input helper preflight blocked safely with sanitized output only. Restore execution was not attempted because runtime inputs are not available to Codex through a safe approved path.
 
 ## Result
 
 ```txt
-vps_git_repository_unavailable_blocker_resolved=true
-vps_helper_delivery_method=non_git_script_only_delivery
-vps_helper_delivery_status=success
+anti_proliferation_check=pass
+is_this_loop_proliferation_risk=false
+proliferation_reason=none
+forward_progress_type=guarded_runtime_input_injection_and_optional_restore
+next_loop_requires_new_operator_input=true
 vps_helper_available=true
 vps_helper_bash_validation_status=pass
 vps_helper_no_input_preflight_status=blocked_safely
 runtime_inputs_available_to_codex=false
-helper_preflight_status=blocked
+runtime_input_injection_method=blocked
+restore_target_scope_input_present=false
+restore_confirm_input_present=false
+db_url_input_present=false
+artifact_path_input_present=false
+restore_tool_input_present=false
+psql_allow_input_present=false
+helper_preflight_status=not_run
 temporary_codex_direct_restore_execution_override_used=false
 ssh_access_available=true
 vps_working_directory_available=true
-api_service_active=true
 restore_target_scope_confirmed=false
 restore_target_scope_category=unknown
 operator_secret_context_available=false
 operator_artifact_context_available=false
-selected_artifact_candidate=not_checked_runtime_inputs_missing
-artifact_exists=false
-artifact_nonempty=false
-artifact_access_status=not_checked_runtime_inputs_missing
+selected_artifact_candidate=not_checked
+artifact_exists=not_checked
+artifact_nonempty=not_checked
+artifact_access_status=not_checked
 restore_tool_selected=none
 operator_side_restore_retry_execution_status=not_attempted
 restore_retry_attempt_count=0
@@ -54,16 +48,7 @@ pg_restore_executed=false
 psql_executed=false
 supabase_connection_attempted=false
 db_change_performed=false
-post_restore_public_api_health_current=not_run_restore_not_attempted
-post_restore_public_admin_root_current=not_run_restore_not_attempted
-post_restore_public_customers_no_auth_current=not_run_restore_not_attempted
-```
-
-## Production And DR State
-
-```txt
 production_go=true
-production_no_go=false
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
@@ -80,8 +65,6 @@ db_url_recorded=false
 artifact_path_recorded=false
 artifact_filename_recorded=false
 artifact_content_recorded=false
-artifact_hash_recorded=false
-artifact_exact_size_recorded=false
 sql_recorded=false
 db_object_recorded=false
 role_recorded=false
@@ -92,8 +75,14 @@ message_body_recorded=false
 line_api_response_body_recorded=false
 ```
 
-## Next
+## Notes
+
+- Runtime input values were never displayed or recorded.
+- Restore retry was not attempted because required runtime inputs were not available to Codex.
+- Loop 285 stops here and does not auto-start Loop 286.
+
+## Next Candidate
 
 ```txt
-next_recommended_loop=Loop 285 guarded DR restore runtime input injection
+next_recommended_loop=Loop 286 operator-provided runtime input handoff
 ```

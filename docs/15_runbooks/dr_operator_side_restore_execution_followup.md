@@ -380,3 +380,17 @@ restore_retry_success=not_attempted
 failure_reason=runtime_inputs_not_available_to_codex
 next_minimal_action=Loop 285 guarded DR restore runtime input injection
 ```
+
+## Loop 285 Runtime Input Injection
+
+```txt
+loop_285_status=blocked
+runtime_inputs_available_to_codex=false
+runtime_input_injection_method=blocked
+helper_preflight_status=not_run
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_available_to_codex
+dr_readiness_status=not_ready_restore_failed
+next_minimal_action=Loop 286 operator-provided runtime input handoff
+```

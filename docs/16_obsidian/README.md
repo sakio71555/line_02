@@ -122,6 +122,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 283 adds a guarded restore retry helper to resolve the executable-helper prerequisite while keeping restore execution conditional on strict preflight pass.
 - Loop 283 then blocks before restore execution because the allowed VPS git-based sync path cannot proceed from the checked working directory.
 - Loop 284 resolves that delivery blocker with non-git script-only helper delivery, confirms VPS helper validation and no-input safe block, then blocks before restore because runtime inputs are not available to Codex.
+- Loop 285 checks guarded restore runtime input availability by boolean presence only, confirms the helper remains available, then blocks before helper input preflight and restore because runtime inputs are still not available to Codex.
 
 ## .obsidian Policy
 

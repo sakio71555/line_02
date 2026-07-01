@@ -127,6 +127,19 @@ bulk_send_allowed=false
 selected_next_minimal_action=DR_backup_artifact_validation_preflight
 ```
 
+## Loop 285 Guarded Runtime Input Injection
+
+Loop 285 verifies the helper remains available and checks required runtime input names by value-hidden boolean presence only. Runtime inputs are still unavailable to Codex, so restore retry remains blocked before helper input preflight.
+
+```txt
+loop_285_status=blocked
+runtime_inputs_available_to_codex=false
+restore_retry_attempt_count=0
+dr_readiness_status=not_ready_restore_failed
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+```
+
 ## Loop 273 DR Backup Artifact Validation Preflight
 
 Loop 273 creates the sanitized artifact metadata schema and validation criteria. It does not read the artifact or execute restore. Because no sufficient sanitized operator metadata exists yet, the status is `operator_metadata_required`.
