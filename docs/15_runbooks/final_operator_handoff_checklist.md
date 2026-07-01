@@ -2348,3 +2348,31 @@ next_minimal_action=Loop 281 DR restore execution blocker resolution
 ```
 
 No secret, DB URL, artifact path, artifact filename, raw log, SQL, DB object name, role name, package name, extension name, LINE identifier, message body, or production log should be included in the operator handoff.
+
+## Loop 281 Operator-Side Restore Procedure Resolution
+
+```txt
+loop_281_status=complete
+loop_281_anti_proliferation_check=pass
+loop_281_restore_procedure_exists=true
+loop_281_restore_procedure_source=new_operator_side_template
+loop_281_restore_procedure_blocker_resolved=true
+loop_281_operator_side_execution_possible=true
+loop_281_procedure_requires_operator_secret_context=true
+loop_281_procedure_requires_operator_artifact_context=true
+loop_281_procedure_allows_single_attempt=true
+loop_281_procedure_stop_on_first_failure=true
+loop_281_procedure_retry_forbidden=true
+loop_281_restore_execution_performed=false
+loop_281_pg_restore_executed=false
+loop_281_psql_executed=false
+loop_281_supabase_connection_attempted=false
+loop_281_db_change_performed=false
+loop_281_production_go=true
+loop_281_production_go_scope=line_api_admin_current_runtime
+loop_281_production_go_scope_expanded=false
+loop_281_dr_readiness_status=not_ready_restore_failed
+loop_281_next_loop=Loop 282 conditional DR restore retry execution with resolved procedure
+```
+
+Use `docs/15_runbooks/dr_operator_side_restore_retry_procedure.md` as the operator-side procedure boundary. Do not include secrets, DB URLs, artifact details, raw logs, SQL, object names, role names, package names, extension names, dump contents, row contents, LINE identifiers, message bodies, or production logs in the handoff.

@@ -276,3 +276,37 @@ next_minimal_action=Loop 281 DR restore execution blocker resolution
 ```
 
 Loop 280 did not record secrets, DB URLs, artifact paths, artifact filenames, raw logs, SQL, object names, role names, package names, extension names, dump content, row content, LINE identifiers, message bodies, or production logs.
+
+## Loop 281 DR Restore Execution Blocker Resolution
+
+Loop 281 resolves the Loop 280 `restore_procedure_not_found` blocker by adding a concrete category-only operator-side restore retry procedure. This does not authorize Codex direct restore execution or DB access.
+
+Procedure:
+
+- [DR Operator-Side Restore Retry Procedure](dr_operator_side_restore_retry_procedure.md)
+
+```txt
+dr_restore_procedure_blocker_resolution_created=true
+restore_procedure_exists=true
+restore_procedure_source=new_operator_side_template
+restore_procedure_blocker_resolved=true
+operator_side_execution_possible=true
+procedure_requires_operator_secret_context=true
+procedure_requires_operator_artifact_context=true
+procedure_allows_single_attempt=true
+procedure_stop_on_first_failure=true
+procedure_retry_forbidden=true
+restore_execution_status=not_executed
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+next_execution_sequence_status=ready_for_operator_side_restore_execution_result
+next_minimal_action=Loop 282 conditional DR restore retry execution with resolved procedure
+```
+
+The Loop 281 procedure remains operator-side only. It must not record secrets, DB URLs, artifact paths, artifact filenames, raw logs, SQL, object names, role names, package names, extension names, dump content, row content, LINE identifiers, message bodies, or production logs.

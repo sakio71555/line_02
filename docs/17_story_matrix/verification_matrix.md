@@ -1922,6 +1922,41 @@ loop_280_restricted_actions_remain_no_go=true
 loop_280_next_loop=Loop 281 DR restore execution blocker resolution
 ```
 
+## Loop 281 Verification Note
+
+```txt
+loop_281_dr_restore_procedure_blocker_resolution_created=true
+loop_281_anti_proliferation_check=pass
+loop_281_restore_procedure_exists=true
+loop_281_restore_procedure_source=new_operator_side_template
+loop_281_restore_procedure_blocker_resolved=true
+loop_281_operator_side_execution_possible=true
+loop_281_procedure_requires_operator_secret_context=true
+loop_281_procedure_requires_operator_artifact_context=true
+loop_281_procedure_allows_single_attempt=true
+loop_281_procedure_stop_on_first_failure=true
+loop_281_procedure_retry_forbidden=true
+loop_281_restore_execution_performed=false
+loop_281_pg_restore_executed=false
+loop_281_psql_executed=false
+loop_281_supabase_connection_attempted=false
+loop_281_db_change_performed=false
+loop_281_vps_direct_work_used=false
+loop_281_raw_log_recorded=false
+loop_281_secret_recorded=false
+loop_281_db_url_recorded=false
+loop_281_artifact_path_recorded=false
+loop_281_artifact_filename_recorded=false
+loop_281_artifact_content_recorded=false
+loop_281_sql_recorded=false
+loop_281_db_object_recorded=false
+loop_281_role_recorded=false
+loop_281_package_name_recorded=false
+loop_281_extension_name_recorded=false
+loop_281_restricted_actions_remain_no_go=true
+loop_281_next_loop=Loop 282 conditional DR restore retry execution with resolved procedure
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

@@ -3565,3 +3565,27 @@ Current Loop 280 reading:
 | temporary Codex execution override | `granted_but_unused` | Blocked at restore procedure preflight. |
 | restore retry | `blocked_before_execution` | Missing concrete Codex-safe procedure. |
 | retry after failure | `no_go` | No retry and no second attempt. |
+
+## Loop 281 DR Restore Procedure Resolution
+
+Loop 281 resolves the restore procedure blocker without changing runtime production status.
+
+```txt
+loop_281_status=complete
+loop_281_restore_procedure_exists=true
+loop_281_restore_procedure_source=new_operator_side_template
+loop_281_restore_procedure_blocker_resolved=true
+loop_281_operator_side_execution_possible=true
+loop_281_restore_execution_status=not_executed
+loop_281_pg_restore_executed=false
+loop_281_psql_executed=false
+loop_281_supabase_connection_attempted=false
+loop_281_db_change_performed=false
+loop_281_production_go=true
+loop_281_production_go_scope=line_api_admin_current_runtime
+loop_281_production_go_scope_expanded=false
+loop_281_dr_readiness_status=not_ready_restore_failed
+loop_281_restricted_actions_remain_no_go=true
+```
+
+Reference: [DR Operator-Side Restore Retry Procedure](dr_operator_side_restore_retry_procedure.md).

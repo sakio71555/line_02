@@ -292,6 +292,19 @@ dr_readiness_status=not_ready_restore_failed
 selected_next_minimal_action=Loop 281 DR restore execution blocker resolution
 ```
 
+## Loop 281 DR Restore Procedure Resolution
+
+Loop 281 resolves the DR restore procedure blocker without changing production runtime or executing restore. The next DR action can use a category-only operator-side single-attempt procedure.
+
+```txt
+loop_281_restore_procedure_exists=true
+loop_281_restore_procedure_source=new_operator_side_template
+loop_281_restore_procedure_blocker_resolved=true
+loop_281_restore_execution_status=not_executed
+loop_281_dr_readiness_status=not_ready_restore_failed
+loop_281_next_loop=Loop 282 conditional DR restore retry execution with resolved procedure
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

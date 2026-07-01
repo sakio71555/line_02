@@ -297,3 +297,29 @@ production_go_scope_expanded=false
 restricted_actions_remain_no_go=true
 next_minimal_action=Loop 281 DR restore execution blocker resolution
 ```
+
+## Loop 281 DR Restore Procedure Blocker Resolution
+
+Loop 281 resolves the missing restore procedure blocker by adding a category-only operator-side procedure template. It does not execute restore or expand production Go.
+
+```txt
+dr_restore_procedure_blocker_resolution_created=true
+restore_procedure_exists=true
+restore_procedure_source=new_operator_side_template
+restore_procedure_blocker_resolved=true
+operator_side_execution_possible=true
+procedure_requires_operator_secret_context=true
+procedure_requires_operator_artifact_context=true
+procedure_allows_single_attempt=true
+procedure_stop_on_first_failure=true
+procedure_retry_forbidden=true
+restore_execution_status=not_executed
+dr_readiness_status=not_ready_restore_failed
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 282 conditional DR restore retry execution with resolved procedure
+```
+
+Reference: [DR Operator-Side Restore Retry Procedure](dr_operator_side_restore_retry_procedure.md).

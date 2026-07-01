@@ -325,3 +325,21 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 next_minimal_action=Loop 281 DR restore execution blocker resolution
 ```
+
+## Loop 281 Procedure Resolution
+
+Loop 281 adds the missing operator-side restore retry procedure and resolves the Loop 280 blocker without executing restore.
+
+```txt
+restore_procedure_exists=true
+restore_procedure_source=new_operator_side_template
+restore_procedure_blocker_resolved=true
+operator_side_execution_possible=true
+procedure_allows_single_attempt=true
+procedure_stop_on_first_failure=true
+procedure_retry_forbidden=true
+restore_execution_status=not_executed
+next_execution_sequence_status=ready_for_operator_side_restore_execution_result
+```
+
+Use [DR Operator-Side Restore Retry Procedure](dr_operator_side_restore_retry_procedure.md) before any future operator-side attempt. The procedure is category-only and keeps actual commands, values, paths, URLs, secrets, identifiers, raw logs, SQL, object names, role names, package names, extension names, dump contents, row contents, LINE identifiers, and production logs out of docs.
