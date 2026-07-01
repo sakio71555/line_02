@@ -3,7 +3,7 @@
 ## Loop
 
 ```txt
-loop=Loop 285 guarded DR restore runtime input injection
+loop=Loop 286 operator-provided runtime input handoff
 status=blocked
 ```
 
@@ -13,12 +13,13 @@ status=blocked
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=guarded_runtime_input_injection_and_optional_restore
+forward_progress_type=operator_runtime_input_handoff_and_optional_restore
 next_loop_requires_new_operator_input=true
 vps_helper_available=true
 vps_helper_bash_validation_status=pass
 vps_helper_no_input_preflight_status=blocked_safely
 runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
 runtime_input_injection_method=blocked
 restore_target_scope_input_present=false
 restore_confirm_input_present=false
@@ -42,7 +43,7 @@ restore_tool_selected=none
 operator_side_restore_retry_execution_status=not_attempted
 restore_retry_attempt_count=0
 restore_retry_success=not_attempted
-failure_reason=runtime_inputs_not_available_to_codex
+failure_reason=runtime_inputs_not_provided_by_operator
 restore_retry_retry_executed=false
 pg_restore_executed=false
 psql_executed=false
@@ -78,11 +79,11 @@ line_api_response_body_recorded=false
 ## Notes
 
 - Runtime input values were never displayed or recorded.
-- Restore retry was not attempted because required runtime inputs were not available to Codex.
-- Loop 285 stops here and does not auto-start Loop 286.
+- Restore retry was not attempted because the operator-provided runtime input handoff was not present.
+- Loop 286 stops here and does not auto-start Loop 287.
 
 ## Next Candidate
 
 ```txt
-next_recommended_loop=Loop 286 operator-provided runtime input handoff
+next_recommended_loop=Loop 287 operator runtime input execution
 ```

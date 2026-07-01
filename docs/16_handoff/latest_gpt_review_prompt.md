@@ -17,14 +17,15 @@
 ## Review Target
 
 ```txt
-loop=Loop 285 guarded DR restore runtime input injection
+loop=Loop 286 operator-provided runtime input handoff
 status=blocked
-blocked_reason=runtime_inputs_not_available_to_codex
+blocked_reason=runtime_inputs_not_provided_by_operator
 anti_proliferation_check=pass
 vps_helper_available=true
 vps_helper_bash_validation_status=pass
 vps_helper_no_input_preflight_status=blocked_safely
 runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
 runtime_input_injection_method=blocked
 helper_preflight_status=not_run
 restore_retry_attempt_count=0
@@ -37,7 +38,7 @@ production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
-next_recommended_loop=Loop 286 operator-provided runtime input handoff
+next_recommended_loop=Loop 287 operator runtime input execution
 ```
 
 ## Safety Boundary

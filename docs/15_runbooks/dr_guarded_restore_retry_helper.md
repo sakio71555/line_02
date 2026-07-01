@@ -140,6 +140,35 @@ db_change_performed=false
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 286 Operator Runtime Input Handoff Result
+
+```txt
+loop_286_status=blocked
+anti_proliferation_check=pass
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+vps_helper_no_input_preflight_status=blocked_safely
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+restore_target_scope_input_present=false
+restore_confirm_input_present=false
+db_url_input_present=false
+artifact_path_input_present=false
+restore_tool_input_present=false
+psql_allow_input_present=false
+helper_preflight_status=not_run
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 284 VPS Helper Delivery Result
 
 ```txt

@@ -2446,6 +2446,31 @@ dr_readiness_status=not_ready_restore_failed
 next_recommended_loop=Loop 286 operator-provided runtime input handoff
 ```
 
+## Loop 286 Result Handoff
+
+```txt
+loop_286_status=blocked
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+vps_helper_no_input_preflight_status=blocked_safely
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+dr_readiness_status=not_ready_restore_failed
+next_recommended_loop=Loop 287 operator runtime input execution
+```
+
 ## Loop 284 Result Handoff
 
 ```txt

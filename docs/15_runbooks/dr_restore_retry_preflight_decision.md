@@ -351,3 +351,20 @@ restore_retry_success=not_attempted
 failure_reason=runtime_inputs_not_available_to_codex
 next_recommended_loop=Loop 286 operator-provided runtime input handoff
 ```
+
+## Loop 286 Result
+
+```txt
+loop_286_status=blocked
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+helper_preflight_status=not_run
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+restore_tool_selected=none
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+next_recommended_loop=Loop 287 operator runtime input execution
+```

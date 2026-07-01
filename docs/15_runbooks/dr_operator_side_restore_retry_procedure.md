@@ -237,3 +237,17 @@ restore_retry_success=not_attempted
 failure_reason=runtime_inputs_not_available_to_codex
 next_minimal_action=Loop 286 operator-provided runtime input handoff
 ```
+
+## Loop 286 Runtime Input Handoff Status
+
+```txt
+loop_286_status=blocked
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+next_minimal_action=Loop 287 operator runtime input execution
+```

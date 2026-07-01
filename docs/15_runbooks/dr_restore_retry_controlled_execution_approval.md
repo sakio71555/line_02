@@ -380,6 +380,22 @@ codex_direct_artifact_path_internal_use_allowed=true_if_required_but_never_outpu
 production_go_scope_expanded=false
 ```
 
+## Loop 286 Result
+
+```txt
+loop_286_status=blocked
+temporary_codex_direct_restore_execution_override_used=false
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+retry_allowed=false
+stop_on_first_failure=true
+production_go_scope_expanded=false
+```
+
 ## Loop 285 Result
 
 ```txt
