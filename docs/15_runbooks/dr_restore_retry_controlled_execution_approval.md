@@ -248,3 +248,27 @@ package_name_recorded=false
 extension_name_recorded=false
 next_minimal_action=Loop 278 operator-side restore execution followup
 ```
+
+## Loop 278 Operator-Side Restore Execution Followup
+
+Loop 278 prepares the final operator-side execution followup after Loop 277 recorded `not_attempted`. It still does not execute restore and keeps actual execution behind a separate operator approval decision.
+
+```txt
+operator_side_restore_execution_followup_created=true
+operator_restore_followup_decision=prepare_operator_side_restore_execution_runbook_only
+approval_scope=operator_side_restore_execution_followup_only
+approval_block_required_before_actual_restore_execution=true
+restore_execution_allowed_in_loop_278=false
+pg_restore_allowed_in_loop_278=false
+psql_allowed_in_loop_278=false
+supabase_connection_allowed_in_loop_278=false
+db_change_allowed_in_loop_278=false
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+actual_restore_execution_requires_next_operator_approval=true
+production_go_unchanged=true
+production_go_scope_expanded=false
+next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
+```
+
+Use [DR Operator-Side Restore Execution Followup](dr_operator_side_restore_execution_followup.md) as the followup runbook for the final approval decision.

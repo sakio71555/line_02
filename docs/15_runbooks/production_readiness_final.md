@@ -370,6 +370,50 @@ Current Loop 277 reading:
 | DR readiness | `not_ready_restore_failed` | Known risk remains accepted. |
 | retry policy | `no_retry_executed` | No retry was attempted or authorized. |
 
+## Loop 278 Current Status Override
+
+Loop 278 prepares the operator-side restore execution followup. Production Go remains unchanged, and actual restore execution remains disallowed in Loop 278.
+
+```txt
+loop_278_current_status_override=true
+operator_side_restore_execution_followup_created=true
+operator_restore_followup_decision=prepare_operator_side_restore_execution_runbook_only
+approval_scope=operator_side_restore_execution_followup_only
+approval_block_required_before_actual_restore_execution=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_execution_allowed_in_loop_278=false
+pg_restore_allowed_in_loop_278=false
+psql_allowed_in_loop_278=false
+supabase_connection_allowed_in_loop_278=false
+db_change_allowed_in_loop_278=false
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+actual_restore_execution_requires_next_operator_approval=true
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
+```
+
+Current Loop 278 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR artifact validation | `pass` | Sanitized artifact validation remains selected. |
+| operator-side execution followup | `prepared` | Approval decision block and sanitized result block are ready. |
+| restore execution in Loop 278 | `no_go` | Actual execution requires Loop 279 approval. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains accepted. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

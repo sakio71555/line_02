@@ -65,6 +65,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-055 | DR restore retry preflight decision | docs-only review of restore retry requirements, option comparison, and operator approval package | operator-side restore preflight selected, execution remains No-Go, Loop 276 operator decision required | true | false | false | false | false | false | false | false | pending_loop_275_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, or OpenAI execution. |
 | V-056 | DR restore retry controlled execution approval | docs-only controlled execution approval package | operator-side one-attempt approval package prepared, execution remains No-Go in Loop 276, Loop 277 operator-side execution required | true | false | false | false | false | false | false | false | pending_loop_276_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
 | V-057 | Operator-side DR restore retry result intake | docs-only sanitized result intake | operator-side result recorded as not_attempted, restore still not run, DR readiness unchanged | true | false | false | false | false | false | false | false | pending_loop_277_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
+| V-058 | Operator-side restore execution followup | docs-only followup runbook and approval block | operator-side execution followup prepared, actual restore still disallowed in Loop 278 | true | false | false | false | false | false | false | false | pending_loop_278_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1855,6 +1856,36 @@ loop_277_package_name_recorded=false
 loop_277_extension_name_recorded=false
 loop_277_restricted_actions_remain_no_go=true
 loop_277_next_loop=Loop 278 operator-side restore execution followup
+```
+
+## Loop 278 Verification Note
+
+```txt
+loop_278_operator_side_restore_execution_followup_created=true
+loop_278_anti_proliferation_check=pass
+loop_278_is_this_loop_proliferation_risk=false
+loop_278_forward_progress_type=operator_side_restore_execution_followup
+loop_278_production_go=true
+loop_278_production_go_scope=line_api_admin_current_runtime
+loop_278_production_go_scope_expanded=false
+loop_278_post_go_monitoring_status=pass
+loop_278_dr_readiness_status=not_ready_restore_failed
+loop_278_dr_risk_acceptance_status=accepted_with_known_risk
+loop_278_dr_artifact_validation_preflight_status=pass
+loop_278_operator_side_restore_retry_execution_status=not_attempted
+loop_278_restore_retry_attempt_count=0
+loop_278_restore_retry_success=not_attempted
+loop_278_operator_restore_followup_decision=prepare_operator_side_restore_execution_runbook_only
+loop_278_approval_block_required_before_actual_restore_execution=true
+loop_278_restore_execution_allowed_in_loop_278=false
+loop_278_pg_restore_allowed_in_loop_278=false
+loop_278_psql_allowed_in_loop_278=false
+loop_278_supabase_connection_allowed_in_loop_278=false
+loop_278_db_change_allowed_in_loop_278=false
+loop_278_codex_direct_restore_execution_allowed=false
+loop_278_codex_direct_db_access_allowed=false
+loop_278_restricted_actions_remain_no_go=true
+loop_278_next_loop=Loop 279 operator-side DR restore retry execution approval decision
 ```
 
 ## Stage 2 Rule

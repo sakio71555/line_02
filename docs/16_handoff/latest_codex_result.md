@@ -2,7 +2,7 @@
 
 ## Loop
 
-Loop 277: operator-side DR restore retry result intake
+Loop 278: operator-side restore execution followup
 
 ## Status
 
@@ -11,13 +11,13 @@ loop_status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=operator_side_restore_result_intake
+forward_progress_type=operator_side_restore_execution_followup
 next_loop_requires_new_operator_input=true
 ```
 
 ## Summary
 
-Loop 277 recorded the operator-side controlled DR restore retry result as sanitized metadata. The result was `not_attempted`, so no restore retry ran and DR readiness remains incomplete.
+Loop 278 created the operator-side restore execution followup after Loop 277 recorded `not_attempted`. It prepares the final approval decision block, category-only operator-side steps, sanitized result blocks, and execution boundaries for a later Loop.
 
 No restore, restore retry, `pg_restore`, `psql`, Supabase connection, DB/schema/role/extension/cluster change, package/apt operation, VPS action, Nginx/DNS/HTTPS/certbot operation, service restart, LINE send, OpenAI call, runtime code, package, or config change was executed by Codex.
 
@@ -35,48 +35,52 @@ post_go_monitoring_status=pass
 dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
 dr_artifact_validation_preflight_status=pass
-restricted_actions_remain_no_go=true
-```
-
-## Operator-Side Restore Result
-
-```txt
-operator_side_restore_result_intake_created=true
-operator_side_restore_result_provided=true
 operator_side_restore_retry_execution_status=not_attempted
 restore_retry_attempt_count=0
 restore_retry_success=not_attempted
-failure_reason=operator_side_restore_not_run
-restore_retry_retry_executed=false
-pg_restore_executed=false
-psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
-raw_log_recorded=false
-secret_recorded=false
-db_url_recorded=false
-artifact_path_recorded=false
-artifact_filename_recorded=false
-artifact_content_recorded=false
-sql_recorded=false
-db_object_recorded=false
-role_recorded=false
-package_name_recorded=false
-extension_name_recorded=false
-production_go_unchanged=true
+restricted_actions_remain_no_go=true
 ```
 
-## Classification
+## Operator-Side Restore Execution Followup
 
 ```txt
-dr_restore_retry_status=not_attempted
-next_execution_sequence_status=operator_side_execution_still_required
-retry_without_new_approval=no_go
-production_go_scope_expanded=false
+operator_side_restore_execution_followup_created=true
+operator_restore_followup_decision=prepare_operator_side_restore_execution_runbook_only
+approval_scope=operator_side_restore_execution_followup_only
+approval_block_required_before_actual_restore_execution=true
+restore_execution_allowed_in_loop_278=false
+pg_restore_allowed_in_loop_278=false
+psql_allowed_in_loop_278=false
+supabase_connection_allowed_in_loop_278=false
+db_change_allowed_in_loop_278=false
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+actual_restore_execution_requires_next_operator_approval=true
+```
+
+## Approval Choices For Next Loop
+
+```txt
+approval_decision=approve_operator_side_dr_restore_retry_execution_once
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+stop_on_first_failure=true
+retry_allowed=false
+sanitized_result_required=true
+```
+
+or
+
+```txt
+approval_decision=defer_operator_side_dr_restore_retry_execution
+approval_scope=none
+restore_execution_allowed=false
+production_go_unchanged=true
+dr_risk_acceptance_status=accepted_with_known_risk
 ```
 
 ## Next
 
 ```txt
-next_recommended_loop=Loop 278 operator-side restore execution followup
+next_recommended_loop=Loop 279 operator-side DR restore retry execution approval decision
 ```

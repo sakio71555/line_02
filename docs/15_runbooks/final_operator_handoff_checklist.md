@@ -314,6 +314,45 @@ Operator handoff:
 - Keep the one-attempt limit, no retry without new approval, and sanitized-result-only reporting.
 - Do not share DB URL, secret, artifact path, artifact filename, exact size, hash/checksum value, raw output, SQL, object names, role names, dump content, row content, LINE identifiers, message bodies, or production logs.
 
+## Loop 278 Current Status Override
+
+Loop 278 prepares the operator-side restore execution followup. Actual restore execution remains disallowed in this Loop and requires a separate operator approval decision.
+
+```txt
+loop_278_current_status_override=true
+operator_side_restore_execution_followup_created=true
+operator_restore_followup_decision=prepare_operator_side_restore_execution_runbook_only
+approval_scope=operator_side_restore_execution_followup_only
+approval_block_required_before_actual_restore_execution=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_execution_allowed_in_loop_278=false
+pg_restore_allowed_in_loop_278=false
+psql_allowed_in_loop_278=false
+supabase_connection_allowed_in_loop_278=false
+db_change_allowed_in_loop_278=false
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+actual_restore_execution_requires_next_operator_approval=true
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
+```
+
+Operator handoff:
+
+- Choose `approve_operator_side_dr_restore_retry_execution_once` only if actual operator-side execution is intended.
+- Choose `defer_operator_side_dr_restore_retry_execution` if DR restore retry remains deferred.
+- Keep actual secrets, DB connection details, artifact details, and raw restore output outside chat, docs, Git, and Codex output.
+- Return only the sanitized success, failed-no-retry, or not-attempted template after any future operator-side action.
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation as the target-control proof model, selected the existing internal CLI one-message category, and ran only dry-run route preflight. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

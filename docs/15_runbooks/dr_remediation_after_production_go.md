@@ -74,9 +74,9 @@ The production Go decision is not a DR completion signal. DR should be resumed o
 ```txt
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 recommended_strategy_reason=lowest_risk_next_step_after_post_go_monitoring_pass
-next_recommended_loop=Loop 278 operator-side restore execution followup
+next_recommended_loop=Loop 279 operator-side DR restore retry execution approval decision
 dr_next_operator_decision_required=true
-next_minimal_action=Loop 278 operator-side restore execution followup
+next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
 ```
 
 Loop 273 completed the preflight contract and initially required sanitized operator artifact metadata. Loop 274 then supplied and validated the metadata, so the current DR step is operator-side restore retry approval, not restore execution by Codex.
@@ -168,6 +168,25 @@ loop_277_dr_risk_acceptance_status=accepted_with_known_risk
 loop_277_production_go_unchanged=true
 loop_277_production_go_scope_expanded=false
 loop_277_next_minimal_action=Loop 278 operator-side restore execution followup
+```
+
+Loop 278 prepared the operator-side restore execution followup. Actual restore execution remains disallowed in Loop 278 and now requires a separate Loop 279 operator approval decision.
+
+```txt
+loop_278_operator_side_restore_execution_followup_created=true
+loop_278_operator_restore_followup_decision=prepare_operator_side_restore_execution_runbook_only
+loop_278_approval_block_required_before_actual_restore_execution=true
+loop_278_restore_execution_allowed=false
+loop_278_pg_restore_allowed=false
+loop_278_psql_allowed=false
+loop_278_supabase_connection_allowed=false
+loop_278_db_change_allowed=false
+loop_278_codex_direct_restore_execution_allowed=false
+loop_278_codex_direct_db_access_allowed=false
+loop_278_actual_restore_execution_requires_next_operator_approval=true
+loop_278_production_go_unchanged=true
+loop_278_production_go_scope_expanded=false
+loop_278_next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
 ```
 
 ## Artifact And Secret Policy

@@ -635,6 +635,8 @@ Loop 276 DR restore retry controlled execution approvalでは、Loop 275のopera
 
 Loop 277 operator-side DR restore retry result intakeでは、operator-side sanitized resultを `not_attempted` として記録しました。restore retryは未実行のため、DR readinessは `not_ready_restore_failed` のまま、production Go scopeは `line_api_admin_current_runtime` のままです。restore、pg_restore、psql、Supabase、DB変更、artifact path/name/content/hash/exact size、raw log、secret、VPS direct workは行っていません。詳細は [Loop 277 task doc](docs/11_codex_tasks/277_operator_side_dr_restore_retry_result_intake.md) と [DR restore retry controlled execution approval](docs/15_runbooks/dr_restore_retry_controlled_execution_approval.md) を参照してください。次は `Loop 278: operator-side restore execution followup` です。
 
+Loop 278 operator-side restore execution followupでは、Loop 277の `not_attempted` を受けて、次にoperator-side実行判断へ進むためのfollowup runbook、approval block、sanitized result block、execution boundaryをdocs-onlyで整理しました。Loop 278ではrestore、pg_restore、psql、Supabase、DB変更、artifact path/name/content/hash/exact size、raw log、secret、VPS direct workは行っていません。詳細は [Loop 278 task doc](docs/11_codex_tasks/278_operator_side_restore_execution_followup.md) と [DR operator-side restore execution followup](docs/15_runbooks/dr_operator_side_restore_execution_followup.md) を参照してください。次は `Loop 279: operator-side DR restore retry execution approval decision` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

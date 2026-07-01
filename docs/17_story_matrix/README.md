@@ -219,6 +219,33 @@ dr_readiness_status=not_ready_restore_failed
 selected_next_minimal_action=Loop 278 operator-side restore execution followup
 ```
 
+## Loop 278 Operator-Side Restore Execution Followup
+
+Loop 278 prepares the operator-side restore execution followup. Actual restore execution remains disallowed in Loop 278 and requires a separate Loop 279 approval decision.
+
+```txt
+operator_side_restore_execution_followup_created=true
+operator_restore_followup_decision=prepare_operator_side_restore_execution_runbook_only
+approval_block_required_before_actual_restore_execution=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_artifact_validation_preflight_status=pass
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_execution_allowed_in_loop_278=false
+pg_restore_allowed_in_loop_278=false
+psql_allowed_in_loop_278=false
+supabase_connection_allowed_in_loop_278=false
+db_change_allowed_in_loop_278=false
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+selected_next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.
