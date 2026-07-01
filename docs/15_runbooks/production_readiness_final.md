@@ -3523,3 +3523,45 @@ Current Loop 279 reading:
 | Codex direct restore | `no_go` | Codex must not execute restore or `pg_restore`. |
 | Codex direct DB access | `no_go` | Codex must not run `psql` or connect to Supabase. |
 | Retry after failure | `no_go` | Requires new explicit approval. |
+
+## Loop 280 Current Status Override
+
+Loop 280 consumed a one-time operator override for conditional Codex-managed DR restore retry execution. The override was not used because the runbook preflight did not find a concrete Codex-safe restore procedure. Production Go remains scoped to the current LINE/API/Admin runtime.
+
+```txt
+loop_280_current_status_override=true
+loop_280_status=blocked
+temporary_codex_direct_restore_execution_override_granted=true
+temporary_codex_direct_restore_execution_override_used=false
+restore_procedure_exists=false
+restore_retry_execution_status=blocked_before_execution
+blocked_reason=restore_procedure_not_found
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_artifact_validation_preflight_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 281 DR restore execution blocker resolution
+```
+
+Current Loop 280 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| DR readiness | `not_ready_restore_failed` | Restore did not run. |
+| temporary Codex execution override | `granted_but_unused` | Blocked at restore procedure preflight. |
+| restore retry | `blocked_before_execution` | Missing concrete Codex-safe procedure. |
+| retry after failure | `no_go` | No retry and no second attempt. |

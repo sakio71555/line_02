@@ -246,3 +246,33 @@ next_minimal_action=Loop 280 operator-side DR restore retry execution result int
 ```
 
 Operator-side execution remains constrained to one attempt. The next Codex Loop may only intake a sanitized result block.
+
+## Loop 280 Conditional Codex-Managed Restore Retry Execution
+
+Loop 280 consumed a temporary one-time operator override that would have allowed Codex-managed restore execution only if all strict preflight conditions passed. The override was not exercised because the reviewed runbooks did not contain a concrete Codex-safe restore procedure.
+
+```txt
+loop_280_status=blocked
+anti_proliferation_check=pass
+temporary_codex_direct_restore_execution_override_granted=true
+temporary_codex_direct_restore_execution_override_used=false
+restore_procedure_exists=false
+restore_retry_execution_status=blocked_before_execution
+blocked_reason=restore_procedure_not_found
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=restore_procedure_not_found
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go_unchanged=true
+production_go_scope_expanded=false
+dr_restore_retry_status=blocked_before_execution
+dr_readiness_status=not_ready_restore_failed
+next_minimal_action=Loop 281 DR restore execution blocker resolution
+```
+
+Loop 280 did not record secrets, DB URLs, artifact paths, artifact filenames, raw logs, SQL, object names, role names, package names, extension names, dump content, row content, LINE identifiers, message bodies, or production logs.

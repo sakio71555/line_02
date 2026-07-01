@@ -67,6 +67,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-057 | Operator-side DR restore retry result intake | docs-only sanitized result intake | operator-side result recorded as not_attempted, restore still not run, DR readiness unchanged | true | false | false | false | false | false | false | false | pending_loop_277_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
 | V-058 | Operator-side restore execution followup | docs-only followup runbook and approval block | operator-side execution followup prepared, actual restore still disallowed in Loop 278 | true | false | false | false | false | false | false | false | pending_loop_278_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
 | V-059 | Operator-side DR restore retry execution approval decision | docs-only approval decision intake | one operator-side attempt approved for next result-intake sequence, Codex direct restore/DB access remains No-Go | true | false | false | false | false | false | false | false | pending_loop_279_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
+| V-060 | Conditional DR restore retry execution | runbook preflight and sanitized blocked result | conditional Codex execution override granted but unused; blocked before execution because restore procedure was not found | true | false | false | false | false | false | false | false | pending_loop_280_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or service restart. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1887,6 +1888,38 @@ loop_278_codex_direct_restore_execution_allowed=false
 loop_278_codex_direct_db_access_allowed=false
 loop_278_restricted_actions_remain_no_go=true
 loop_278_next_loop=Loop 279 operator-side DR restore retry execution approval decision
+```
+
+## Loop 280 Verification Note
+
+```txt
+loop_280_status=blocked
+loop_280_anti_proliferation_check=pass
+loop_280_temporary_codex_direct_restore_execution_override_granted=true
+loop_280_temporary_codex_direct_restore_execution_override_used=false
+loop_280_restore_procedure_exists=false
+loop_280_restore_retry_execution_status=blocked_before_execution
+loop_280_blocked_reason=restore_procedure_not_found
+loop_280_operator_side_restore_retry_execution_status=not_attempted
+loop_280_restore_retry_attempt_count=0
+loop_280_restore_retry_success=not_attempted
+loop_280_pg_restore_executed=false
+loop_280_psql_executed=false
+loop_280_supabase_connection_attempted=false
+loop_280_db_change_performed=false
+loop_280_raw_log_recorded=false
+loop_280_secret_recorded=false
+loop_280_db_url_recorded=false
+loop_280_artifact_path_recorded=false
+loop_280_artifact_filename_recorded=false
+loop_280_artifact_content_recorded=false
+loop_280_sql_recorded=false
+loop_280_db_object_recorded=false
+loop_280_role_recorded=false
+loop_280_package_name_recorded=false
+loop_280_extension_name_recorded=false
+loop_280_restricted_actions_remain_no_go=true
+loop_280_next_loop=Loop 281 DR restore execution blocker resolution
 ```
 
 ## Stage 2 Rule

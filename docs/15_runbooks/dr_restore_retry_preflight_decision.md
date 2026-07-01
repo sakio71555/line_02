@@ -253,3 +253,30 @@ production_go_unchanged=true
 production_go_scope_expanded=false
 next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
 ```
+
+## Loop 280 Conditional Codex-Managed Restore Retry Execution
+
+Loop 280 changed the immediate execution mode for this one Loop only: the operator temporarily allowed Codex-managed execution if every strict preflight passed. The restore did not run because the preflight found no concrete Codex-safe restore procedure in the reviewed runbooks.
+
+```txt
+loop_280_status=blocked
+temporary_codex_direct_restore_execution_override_granted=true
+temporary_codex_direct_restore_execution_override_used=false
+restore_procedure_exists=false
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+operator_secret_context_available=not_checked_restore_procedure_blocked
+selected_artifact_candidate=not_checked_restore_procedure_blocked
+restore_retry_execution_status=blocked_before_execution
+blocked_reason=restore_procedure_not_found
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+next_minimal_action=Loop 281 DR restore execution blocker resolution
+```

@@ -272,6 +272,26 @@ retry_allowed=false
 selected_next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
 ```
 
+## Loop 280 Conditional DR Restore Retry Execution
+
+Loop 280 consumed the one-time conditional Codex execution override and blocked before restore execution because the reviewed runbooks did not contain a concrete Codex-safe restore procedure.
+
+```txt
+loop_280_status=blocked
+temporary_codex_direct_restore_execution_override_used=false
+restore_procedure_exists=false
+restore_retry_execution_status=blocked_before_execution
+blocked_reason=restore_procedure_not_found
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+selected_next_minimal_action=Loop 281 DR restore execution blocker resolution
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

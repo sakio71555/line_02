@@ -296,3 +296,32 @@ next_minimal_action=Loop 280 operator-side DR restore retry execution result int
 ```
 
 The next Loop should record only sanitized operator-side execution results. It must not record secrets, DB URLs, artifact paths, artifact filenames, raw logs, SQL, DB object names, role names, package names, extension names, LINE identifiers, message bodies, or production logs.
+
+## Loop 280 Conditional Codex-Managed Restore Retry Execution
+
+Loop 280 received a one-time operator override for conditional Codex-managed restore retry execution, but stopped at preflight because no concrete Codex-safe restore procedure was available in the reviewed runbooks.
+
+```txt
+loop_280_status=blocked
+operator_restore_execution_decision=approved
+temporary_codex_direct_restore_execution_override_granted=true
+temporary_codex_direct_restore_execution_override_used=false
+restore_retry_attempt_limit=1
+stop_on_first_failure=true
+retry_allowed=false
+restore_procedure_exists=false
+restore_retry_execution_status=blocked_before_execution
+blocked_reason=restore_procedure_not_found
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=restore_procedure_not_found
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go_unchanged=true
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+next_minimal_action=Loop 281 DR restore execution blocker resolution
+```

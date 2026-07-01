@@ -2321,3 +2321,30 @@ Operator handoff:
 - Return only sanitized result metadata in the next Loop.
 - Do not share secrets, DB URLs, artifact paths or filenames, raw logs, SQL, DB object names, role names, package names, extension names, LINE identifiers, message bodies, or production logs.
 - Do not ask Codex to execute restore, run `pg_restore`, run `psql`, connect to Supabase, or change DB state.
+
+## Loop 280 Conditional DR Restore Retry Execution
+
+```txt
+loop_280_status=blocked
+temporary_codex_direct_restore_execution_override_granted=true
+temporary_codex_direct_restore_execution_override_used=false
+restore_procedure_exists=false
+restore_retry_execution_status=blocked_before_execution
+blocked_reason=restore_procedure_not_found
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 281 DR restore execution blocker resolution
+```
+
+No secret, DB URL, artifact path, artifact filename, raw log, SQL, DB object name, role name, package name, extension name, LINE identifier, message body, or production log should be included in the operator handoff.

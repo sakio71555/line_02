@@ -273,3 +273,27 @@ dr_risk_acceptance_status=accepted_with_known_risk
 ```
 
 Any future execution Loop must explicitly restate the No-Go boundaries and require a clean git state before work begins.
+
+## Loop 280 Conditional Restore Execution Blocked
+
+Loop 280 consumed a one-time conditional Codex execution override and stopped before restore execution because the reviewed runbooks did not provide a concrete Codex-safe restore procedure.
+
+```txt
+loop_280_status=blocked
+restore_retry_execution_status=blocked_before_execution
+blocked_reason=restore_procedure_not_found
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 281 DR restore execution blocker resolution
+```

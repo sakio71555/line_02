@@ -1,14 +1,14 @@
 # Production Vs DR Readiness Matrix
 
-This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution. Loop 272 reviews the DR strategy and selects backup artifact validation preflight before restore retry. Loop 273 creates the artifact metadata schema and records that operator metadata is required before validation can pass. Loop 274 validates sanitized operator metadata as pass while keeping restore execution blocked. Loop 275 creates the restore retry preflight decision package and selects operator-side controlled restore retry approval as the next operator decision. Loop 276 creates that approval package while keeping execution disallowed in Loop 276. Loop 277 records the operator-side result as not attempted. Loop 278 prepares the operator-side execution followup and keeps actual restore execution behind a separate approval decision. Loop 279 records the operator decision as approved for one operator-side DR restore retry attempt and keeps Codex direct restore/DB access forbidden.
+This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution. Loop 272 reviews the DR strategy and selects backup artifact validation preflight before restore retry. Loop 273 creates the artifact metadata schema and records that operator metadata is required before validation can pass. Loop 274 validates sanitized operator metadata as pass while keeping restore execution blocked. Loop 275 creates the restore retry preflight decision package and selects operator-side controlled restore retry approval as the next operator decision. Loop 276 creates that approval package while keeping execution disallowed in Loop 276. Loop 277 records the operator-side result as not attempted. Loop 278 prepares the operator-side execution followup and keeps actual restore execution behind a separate approval decision. Loop 279 records the operator decision as approved for one operator-side DR restore retry attempt and keeps Codex direct restore/DB access forbidden. Loop 280 consumes a one-time conditional Codex execution override and blocks before restore because no concrete Codex-safe procedure exists.
 
 | area | status | reason_scope | evidence | next_review | go_status |
 | --- | --- | --- | --- | --- | --- |
-| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md`, `docs/15_runbooks/dr_backup_artifact_validation_preflight.md`, `docs/15_runbooks/dr_restore_retry_preflight_decision.md`, `docs/15_runbooks/dr_restore_retry_controlled_execution_approval.md`, `docs/15_runbooks/dr_operator_side_restore_execution_followup.md`, `docs/11_codex_tasks/279_operator_side_dr_restore_retry_execution_approval_decision.md` | Loop 280 operator-side DR restore retry execution result intake | Known risk accepted |
+| DR readiness | `not_ready_restore_failed` | restore retry blocked before execution because no concrete Codex-safe procedure exists | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md`, `docs/15_runbooks/dr_backup_artifact_validation_preflight.md`, `docs/15_runbooks/dr_restore_retry_preflight_decision.md`, `docs/15_runbooks/dr_restore_retry_controlled_execution_approval.md`, `docs/15_runbooks/dr_operator_side_restore_execution_followup.md`, `docs/11_codex_tasks/279_operator_side_dr_restore_retry_execution_approval_decision.md`, `docs/11_codex_tasks/280_conditional_dr_restore_retry_execution.md` | Loop 281 DR restore execution blocker resolution | Known risk accepted |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 280 operator-side DR restore retry execution result intake | Included in current runtime Go |
-| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 280 operator-side DR restore retry execution result intake | Go for current runtime |
-| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 280 operator-side DR restore retry execution result intake | `production_go` scoped |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 281 DR restore execution blocker resolution | Included in current runtime Go |
+| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 281 DR restore execution blocker resolution | Go for current runtime |
+| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 281 DR restore execution blocker resolution | `production_go` scoped |
 
 ## Current State
 
@@ -520,6 +520,41 @@ loop_279_stop_on_first_failure=true
 loop_279_retry_allowed=false
 loop_279_restricted_actions_remain_no_go=true
 loop_279_next_loop=Loop 280 operator-side DR restore retry execution result intake
+```
+
+## Loop 280 Conditional DR Restore Retry Execution
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | Consumed the execution approval and performed preflight, not another approval gate. |
+| Production Go | `unchanged` | Still scoped to current LINE/API/Admin runtime. |
+| Temporary Codex execution override | `granted_but_unused` | Blocked before execution. |
+| Restore procedure | `not_found` | Reviewed runbooks lack a concrete Codex-safe procedure. |
+| Restore retry | `blocked_before_execution` | No attempt was made. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains accepted. |
+| Next action | `selected` | Loop 281 DR restore execution blocker resolution. |
+
+```txt
+loop_280_status=blocked
+loop_280_anti_proliferation_check=pass
+loop_280_temporary_codex_direct_restore_execution_override_granted=true
+loop_280_temporary_codex_direct_restore_execution_override_used=false
+loop_280_restore_procedure_exists=false
+loop_280_restore_retry_execution_status=blocked_before_execution
+loop_280_blocked_reason=restore_procedure_not_found
+loop_280_operator_side_restore_retry_execution_status=not_attempted
+loop_280_restore_retry_attempt_count=0
+loop_280_restore_retry_success=not_attempted
+loop_280_pg_restore_executed=false
+loop_280_psql_executed=false
+loop_280_supabase_connection_attempted=false
+loop_280_db_change_performed=false
+loop_280_production_go=true
+loop_280_production_go_scope=line_api_admin_current_runtime
+loop_280_production_go_scope_expanded=false
+loop_280_dr_readiness_status=not_ready_restore_failed
+loop_280_restricted_actions_remain_no_go=true
+loop_280_next_loop=Loop 281 DR restore execution blocker resolution
 ```
 
 ## Loop 271 Post-Go Monitoring Review

@@ -113,6 +113,7 @@
 - Loop 278 operator-side restore execution followup: `11_codex_tasks/278_operator_side_restore_execution_followup.md`
 - DR operator-side restore execution followup runbook: `15_runbooks/dr_operator_side_restore_execution_followup.md`
 - Loop 279 operator-side DR restore retry execution approval decision: `11_codex_tasks/279_operator_side_dr_restore_retry_execution_approval_decision.md`
+- Loop 280 conditional Codex-managed DR restore retry execution: `11_codex_tasks/280_conditional_dr_restore_retry_execution.md`
 
 ## Prompts and Templates
 

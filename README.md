@@ -132,6 +132,8 @@ Loop 214ではCodex作業結果をChatGPTへレビュー依頼するためのhan
 
 Loop 279ではoperator-side DR restore retry execution approval decisionを記録しました。1回だけoperator-sideでrestore retryを実行できる承認をsanitizedに残し、Codex direct restore/DB accessは引き続き禁止しています。詳細は [docs/11_codex_tasks/279_operator_side_dr_restore_retry_execution_approval_decision.md](docs/11_codex_tasks/279_operator_side_dr_restore_retry_execution_approval_decision.md) を参照してください。
 
+Loop 280ではconditional Codex-managed DR restore retry executionをpreflightし、具体的なCodex-safe restore procedureが見つからなかったためrestore実行前にblockedとして記録しました。restore、pg_restore、psql、Supabase接続、DB変更、secret/raw log/artifact詳細の記録は行っていません。詳細は [docs/11_codex_tasks/280_conditional_dr_restore_retry_execution.md](docs/11_codex_tasks/280_conditional_dr_restore_retry_execution.md) を参照してください。
+
 Loop 252ではclassifier / package / restore routeを凍結したまま、DR readinessとapp production path readinessを分離してレビューしました。`production_no_go=true` は維持し、次の最小作業をlocal production start verification checklist executionへ寄せています。詳細は [docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md](docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md) と [docs/17_story_matrix/production_vs_dr_readiness_matrix.md](docs/17_story_matrix/production_vs_dr_readiness_matrix.md) を参照してください。
 
 Loop 253ではlocal-only production start verification checklistを実行し、API/Admin build、127.0.0.1限定のlocal start、local curl、process停止確認がpassしました。外部API、Supabase、VPS、Nginx、DNS、HTTPS、DB変更、secret表示は行わず、`production_no_go=true` と `dr_readiness_status=not_ready_restore_failed` は維持しています。詳細は [docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md](docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md) を参照してください。
