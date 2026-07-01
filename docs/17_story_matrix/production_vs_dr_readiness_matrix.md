@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 266 line runtime permission gate without message send | Not final Go |
-| External runtime readiness | `line_runtime_permission_gate_required` | Loop 265 records line runtime env category present; runtime permission remains separate | `docs/11_codex_tasks/265_line_runtime_env_post_injection_record.md` | Loop 266 line runtime permission gate without message send | Not final Go |
-| Production readiness | `production_no_go_runtime_permission_gates_required` | DR, classifier, runtime permission gates, public smoke, and production Go decision reasons remain | `docs/11_codex_tasks/265_line_runtime_env_post_injection_record.md` | Loop 266 line runtime permission gate without message send | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 267 line message send permission gate | Not final Go |
+| External runtime readiness | `line_runtime_non_send_validation_passed` | Loop 266 validated API health, route shape, and invalid-signature handling without LINE send or external LINE API | `docs/11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md` | Loop 267 line message send permission gate | Not final Go |
+| Production readiness | `production_no_go_message_send_gate_required` | DR, classifier, public smoke, explicit message-send approval, and production Go decision reasons remain | `docs/11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md` | Loop 267 line message send permission gate | `production_no_go` maintained |
 
 ## Current State
 
@@ -19,7 +19,7 @@ app_readiness_status=local_production_start_verified
 app_production_path_review_completed=true
 local_production_verification_status=pass
 final_pre_external_runtime_review_completed=true
-external_runtime_readiness_status=line_runtime_permission_gate_required
+external_runtime_readiness_status=line_runtime_non_send_validation_passed
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
 staged_external_runtime_execution_plan_created=true
@@ -62,15 +62,59 @@ production_go_judgement_ready=true
 unknown_blocker_count=0
 known_env_blocker_count=0
 next_runtime_permission_gate_sequence_created=true
-next_execution_sequence_status=line_runtime_permission_gate_required
+next_execution_sequence_status=ready_for_line_message_send_permission_gate
+line_runtime_permission_gate_completed=true
+line_runtime_permission_gate_status=pass
+line_runtime_non_send_validation_status=pass
+api_health_check_status=pass
+line_webhook_invalid_signature_check_status=pass
+line_route_shape_check_status=pass
+line_external_api_connection_attempted=false
+line_message_send_executed=false
+public_smoke_executed=false
 placeholder_only_dry_run_execution_status=pass
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
-production_readiness_status=production_no_go_runtime_permission_gates_required
+production_readiness_status=production_no_go_message_send_gate_required
 production_no_go=true
 production_no_go_reason_scope=fully_split
 production_go_changed=false
+```
+
+## Loop 266 Line Runtime Permission Gate Without Message Send
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Approval | `approved` | Internal non-send validation only. |
+| Runtime env category | `present` | Confirmed by Loop 265 operator sanitized result. |
+| API health | `pass` | Status-only check; no secret or env value output. |
+| LINE route shape | `pass` | Status-only route check. |
+| Invalid signature handling | `pass` | Rejection path confirmed without LINE send. |
+| LINE external API | `not_attempted` | Explicitly disallowed in this Loop. |
+| LINE message send | `not_executed` | Reply/push/multicast/broadcast remain disallowed. |
+| Public smoke | `not_executed` | Still requires separate approval. |
+| Production Go | `not_changed` | `production_no_go=true`. |
+| Next action | `selected` | Loop 267 line message send permission gate. |
+
+```txt
+loop_266_line_runtime_permission_gate_completed=true
+loop_266_operator_approval_status=approved
+loop_266_line_runtime_env_category_present_in_running_process=true
+loop_266_line_runtime_permission_gate_status=pass
+loop_266_line_runtime_non_send_validation_status=pass
+loop_266_api_health_check_status=pass
+loop_266_line_webhook_invalid_signature_check_status=pass
+loop_266_line_route_shape_check_status=pass
+loop_266_line_external_api_connection_attempted=false
+loop_266_line_message_send_executed=false
+loop_266_public_smoke_executed=false
+loop_266_production_no_go=true
+loop_266_production_go_changed=false
+loop_266_dr_readiness_status=not_ready_restore_failed
+loop_266_classifier_route_status=frozen
+loop_266_next_execution_sequence_status=ready_for_line_message_send_permission_gate
+loop_266_next_minimal_action=Loop 267 line message send permission gate
 ```
 
 ## Loop 265 Line Runtime Env Post-Injection Record

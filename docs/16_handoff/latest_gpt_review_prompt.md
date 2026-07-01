@@ -5,75 +5,68 @@
 
 ## Review Target
 
-Loop 265: line runtime env post-injection record
+Loop 266: line runtime permission gate without message send
 
 ## Result Summary
 
 ```txt
 loop_status=complete
-line_runtime_env_post_injection_record_created=true
-operator_side_injection_status=completed
-target_category=line_runtime_env_category
+approval_block_present=true
+operator_approval_status=approved
+approval_scope=line_runtime_internal_non_send_validation_only
 line_runtime_env_category_present_in_running_process=true
-remaining_missing_required_categories_count=0
-remaining_missing_required_categories=none
-known_env_blocker_count=0
-production_go_judgement_ready=true
-unknown_blocker_count=0
-line_runtime_execution_allowed=false
-line_message_send_allowed=false
-external_runtime_execution_allowed=false
-public_smoke_allowed=false
+line_runtime_permission_gate_completed=true
+line_runtime_permission_gate_status=pass
+line_runtime_non_send_validation_status=pass
+api_health_check_status=pass
+line_webhook_invalid_signature_check_status=pass
+line_route_shape_check_status=pass
+line_external_api_connection_attempted=false
+line_message_send_executed=false
+public_smoke_executed=false
 production_no_go=true
 production_go_changed=false
+production_go_judgement_ready=true
 dr_readiness_status=not_ready_restore_failed
 classifier_route_status=frozen
-next_runtime_permission_gate_sequence_created=true
-next_minimal_action=Loop 266 line runtime permission gate without message send
+next_execution_sequence_status=ready_for_line_message_send_permission_gate
+next_minimal_action=Loop 267 line message send permission gate
 ```
 
 ## What Codex Changed
 
-- Validated the operator-provided sanitized post-injection result.
-- Recorded `line_runtime_env_category` as present in the running API process.
-- Updated `remaining_missing_required_categories_count=0`.
-- Created runtime permission gate sequence.
+- Validated the Loop 266 approval block.
+- Reviewed Loop 265 sanitized evidence and existing non-send LINE runtime validation docs.
+- Ran status-only internal non-send validation.
+- Recorded that API health, invalid-signature rejection, and route shape passed.
+- Kept LINE message send, external LINE API connection, public smoke, and production Go disallowed.
 - Updated task doc, runbooks, dev log, Obsidian, handoff, and matrices.
-
-## Runtime Permission Gate Sequence
-
-1. `line_runtime_permission_gate`
-2. `line_message_send_permission_gate`
-3. `openai_runtime_permission_gate`
-4. `supabase_runtime_permission_gate`
-5. `public_smoke_permission_gate`
-6. `production_go_decision_gate`
 
 ## Safety Boundary To Review
 
 ```txt
 secret_value_recorded=false
 db_url_recorded=false
-env_file_opened=false
-secret_file_opened=false
+env_file_displayed=false
+secret_file_displayed=false
 raw_log_recorded=false
-line_runtime_execution_allowed=false
+line_identifier_recorded=false
+message_body_recorded=false
 line_message_send_allowed=false
-external_api_connection_attempted=false
+line_message_send_executed=false
+line_external_api_connection_attempted=false
 public_smoke_executed=false
+service_restart_executed=false
 vps_change_executed=false
-db_change_executed=false
-runtime_code_changed=false
-package_json_changed=false
-pnpm_lock_changed=false
+production_go_changed=false
 production_no_go=true
 ```
 
 ## Review Questions
 
 1. このLoopは complete / blocked / failed のどれですか？
-2. `line_runtime_env_category` のenv blockerを解消扱いにした判断は妥当ですか？
-3. Codexが選んだ次Loop候補 `Loop 266: line runtime permission gate without message send` を採用しますか？
+2. non-send LINE runtime validationをpass扱いにした判断は妥当ですか？
+3. Codexが選んだ次Loop候補 `Loop 267: line message send permission gate` を採用しますか？
 4. 採用しない場合、理由は何ですか？
 5. 次に取るべき方針は go / no-go / route freeze / alternative path / human input required のどれですか？
 6. 次LoopのCodex文章を作ってよいですか？
@@ -85,7 +78,7 @@ production_no_go=true
 ## Candidate Next Loop
 
 ```txt
-Loop 266: line runtime permission gate without message send
+Loop 267: line message send permission gate
 ```
 
 Do not auto-progress. Review first.

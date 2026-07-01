@@ -611,6 +611,8 @@ Loop 264 line runtime env category injection and boolean verificationでは、`l
 
 Loop 265 line runtime env post-injection recordでは、operator提供のsanitized resultを正式に記録し、`line_runtime_env_category` がrunning API processに載った状態としてcurrent overrideを更新しました。`remaining_missing_required_categories_count=0`、`known_env_blocker_count=0` ですが、LINE runtime実行、LINE送信、外部API接続、public smoke、production Goはまだ未承認です。詳細は [Loop 265 task doc](docs/11_codex_tasks/265_line_runtime_env_post_injection_record.md) を参照してください。次は `Loop 266: line runtime permission gate without message send` です。
 
+Loop 266 line runtime permission gate without message sendでは、operator承認範囲をnon-send LINE runtime validationのみに限定し、status-onlyのloopback確認でAPI health、invalid-signature rejection、route shapeがpassすることを記録しました。LINE message send、reply/push/multicast/broadcast、外部LINE API接続、public smoke、service restart、env値/secret表示、production Goは未実施・未承認です。詳細は [Loop 266 task doc](docs/11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md) を参照してください。次は `Loop 267: line message send permission gate` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

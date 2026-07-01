@@ -296,6 +296,8 @@ Loop 264 status: `line_runtime_env_injection_approval_consumed=true`, `operator_
 
 Loop 265 status: `line_runtime_env_post_injection_record_created=true`, `operator_side_injection_status=completed`, `target_category=line_runtime_env_category`, `line_runtime_env_category_present_in_running_process=true`, `remaining_missing_required_categories_count=0`, `remaining_missing_required_categories=none`, `known_env_blocker_count=0`, `production_go_judgement_ready=true`, `unknown_blocker_count=0`, `line_runtime_execution_allowed=false`, `line_message_send_allowed=false`, `external_runtime_execution_allowed=false`, `public_smoke_allowed=false`, `production_no_go=true`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 266 line runtime permission gate without message send`.
 
+Loop 266 status: `line_runtime_permission_gate_completed=true`, `line_runtime_permission_gate_status=pass`, `line_runtime_non_send_validation_status=pass`, `api_health_check_status=pass`, `line_webhook_invalid_signature_check_status=pass`, `line_route_shape_check_status=pass`, `line_external_api_connection_attempted=false`, `line_message_send_executed=false`, `public_smoke_executed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 267 line message send permission gate`.
+
 ## Obsidian Helpers
 
 - [Obsidian README](README.md)

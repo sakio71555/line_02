@@ -87,3 +87,22 @@ unsafe_verification_blocked=true
 production_runtime_change_allowed=false
 selected_next_minimal_action=line_runtime_permission_gate_without_message_send
 ```
+
+## Loop 266 Line Runtime Permission Gate Without Message Send
+
+Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.
+
+```txt
+line_runtime_permission_gate_status=pass
+line_runtime_non_send_validation_status=pass
+api_health_check_status=pass
+line_webhook_invalid_signature_check_status=pass
+line_route_shape_check_status=pass
+line_external_api_connection_attempted=false
+line_message_send_executed=false
+public_smoke_executed=false
+production_no_go=true
+dr_readiness_status=not_ready_restore_failed
+next_execution_sequence_status=ready_for_line_message_send_permission_gate
+selected_next_minimal_action=line_message_send_permission_gate
+```

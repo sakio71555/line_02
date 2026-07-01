@@ -93,6 +93,7 @@
 - Loop 262 line runtime env injection permission gate: `11_codex_tasks/262_line_runtime_env_injection_permission_gate.md`
 - Loop 264 line runtime env category injection and boolean verification: `11_codex_tasks/264_line_runtime_env_category_injection_and_boolean_verification.md`
 - Loop 265 line runtime env post-injection record: `11_codex_tasks/265_line_runtime_env_post_injection_record.md`
+- Loop 266 line runtime permission gate without message send: `11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md`
 
 ## Prompts and Templates
 

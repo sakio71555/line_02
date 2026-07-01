@@ -6,6 +6,47 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 266 Current Status Override
+
+Loop 266 validates the operator-approved LINE runtime permission gate without message send. Internal non-send validation passed, but LINE message send, external LINE API connection, public smoke, and production Go remain unapproved.
+
+```txt
+loop_266_current_status_override=true
+approval_scope=line_runtime_internal_non_send_validation_only
+line_runtime_env_category_present_in_running_process=true
+line_runtime_permission_gate_completed=true
+line_runtime_permission_gate_status=pass
+line_runtime_non_send_validation_status=pass
+api_health_check_status=pass
+line_webhook_invalid_signature_check_status=pass
+line_route_shape_check_status=pass
+line_message_send_allowed=false
+line_message_send_executed=false
+external_line_api_connection_attempted=false
+public_smoke_executed=false
+production_no_go=true
+production_go_changed=false
+production_go_judgement_ready=true
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_operator_approval_required=true
+next_execution_sequence_status=ready_for_line_message_send_permission_gate
+selected_next_minimal_action=Loop 267 line message send permission gate
+```
+
+Current runtime permission Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| line env category | `present` | Loop 265 and Loop 266 use sanitized evidence only. |
+| line runtime non-send validation | `pass` | Internal status-only checks passed. |
+| line message send | `not_allowed` | Separate Loop 267 approval required. |
+| external LINE API | `not_called` | No external LINE API connection was attempted. |
+| public smoke | `not_allowed` | Separate approval required. |
+| production Go | `not_requested` | `production_no_go=true`. |
+| DR known risk | `not_ready_restore_failed` | Restore drill is still not successful. |
+| classifier route | `frozen` | Do not resume classifier/payload/package/restore route. |
+
 ## Loop 265 Current Status Override
 
 Loop 265 records the operator-provided sanitized post-injection result for `line_runtime_env_category`. The env category is present in the running API process, but LINE runtime execution, LINE message send, external API connection, public smoke, and production Go remain unapproved.

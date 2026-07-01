@@ -6,6 +6,39 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 266 Current Status Override
+
+Loop 266 validates the operator-approved LINE runtime permission gate without message send. The gate used status-only loopback checks and did not display env values, secret files, webhook path values, raw logs, LINE identifiers, or message bodies. It did not send LINE messages, connect to external LINE APIs, run public smoke, restart services, or change production Go.
+
+```txt
+loop_266_current_status_override=true
+approval_decision=approve_line_runtime_permission_gate_without_message_send
+approval_scope=line_runtime_internal_non_send_validation_only
+line_runtime_env_category_present_in_running_process=true
+line_runtime_permission_gate_completed=true
+line_runtime_permission_gate_status=pass
+line_runtime_non_send_validation_status=pass
+api_health_check_status=pass
+line_webhook_invalid_signature_check_status=pass
+line_route_shape_check_status=pass
+line_message_send_allowed=false
+line_message_send_executed=false
+external_line_api_connection_allowed=false
+external_line_api_connection_attempted=false
+public_smoke_allowed=false
+public_smoke_executed=false
+production_no_go=true
+production_go_changed=false
+production_go_judgement_ready=true
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_operator_approval_required=true
+next_execution_sequence_status=ready_for_line_message_send_permission_gate
+selected_next_minimal_action=Loop 267 line message send permission gate
+```
+
+Do not send LINE messages until Loop 267 or a later explicitly approved message-send permission gate.
+
 ## Loop 265 Current Status Override
 
 Loop 265 records the operator-provided sanitized post-injection result for `line_runtime_env_category`. It does not display values, env files, secret files, raw logs, LINE identifiers, or message bodies. It does not run LINE runtime, send LINE messages, connect externally, run public smoke, or change production Go.
