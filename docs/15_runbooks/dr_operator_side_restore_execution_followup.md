@@ -365,3 +365,18 @@ db_change_performed=false
 dr_readiness_status=not_ready_restore_failed
 next_minimal_action=Loop 284 guarded DR restore runtime input injection
 ```
+
+## Loop 284 VPS Helper Delivery
+
+```txt
+vps_git_repository_unavailable_blocker_resolved=true
+vps_helper_delivery_status=success
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+vps_helper_no_input_preflight_status=blocked_safely
+runtime_inputs_available_to_codex=false
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_available_to_codex
+next_minimal_action=Loop 285 guarded DR restore runtime input injection
+```

@@ -15,26 +15,23 @@
 対象:
 
 ```txt
-loop=Loop 283 DR restore execution prerequisite resolution and guarded helper
+loop=Loop 284 VPS guarded helper delivery / sync blocker resolution
 loop_status=blocked
-blocked_reason=vps_git_repository_unavailable
+blocked_reason=runtime_inputs_not_available_to_codex
 ```
 
 Sanitized result:
 
 ```txt
 anti_proliferation_check=pass
-restore_executable_helper_exists=true
-helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
-helper_local_validation_status=pass
-vps_direct_work_used=true
-vps_sync_status=blocked_vps_git_repository_unavailable
-vps_helper_available=false
-helper_preflight_status=not_run_vps_sync_blocked
-temporary_codex_direct_restore_execution_override_used=false
-ssh_access_available=true
-vps_working_directory_available=true
-api_service_active=true
+vps_git_repository_unavailable_blocker_resolved=true
+vps_helper_delivery_method=non_git_script_only_delivery
+vps_helper_delivery_status=success
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+vps_helper_no_input_preflight_status=blocked_safely
+runtime_inputs_available_to_codex=false
+helper_preflight_status=blocked
 restore_retry_attempt_count=0
 restore_retry_success=not_attempted
 pg_restore_executed=false
@@ -62,7 +59,7 @@ extension_name_recorded=false
 Codex proposed next minimal action:
 
 ```txt
-next_recommended_loop=Loop 284 guarded DR restore runtime input injection
+next_recommended_loop=Loop 285 guarded DR restore runtime input injection
 ```
 
 同じblockerが2回以上出ている場合は、protocol追加・recollection・readiness gate追加を次Loop候補にしないでください。

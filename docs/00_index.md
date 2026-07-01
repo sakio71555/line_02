@@ -119,6 +119,7 @@
 - Loop 282 conditional DR restore retry execution with resolved procedure: `11_codex_tasks/282_conditional_dr_restore_retry_execution_with_resolved_procedure.md`
 - Loop 283 DR restore execution prerequisite resolution and guarded helper: `11_codex_tasks/283_dr_restore_execution_prerequisite_resolution_and_guarded_helper.md`
 - DR guarded restore retry helper runbook: `15_runbooks/dr_guarded_restore_retry_helper.md`
+- Loop 284 VPS guarded helper delivery / sync blocker resolution: `11_codex_tasks/284_vps_guarded_helper_delivery_sync_blocker_resolution.md`
 
 ## Prompts and Templates
 

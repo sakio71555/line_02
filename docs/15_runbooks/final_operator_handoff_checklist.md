@@ -2422,6 +2422,21 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 284 Result Handoff
+
+```txt
+vps_helper_delivery_status=success
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+vps_helper_no_input_preflight_status=blocked_safely
+runtime_inputs_available_to_codex=false
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_available_to_codex
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 283 Result Handoff
 
 ```txt

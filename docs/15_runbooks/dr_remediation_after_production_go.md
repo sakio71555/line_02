@@ -18,6 +18,19 @@ post_go_monitoring_status=pass
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 284 Result
+
+```txt
+vps_git_repository_unavailable_blocker_resolved=true
+vps_helper_available=true
+restore_retry_execution_status=blocked_before_execution
+failure_reason=runtime_inputs_not_available_to_codex
+dr_readiness_status=not_ready_restore_failed
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+```
+
 ## Loop 283 Result
 
 ```txt

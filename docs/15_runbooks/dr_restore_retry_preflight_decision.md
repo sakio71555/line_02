@@ -324,3 +324,14 @@ failure_reason=vps_git_repository_unavailable
 restore_retry_attempt_count=0
 restore_retry_success=not_attempted
 ```
+
+## Loop 284 Result
+
+```txt
+vps_helper_delivery_status=success
+vps_helper_no_input_preflight_status=blocked_safely
+runtime_inputs_available_to_codex=false
+helper_preflight_status=blocked
+restore_retry_execution_status=blocked_before_execution
+failure_reason=runtime_inputs_not_available_to_codex
+```

@@ -341,6 +341,22 @@ loop_283_restore_retry_success=not_attempted
 loop_283_dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 284 VPS Guarded Helper Delivery
+
+Loop 284 resolves the VPS git repository unavailable blocker by delivering the guarded helper with the approved non-git script-only method. Restore remains blocked because runtime inputs are not available to Codex.
+
+```txt
+loop_284_status=blocked
+loop_284_vps_git_repository_unavailable_blocker_resolved=true
+loop_284_vps_helper_delivery_status=success
+loop_284_vps_helper_available=true
+loop_284_vps_helper_no_input_preflight_status=blocked_safely
+loop_284_runtime_inputs_available_to_codex=false
+loop_284_restore_retry_attempt_count=0
+loop_284_restore_retry_success=not_attempted
+loop_284_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

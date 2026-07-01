@@ -210,3 +210,17 @@ psql_executed=false
 supabase_connection_attempted=false
 db_change_performed=false
 ```
+
+## Loop 284 VPS Helper Delivery
+
+```txt
+vps_git_repository_unavailable_blocker_resolved=true
+vps_helper_delivery_method=non_git_script_only_delivery
+vps_helper_delivery_status=success
+vps_helper_available=true
+vps_helper_no_input_preflight_status=blocked_safely
+runtime_inputs_available_to_codex=false
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_available_to_codex
+```

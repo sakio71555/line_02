@@ -193,6 +193,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 283 DR Restore Execution Prerequisite Resolution And Guarded Helper](../11_codex_tasks/283_dr_restore_execution_prerequisite_resolution_and_guarded_helper.md)
 - [Loop 283 Obsidian Log](loop_283_dr_restore_execution_prerequisite_resolution_and_guarded_helper.md)
 - [DR Guarded Restore Retry Helper](../15_runbooks/dr_guarded_restore_retry_helper.md)
+- [Loop 284 VPS Guarded Helper Delivery Sync Blocker Resolution](../11_codex_tasks/284_vps_guarded_helper_delivery_sync_blocker_resolution.md)
+- [Loop 284 Obsidian Log](loop_284_vps_guarded_helper_delivery_sync_blocker_resolution.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
 - [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
 - [DR Backup Artifact Validation Preflight](../15_runbooks/dr_backup_artifact_validation_preflight.md)
@@ -367,6 +369,8 @@ Loop 282 status: `loop_282_status=blocked`, `temporary_codex_direct_restore_exec
 Loop 283 helper status: `restore_executable_helper_exists=true`, `helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh`, `helper_default_mode=preflight_only`, `helper_execute_mode_requires_explicit_confirm=true`, `helper_attempt_limit=1`, `helper_retry_forbidden=true`, `production_go_scope_expanded=false`, `dr_readiness_status=not_ready_restore_failed`.
 
 Loop 283 result: `loop_283_status=blocked`, `vps_sync_status=blocked_vps_git_repository_unavailable`, `helper_preflight_status=not_run_vps_sync_blocked`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`.
+
+Loop 284 result: `loop_284_status=blocked`, `vps_git_repository_unavailable_blocker_resolved=true`, `vps_helper_delivery_status=success`, `vps_helper_available=true`, `vps_helper_no_input_preflight_status=blocked_safely`, `runtime_inputs_available_to_codex=false`, `restore_retry_attempt_count=0`, `restore_retry_success=not_attempted`, `next=Loop 285 guarded DR restore runtime input injection`.
 
 ## Obsidian Helpers
 

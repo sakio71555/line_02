@@ -1,13 +1,14 @@
-# Latest Codex Result
+# Loop 284: VPS Guarded Helper Delivery / Sync Blocker Resolution
 
-## Loop
+## Purpose
 
-Loop 284: VPS guarded helper delivery / sync blocker resolution
+Resolve the Loop 283 `vps_git_repository_unavailable` blocker by delivering the guarded restore helper to the VPS using the explicitly approved non-git script-only delivery path.
 
-## Status
+Loop 284 stops after helper delivery and preflight classification. It does not auto-start Loop 285.
+
+## Anti-Proliferation Check
 
 ```txt
-loop_status=blocked
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
@@ -15,15 +16,42 @@ forward_progress_type=vps_guarded_helper_delivery_and_preflight
 next_loop_requires_new_operator_input=true
 ```
 
-## Summary
+This Loop is forward progress because it resolves the concrete Loop 283 VPS sync blocker by delivering the helper file directly instead of repeating the git-based sync blocker.
 
-Loop 284 resolved the Loop 283 `vps_git_repository_unavailable` blocker by using the approved non-git script-only delivery path for the guarded helper.
-
-The helper is now available on the VPS and passed VPS-side syntax validation. The no-input helper preflight blocked safely with sanitized output only. Restore execution was not attempted because runtime inputs are not available to Codex through a safe approved path.
-
-## Result
+## Operator Approval
 
 ```txt
+operator_decision=approve_codex_vps_guarded_helper_delivery_once
+approval_scope=vps_helper_delivery_and_preflight_only_with_optional_single_restore_if_all_inputs_already_available
+codex_direct_vps_access_allowed=true
+codex_direct_non_git_helper_delivery_allowed=true
+codex_direct_vps_repo_sync_allowed=false_when_git_repository_unavailable
+codex_direct_helper_preflight_allowed=true
+codex_direct_restore_execution_allowed=true_only_if_all_preconditions_pass
+restore_retry_attempt_limit=1
+stop_on_first_failure=true
+retry_allowed=false
+production_go_unchanged=true
+production_go_scope_expanded=false
+sanitized_result_required=true
+```
+
+## Local Helper Validation
+
+```txt
+local_helper_exists=true
+local_helper_bash_validation_status=pass
+local_helper_no_input_preflight_status=blocked_safely
+secret_output=false
+db_url_output=false
+artifact_path_output=false
+raw_log_output=false
+```
+
+## VPS Helper Delivery Result
+
+```txt
+loop_284_status=blocked
 vps_git_repository_unavailable_blocker_resolved=true
 vps_helper_delivery_method=non_git_script_only_delivery
 vps_helper_delivery_status=success
@@ -54,16 +82,24 @@ pg_restore_executed=false
 psql_executed=false
 supabase_connection_attempted=false
 db_change_performed=false
+dr_restore_retry_status=blocked_before_execution
+```
+
+## Post-Restore Checks
+
+Post-restore checks were not run because no restore attempt occurred.
+
+```txt
 post_restore_public_api_health_current=not_run_restore_not_attempted
 post_restore_public_admin_root_current=not_run_restore_not_attempted
 post_restore_public_customers_no_auth_current=not_run_restore_not_attempted
+api_service_active=true
 ```
 
 ## Production And DR State
 
 ```txt
 production_go=true
-production_no_go=false
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
@@ -80,8 +116,6 @@ db_url_recorded=false
 artifact_path_recorded=false
 artifact_filename_recorded=false
 artifact_content_recorded=false
-artifact_hash_recorded=false
-artifact_exact_size_recorded=false
 sql_recorded=false
 db_object_recorded=false
 role_recorded=false
@@ -92,7 +126,21 @@ message_body_recorded=false
 line_api_response_body_recorded=false
 ```
 
-## Next
+## Verification
+
+```txt
+git_status_initial=clean
+git_diff_check=pass
+bash_n_helper=pass
+docs_link_check=pass
+secret_pattern_boolean_check=pass
+artifact_detail_boolean_check=pass
+lint=pass
+typecheck_skipped_reason=docs_and_existing_helper_only_no_runtime_app_code_package_or_config_change
+test_skipped_reason=docs_and_existing_helper_only_no_runtime_app_code_package_or_config_change
+```
+
+## Next Minimal Action
 
 ```txt
 next_recommended_loop=Loop 285 guarded DR restore runtime input injection

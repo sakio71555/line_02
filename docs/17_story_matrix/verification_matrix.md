@@ -2044,6 +2044,39 @@ loop_283_artifact_filename_recorded=false
 loop_283_artifact_content_recorded=false
 ```
 
+## Loop 284 Verification Note
+
+```txt
+loop_284_status=blocked
+loop_284_anti_proliferation_check=pass
+loop_284_vps_git_repository_unavailable_blocker_resolved=true
+loop_284_vps_helper_delivery_method=non_git_script_only_delivery
+loop_284_vps_helper_delivery_status=success
+loop_284_vps_helper_available=true
+loop_284_vps_helper_bash_validation_status=pass
+loop_284_vps_helper_no_input_preflight_status=blocked_safely
+loop_284_runtime_inputs_available_to_codex=false
+loop_284_helper_preflight_status=blocked
+loop_284_restore_retry_attempt_count=0
+loop_284_restore_retry_success=not_attempted
+loop_284_pg_restore_executed=false
+loop_284_psql_executed=false
+loop_284_supabase_connection_attempted=false
+loop_284_db_change_performed=false
+loop_284_raw_log_recorded=false
+loop_284_secret_recorded=false
+loop_284_db_url_recorded=false
+loop_284_artifact_path_recorded=false
+loop_284_artifact_filename_recorded=false
+loop_284_artifact_content_recorded=false
+loop_284_sql_recorded=false
+loop_284_db_object_recorded=false
+loop_284_role_recorded=false
+loop_284_package_name_recorded=false
+loop_284_extension_name_recorded=false
+loop_284_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

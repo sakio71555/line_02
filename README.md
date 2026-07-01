@@ -142,6 +142,8 @@ Loop 283ではDR restore execution prerequisite resolution and guarded helperと
 
 Loop 283のVPS sync preflightでは、VPS working directoryとAPI service activeを確認しましたが、許可されたgit-based sync pathが使えないため `blocked_vps_git_repository_unavailable` としてrestore実行前に停止しました。restore、pg_restore、psql、Supabase接続、DB変更、secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。
 
+Loop 284ではVPS guarded helper delivery / sync blocker resolutionとして、許可されたnon-git script-only deliveryで `scripts/dr/restore_retry_guarded.sh` をVPS側へ配置し、VPS上で `bash -n` とno-input preflightの安全blockedを確認しました。runtime inputsはCodexに安全に渡されていないためrestore実行前にblockedし、restore、pg_restore、psql、Supabase接続、DB変更、secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。次は `Loop 285: guarded DR restore runtime input injection` です。
+
 Loop 252ではclassifier / package / restore routeを凍結したまま、DR readinessとapp production path readinessを分離してレビューしました。`production_no_go=true` は維持し、次の最小作業をlocal production start verification checklist executionへ寄せています。詳細は [docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md](docs/11_codex_tasks/252_app_production_path_review_and_readiness_cleanup.md) と [docs/17_story_matrix/production_vs_dr_readiness_matrix.md](docs/17_story_matrix/production_vs_dr_readiness_matrix.md) を参照してください。
 
 Loop 253ではlocal-only production start verification checklistを実行し、API/Admin build、127.0.0.1限定のlocal start、local curl、process停止確認がpassしました。外部API、Supabase、VPS、Nginx、DNS、HTTPS、DB変更、secret表示は行わず、`production_no_go=true` と `dr_readiness_status=not_ready_restore_failed` は維持しています。詳細は [docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md](docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md) を参照してください。
@@ -655,7 +657,9 @@ Loop 282 conditional DR restore retry execution with resolved procedureでは、
 
 Loop 283 DR restore execution prerequisite resolution and guarded helperでは、Loop 282の `restore_procedure_not_executable_safely` blockerを解消するため、guarded restore retry helper `scripts/dr/restore_retry_guarded.sh` と [DR guarded restore retry helper runbook](docs/15_runbooks/dr_guarded_restore_retry_helper.md) を追加しました。helperはpreflight-onlyを既定にし、unsafe target scopeをblockし、execute modeには明示確認を必須にし、1 attempt / no retryを強制します。production Go scopeは `line_api_admin_current_runtime` のままで、DR readinessはrestore retryが通るまで `not_ready_restore_failed` のままです。
 
-Loop 283のVPS sync preflightでは、VPS working directoryとAPI service activeを確認しましたが、許可されたgit-based sync pathが使えないため `blocked_vps_git_repository_unavailable` としてrestore実行前に停止しました。restore、pg_restore、psql、Supabase接続、DB変更、secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。次は `Loop 284: guarded DR restore runtime input injection` です。
+Loop 283のVPS sync preflightでは、VPS working directoryとAPI service activeを確認しましたが、許可されたgit-based sync pathが使えないため `blocked_vps_git_repository_unavailable` としてrestore実行前に停止しました。restore、pg_restore、psql、Supabase接続、DB変更、secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。次は `Loop 284: VPS guarded helper delivery / sync blocker resolution` です。
+
+Loop 284 VPS guarded helper delivery / sync blocker resolutionでは、許可されたnon-git script-only deliveryで `scripts/dr/restore_retry_guarded.sh` をVPS側へ配置し、VPS上で `bash -n` とno-input preflightの安全blockedを確認しました。runtime inputsはCodexに安全に渡されていないためrestore実行前にblockedし、restore、pg_restore、psql、Supabase接続、DB変更、secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。次は `Loop 285: guarded DR restore runtime input injection` です。
 
 ## Secrets
 
