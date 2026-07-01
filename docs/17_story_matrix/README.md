@@ -58,6 +58,11 @@ public_customers_no_auth_current=401
 post_go_monitoring_status=pass
 dr_remediation_plan_created=true
 dr_remediation_priority=high_after_post_go_stability
+dr_remediation_strategy_review_created=true
+dr_remediation_strategy_status=reviewed
+recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+dr_next_operator_decision_required=true
+restore_execution_status=not_executed
 restricted_actions_remain_no_go=true
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
@@ -119,7 +124,7 @@ duplicate_send_detected=false
 additional_line_send_allowed=false
 retry_allowed=false
 bulk_send_allowed=false
-selected_next_minimal_action=DR_remediation_strategy_review_after_production_Go
+selected_next_minimal_action=DR_backup_artifact_validation_preflight
 ```
 
 ## Loop 266 Line Runtime Permission Gate Without Message Send
@@ -290,4 +295,30 @@ bulk_send_allowed=false
 openai_auto_reply_production_allowed=false
 next_execution_sequence_status=DR_remediation_strategy_review_after_production_Go
 selected_next_minimal_action=DR_remediation_strategy_review_after_production_Go
+```
+
+## Loop 272 DR Remediation Strategy Review
+
+Loop 272 reviews the remaining DR risk after production Go and selects one safe next strategy: backup artifact validation preflight before any restore retry. Production Go and post-Go monitoring pass remain unchanged.
+
+```txt
+dr_remediation_strategy_review_created=true
+anti_proliferation_check=pass
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+dr_next_operator_decision_required=true
+restore_execution_status=not_executed
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+restricted_actions_remain_no_go=true
+classifier_route_status=frozen
+next_execution_sequence_status=DR_backup_artifact_validation_preflight
+selected_next_minimal_action=DR_backup_artifact_validation_preflight
 ```

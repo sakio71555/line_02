@@ -6,7 +6,7 @@
 対象:
 
 ```txt
-Loop 271: post-Go monitoring review and DR remediation planning
+Loop 272: DR remediation strategy review after production Go
 ```
 
 結果:
@@ -14,56 +14,52 @@ Loop 271: post-Go monitoring review and DR remediation planning
 ```txt
 loop_status=complete
 anti_proliferation_check=pass
-operator_final_decision=production_go
+is_this_loop_proliferation_risk=false
 production_go=true
-production_no_go=false
 production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
 dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
-post_go_monitoring_review_created=true
-post_go_monitoring_readonly_check_status=pass
-public_api_health_current=200
-public_admin_root_current=200
-public_customers_no_auth_current=401
-post_go_monitoring_status=pass
-monitoring_failure_reason=none
+dr_remediation_strategy_review_created=true
+recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+dr_next_operator_decision_required=true
 restricted_actions_remain_no_go=true
-dr_remediation_plan_created=true
-next_recommended_loop=Loop 272 DR remediation strategy review after production Go
+next_recommended_loop=Loop 273 DR backup artifact validation preflight
 ```
 
 Safety:
 
 ```txt
-additional_line_message_send_executed=false
-line_retry_executed=false
-line_reply_executed=false
-line_push_executed=false
-line_multicast_executed=false
-line_broadcast_executed=false
-public_smoke_rerun=false
-openai_api_executed=false
-supabase_connection_executed=false
-supabase_restore_executed=false
-psql_executed=false
+restore_execution_performed=false
 pg_restore_executed=false
-restore_executed=false
-db_changed=false
-schema_changed=false
-role_changed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+schema_change_performed=false
+role_change_performed=false
+extension_created=false
 cluster_changed=false
-nginx_changed=false
-dns_changed=false
-https_certbot_operation_executed=false
-service_restart_executed=false
+backup_artifact_content_read=false
+backup_artifact_path_recorded=false
+dump_path_recorded=false
 package_install_executed=false
 apt_operation_executed=false
+line_additional_send_executed=false
+line_retry_executed=false
+line_bulk_send_executed=false
+openai_api_executed=false
+nginx_dns_https_change_executed=false
 runtime_code_changed=false
 package_or_config_changed=false
 secret_values_recorded=false
 env_values_recorded=false
 db_url_recorded=false
 raw_log_recorded=false
+sql_recorded=false
+db_object_name_recorded=false
+role_name_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
 line_identifier_recorded=false
 message_body_recorded=false
 line_api_response_body_recorded=false
@@ -75,16 +71,16 @@ row_content_recorded=false
 必ず以下の順で判定してください。
 
 1. このLoopは complete / partial / blocked のどれか
-2. `production_go=true` は `line_api_admin_current_runtime` にscope限定されているか
-3. read-only monitoring結果はbaseline通りか
-4. `dr_readiness_status=not_ready_restore_failed` と `dr_risk_acceptance_status=accepted_with_known_risk` が矛盾なく維持されているか
-5. restricted actions remain No-Go が維持されているか
-6. secret / raw log / LINE identifier / message body / LINE API response body / production log が記録されていないか
-7. 次に取るべき方針は DR remediation strategy review / no-go / route freeze のどれか
+2. DR strategyが増殖ではなく前進か
+3. restore実行を誤って許可していないか
+4. production_go状態を崩していないか
+5. 次Loopのoperator decisionが具体的か
+6. secret/path/raw log/DB情報を記録していないか
+7. 次に取るべき方針は DR backup artifact validation preflight / no-go / route freeze のどれか
 8. 次LoopのCodex文章を作ってよいか
 
 レビュー観点:
 
-- Current runtimeはGoのまま維持し、追加LINE送信、retry、bulk、OpenAI自動返信、Supabase restore、DB/Nginx/DNS/HTTPS/package変更をNo-Goにできているか。
-- post-Go monitoringが通っている一方で、DRはまだ未完成であることを分離できているか。
-- 次Loop候補を `Loop 272: DR remediation strategy review after production Go` のみにしてよいか。
+- `recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry` は、restore retry前の安全な前進になっているか。
+- Loop 273で許可されるのはsanitized artifact metadata validationだけで、artifact path/content、restore、`pg_restore`、`psql`、Supabase、DB変更がNo-Goのままか。
+- `production_go=true` / `production_go_scope=line_api_admin_current_runtime` と `dr_readiness_status=not_ready_restore_failed` の分離が維持されているか。

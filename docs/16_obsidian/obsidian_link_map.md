@@ -168,8 +168,11 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 270 Obsidian Log](loop_270_production_go_decision_record.md)
 - [Loop 271 Post-Go Monitoring Review](../11_codex_tasks/271_post_go_monitoring_review.md)
 - [Loop 271 Obsidian Log](loop_271_post_go_monitoring_review.md)
+- [Loop 272 DR Remediation Strategy Review](../11_codex_tasks/272_dr_remediation_strategy_review_after_production_go.md)
+- [Loop 272 Obsidian Log](loop_272_dr_remediation_strategy_review.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
 - [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
+- [DR Backup Artifact Validation Preflight](../15_runbooks/dr_backup_artifact_validation_preflight.md)
 - [Loop 262 Obsidian Log](loop_262_line_runtime_env_injection_permission_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
@@ -317,6 +320,8 @@ Loop 269 status: `operator_attestation_used=true`, `operator_controlled_target_c
 Loop 270 status: `operator_final_decision=production_go`, `production_go=true`, `production_no_go=false`, `production_go_scope=line_api_admin_current_runtime`, `dr_readiness_status=not_ready_restore_failed`, `dr_risk_acceptance_status=accepted_with_known_risk`, `line_real_push_smoke_status=pass`, `line_message_send_attempt_count=1`, `line_message_send_success=true`, `public_smoke_status=pass`, `post_go_monitoring_baseline_created=true`, `restricted_actions_remain_no_go=true`, `next=Loop 271 post-Go monitoring review`.
 
 Loop 271 status: `post_go_monitoring_readonly_check_status=pass`, `public_api_health_current=200`, `public_admin_root_current=200`, `public_customers_no_auth_current=401`, `production_go=true`, `production_no_go=false`, `production_go_scope=line_api_admin_current_runtime`, `dr_readiness_status=not_ready_restore_failed`, `dr_risk_acceptance_status=accepted_with_known_risk`, `restricted_actions_remain_no_go=true`, `dr_remediation_plan_created=true`, `next=Loop 272 DR remediation strategy review after production Go`.
+
+Loop 272 status: `dr_remediation_strategy_review_created=true`, `production_go=true`, `production_go_scope=line_api_admin_current_runtime`, `post_go_monitoring_status=pass`, `dr_readiness_status=not_ready_restore_failed`, `dr_risk_acceptance_status=accepted_with_known_risk`, `recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry`, `dr_next_operator_decision_required=true`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `restricted_actions_remain_no_go=true`, `next=Loop 273 DR backup artifact validation preflight`.
 
 ## Obsidian Helpers
 

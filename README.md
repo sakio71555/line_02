@@ -623,6 +623,8 @@ Loop 270 production Go decision recordでは、operator側で実行済みのsani
 
 Loop 271 post-Go monitoring review and DR remediation planningでは、Loop 270のscope-limited production Goを維持したまま、read-only public monitoring checksでpublic API health、admin root、unauthenticated customers guardがbaseline通りであることを記録しました。DRは `not_ready_restore_failed` / `accepted_with_known_risk` のまま、restore実行ではなくDR remediation計画だけを追加しています。追加LINE送信、retry、bulk、OpenAI、Supabase restore、DB/Nginx/DNS/HTTPS/package変更はNo-Goのままです。詳細は [Loop 271 task doc](docs/11_codex_tasks/271_post_go_monitoring_review.md) と [DR remediation after production Go](docs/15_runbooks/dr_remediation_after_production_go.md) を参照してください。次は `Loop 272: DR remediation strategy review after production Go` です。
 
+Loop 272 DR remediation strategy review after production Goでは、`production_go=true` / `production_go_scope=line_api_admin_current_runtime` と post-Go monitoring pass を維持したまま、未完了DRの次手を `recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry` に絞りました。Loop 273はrestore実行ではなく、operator承認付きのsanitized artifact metadata validation preflightのみを候補にします。詳細は [Loop 272 task doc](docs/11_codex_tasks/272_dr_remediation_strategy_review_after_production_go.md) と [DR backup artifact validation preflight](docs/15_runbooks/dr_backup_artifact_validation_preflight.md) を参照してください。次は `Loop 273: DR backup artifact validation preflight` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

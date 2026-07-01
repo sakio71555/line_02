@@ -101,6 +101,8 @@
 - Loop 270 post-Go monitoring baseline: `15_runbooks/post_go_monitoring_baseline.md`
 - Loop 271 post-Go monitoring review: `11_codex_tasks/271_post_go_monitoring_review.md`
 - Loop 271 DR remediation after production Go: `15_runbooks/dr_remediation_after_production_go.md`
+- Loop 272 DR remediation strategy review: `11_codex_tasks/272_dr_remediation_strategy_review_after_production_go.md`
+- DR backup artifact validation preflight runbook: `15_runbooks/dr_backup_artifact_validation_preflight.md`
 
 ## Prompts and Templates
 

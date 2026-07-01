@@ -103,6 +103,46 @@ Current post-Go reading:
 | DR remediation | `planned` | Planning only; no restore, DB, or Supabase execution. |
 | restricted actions | `no_go` | Additional LINE send, retry, bulk, OpenAI, restore, DB/infra/package changes remain No-Go. |
 
+## Loop 272 Current Status Override
+
+Loop 272 reviews the DR strategy after production Go and selects the backup artifact validation preflight as the next minimal DR action. It does not execute restore, `pg_restore`, `psql`, Supabase connection, DB changes, package operations, LINE sends, OpenAI calls, or infra changes.
+
+```txt
+loop_272_current_status_override=true
+anti_proliferation_check=pass
+dr_remediation_strategy_review_created=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+current_runtime_production_status=production_go
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_remediation_strategy_status=reviewed
+recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+dr_next_operator_decision_required=true
+restore_execution_status=not_executed
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+restricted_actions_remain_no_go=true
+classifier_route_status=frozen
+next_minimal_action=Loop 273 DR backup artifact validation preflight
+```
+
+Current DR strategy reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR readiness | `not_ready_restore_failed` | Still accepted as known risk, not resolved. |
+| DR strategy | `reviewed` | Backup artifact validation preflight selected before restore retry. |
+| restore execution | `no_go` | No restore, `pg_restore`, `psql`, Supabase connection, or DB change allowed in Loop 272/273 preflight. |
+| restricted actions | `no_go` | Additional LINE send, retry, bulk, OpenAI, DB/infra/package changes remain No-Go. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

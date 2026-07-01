@@ -60,6 +60,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-050 | Single controlled LINE message send with operator attestation | operator attestation plus internal CLI dry-run route preflight | attestation accepted, route preflight blocked before send, no external LINE API attempt | true | false | false | false | false | false | false | false | pending_loop_269_verification | Dry-run only; no execute mode, no send, no retry, no identifier/body/API response body recording, no public smoke, no production Go. |
 | V-051 | Production Go decision record and post-Go monitoring baseline | sanitized operator-side result recording only | scope-limited production Go recorded, DR known risk accepted, post-Go monitoring baseline created | true | false | false | false | false | false | false | false | pending_loop_270_verification | Does not execute additional LINE send, retry, public smoke rerun, OpenAI, Supabase restore, DB, infra, package, or runtime changes. |
 | V-052 | Post-Go monitoring review | read-only public health and auth guard checks | public API health 200, admin root 200, unauthenticated customers 401, DR remediation plan created | true | false | true | true | false | false | false | false | pending_loop_271_verification | Read-only public checks only; no send, retry, OpenAI, Supabase restore, DB, infra, package, raw log, or secret exposure. |
+| V-053 | DR remediation strategy review | docs-only strategy review and operator decision package | backup artifact validation preflight selected before restore retry | true | false | false | false | false | false | false | false | pending_loop_272_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/content, raw log, secret, package, infra, LINE, or OpenAI execution. |
 
 ## Blocked Or Operator Approval Required
 
@@ -78,7 +79,8 @@ These checks are not allowed in this goal.
 | BV-009 | LINE real send after Loop 268 block | Target proof is not independently confirmed without identifier/body exposure. | false | true | true | true | false | false | false | true | Loop 269 controlled LINE send route human decision |
 | BV-010 | LINE real send after Loop 269 block | Current route cannot fetch target from this Codex shell and execute-mode runtime categories are unavailable. | false | true | true | true | false | false | false | true | Loop 270 controlled LINE send route review required |
 | BV-011 | Restricted actions after production Go | Additional LINE send, retry, bulk/multicast/broadcast, OpenAI auto-reply activation, Supabase restore, DB/infra/package changes remain No-Go without future explicit approval. | false | true | true | true | true | true | true | true | Loop 271 post-Go monitoring review |
-| BV-012 | DR remediation execution after post-Go monitoring | Restore, `pg_restore`, `psql`, Supabase connection, target DB creation, and DB changes remain blocked until a future explicit DR execution approval. | false | true | true | false | false | true | true | true | Loop 272 DR remediation strategy review after production Go |
+| BV-012 | DR remediation execution after post-Go monitoring | Restore, `pg_restore`, `psql`, Supabase connection, target DB creation, and DB changes remain blocked until a future explicit DR execution approval. | false | true | true | false | false | true | true | true | Loop 273 DR backup artifact validation preflight |
+| BV-013 | DR restore retry after strategy review | Restore retry remains blocked; next Loop may validate only sanitized artifact metadata if approved. | false | true | true | false | false | true | true | true | Loop 273 DR backup artifact validation preflight |
 
 ## Loop 216 Verification Note
 
@@ -1651,6 +1653,37 @@ loop_271_package_install_executed=false
 loop_271_secret_recorded=false
 loop_271_raw_log_recorded=false
 loop_271_next_loop=Loop 272 DR remediation strategy review after production Go
+```
+
+## Loop 272 Verification Note
+
+```txt
+loop_272_dr_remediation_strategy_review_created=true
+loop_272_anti_proliferation_check=pass
+loop_272_production_go=true
+loop_272_production_go_scope=line_api_admin_current_runtime
+loop_272_post_go_monitoring_status=pass
+loop_272_dr_readiness_status=not_ready_restore_failed
+loop_272_dr_risk_acceptance_status=accepted_with_known_risk
+loop_272_recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+loop_272_dr_next_operator_decision_required=true
+loop_272_restore_execution_performed=false
+loop_272_pg_restore_executed=false
+loop_272_psql_executed=false
+loop_272_supabase_connection_attempted=false
+loop_272_db_change_performed=false
+loop_272_backup_artifact_path_recorded=false
+loop_272_backup_artifact_content_read=false
+loop_272_secret_recorded=false
+loop_272_raw_log_recorded=false
+loop_272_package_install_executed=false
+loop_272_apt_operation_executed=false
+loop_272_line_additional_send_executed=false
+loop_272_openai_api_executed=false
+loop_272_nginx_dns_https_change_executed=false
+loop_272_runtime_code_changed=false
+loop_272_restricted_actions_remain_no_go=true
+loop_272_next_loop=Loop 273 DR backup artifact validation preflight
 ```
 
 ## Stage 2 Rule

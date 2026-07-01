@@ -74,6 +74,52 @@ Operator handoff:
 - Do not retry LINE sends; preserve the one-send lock and record only sanitized statuses.
 - Treat DR remediation as high priority after post-Go stability, but do not execute restore without a future explicit Loop.
 
+## Loop 272 Current Status Override
+
+Loop 272 reviewed the remaining DR risk after production Go and selected the next operator decision.
+
+```txt
+loop_272_current_status_override=true
+dr_remediation_strategy_review_created=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+dr_next_operator_decision_required=true
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 273 DR backup artifact validation preflight
+```
+
+Operator decision package for the next DR step:
+
+```txt
+approval_decision=approve_dr_backup_artifact_validation_preflight
+approval_scope=sanitized_artifact_metadata_only
+artifact_path_recording_allowed=false
+artifact_content_reading_allowed=false
+secret_recording_allowed=false
+restore_execution_allowed=false
+pg_restore_allowed=false
+psql_allowed=false
+supabase_connection_allowed=false
+db_change_allowed=false
+production_go_unchanged=true
+```
+
+Operator handoff:
+
+- Do not paste backup artifact paths, dump paths, DB URLs, secrets, raw logs, SQL, DB object names, role names, package names, extension names, LINE identifiers, message bodies, or production logs.
+- If approving Loop 273, approve only sanitized artifact metadata validation.
+- Do not execute restore, `pg_restore`, `psql`, Supabase connection, or DB changes in Loop 273.
+- Keep production Go unchanged while DR remains a known accepted risk.
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation as the target-control proof model, selected the existing internal CLI one-message category, and ran only dry-run route preflight. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

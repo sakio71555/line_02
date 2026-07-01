@@ -1,14 +1,14 @@
 # Production Vs DR Readiness Matrix
 
-This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution.
+This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution. Loop 272 reviews the DR strategy and selects backup artifact validation preflight before restore retry.
 
 | area | status | reason_scope | evidence | next_review | go_status |
 | --- | --- | --- | --- | --- | --- |
-| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md` | Loop 272 DR remediation strategy review | Known risk accepted |
+| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md`, `docs/15_runbooks/dr_backup_artifact_validation_preflight.md` | Loop 273 DR backup artifact validation preflight | Known risk accepted |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 272 DR remediation strategy review | Included in current runtime Go |
-| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 272 DR remediation strategy review | Go for current runtime |
-| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 272 DR remediation strategy review | `production_go` scoped |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 273 DR backup artifact validation preflight | Included in current runtime Go |
+| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 273 DR backup artifact validation preflight | Go for current runtime |
+| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 273 DR backup artifact validation preflight | `production_go` scoped |
 
 ## Current State
 
@@ -45,6 +45,11 @@ public_customers_no_auth_current=401
 post_go_monitoring_status=pass
 dr_remediation_plan_created=true
 dr_remediation_priority=high_after_post_go_stability
+dr_remediation_strategy_review_created=true
+dr_remediation_strategy_status=reviewed
+recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+dr_next_operator_decision_required=true
+restore_execution_status=not_executed
 restricted_actions_remain_no_go=true
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
@@ -144,6 +149,41 @@ dns_change_allowed=false
 https_certbot_change_allowed=false
 package_install_allowed=false
 apt_operation_allowed=false
+```
+
+## Loop 272 DR Remediation Strategy Review
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | Selects one next DR operator decision, not another generic gate. |
+| Production Go | `unchanged` | Still scoped to current LINE/API/Admin runtime. |
+| Post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains accepted; not resolved. |
+| Recommended DR strategy | `backup_artifact_validation_plan_before_restore_retry` | Metadata-only preflight before restore retry. |
+| Restore execution | `no_go` | No restore, `pg_restore`, `psql`, Supabase, or DB change. |
+| Restricted actions | `no_go` | Additional send, retry, bulk, OpenAI activation, restore, DB/infra/package changes remain blocked. |
+| Next action | `selected` | Loop 273 DR backup artifact validation preflight. |
+
+```txt
+loop_272_dr_remediation_strategy_review_created=true
+loop_272_anti_proliferation_check=pass
+loop_272_production_go=true
+loop_272_production_go_scope=line_api_admin_current_runtime
+loop_272_post_go_monitoring_status=pass
+loop_272_dr_readiness_status=not_ready_restore_failed
+loop_272_dr_risk_acceptance_status=accepted_with_known_risk
+loop_272_dr_remediation_strategy_status=reviewed
+loop_272_recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
+loop_272_dr_next_operator_decision_required=true
+loop_272_restore_execution_status=not_executed
+loop_272_restore_execution_performed=false
+loop_272_pg_restore_executed=false
+loop_272_psql_executed=false
+loop_272_supabase_connection_attempted=false
+loop_272_db_change_performed=false
+loop_272_restricted_actions_remain_no_go=true
+loop_272_classifier_route_status=frozen
+loop_272_next_minimal_action=Loop 273 DR backup artifact validation preflight
 ```
 
 ## Loop 271 Post-Go Monitoring Review
