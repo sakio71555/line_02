@@ -96,6 +96,7 @@
 - Loop 266 line runtime permission gate without message send: `11_codex_tasks/266_line_runtime_permission_gate_without_message_send.md`
 - Loop 267 line message send permission gate: `11_codex_tasks/267_line_message_send_permission_gate.md`
 - Loop 268 single controlled LINE message send: `11_codex_tasks/268_single_controlled_line_message_send.md`
+- Loop 269 single controlled LINE message send with operator attestation: `11_codex_tasks/269_single_controlled_line_message_send_with_operator_attestation.md`
 
 ## Prompts and Templates
 

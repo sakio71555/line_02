@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 269 controlled LINE send route human decision | Not final Go |
-| External runtime readiness | `line_message_send_blocked_target_not_confirmed` | Loop 268 validated approval but blocked before send because target proof was not independently confirmed without identifier/body exposure | `docs/11_codex_tasks/268_single_controlled_line_message_send.md` | Loop 269 controlled LINE send route human decision | Not final Go |
-| Production readiness | `production_no_go_line_send_blocked` | DR, classifier, public smoke, target-proof blocker, and production Go decision reasons remain | `docs/11_codex_tasks/268_single_controlled_line_message_send.md` | Loop 269 controlled LINE send route human decision | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 270 controlled LINE send route review required | Not final Go |
+| External runtime readiness | `line_message_send_blocked_route_preflight` | Loop 269 accepted operator attestation but the internal CLI route could not fetch target from the current Codex environment | `docs/11_codex_tasks/269_single_controlled_line_message_send_with_operator_attestation.md` | Loop 270 controlled LINE send route review required | Not final Go |
+| Production readiness | `production_no_go_line_send_route_blocked` | DR, classifier, public smoke, route preflight blocker, and production Go decision reasons remain | `docs/11_codex_tasks/269_single_controlled_line_message_send_with_operator_attestation.md` | Loop 270 controlled LINE send route review required | `production_no_go` maintained |
 
 ## Current State
 
@@ -19,7 +19,7 @@ app_readiness_status=local_production_start_verified
 app_production_path_review_completed=true
 local_production_verification_status=pass
 final_pre_external_runtime_review_completed=true
-external_runtime_readiness_status=line_message_send_blocked_target_not_confirmed
+external_runtime_readiness_status=line_message_send_blocked_route_preflight
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
 staged_external_runtime_execution_plan_created=true
@@ -62,7 +62,7 @@ production_go_judgement_ready=true
 unknown_blocker_count=0
 known_env_blocker_count=0
 next_runtime_permission_gate_sequence_created=true
-next_execution_sequence_status=line_send_blocked_requires_operator_or_route_review
+next_execution_sequence_status=controlled_send_route_review_required
 line_runtime_permission_gate_completed=true
 line_runtime_permission_gate_status=pass
 line_runtime_non_send_validation_status=pass
@@ -74,12 +74,17 @@ line_message_send_executed=false
 line_message_send_execution_status=blocked
 line_message_send_attempt_count=0
 line_message_send_retry_executed=false
-operator_controlled_target_confirmed=not_confirmed
+operator_controlled_target_confirmed=operator_attested
 customer_target_confirmed=false
 line_identifier_recorded=false
 message_body_recorded=false
 line_api_response_body_recorded=false
 line_message_send_success=not_attempted
+operator_attestation_used=true
+route_preflight_mode=dry_run
+route_preflight_status=blocked
+route_preflight_blocker=customer_list_fetch_failed
+required_execute_env_available_in_codex_shell=false
 public_smoke_executed=false
 line_message_send_permission_gate_created=true
 line_message_send_execution_allowed_in_loop_267=false
@@ -96,10 +101,52 @@ placeholder_only_dry_run_execution_status=pass
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
-production_readiness_status=production_no_go_line_send_blocked
+production_readiness_status=production_no_go_line_send_route_blocked
 production_no_go=true
 production_no_go_reason_scope=fully_split
 production_go_changed=false
+```
+
+## Loop 269 Single Controlled LINE Message Send With Operator Attestation
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | Operator attestation moved past the Loop 268 target-proof blocker. |
+| Approval and attestation | `approved` | Target control is operator-attested. |
+| Send method | `internal_cli_category_selected` | Existing one-message/no-retry/no-bulk category. |
+| Route preflight | `blocked` | Current Codex shell could not fetch target through the route. |
+| LINE message send | `blocked_before_attempt` | No external LINE API connection. |
+| Retry | `not_executed` | Retry remains No-Go. |
+| Identifier/body recording | `false` | No LINE identifier, message body, or LINE API response body recorded. |
+| Public smoke | `not_executed` | Separate approval required. |
+| Production Go | `not_changed` | `production_no_go=true`. |
+| Next action | `selected` | Loop 270 controlled LINE send route review required. |
+
+```txt
+loop_269_operator_attestation_used=true
+loop_269_operator_controlled_target_confirmed=operator_attested
+loop_269_customer_target_confirmed=false
+loop_269_send_method_category=existing_internal_cli_one_message_category
+loop_269_route_preflight_mode=dry_run
+loop_269_route_preflight_status=blocked
+loop_269_route_preflight_blocker=customer_list_fetch_failed
+loop_269_required_execute_env_available_in_codex_shell=false
+loop_269_line_message_send_execution_status=blocked
+loop_269_line_message_send_attempt_count=0
+loop_269_line_message_send_success=not_attempted
+loop_269_line_message_send_executed=false
+loop_269_line_message_send_retry_executed=false
+loop_269_line_identifier_recorded=false
+loop_269_message_body_recorded=false
+loop_269_line_api_response_body_recorded=false
+loop_269_line_external_api_connection_attempted=false
+loop_269_public_smoke_executed=false
+loop_269_production_no_go=true
+loop_269_production_go_changed=false
+loop_269_dr_readiness_status=not_ready_restore_failed
+loop_269_classifier_route_status=frozen
+loop_269_next_execution_sequence_status=controlled_send_route_review_required
+loop_269_next_minimal_action=Loop 270 controlled LINE send route review required
 ```
 
 ## Loop 268 Single Controlled LINE Message Send

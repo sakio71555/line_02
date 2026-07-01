@@ -617,6 +617,8 @@ Loop 267 line message send permission gateでは、Loop 266のnon-send validatio
 
 Loop 268 single controlled LINE message sendでは、operator承認ブロックを検証し、既存internal CLI one-message categoryを選定しましたが、operator-controlled non-customer targetをLINE identifierやmessage bodyなしで独立確認できなかったため、送信前にblockedしました。LINE送信、retry、外部LINE API接続、public smoke、OpenAI、Supabase write、production Goは未実施です。詳細は [Loop 268 task doc](docs/11_codex_tasks/268_single_controlled_line_message_send.md) を参照してください。次は `Loop 269: controlled LINE send route human decision` です。
 
+Loop 269 single controlled LINE message send with operator attestationでは、operator attestationをtarget-control根拠として採用し、既存internal CLI one-message categoryでdry-run route preflightまで進めました。現在のCodex実行環境ではrouteがtarget fetchに失敗し、execute-mode runtime categoriesも利用できないため、LINE送信前にblockedしました。LINE送信、retry、外部LINE API接続、public smoke、OpenAI、Supabase write、production Goは未実施です。詳細は [Loop 269 task doc](docs/11_codex_tasks/269_single_controlled_line_message_send_with_operator_attestation.md) を参照してください。次は `Loop 270: controlled LINE send route review required` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

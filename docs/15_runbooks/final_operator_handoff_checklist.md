@@ -6,6 +6,44 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 269 Current Status Override
+
+Loop 269 accepted operator attestation as the target-control proof model, selected the existing internal CLI one-message category, and ran only dry-run route preflight. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.
+
+```txt
+loop_269_current_status_override=true
+anti_proliferation_check=pass
+forward_progress_type=human_input_required
+operator_attestation_used=true
+approval_block_present=true
+operator_approval_status=approved
+approval_scope=single_operator_controlled_test_message_only
+send_method_category=existing_internal_cli_one_message_category
+operator_controlled_target_confirmed=operator_attested
+customer_target_confirmed=false
+route_preflight_mode=dry_run
+route_preflight_status=blocked
+route_preflight_blocker=customer_list_fetch_failed
+line_message_send_execution_status=blocked
+line_message_send_attempt_count=0
+line_message_send_success=not_attempted
+line_message_send_executed=false
+line_message_send_retry_executed=false
+line_identifier_recorded=false
+message_body_recorded=false
+line_api_response_body_recorded=false
+line_external_api_connection_attempted=false
+public_smoke_executed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_execution_sequence_status=controlled_send_route_review_required
+selected_next_minimal_action=Loop 270 controlled LINE send route review required
+```
+
+Do not send LINE messages until the route review decides how a one-send/no-retry route can execute with runtime env and target selection without exposing identifiers or message bodies.
+
 ## Loop 268 Current Status Override
 
 Loop 268 validated the operator approval for one controlled LINE test message and selected the existing internal CLI one-message category. It blocked before sending because the operator-controlled non-customer target could not be independently confirmed without exposing a LINE identifier or message body.

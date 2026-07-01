@@ -6,7 +6,7 @@
 対象:
 
 ```txt
-Loop 268: single controlled LINE message send
+Loop 269: single controlled LINE message send with operator attestation
 ```
 
 結果:
@@ -15,13 +15,18 @@ Loop 268: single controlled LINE message send
 loop_status=blocked
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-forward_progress_type=single_controlled_line_send_blocked_with_reason
+forward_progress_type=human_input_required
+operator_attestation_used=true
 approval_block_present=true
 operator_approval_status=approved
 approval_scope=single_operator_controlled_test_message_only
 send_method_category=existing_internal_cli_one_message_category
-operator_controlled_target_confirmed=not_confirmed
+operator_controlled_target_confirmed=operator_attested
 customer_target_confirmed=false
+route_preflight_mode=dry_run
+route_preflight_status=blocked
+route_preflight_blocker=customer_list_fetch_failed
+required_execute_env_available_in_codex_shell=false
 line_message_send_execution_status=blocked
 line_message_send_attempt_count=0
 line_message_send_success=not_attempted
@@ -36,15 +41,8 @@ production_no_go=true
 production_go_changed=false
 dr_readiness_status=not_ready_restore_failed
 classifier_route_status=frozen
-next_execution_sequence_status=line_send_blocked_requires_operator_or_route_review
-selected_next_minimal_action=Loop 269 controlled LINE send route human decision
-```
-
-Blocked reason:
-
-```txt
-blocked_reason=operator_controlled_target_not_independently_confirmed_without_identifier_or_body
-blocked_reason_secondary=send_route_would_need_external_line_api_attempt_after_unconfirmed_target
+next_execution_sequence_status=controlled_send_route_review_required
+selected_next_minimal_action=Loop 270 controlled LINE send route review required
 ```
 
 Safety:
@@ -84,8 +82,9 @@ config_changed=false
 
 レビュー観点:
 
-- Loop 268は承認を検証したうえで、条件未達により送信前に止まっているか。
-- 承認だけをtarget proofとして扱わず、customer誤送信リスクを避けた判断になっているか。
+- Operator attestationによりLoop 268のtarget independent confirmation blockerは解消扱いになっているか。
+- 新しいblockerはcurrent Codex shellからinternal CLI routeがtarget fetchできないことか。
+- これ以上approval/readiness docsを増やすより、route review / human input required にすべきか。
 - `production_no_go=true` と `dr_readiness_status=not_ready_restore_failed` が維持されているか。
 - LINE identifier / message body / LINE API response body / secret / env value / raw log が記録されていないか。
-- 次Loop候補を `Loop 269: controlled LINE send route human decision` のみにしてよいか。
+- 次Loop候補を `Loop 270: controlled LINE send route review required` のみにしてよいか。
