@@ -6,6 +6,51 @@ productionへ進む直前に、staging検証、Auth/JWT、RLS、selectedTenantId
 
 このrunbookでは本物LINE送信、OpenAI API実呼び出し、production DB接続、production deploy、production smokeは行わない。
 
+## Loop 268 Current Status Override
+
+Loop 268 validated the operator approval for one controlled LINE test message, selected the existing internal CLI one-message category, and blocked before send because the operator-controlled non-customer target could not be independently confirmed without exposing a LINE identifier or message body.
+
+```txt
+loop_268_current_status_override=true
+approval_block_present=true
+operator_approval_status=approved
+approval_scope=single_operator_controlled_test_message_only
+line_message_send_allowed=true
+line_message_send_count_limit=1
+send_method_category=existing_internal_cli_one_message_category
+operator_controlled_target_confirmed=not_confirmed
+customer_target_confirmed=false
+line_message_send_execution_status=blocked
+line_message_send_attempt_count=0
+line_message_send_success=not_attempted
+line_message_send_executed=false
+line_message_send_retry_executed=false
+line_identifier_recorded=false
+message_body_recorded=false
+line_api_response_body_recorded=false
+line_external_api_connection_attempted=false
+public_smoke_executed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_operator_approval_required=true
+next_execution_sequence_status=line_send_blocked_requires_operator_or_route_review
+selected_next_minimal_action=Loop 269 controlled LINE send route human decision
+```
+
+Current LINE send Go / No-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| approval | `approved_for_one_send` | Approval was validated and consumed for the pre-send gate. |
+| send method | `internal_cli_category_selected` | Existing one-message/no-retry/no-bulk category is preferred. |
+| target proof | `not_confirmed` | Operator-controlled non-customer status was not independently proven without identifiers/body. |
+| line message send | `blocked_before_attempt` | No LINE external API call was attempted. |
+| retry | `not_allowed` | Retry remains No-Go. |
+| public smoke | `not_allowed` | Separate approval required. |
+| production Go | `not_requested` | `production_no_go=true`. |
+
 ## Loop 267 Current Status Override
 
 Loop 267 creates the LINE message send permission gate and controlled send readiness pack. LINE send remains unapproved in this Loop; the only next action is an explicit operator decision for one controlled test message.

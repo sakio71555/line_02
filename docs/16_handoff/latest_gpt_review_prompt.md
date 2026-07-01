@@ -6,38 +6,45 @@
 対象:
 
 ```txt
-Loop 267: line message send permission gate and controlled send readiness pack
+Loop 268: single controlled LINE message send
 ```
 
 結果:
 
 ```txt
-loop_status=complete
+loop_status=blocked
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-forward_progress_type=operator_decision_pack
-line_message_send_permission_gate_created=true
-line_message_send_execution_allowed_in_loop_267=false
-line_message_send_requires_explicit_operator_approval=true
-line_message_send_scope_must_be_single_message=true
-line_message_send_target_must_be_operator_controlled=true
-line_message_send_target_must_not_be_customer=true
-line_message_body_recording_allowed=false
-line_identifier_recording_allowed=false
-existing_controlled_send_route_available=true
-existing_internal_cli_available=true
-existing_staff_reply_route_available=conditional
-line_message_send_allowed=false
+forward_progress_type=single_controlled_line_send_blocked_with_reason
+approval_block_present=true
+operator_approval_status=approved
+approval_scope=single_operator_controlled_test_message_only
+send_method_category=existing_internal_cli_one_message_category
+operator_controlled_target_confirmed=not_confirmed
+customer_target_confirmed=false
+line_message_send_execution_status=blocked
+line_message_send_attempt_count=0
+line_message_send_success=not_attempted
 line_message_send_executed=false
+line_message_send_retry_executed=false
+line_identifier_recorded=false
+message_body_recorded=false
+line_api_response_body_recorded=false
 line_external_api_connection_attempted=false
 public_smoke_executed=false
 production_no_go=true
 production_go_changed=false
 dr_readiness_status=not_ready_restore_failed
 classifier_route_status=frozen
-next_operator_approval_required=true
-next_execution_sequence_status=line_message_send_approval_required
-selected_next_minimal_action=Loop 268 single controlled LINE message send approval decision
+next_execution_sequence_status=line_send_blocked_requires_operator_or_route_review
+selected_next_minimal_action=Loop 269 controlled LINE send route human decision
+```
+
+Blocked reason:
+
+```txt
+blocked_reason=operator_controlled_target_not_independently_confirmed_without_identifier_or_body
+blocked_reason_secondary=send_route_would_need_external_line_api_attempt_after_unconfirmed_target
 ```
 
 Safety:
@@ -49,9 +56,14 @@ db_url_recorded=false
 raw_log_recorded=false
 line_identifier_recorded=false
 message_body_recorded=false
+line_api_response_body_recorded=false
+customer_message_recorded=false
 line_message_send_executed=false
 line_external_api_connection_attempted=false
+line_message_send_retry_executed=false
 public_smoke_executed=false
+openai_api_executed=false
+supabase_write_executed=false
 production_go_changed=false
 runtime_code_changed=false
 package_json_changed=false
@@ -72,8 +84,8 @@ config_changed=false
 
 レビュー観点:
 
-- Loop 267は送信せず、Loop 268のoperator decision packとして前進しているか。
-- `production_no_go=true` が維持されているか。
-- LINE identifier / message body / secret / env value / raw log が記録されていないか。
-- 次Loop候補を `Loop 268: single controlled LINE message send approval decision` のみにしてよいか。
-- Loop 268へ進む場合、operatorが approve / do-not-approve / request-more-review のどれを返すべきか。
+- Loop 268は承認を検証したうえで、条件未達により送信前に止まっているか。
+- 承認だけをtarget proofとして扱わず、customer誤送信リスクを避けた判断になっているか。
+- `production_no_go=true` と `dr_readiness_status=not_ready_restore_failed` が維持されているか。
+- LINE identifier / message body / LINE API response body / secret / env value / raw log が記録されていないか。
+- 次Loop候補を `Loop 269: controlled LINE send route human decision` のみにしてよいか。

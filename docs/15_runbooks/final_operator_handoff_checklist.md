@@ -6,6 +6,42 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 268 Current Status Override
+
+Loop 268 validated the operator approval for one controlled LINE test message and selected the existing internal CLI one-message category. It blocked before sending because the operator-controlled non-customer target could not be independently confirmed without exposing a LINE identifier or message body.
+
+```txt
+loop_268_current_status_override=true
+anti_proliferation_check=pass
+forward_progress_type=single_controlled_line_send_blocked_with_reason
+approval_block_present=true
+operator_approval_status=approved
+approval_scope=single_operator_controlled_test_message_only
+single_controlled_line_message_send_approval_consumed=true
+send_method_category=existing_internal_cli_one_message_category
+operator_controlled_target_confirmed=not_confirmed
+customer_target_confirmed=false
+line_message_send_execution_status=blocked
+line_message_send_attempt_count=0
+line_message_send_success=not_attempted
+line_message_send_executed=false
+line_message_send_retry_executed=false
+line_identifier_recorded=false
+message_body_recorded=false
+line_api_response_body_recorded=false
+line_external_api_connection_attempted=false
+public_smoke_executed=false
+production_no_go=true
+production_go_changed=false
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+next_operator_approval_required=true
+next_execution_sequence_status=line_send_blocked_requires_operator_or_route_review
+selected_next_minimal_action=Loop 269 controlled LINE send route human decision
+```
+
+Do not send LINE messages until the operator chooses how to prove or route an operator-controlled non-customer target without exposing identifiers or message bodies.
+
 ## Loop 267 Current Status Override
 
 Loop 267 creates the LINE message send permission gate and controlled send readiness pack. It does not send a LINE message, connect to the external LINE API, run public smoke, restart services, or change production Go.

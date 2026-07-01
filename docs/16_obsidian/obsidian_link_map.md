@@ -160,6 +160,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 261 Actual Runtime Env Presence Check](../11_codex_tasks/261_actual_runtime_env_presence_check.md)
 - [Loop 261 Obsidian Log](loop_261_actual_runtime_env_presence_check.md)
 - [Loop 262 Line Runtime Env Injection Permission Gate](../11_codex_tasks/262_line_runtime_env_injection_permission_gate.md)
+- [Loop 268 Single Controlled LINE Message Send](../11_codex_tasks/268_single_controlled_line_message_send.md)
+- [Loop 268 Obsidian Log](loop_268_single_controlled_line_message_send.md)
 - [Loop 262 Obsidian Log](loop_262_line_runtime_env_injection_permission_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
@@ -299,6 +301,8 @@ Loop 265 status: `line_runtime_env_post_injection_record_created=true`, `operato
 Loop 266 status: `line_runtime_permission_gate_completed=true`, `line_runtime_permission_gate_status=pass`, `line_runtime_non_send_validation_status=pass`, `api_health_check_status=pass`, `line_webhook_invalid_signature_check_status=pass`, `line_route_shape_check_status=pass`, `line_external_api_connection_attempted=false`, `line_message_send_executed=false`, `public_smoke_executed=false`, `production_no_go=true`, `production_go_changed=false`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 267 line message send permission gate`.
 
 Loop 267 status: `line_message_send_permission_gate_created=true`, `line_message_send_execution_allowed_in_loop_267=false`, `line_message_send_requires_explicit_operator_approval=true`, `line_message_send_scope_must_be_single_message=true`, `existing_controlled_send_route_available=true`, `existing_internal_cli_available=true`, `existing_staff_reply_route_available=conditional`, `line_message_send_executed=false`, `line_external_api_connection_attempted=false`, `public_smoke_executed=false`, `production_no_go=true`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 268 single controlled LINE message send approval decision`.
+
+Loop 268 status: `approval_block_present=true`, `operator_approval_status=approved`, `send_method_category=existing_internal_cli_one_message_category`, `operator_controlled_target_confirmed=not_confirmed`, `customer_target_confirmed=false`, `line_message_send_execution_status=blocked`, `line_message_send_attempt_count=0`, `line_message_send_executed=false`, `line_external_api_connection_attempted=false`, `public_smoke_executed=false`, `production_no_go=true`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 269 controlled LINE send route human decision`.
 
 ## Obsidian Helpers
 
