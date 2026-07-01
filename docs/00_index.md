@@ -109,6 +109,7 @@
 - DR restore retry preflight decision runbook: `15_runbooks/dr_restore_retry_preflight_decision.md`
 - Loop 276 DR restore retry controlled execution approval: `11_codex_tasks/276_dr_restore_retry_controlled_execution_approval.md`
 - DR restore retry controlled execution approval runbook: `15_runbooks/dr_restore_retry_controlled_execution_approval.md`
+- Loop 277 operator-side DR restore retry result intake: `11_codex_tasks/277_operator_side_dr_restore_retry_result_intake.md`
 
 ## Prompts and Templates
 

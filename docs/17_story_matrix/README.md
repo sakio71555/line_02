@@ -195,6 +195,30 @@ dr_readiness_status=not_ready_restore_failed
 selected_next_minimal_action=Loop 277 operator-side DR restore retry controlled execution
 ```
 
+## Loop 277 Operator-Side DR Restore Retry Result Intake
+
+Loop 277 records the operator-side restore retry result as `not_attempted`. No restore retry ran, so DR readiness remains `not_ready_restore_failed` and production Go remains scoped to the current LINE/API/Admin runtime.
+
+```txt
+operator_side_restore_result_intake_created=true
+operator_side_restore_result_provided=true
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=operator_side_restore_not_run
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_retry_status=not_attempted
+dr_readiness_status=not_ready_restore_failed
+selected_next_minimal_action=Loop 278 operator-side restore execution followup
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

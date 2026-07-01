@@ -318,6 +318,58 @@ Current Loop 276 reading:
 | Codex direct restore/DB access | `no_go` | Codex cannot execute restore or access DB/secrets/artifact paths. |
 | restore execution | `no_go_in_loop_276` | Execution requires a future explicit operator-side approval Loop. |
 
+## Loop 277 Current Status Override
+
+Loop 277 records the sanitized operator-side restore retry result as `not_attempted`. Production Go remains unchanged, and DR readiness remains incomplete because no restore retry ran.
+
+```txt
+loop_277_current_status_override=true
+operator_side_restore_result_intake_created=true
+operator_side_restore_result_provided=true
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=operator_side_restore_not_run
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_artifact_validation_preflight_status=pass
+dr_restore_retry_status=not_attempted
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 278 operator-side restore execution followup
+```
+
+Current Loop 277 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR artifact validation | `pass` | Sanitized artifact validation remains selected. |
+| operator-side restore result | `not_attempted` | No restore retry ran. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains accepted. |
+| retry policy | `no_retry_executed` | No retry was attempted or authorized. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

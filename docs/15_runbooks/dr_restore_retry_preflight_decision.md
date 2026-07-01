@@ -189,3 +189,27 @@ next_minimal_action=single_action_for_loop_277
 ```
 
 Use [DR Restore Retry Controlled Execution Approval](dr_restore_retry_controlled_execution_approval.md) as the detailed operator approval and sanitized result template.
+
+## Loop 277 Operator-Side Result Intake
+
+Loop 277 recorded the operator-side sanitized restore retry result as `not_attempted`. The restore retry still has not run, so DR readiness remains `not_ready_restore_failed`.
+
+```txt
+operator_side_restore_result_intake_created=true
+operator_side_restore_result_provided=true
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=operator_side_restore_not_run
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_restore_retry_status=not_attempted
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+production_go_unchanged=true
+production_go_scope_expanded=false
+next_minimal_action=Loop 278 operator-side restore execution followup
+```

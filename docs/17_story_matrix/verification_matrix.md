@@ -64,6 +64,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-054 | DR artifact validation pass | docs-only review of sanitized operator metadata and artifact validation status | candidate A pass recorded, candidate B rejected, restore remains No-Go | true | false | false | false | false | false | false | false | pending_loop_274_verification | No artifact path/name/content/hash/exact size, restore, `pg_restore`, `psql`, Supabase, DB change, raw log, or secret exposure. |
 | V-055 | DR restore retry preflight decision | docs-only review of restore retry requirements, option comparison, and operator approval package | operator-side restore preflight selected, execution remains No-Go, Loop 276 operator decision required | true | false | false | false | false | false | false | false | pending_loop_275_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, or OpenAI execution. |
 | V-056 | DR restore retry controlled execution approval | docs-only controlled execution approval package | operator-side one-attempt approval package prepared, execution remains No-Go in Loop 276, Loop 277 operator-side execution required | true | false | false | false | false | false | false | false | pending_loop_276_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
+| V-057 | Operator-side DR restore retry result intake | docs-only sanitized result intake | operator-side result recorded as not_attempted, restore still not run, DR readiness unchanged | true | false | false | false | false | false | false | false | pending_loop_277_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, OpenAI, or VPS direct execution. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1815,6 +1816,45 @@ loop_276_vps_direct_work_used=false
 loop_276_vps_readonly_sanity_check_status=not_attempted_not_required
 loop_276_restricted_actions_remain_no_go=true
 loop_276_next_loop=Loop 277 operator-side DR restore retry controlled execution
+```
+
+## Loop 277 Verification Note
+
+```txt
+loop_277_operator_side_restore_result_intake_created=true
+loop_277_anti_proliferation_check=pass
+loop_277_is_this_loop_proliferation_risk=false
+loop_277_forward_progress_type=operator_side_restore_result_intake
+loop_277_production_go=true
+loop_277_production_go_scope=line_api_admin_current_runtime
+loop_277_production_go_scope_expanded=false
+loop_277_post_go_monitoring_status=pass
+loop_277_dr_readiness_status=not_ready_restore_failed
+loop_277_dr_risk_acceptance_status=accepted_with_known_risk
+loop_277_dr_artifact_validation_preflight_status=pass
+loop_277_operator_side_restore_result_provided=true
+loop_277_operator_side_restore_retry_execution_status=not_attempted
+loop_277_restore_retry_attempt_count=0
+loop_277_restore_retry_success=not_attempted
+loop_277_failure_reason=operator_side_restore_not_run
+loop_277_restore_retry_retry_executed=false
+loop_277_pg_restore_executed=false
+loop_277_psql_executed=false
+loop_277_supabase_connection_attempted=false
+loop_277_db_change_performed=false
+loop_277_raw_log_recorded=false
+loop_277_secret_recorded=false
+loop_277_db_url_recorded=false
+loop_277_artifact_path_recorded=false
+loop_277_artifact_filename_recorded=false
+loop_277_artifact_content_recorded=false
+loop_277_sql_recorded=false
+loop_277_db_object_recorded=false
+loop_277_role_recorded=false
+loop_277_package_name_recorded=false
+loop_277_extension_name_recorded=false
+loop_277_restricted_actions_remain_no_go=true
+loop_277_next_loop=Loop 278 operator-side restore execution followup
 ```
 
 ## Stage 2 Rule

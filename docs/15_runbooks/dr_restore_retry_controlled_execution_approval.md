@@ -213,3 +213,38 @@ restore_execution_allowed_in_loop_276=false
 next_operator_approval_required=true
 next_minimal_action=single_action_for_loop_277
 ```
+
+## Loop 277 Result Intake
+
+Loop 277 received a sanitized operator-side result block. The result was `not_attempted`, so no restore retry was run and DR readiness remains incomplete.
+
+```txt
+operator_side_restore_result_intake_created=true
+operator_side_restore_result_provided=true
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=operator_side_restore_not_run
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_restore_retry_status=not_attempted
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+production_go_unchanged=true
+production_go_scope_expanded=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+next_minimal_action=Loop 278 operator-side restore execution followup
+```

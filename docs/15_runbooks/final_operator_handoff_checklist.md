@@ -268,6 +268,52 @@ Operator handoff:
 - Return only the sanitized success, failed-no-retry, or not-attempted template after the operator-side action.
 - Do not retry after failure without a new explicit operator approval.
 
+## Loop 277 Current Status Override
+
+Loop 277 records the sanitized operator-side restore retry result as `not_attempted`. No restore retry ran, and the next minimal action is an operator-side execution followup rather than diagnosis or post-restore validation.
+
+```txt
+loop_277_current_status_override=true
+operator_side_restore_result_intake_created=true
+operator_side_restore_result_provided=true
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=operator_side_restore_not_run
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+dr_restore_retry_status=not_attempted
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 278 operator-side restore execution followup
+```
+
+Operator handoff:
+
+- If restore retry is still desired, perform a new operator-side execution followup.
+- Keep the one-attempt limit, no retry without new approval, and sanitized-result-only reporting.
+- Do not share DB URL, secret, artifact path, artifact filename, exact size, hash/checksum value, raw output, SQL, object names, role names, dump content, row content, LINE identifiers, message bodies, or production logs.
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation as the target-control proof model, selected the existing internal CLI one-message category, and ran only dry-run route preflight. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

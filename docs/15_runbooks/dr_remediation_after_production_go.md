@@ -74,9 +74,9 @@ The production Go decision is not a DR completion signal. DR should be resumed o
 ```txt
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 recommended_strategy_reason=lowest_risk_next_step_after_post_go_monitoring_pass
-next_recommended_loop=Loop 277 operator-side DR restore retry controlled execution
+next_recommended_loop=Loop 278 operator-side restore execution followup
 dr_next_operator_decision_required=true
-next_minimal_action=Loop 277 operator-side DR restore retry controlled execution
+next_minimal_action=Loop 278 operator-side restore execution followup
 ```
 
 Loop 273 completed the preflight contract and initially required sanitized operator artifact metadata. Loop 274 then supplied and validated the metadata, so the current DR step is operator-side restore retry approval, not restore execution by Codex.
@@ -146,6 +146,28 @@ loop_276_psql_executed=false
 loop_276_supabase_connection_attempted=false
 loop_276_db_change_performed=false
 loop_276_next_minimal_action=Loop 277 operator-side DR restore retry controlled execution
+```
+
+Loop 277 recorded the sanitized operator-side restore retry result as `not_attempted`. No restore retry ran, and the DR known risk remains accepted.
+
+```txt
+loop_277_operator_side_restore_result_intake_created=true
+loop_277_operator_side_restore_result_provided=true
+loop_277_operator_side_restore_retry_execution_status=not_attempted
+loop_277_restore_retry_attempt_count=0
+loop_277_restore_retry_success=not_attempted
+loop_277_failure_reason=operator_side_restore_not_run
+loop_277_restore_retry_retry_executed=false
+loop_277_pg_restore_executed=false
+loop_277_psql_executed=false
+loop_277_supabase_connection_attempted=false
+loop_277_db_change_performed=false
+loop_277_dr_restore_retry_status=not_attempted
+loop_277_dr_readiness_status=not_ready_restore_failed
+loop_277_dr_risk_acceptance_status=accepted_with_known_risk
+loop_277_production_go_unchanged=true
+loop_277_production_go_scope_expanded=false
+loop_277_next_minimal_action=Loop 278 operator-side restore execution followup
 ```
 
 ## Artifact And Secret Policy

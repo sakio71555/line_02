@@ -1,14 +1,14 @@
 # Production Vs DR Readiness Matrix
 
-This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution. Loop 272 reviews the DR strategy and selects backup artifact validation preflight before restore retry. Loop 273 creates the artifact metadata schema and records that operator metadata is required before validation can pass. Loop 274 validates sanitized operator metadata as pass while keeping restore execution blocked. Loop 275 creates the restore retry preflight decision package and selects operator-side controlled restore retry approval as the next operator decision. Loop 276 creates that approval package while keeping execution disallowed in Loop 276.
+This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution. Loop 272 reviews the DR strategy and selects backup artifact validation preflight before restore retry. Loop 273 creates the artifact metadata schema and records that operator metadata is required before validation can pass. Loop 274 validates sanitized operator metadata as pass while keeping restore execution blocked. Loop 275 creates the restore retry preflight decision package and selects operator-side controlled restore retry approval as the next operator decision. Loop 276 creates that approval package while keeping execution disallowed in Loop 276. Loop 277 records the operator-side result as not attempted.
 
 | area | status | reason_scope | evidence | next_review | go_status |
 | --- | --- | --- | --- | --- | --- |
-| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md`, `docs/15_runbooks/dr_backup_artifact_validation_preflight.md`, `docs/15_runbooks/dr_restore_retry_preflight_decision.md`, `docs/15_runbooks/dr_restore_retry_controlled_execution_approval.md` | Loop 277 operator-side DR restore retry controlled execution | Known risk accepted |
+| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md`, `docs/15_runbooks/dr_backup_artifact_validation_preflight.md`, `docs/15_runbooks/dr_restore_retry_preflight_decision.md`, `docs/15_runbooks/dr_restore_retry_controlled_execution_approval.md` | Loop 278 operator-side restore execution followup | Known risk accepted |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 277 operator-side DR restore retry controlled execution | Included in current runtime Go |
-| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 277 operator-side DR restore retry controlled execution | Go for current runtime |
-| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 277 operator-side DR restore retry controlled execution | `production_go` scoped |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 278 operator-side restore execution followup | Included in current runtime Go |
+| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 278 operator-side restore execution followup | Go for current runtime |
+| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 278 operator-side restore execution followup | `production_go` scoped |
 
 ## Current State
 
@@ -64,6 +64,12 @@ recommended_execution_mode=operator_side_only
 restore_retry_attempt_limit=1
 stop_on_first_failure=true
 retry_allowed=false
+operator_side_restore_result_intake_created=true
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+dr_restore_retry_status=not_attempted
+production_go_scope_expanded=false
 next_operator_approval_required=true
 restore_execution_status=not_executed
 restricted_actions_remain_no_go=true
@@ -365,6 +371,57 @@ loop_276_vps_direct_work_used=false
 loop_276_vps_readonly_sanity_check_status=not_attempted_not_required
 loop_276_restricted_actions_remain_no_go=true
 loop_276_next_loop=Loop 277 operator-side DR restore retry controlled execution
+```
+
+## Loop 277 Operator-Side DR Restore Retry Result Intake
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | Records the provided sanitized result instead of adding another approval gate. |
+| Production Go | `unchanged` | Still scoped to current LINE/API/Admin runtime. |
+| Production scope expansion | `false` | No scope expansion was recorded. |
+| Post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR artifact validation | `pass` | Loop 274 candidate A remains selected via sanitized metadata only. |
+| Operator-side result | `not_attempted` | The operator-side restore retry did not run. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains accepted. |
+| Restore execution | `not_executed` | No restore retry, `pg_restore`, `psql`, Supabase connection, or DB change. |
+| Next action | `selected` | Loop 278 operator-side restore execution followup. |
+
+```txt
+loop_277_operator_side_restore_result_intake_created=true
+loop_277_anti_proliferation_check=pass
+loop_277_is_this_loop_proliferation_risk=false
+loop_277_forward_progress_type=operator_side_restore_result_intake
+loop_277_production_go=true
+loop_277_production_go_scope=line_api_admin_current_runtime
+loop_277_production_go_scope_expanded=false
+loop_277_post_go_monitoring_status=pass
+loop_277_dr_readiness_status=not_ready_restore_failed
+loop_277_dr_risk_acceptance_status=accepted_with_known_risk
+loop_277_dr_artifact_validation_preflight_status=pass
+loop_277_operator_side_restore_result_provided=true
+loop_277_operator_side_restore_retry_execution_status=not_attempted
+loop_277_restore_retry_attempt_count=0
+loop_277_restore_retry_success=not_attempted
+loop_277_failure_reason=operator_side_restore_not_run
+loop_277_restore_retry_retry_executed=false
+loop_277_pg_restore_executed=false
+loop_277_psql_executed=false
+loop_277_supabase_connection_attempted=false
+loop_277_db_change_performed=false
+loop_277_raw_log_recorded=false
+loop_277_secret_recorded=false
+loop_277_db_url_recorded=false
+loop_277_artifact_path_recorded=false
+loop_277_artifact_filename_recorded=false
+loop_277_artifact_content_recorded=false
+loop_277_sql_recorded=false
+loop_277_db_object_recorded=false
+loop_277_role_recorded=false
+loop_277_package_name_recorded=false
+loop_277_extension_name_recorded=false
+loop_277_restricted_actions_remain_no_go=true
+loop_277_next_loop=Loop 278 operator-side restore execution followup
 ```
 
 ## Loop 271 Post-Go Monitoring Review
