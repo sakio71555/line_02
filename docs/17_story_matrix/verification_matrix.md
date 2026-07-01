@@ -1686,6 +1686,36 @@ loop_272_restricted_actions_remain_no_go=true
 loop_272_next_loop=Loop 273 DR backup artifact validation preflight
 ```
 
+## Loop 273 Verification Note
+
+```txt
+loop_273_dr_backup_artifact_validation_preflight_created=true
+loop_273_artifact_metadata_schema_created=true
+loop_273_operator_artifact_metadata_provided=false
+loop_273_operator_artifact_metadata_required=true
+loop_273_dr_backup_artifact_validation_preflight_status=operator_metadata_required
+loop_273_artifact_validation_pass_does_not_authorize_restore=true
+loop_273_restore_retry_requires_separate_operator_approval=true
+loop_273_restore_retry_requires_restore_preflight_loop=true
+loop_273_production_go=true
+loop_273_production_go_scope=line_api_admin_current_runtime
+loop_273_post_go_monitoring_status=pass
+loop_273_dr_readiness_status=not_ready_restore_failed
+loop_273_dr_risk_acceptance_status=accepted_with_known_risk
+loop_273_restore_execution_performed=false
+loop_273_pg_restore_executed=false
+loop_273_psql_executed=false
+loop_273_supabase_connection_attempted=false
+loop_273_db_change_performed=false
+loop_273_artifact_path_recorded=false
+loop_273_artifact_filename_recorded=false
+loop_273_artifact_content_read=false
+loop_273_artifact_hash_recorded=false
+loop_273_artifact_size_exact_recorded=false
+loop_273_restricted_actions_remain_no_go=true
+loop_273_next_loop=Loop 274 DR artifact metadata intake and validation
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.

@@ -143,6 +143,48 @@ Current DR strategy reading:
 | restore execution | `no_go` | No restore, `pg_restore`, `psql`, Supabase connection, or DB change allowed in Loop 272/273 preflight. |
 | restricted actions | `no_go` | Additional LINE send, retry, bulk, OpenAI, DB/infra/package changes remain No-Go. |
 
+## Loop 273 Current Status Override
+
+Loop 273 creates the DR backup artifact validation preflight and operator metadata schema. It records that operator metadata is required before artifact validation can pass.
+
+```txt
+loop_273_current_status_override=true
+dr_backup_artifact_validation_preflight_created=true
+artifact_metadata_schema_created=true
+operator_artifact_metadata_provided=false
+operator_artifact_metadata_required=true
+dr_backup_artifact_validation_preflight_status=operator_metadata_required
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_read=false
+artifact_hash_recorded=false
+artifact_size_exact_recorded=false
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 274 DR artifact metadata intake and validation
+```
+
+Current Loop 273 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR readiness | `not_ready_restore_failed` | Still accepted as known risk, not resolved. |
+| DR artifact validation | `operator_metadata_required` | The schema exists, but no sufficient sanitized operator artifact metadata is present. |
+| restore execution | `no_go` | Artifact validation cannot authorize restore. |
+| restricted actions | `no_go` | Additional LINE send, retry, bulk, OpenAI, DB/infra/package changes remain No-Go. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

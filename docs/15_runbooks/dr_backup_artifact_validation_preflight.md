@@ -63,6 +63,90 @@ restore_execution_allowed=false
 
 Do not record the artifact path, dump path, checksum value, file size value, secret values, raw command output, or any content from the dump.
 
+## Loop 273 Artifact Metadata Contract
+
+Loop 273 upgrades the future preflight fields into a strict operator metadata schema. The next intake must use only sanitized categories and booleans:
+
+```txt
+operator_artifact_metadata_provided=true_or_false
+artifact_exists=true_or_false_or_unknown
+artifact_nonempty=true_or_false_or_unknown
+artifact_generation_status=known_or_unknown
+artifact_age_category=same_day_or_recent_or_stale_or_unknown
+artifact_storage_category=operator_managed_outside_repo_or_vps_outside_repo_or_external_backup_storage_or_unknown
+artifact_format_category=logical_backup_or_platform_backup_or_unknown
+artifact_restore_candidate=true_or_false_or_unknown
+artifact_integrity_status=not_checked_or_operator_attested_pass_or_operator_attested_fail_or_unknown
+artifact_access_status=operator_accessible_or_not_accessible_or_unknown
+artifact_secret_exposure_risk=none_recorded_or_risk_unknown
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_read=false
+artifact_hash_recorded=false
+artifact_size_exact_recorded=false
+```
+
+Reject the intake if it includes artifact path, artifact filename, exact size, hash/checksum value, storage URL, shell output, raw log, DB URL, secret, SQL, DB object name, role name, package name, extension name, dump content, row content, LINE identifier, message body, production log, or any request to execute restore/`pg_restore`/`psql`/Supabase/DB changes.
+
+## Loop 273 Validation Criteria
+
+```txt
+dr_backup_artifact_validation_preflight_created=true
+artifact_metadata_schema_created=true
+operator_artifact_metadata_required=true
+operator_artifact_metadata_provided=false
+dr_backup_artifact_validation_preflight_status=operator_metadata_required
+```
+
+Status meanings:
+
+| status | criteria | restore authorization |
+| --- | --- | --- |
+| `operator_metadata_required` | no complete sanitized operator payload exists | no |
+| `pass` | all required sanitized fields are present, artifact is operator-attested as present/nonempty/accessible, integrity is operator-attested pass, and no forbidden details are recorded | no |
+| `partial` | sanitized payload exists but one or more non-execution values remain unknown or not checked | no |
+| `blocked` | forbidden content is present or the request asks to execute restore/`pg_restore`/`psql`/Supabase/DB changes | no |
+
+Loop 273 does not infer artifact metadata from older notes and does not read artifact files. If metadata is not explicitly present as sanitized operator input, keep `operator_artifact_metadata_required=true`.
+
+## Operator-Side Metadata Collection Format
+
+For Loop 274, the operator should paste only this sanitized block:
+
+```txt
+operator_artifact_metadata_provided=true
+artifact_exists=true_or_false_or_unknown
+artifact_nonempty=true_or_false_or_unknown
+artifact_generation_status=known_or_unknown
+artifact_age_category=same_day_or_recent_or_stale_or_unknown
+artifact_storage_category=operator_managed_outside_repo_or_vps_outside_repo_or_external_backup_storage_or_unknown
+artifact_format_category=logical_backup_or_platform_backup_or_unknown
+artifact_restore_candidate=true_or_false_or_unknown
+artifact_integrity_status=not_checked_or_operator_attested_pass_or_operator_attested_fail_or_unknown
+artifact_access_status=operator_accessible_or_not_accessible_or_unknown
+artifact_secret_exposure_risk=none_recorded_or_risk_unknown
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_read=false
+artifact_hash_recorded=false
+artifact_size_exact_recorded=false
+```
+
+If any field cannot be safely determined without revealing forbidden details, use `unknown`.
+
+## Restore Retry Boundary
+
+```txt
+artifact_validation_pass_does_not_authorize_restore=true
+restore_retry_requires_separate_operator_approval=true
+restore_retry_requires_restore_preflight_loop=true
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+```
+
 ## Operator Decision Package
 
 Recommended approval format:
@@ -109,6 +193,9 @@ Stop before any write, commit, or execution if any of the following is requested
 
 ```txt
 dr_backup_artifact_validation_preflight_created=true
+artifact_metadata_schema_created=true
+operator_artifact_metadata_required=true
+dr_backup_artifact_validation_preflight_status=operator_metadata_required
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 restore_execution_performed=false
 pg_restore_executed=false
@@ -116,7 +203,11 @@ psql_executed=false
 supabase_connection_attempted=false
 db_change_performed=false
 artifact_path_recorded=false
+artifact_filename_recorded=false
 artifact_content_read=false
+artifact_hash_recorded=false
+artifact_size_exact_recorded=false
 secret_recorded=false
-next_minimal_action=Loop 273 DR backup artifact validation preflight
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 274 DR artifact metadata intake and validation
 ```

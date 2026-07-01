@@ -127,6 +127,19 @@ bulk_send_allowed=false
 selected_next_minimal_action=DR_backup_artifact_validation_preflight
 ```
 
+## Loop 273 DR Backup Artifact Validation Preflight
+
+Loop 273 creates the sanitized artifact metadata schema and validation criteria. It does not read the artifact or execute restore. Because no sufficient sanitized operator metadata exists yet, the status is `operator_metadata_required`.
+
+```txt
+dr_backup_artifact_validation_preflight_created=true
+artifact_metadata_schema_created=true
+operator_artifact_metadata_required=true
+dr_backup_artifact_validation_preflight_status=operator_metadata_required
+dr_readiness_status=not_ready_restore_failed
+selected_next_minimal_action=Loop 274 DR artifact metadata intake and validation
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

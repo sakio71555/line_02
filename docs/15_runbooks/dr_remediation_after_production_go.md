@@ -74,9 +74,21 @@ The production Go decision is not a DR completion signal. DR should be resumed o
 ```txt
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 recommended_strategy_reason=lowest_risk_next_step_after_post_go_monitoring_pass
-next_recommended_loop=Loop 273 DR backup artifact validation preflight
+next_recommended_loop=Loop 274 DR artifact metadata intake and validation
 dr_next_operator_decision_required=true
-next_minimal_action=Loop 273 DR backup artifact validation preflight
+next_minimal_action=Loop 274 DR artifact metadata intake and validation
+```
+
+Loop 273 completed the preflight contract and found that no sufficient sanitized operator artifact metadata is present in the repo. The next DR step is therefore metadata intake, not restore execution.
+
+```txt
+loop_273_dr_backup_artifact_validation_preflight_created=true
+loop_273_artifact_metadata_schema_created=true
+loop_273_operator_artifact_metadata_required=true
+loop_273_dr_backup_artifact_validation_preflight_status=operator_metadata_required
+loop_273_artifact_validation_pass_does_not_authorize_restore=true
+loop_273_restore_retry_requires_separate_operator_approval=true
+loop_273_restore_retry_requires_restore_preflight_loop=true
 ```
 
 ## Artifact And Secret Policy
