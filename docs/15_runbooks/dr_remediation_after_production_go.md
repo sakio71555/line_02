@@ -74,12 +74,12 @@ The production Go decision is not a DR completion signal. DR should be resumed o
 ```txt
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 recommended_strategy_reason=lowest_risk_next_step_after_post_go_monitoring_pass
-next_recommended_loop=Loop 275 DR restore retry preflight decision
+next_recommended_loop=Loop 276 DR restore retry controlled execution approval
 dr_next_operator_decision_required=true
-next_minimal_action=Loop 275 DR restore retry preflight decision
+next_minimal_action=Loop 276 DR restore retry controlled execution approval
 ```
 
-Loop 273 completed the preflight contract and found that no sufficient sanitized operator artifact metadata is present in the repo. The next DR step is therefore metadata intake, not restore execution.
+Loop 273 completed the preflight contract and initially required sanitized operator artifact metadata. Loop 274 then supplied and validated the metadata, so the current DR step is operator-side restore retry approval, not restore execution by Codex.
 
 ```txt
 loop_273_dr_backup_artifact_validation_preflight_created=true
@@ -107,6 +107,24 @@ loop_274_psql_executed=false
 loop_274_supabase_connection_attempted=false
 loop_274_db_change_performed=false
 loop_274_next_minimal_action=Loop 275 DR restore retry preflight decision
+```
+
+Loop 275 reviewed the Loop 274 pass result and created the restore retry preflight decision package. It recommends operator-side controlled restore retry approval as the only next action, while keeping execution disallowed in Loop 275.
+
+```txt
+loop_275_dr_restore_retry_preflight_decision_created=true
+loop_275_anti_proliferation_check=pass
+loop_275_dr_artifact_validation_preflight_status=pass
+loop_275_recommended_restore_preflight_path=operator_side_restore_preflight_only
+loop_275_restore_retry_preflight_status=ready_for_operator_decision
+loop_275_next_operator_approval_required=true
+loop_275_restore_execution_allowed=false
+loop_275_restore_retry_execution_allowed=false
+loop_275_pg_restore_executed=false
+loop_275_psql_executed=false
+loop_275_supabase_connection_attempted=false
+loop_275_db_change_performed=false
+loop_275_next_minimal_action=Loop 276 DR restore retry controlled execution approval
 ```
 
 ## Artifact And Secret Policy
@@ -149,6 +167,21 @@ psql_allowed=false
 supabase_connection_allowed=false
 db_change_allowed=false
 secret_recording_allowed=false
+production_go_unchanged=true
+```
+
+Recommended next approval:
+
+```txt
+approval_decision=approve_operator_side_controlled_dr_restore_retry
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_secret_handling=operator_side_only
+codex_direct_db_access_allowed=false
+codex_direct_restore_execution_allowed=false
+stop_on_first_failure=true
+retry_allowed=false
+sanitized_result_required=true
 production_go_unchanged=true
 ```
 

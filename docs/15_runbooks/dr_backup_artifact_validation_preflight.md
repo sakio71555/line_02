@@ -147,6 +147,27 @@ supabase_connection_attempted=false
 db_change_performed=false
 ```
 
+## Loop 275 Restore Retry Preflight Decision
+
+Loop 275 uses the Loop 274 pass result only to create a restore retry preflight decision package. It does not authorize or execute restore.
+
+```txt
+dr_restore_retry_preflight_decision_created=true
+dr_artifact_validation_preflight_status=pass
+recommended_restore_preflight_path=operator_side_restore_preflight_only
+restore_retry_preflight_status=ready_for_operator_decision
+next_operator_approval_required=true
+restore_execution_allowed_in_loop_275=false
+restore_retry_execution_allowed=false
+pg_restore_allowed_in_loop_275=false
+psql_allowed_in_loop_275=false
+supabase_connection_allowed_in_loop_275=false
+db_change_allowed_in_loop_275=false
+next_minimal_action=single_action_for_loop_276
+```
+
+The recommended next decision is operator-side controlled restore retry approval. Codex should receive only sanitized outcomes and should not receive artifact path, artifact filename, exact size, hash/checksum, raw log, DB URL, secret, SQL, object name, role name, package name, extension name, dump content, or row content.
+
 ## Loop 274 Metadata Intake Result
 
 Loop 274 received operator-provided sanitized artifact metadata and validated it against the Loop 273 contract. Candidate labels are abstract labels only; artifact path, filename, storage URL, exact size, hash/checksum, raw log, and content are not recorded.

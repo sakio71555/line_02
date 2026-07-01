@@ -61,6 +61,8 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-051 | Production Go decision record and post-Go monitoring baseline | sanitized operator-side result recording only | scope-limited production Go recorded, DR known risk accepted, post-Go monitoring baseline created | true | false | false | false | false | false | false | false | pending_loop_270_verification | Does not execute additional LINE send, retry, public smoke rerun, OpenAI, Supabase restore, DB, infra, package, or runtime changes. |
 | V-052 | Post-Go monitoring review | read-only public health and auth guard checks | public API health 200, admin root 200, unauthenticated customers 401, DR remediation plan created | true | false | true | true | false | false | false | false | pending_loop_271_verification | Read-only public checks only; no send, retry, OpenAI, Supabase restore, DB, infra, package, raw log, or secret exposure. |
 | V-053 | DR remediation strategy review | docs-only strategy review and operator decision package | backup artifact validation preflight selected before restore retry | true | false | false | false | false | false | false | false | pending_loop_272_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/content, raw log, secret, package, infra, LINE, or OpenAI execution. |
+| V-054 | DR artifact validation pass | docs-only review of sanitized operator metadata and artifact validation status | candidate A pass recorded, candidate B rejected, restore remains No-Go | true | false | false | false | false | false | false | false | pending_loop_274_verification | No artifact path/name/content/hash/exact size, restore, `pg_restore`, `psql`, Supabase, DB change, raw log, or secret exposure. |
+| V-055 | DR restore retry preflight decision | docs-only review of restore retry requirements, option comparison, and operator approval package | operator-side restore preflight selected, execution remains No-Go, Loop 276 operator decision required | true | false | false | false | false | false | false | false | pending_loop_275_verification | No restore, `pg_restore`, `psql`, Supabase, DB change, artifact path/name/content/hash/exact size, raw log, secret, package, infra, LINE, or OpenAI execution. |
 
 ## Blocked Or Operator Approval Required
 
@@ -1753,6 +1755,33 @@ loop_274_supabase_connection_attempted=false
 loop_274_db_change_performed=false
 loop_274_restricted_actions_remain_no_go=true
 loop_274_next_loop=Loop 275 DR restore retry preflight decision
+```
+
+## Loop 275 Verification Note
+
+```txt
+loop_275_dr_restore_retry_preflight_decision_created=true
+loop_275_anti_proliferation_check=pass
+loop_275_production_go=true
+loop_275_production_go_scope=line_api_admin_current_runtime
+loop_275_post_go_monitoring_status=pass
+loop_275_dr_readiness_status=not_ready_restore_failed
+loop_275_dr_risk_acceptance_status=accepted_with_known_risk
+loop_275_dr_artifact_validation_preflight_status=pass
+loop_275_artifact_validation_pass_does_not_authorize_restore=true
+loop_275_restore_retry_preflight_status=ready_for_operator_decision
+loop_275_recommended_restore_preflight_path=operator_side_restore_preflight_only
+loop_275_next_operator_approval_required=true
+loop_275_restore_execution_performed=false
+loop_275_restore_retry_execution_allowed=false
+loop_275_pg_restore_executed=false
+loop_275_psql_executed=false
+loop_275_supabase_connection_attempted=false
+loop_275_db_change_performed=false
+loop_275_vps_direct_work_used=false
+loop_275_vps_readonly_sanity_check_status=not_attempted_not_required
+loop_275_restricted_actions_remain_no_go=true
+loop_275_next_loop=Loop 276 DR restore retry controlled execution approval
 ```
 
 ## Stage 2 Rule

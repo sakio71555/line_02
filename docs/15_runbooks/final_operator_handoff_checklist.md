@@ -196,6 +196,38 @@ Operator handoff:
 - Do not run restore, `pg_restore`, `psql`, Supabase connection, or DB changes until a separate explicit Loop authorizes the correct preflight or execution step.
 - Continue not recording artifact path, filename, exact size, hash/checksum value, raw output, DB URL, secret, SQL, object names, role names, dump content, row content, LINE identifiers, message bodies, or production logs.
 
+## Loop 275 Current Status Override
+
+Loop 275 creates the restore retry preflight decision package. The recommended next path is operator-side controlled restore retry approval, but Loop 275 itself does not authorize execution.
+
+```txt
+loop_275_current_status_override=true
+dr_restore_retry_preflight_decision_created=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+recommended_restore_preflight_path=operator_side_restore_preflight_only
+restore_retry_preflight_status=ready_for_operator_decision
+next_operator_approval_required=true
+restore_execution_allowed=false
+restore_retry_execution_allowed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 276 DR restore retry controlled execution approval
+```
+
+Operator handoff:
+
+- Choose whether to approve `approve_operator_side_controlled_dr_restore_retry`, approve read-only Codex VPS preflight only, or defer DR restore retry.
+- If execution is approved later, keep it to one operator-side attempt, stop on first failure, and return only sanitized result metadata.
+- Do not share DB URL, secret, artifact path, artifact filename, exact size, hash/checksum value, raw output, SQL, object names, role names, dump content, row content, LINE identifiers, message bodies, or production logs.
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation as the target-control proof model, selected the existing internal CLI one-message category, and ran only dry-run route preflight. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

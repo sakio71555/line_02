@@ -232,6 +232,46 @@ Current Loop 274 reading:
 | restore execution | `no_go` | Artifact validation cannot authorize restore. |
 | next action | `restore_retry_preflight_decision` | Loop 275 may decide the next restore retry preflight only. |
 
+## Loop 275 Current Status Override
+
+Loop 275 creates the DR restore retry preflight decision package. Production Go remains scoped to the current runtime, DR readiness remains incomplete, and restore execution remains disallowed until a separate operator decision.
+
+```txt
+loop_275_current_status_override=true
+dr_restore_retry_preflight_decision_created=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+artifact_validation_pass_does_not_authorize_restore=true
+restore_retry_preflight_status=ready_for_operator_decision
+recommended_restore_preflight_path=operator_side_restore_preflight_only
+next_operator_approval_required=true
+restore_execution_allowed_in_loop_275=false
+restore_retry_execution_allowed=false
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+restricted_actions_remain_no_go=true
+next_minimal_action=single_action_for_loop_276
+```
+
+Current Loop 275 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR readiness | `not_ready_restore_failed` | Still accepted as known risk, not resolved. |
+| DR artifact validation | `pass` | Loop 274 candidate A remains the selected restore candidate. |
+| restore retry preflight | `ready_for_operator_decision` | Operator may approve exactly one controlled next action. |
+| restore execution | `no_go` | Loop 275 does not authorize restore, `pg_restore`, `psql`, Supabase, or DB changes. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.
@@ -929,7 +969,7 @@ Current `production_no_go` reason buckets:
 controlled production enablementへ進むには、少なくとも以下が必要です。
 
 - production envで `x-tenant-id` / dev_header が拒否される。
-- production Admin routeが `Authorization: Bearer` を必須にする。
+- production Admin routeが `credential-header: Bearer` を必須にする。
 - production runtimeでfake verifierがdefaultにならない。
 - production runtimeでSupabase Auth clientとStaffAuthLookupが安全に自動構成される。
 - Admin login/session/token取得とrefresh/logoutが実装・検証済み。
@@ -997,7 +1037,7 @@ controlled production enablementへ進むには、少なくとも以下が必要
 
 ## Admin UI Token Forwarding
 
-- Admin API helperはaccess token providerから受け取ったtokenを `Authorization: Bearer` headerへだけ載せる。
+- Admin API helperはaccess token providerから受け取ったtokenを `credential-header: Bearer` headerへだけ載せる。
 - tokenはlocalStorage、cookie、UI、docs、dev log、error messageへ保存・表示しない。
 - production-style configでは開発用 `x-tenant-id` を送らない。
 - Loop 105ではfake auth clientからsessionを読み、token provider経由でAdmin API helperへ渡す境界を追加した。

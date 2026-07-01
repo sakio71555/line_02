@@ -155,6 +155,24 @@ dr_readiness_status=not_ready_restore_failed
 selected_next_minimal_action=Loop 275 DR restore retry preflight decision
 ```
 
+## Loop 275 DR Restore Retry Preflight Decision
+
+Loop 275 creates the operator decision package for a future controlled restore retry. It selects `operator_side_restore_preflight_only`, keeps restore execution blocked, and keeps production Go scoped to the current LINE/API/Admin runtime.
+
+```txt
+dr_restore_retry_preflight_decision_created=true
+restore_retry_preflight_status=ready_for_operator_decision
+recommended_restore_preflight_path=operator_side_restore_preflight_only
+next_operator_approval_required=true
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+selected_next_minimal_action=Loop 276 DR restore retry controlled execution approval
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

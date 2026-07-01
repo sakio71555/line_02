@@ -105,6 +105,8 @@
 - Loop 273 DR backup artifact validation preflight: `11_codex_tasks/273_dr_backup_artifact_validation_preflight.md`
 - Loop 274 DR artifact metadata intake and validation: `11_codex_tasks/274_dr_artifact_metadata_intake_and_validation.md`
 - DR backup artifact validation preflight runbook: `15_runbooks/dr_backup_artifact_validation_preflight.md`
+- Loop 275 DR restore retry preflight decision: `11_codex_tasks/275_dr_restore_retry_preflight_decision.md`
+- DR restore retry preflight decision runbook: `15_runbooks/dr_restore_retry_preflight_decision.md`
 
 ## Prompts and Templates
 

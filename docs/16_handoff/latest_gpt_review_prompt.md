@@ -1,4 +1,4 @@
-# Latest GPT Review Prompt
+# ChatGPT Review Prompt
 
 まずLoop結果をレビューしてください。
 次LoopのCodex文章はまだ作らないでください。
@@ -6,7 +6,7 @@
 対象:
 
 ```txt
-Loop 274: DR artifact metadata intake and validation
+Loop 275: DR restore retry preflight decision
 ```
 
 結果:
@@ -15,65 +15,45 @@ Loop 274: DR artifact metadata intake and validation
 loop_status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
+forward_progress_type=dr_restore_retry_preflight_decision
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 post_go_monitoring_status=pass
 dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
-operator_artifact_metadata_provided=true
-selected_artifact_candidate=candidate_a
-dr_backup_artifact_validation_preflight_status=pass
-candidate_b_status=rejected
-candidate_b_rejection_reason=artifact_nonempty_false
-artifact_validation_pass_does_not_authorize_restore=true
-restore_retry_requires_separate_operator_approval=true
-restore_retry_requires_restore_preflight_loop=true
-restricted_actions_remain_no_go=true
-next_recommended_loop=Loop 275 DR restore retry preflight decision
-```
-
-Safety:
-
-```txt
-restore_execution_performed=false
+dr_artifact_validation_preflight_status=pass
+dr_restore_retry_preflight_decision_created=true
+restore_retry_preflight_status=ready_for_operator_decision
+recommended_restore_preflight_path=operator_side_restore_preflight_only
+next_operator_approval_required=true
+restore_execution_allowed=false
+restore_retry_execution_allowed=false
 pg_restore_executed=false
 psql_executed=false
 supabase_connection_attempted=false
 db_change_performed=false
-artifact_path_recorded=false
-artifact_filename_recorded=false
-artifact_content_read=false
-artifact_hash_recorded=false
-artifact_size_exact_recorded=false
-secret_values_recorded=false
-env_values_recorded=false
-db_url_recorded=false
-raw_log_recorded=false
-sql_recorded=false
-db_object_name_recorded=false
-role_name_recorded=false
-package_name_recorded=false
-extension_name_recorded=false
-line_identifier_recorded=false
-message_body_recorded=false
-production_log_recorded=false
-dump_content_recorded=false
-row_content_recorded=false
+vps_direct_work_used=false
+vps_readonly_sanity_check_status=not_attempted_not_required
+restricted_actions_remain_no_go=true
 ```
 
 必ず以下の順で判定してください。
 
-1. このLoopは complete / partial / blocked のどれか
-2. artifact metadata validation pass が妥当か
-3. path/filename/hash/exact size/secret/raw logを記録していないか
-4. restore実行を誤って許可していないか
-5. production_go状態を崩していないか
-6. 次Loopが増殖ではなくrestore retry preflight decisionに進んでいるか
-7. 次に取るべき方針は DR restore retry preflight decision / no-go / route freeze のどれか
-8. 次LoopのCodex文章を作ってよいか
+1. このLoopは complete / blocked / failed のどれか
+2. restore retry preflight decisionとして十分か
+3. restore実行を誤って許可していないか
+4. operator-side execution方針が安全か
+5. Codex direct VPS workがread-only/sanitizedに限定されているか
+6. production_go状態を崩していないか
+7. secret/path/raw log/DB情報を記録していないか
+8. 増殖ではなく次のoperator decisionに進めているか
+9. 次に取るべき方針は go / no-go / route freeze / alternative path / human input required のどれか
+10. 次LoopのCodex文章を作ってよいか
 
-レビュー観点:
+次Loop候補は、レビューで採用する場合のみ:
 
-- Candidate A pass is based only on sanitized operator metadata.
-- Candidate B was rejected because sanitized `artifact_nonempty=false`.
-- Loop 275 may decide restore retry preflight only. It must not execute restore, `pg_restore`, `psql`, Supabase connection, or DB changes.
+```txt
+Loop 276: DR restore retry controlled execution approval
+```
+
+同じblockerが2回以上出ている場合は、protocol追加・recollection・readiness gate追加を次Loop候補にしないでください。
