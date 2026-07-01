@@ -119,6 +119,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 280 consumes the one-time conditional Codex execution override, blocks before restore because no concrete Codex-safe procedure exists in the reviewed runbooks, and keeps restore, `pg_restore`, `psql`, Supabase, DB changes, raw logs, artifact details, and secrets No-Go.
 - Loop 281 resolves the `restore_procedure_not_found` blocker by adding a category-only operator-side restore retry procedure, keeps restore, `pg_restore`, `psql`, Supabase, DB changes, raw logs, artifact details, exact names, and secrets No-Go, and selects Loop 282 conditional DR restore retry execution with resolved procedure.
 - Loop 282 runs conditional execution preflight against the VPS but blocks before restore because the resolved procedure is not safely executable in that checked context; restore, `pg_restore`, `psql`, Supabase, DB changes, raw logs, artifact details, exact names, and secrets remain No-Go.
+- Loop 283 adds a guarded restore retry helper to resolve the executable-helper prerequisite while keeping restore execution conditional on strict preflight pass.
 
 ## .obsidian Policy
 

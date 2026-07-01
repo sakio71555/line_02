@@ -173,3 +173,23 @@ next_minimal_action=Loop 283 DR restore execution prerequisite resolution
 ```
 
 The procedure remains the operator-side boundary, but a future attempt must resolve the executable prerequisite without exposing secrets, DB URLs, artifact details, raw logs, SQL, object names, role names, package names, extension names, dump contents, row contents, LINE identifiers, message bodies, or production logs.
+
+## Loop 283 Guarded Helper Addition
+
+Loop 283 adds a guarded executable helper so the procedure is no longer only a category template.
+
+```txt
+restore_executable_helper_exists=true
+helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
+helper_default_mode=preflight_only
+helper_execute_mode_requires_explicit_confirm=true
+helper_target_scope_guard=true
+helper_attempt_limit=1
+helper_stop_on_first_failure=true
+helper_retry_forbidden=true
+helper_secret_output_forbidden=true
+helper_artifact_path_output_forbidden=true
+helper_raw_log_output_forbidden=true
+```
+
+Reference: [DR Guarded Restore Retry Helper](dr_guarded_restore_retry_helper.md).

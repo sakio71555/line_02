@@ -301,3 +301,16 @@ restore_retry_success=not_attempted
 failure_reason=restore_procedure_not_executable_safely
 next_minimal_action=Loop 283 DR restore execution prerequisite resolution
 ```
+
+## Loop 283 Helper Preflight Decision
+
+Loop 283 adds a guarded helper and makes helper preflight a required gate before any restore retry.
+
+```txt
+restore_executable_helper_exists=true
+helper_preflight_required=true
+helper_preflight_without_inputs_expected=blocked_safely
+execute_mode_requires_all_preflight_checks_pass=true
+restore_retry_attempt_limit=1
+retry_allowed=false
+```

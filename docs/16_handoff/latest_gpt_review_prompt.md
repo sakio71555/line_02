@@ -1,4 +1,4 @@
-# ChatGPT Review Prompt
+# Latest GPT Review Prompt
 
 まずLoop結果をレビューしてください。
 次LoopのCodex文章はまだ作らないでください。
@@ -6,58 +6,45 @@
 対象:
 
 ```txt
-Loop 282: conditional DR restore retry execution with resolved procedure
+loop=Loop 283 DR restore execution prerequisite resolution and guarded helper
+current_status=in_progress_after_helper_creation
 ```
 
-結果:
+確認してほしいこと:
+
+1. Loop 283 が Loop 282 の `restore_procedure_not_executable_safely` blocker を実質的に解消する方向へ進んでいるか。
+2. guarded helper の境界が十分か。
+3. secret / DB URL / artifact detail / raw log / SQL / object / role / package / extension / LINE data を記録していないか。
+4. VPS sync / helper preflight / conditional restore execution に進む条件が妥当か。
+5. 1つでも曖昧なら restore 実行せず blocked にする方針でよいか。
+
+Sanitized state:
 
 ```txt
-loop_status=blocked
 anti_proliferation_check=pass
-is_this_loop_proliferation_risk=false
-forward_progress_type=conditional_dr_restore_retry_execution_or_blocked
-temporary_codex_direct_restore_execution_override_used=false
-ssh_access_available=true
-vps_working_directory_available=true
-restore_procedure_exists=true
-restore_procedure_source=new_operator_side_template
-restore_procedure_blocker_resolved=true
-restore_procedure_not_executable_safely=true
-restore_target_scope_confirmed=false
-restore_target_scope_category=unknown
-operator_secret_context_available=not_checked_procedure_blocked
-selected_artifact_candidate=not_checked_procedure_blocked
-operator_side_restore_retry_execution_status=not_attempted
-restore_retry_execution_status=blocked_before_execution
-restore_retry_attempt_count=0
-restore_retry_success=not_attempted
-failure_reason=restore_procedure_not_executable_safely
-restore_retry_retry_executed=false
-pg_restore_executed=false
-psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
+restore_executable_helper_exists=true
+helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
+helper_local_validation_status=pass
+helper_preflight_without_inputs=blocked_safely
+vps_sync_status=pending
+helper_preflight_status=pending
+restore_retry_attempt_count=pending
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
-post_go_monitoring_status=pass
 dr_readiness_status=not_ready_restore_failed
-dr_risk_acceptance_status=accepted_with_known_risk
 restricted_actions_remain_no_go=true
-next_recommended_loop=Loop 283 DR restore execution prerequisite resolution
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
 ```
 
-レビュー観点:
-
-1. このLoopは complete / blocked / failed のどれか
-2. conditional execution approvalをrestore実行に使わず止めた判断は妥当か
-3. `restore_procedure_not_executable_safely` がsanitized blockerとして妥当か
-4. restore / `pg_restore` / `psql` / Supabase / DB変更を実行していないか
-5. secret / DB URL / artifact path / raw log / SQL / object / role / package / extension名を記録していないか
-6. retry禁止を維持しているか
-7. production_go scopeを勝手に拡大していないか
-8. 同じprocedure系blockerが続いているため、次がまたprocedure/protocol増殖にならないか
-9. 次に取るべき方針は go / no-go / route freeze / alternative path / human input required のどれか
-10. 次LoopのCodex文章を作ってよいか
-
-同じblockerが2回以上出ている場合は、protocol追加・recollection・readiness gate追加を次Loop候補にしないでください。
+まだ次Loopへ進めないでください。Loop 283 はこのあと、helper commit/push、VPS sync、VPS preflight、条件が完全に揃う場合だけ1回restore retryへ進む予定です。

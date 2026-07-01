@@ -363,3 +363,19 @@ supabase_connection_attempted=false
 db_change_performed=false
 next_minimal_action=Loop 283 DR restore execution prerequisite resolution
 ```
+
+## Loop 283 Guarded Helper Approval Boundary
+
+Loop 283 keeps the one-time restore retry approval conditional. The approval may be used only if the guarded helper is present, synced, preflighted, and all strict conditions pass.
+
+```txt
+restore_executable_helper_exists=true
+helper_execute_mode_requires_explicit_confirm=true
+restore_retry_attempt_limit=1
+stop_on_first_failure=true
+retry_allowed=false
+codex_direct_restore_execution_allowed=true_if_all_preconditions_pass
+codex_direct_secret_internal_use_allowed=true_if_required_but_never_output
+codex_direct_artifact_path_internal_use_allowed=true_if_required_but_never_output
+production_go_scope_expanded=false
+```

@@ -318,6 +318,18 @@ loop_282_dr_readiness_status=not_ready_restore_failed
 loop_282_next_loop=Loop 283 DR restore execution prerequisite resolution
 ```
 
+## Loop 283 Guarded Helper
+
+Loop 283 adds a guarded restore retry helper to resolve the executable-helper prerequisite while keeping restore execution conditional on strict preflight pass.
+
+```txt
+loop_283_restore_executable_helper_exists=true
+loop_283_helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
+loop_283_helper_default_mode=preflight_only
+loop_283_restore_execution_status=pending_vps_preflight
+loop_283_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

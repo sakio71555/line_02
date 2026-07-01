@@ -2407,3 +2407,17 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 next_minimal_action=Loop 283 DR restore execution prerequisite resolution
 ```
+
+## Loop 283 Guarded Helper Handoff
+
+```txt
+restore_executable_helper_exists=true
+helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
+helper_default_mode=preflight_only
+helper_execute_mode_requires_explicit_confirm=true
+helper_secret_output_forbidden=true
+helper_artifact_path_output_forbidden=true
+helper_raw_log_output_forbidden=true
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+```

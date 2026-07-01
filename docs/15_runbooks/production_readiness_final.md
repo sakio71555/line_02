@@ -3611,3 +3611,17 @@ loop_282_production_go_scope_expanded=false
 loop_282_dr_readiness_status=not_ready_restore_failed
 loop_282_restricted_actions_remain_no_go=true
 ```
+
+## Loop 283 Guarded DR Restore Helper
+
+Loop 283 adds a guarded helper for a conditional DR restore retry. Production Go remains unchanged and scoped to the existing LINE/API/admin runtime.
+
+```txt
+loop_283_restore_executable_helper_exists=true
+loop_283_helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
+loop_283_production_go=true
+loop_283_production_go_scope=line_api_admin_current_runtime
+loop_283_production_go_scope_expanded=false
+loop_283_dr_readiness_status=not_ready_restore_failed
+loop_283_restricted_actions_remain_no_go=true
+```

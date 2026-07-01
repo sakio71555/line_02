@@ -614,6 +614,18 @@ loop_282_dr_readiness_status=not_ready_restore_failed
 loop_282_next_loop=Loop 283 DR restore execution prerequisite resolution
 ```
 
+## Loop 283 Guarded Restore Helper
+
+```txt
+loop_283_restore_executable_helper_exists=true
+loop_283_helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
+loop_283_helper_default_mode=preflight_only
+loop_283_production_go=true
+loop_283_production_go_scope=line_api_admin_current_runtime
+loop_283_production_go_scope_expanded=false
+loop_283_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 271 Post-Go Monitoring Review
 
 | bucket | status | scope |

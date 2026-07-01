@@ -332,3 +332,18 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 next_minimal_action=Loop 283 DR restore execution prerequisite resolution
 ```
+
+## Loop 283 Guarded Helper Addition
+
+Loop 283 adds `scripts/dr/restore_retry_guarded.sh` to resolve the executable-helper prerequisite from Loop 282. The helper defaults to preflight-only, blocks unsafe target scopes, requires explicit confirmation for execute mode, and enforces one attempt with no retry.
+
+```txt
+restore_executable_helper_exists=true
+helper_default_mode=preflight_only
+helper_attempt_limit=1
+helper_retry_forbidden=true
+production_go_scope_expanded=false
+restricted_actions_remain_no_go=true
+```
+
+Reference: [DR Guarded Restore Retry Helper](dr_guarded_restore_retry_helper.md).

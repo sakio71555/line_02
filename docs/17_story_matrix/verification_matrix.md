@@ -2003,6 +2003,28 @@ loop_282_restricted_actions_remain_no_go=true
 loop_282_next_loop=Loop 283 DR restore execution prerequisite resolution
 ```
 
+## Loop 283 Verification Note
+
+```txt
+loop_283_restore_executable_helper_exists=true
+loop_283_helper_path_repo_relative=scripts/dr/restore_retry_guarded.sh
+loop_283_helper_local_validation_status=pass
+loop_283_helper_preflight_without_inputs=blocked_safely
+loop_283_restore_execution_status=pending_vps_preflight
+loop_283_raw_log_recorded=false
+loop_283_secret_recorded=false
+loop_283_db_url_recorded=false
+loop_283_artifact_path_recorded=false
+loop_283_artifact_filename_recorded=false
+loop_283_artifact_content_recorded=false
+loop_283_sql_recorded=false
+loop_283_db_object_recorded=false
+loop_283_role_recorded=false
+loop_283_package_name_recorded=false
+loop_283_extension_name_recorded=false
+loop_283_dr_readiness_status=not_ready_restore_failed
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.
