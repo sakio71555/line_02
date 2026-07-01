@@ -163,3 +163,29 @@ restore_execution_allowed_in_loop_275=false
 next_operator_approval_required=true
 next_minimal_action=single_action_for_loop_276
 ```
+
+## Loop 276 Controlled Execution Approval
+
+Loop 276 finalizes the approval package for a future operator-side controlled restore retry. It still does not authorize Codex direct execution or execute restore.
+
+```txt
+dr_restore_retry_controlled_execution_approval_created=true
+recommended_execution_mode=operator_side_only
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_execution_required=true
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+stop_on_first_failure=true
+retry_allowed=false
+restore_execution_allowed_in_loop_276=false
+restore_retry_execution_allowed_in_loop_276=false
+pg_restore_allowed_in_loop_276=false
+psql_allowed_in_loop_276=false
+supabase_connection_allowed_in_loop_276=false
+db_change_allowed_in_loop_276=false
+next_operator_approval_required=true
+next_minimal_action=single_action_for_loop_277
+```
+
+Use [DR Restore Retry Controlled Execution Approval](dr_restore_retry_controlled_execution_approval.md) as the detailed operator approval and sanitized result template.

@@ -173,6 +173,28 @@ dr_readiness_status=not_ready_restore_failed
 selected_next_minimal_action=Loop 276 DR restore retry controlled execution approval
 ```
 
+## Loop 276 DR Restore Retry Controlled Execution Approval
+
+Loop 276 creates the controlled execution approval package for a future operator-side DR restore retry. It limits the next execution to one operator-side attempt, defines stop conditions and sanitized result templates, and keeps restore execution blocked in Loop 276.
+
+```txt
+dr_restore_retry_controlled_execution_approval_created=true
+controlled_restore_retry_approval_status=prepared
+recommended_execution_mode=operator_side_only
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+stop_on_first_failure=true
+retry_allowed=false
+next_operator_approval_required=true
+restore_execution_allowed_in_loop_276=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+selected_next_minimal_action=Loop 277 operator-side DR restore retry controlled execution
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

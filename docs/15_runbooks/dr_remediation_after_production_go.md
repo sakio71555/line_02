@@ -74,9 +74,9 @@ The production Go decision is not a DR completion signal. DR should be resumed o
 ```txt
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 recommended_strategy_reason=lowest_risk_next_step_after_post_go_monitoring_pass
-next_recommended_loop=Loop 276 DR restore retry controlled execution approval
+next_recommended_loop=Loop 277 operator-side DR restore retry controlled execution
 dr_next_operator_decision_required=true
-next_minimal_action=Loop 276 DR restore retry controlled execution approval
+next_minimal_action=Loop 277 operator-side DR restore retry controlled execution
 ```
 
 Loop 273 completed the preflight contract and initially required sanitized operator artifact metadata. Loop 274 then supplied and validated the metadata, so the current DR step is operator-side restore retry approval, not restore execution by Codex.
@@ -125,6 +125,27 @@ loop_275_psql_executed=false
 loop_275_supabase_connection_attempted=false
 loop_275_db_change_performed=false
 loop_275_next_minimal_action=Loop 276 DR restore retry controlled execution approval
+```
+
+Loop 276 created the controlled execution approval package. It requires operator-side-only execution, one attempt, stop-on-first-failure, no retry without new approval, and sanitized result reporting only. Loop 276 still does not execute restore.
+
+```txt
+loop_276_dr_restore_retry_controlled_execution_approval_created=true
+loop_276_recommended_execution_mode=operator_side_only
+loop_276_approval_scope=single_restore_retry_attempt_operator_side_only
+loop_276_restore_retry_attempt_limit=1
+loop_276_operator_side_execution_required=true
+loop_276_codex_direct_restore_execution_allowed=false
+loop_276_codex_direct_db_access_allowed=false
+loop_276_stop_on_first_failure=true
+loop_276_retry_allowed=false
+loop_276_restore_execution_performed=false
+loop_276_restore_retry_execution_allowed=false
+loop_276_pg_restore_executed=false
+loop_276_psql_executed=false
+loop_276_supabase_connection_attempted=false
+loop_276_db_change_performed=false
+loop_276_next_minimal_action=Loop 277 operator-side DR restore retry controlled execution
 ```
 
 ## Artifact And Secret Policy
@@ -177,6 +198,7 @@ approval_decision=approve_operator_side_controlled_dr_restore_retry
 approval_scope=single_restore_retry_attempt_operator_side_only
 restore_retry_attempt_limit=1
 operator_secret_handling=operator_side_only
+operator_artifact_handling=operator_side_only
 codex_direct_db_access_allowed=false
 codex_direct_restore_execution_allowed=false
 stop_on_first_failure=true

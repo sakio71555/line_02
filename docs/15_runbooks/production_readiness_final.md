@@ -272,6 +272,52 @@ Current Loop 275 reading:
 | restore retry preflight | `ready_for_operator_decision` | Operator may approve exactly one controlled next action. |
 | restore execution | `no_go` | Loop 275 does not authorize restore, `pg_restore`, `psql`, Supabase, or DB changes. |
 
+## Loop 276 Current Status Override
+
+Loop 276 creates the operator-side controlled restore retry approval package. Production Go remains scoped to the current runtime, DR readiness remains incomplete, and execution remains disallowed in Loop 276.
+
+```txt
+loop_276_current_status_override=true
+dr_restore_retry_controlled_execution_approval_created=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+restore_retry_preflight_status=ready_for_operator_decision
+recommended_execution_mode=operator_side_only
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_execution_required=true
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+stop_on_first_failure=true
+retry_allowed=false
+next_operator_approval_required=true
+restore_execution_allowed_in_loop_276=false
+restore_retry_execution_allowed=false
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+restricted_actions_remain_no_go=true
+next_minimal_action=single_action_for_loop_277
+```
+
+Current Loop 276 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR readiness | `not_ready_restore_failed` | Still accepted as known risk, not resolved. |
+| controlled restore retry approval | `prepared` | Operator-side-only one-attempt approval package is ready. |
+| Codex direct restore/DB access | `no_go` | Codex cannot execute restore or access DB/secrets/artifact paths. |
+| restore execution | `no_go_in_loop_276` | Execution requires a future explicit operator-side approval Loop. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

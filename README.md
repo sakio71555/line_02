@@ -631,6 +631,8 @@ Loop 274 DR artifact metadata intake and validationでは、operator提供のsan
 
 Loop 275 DR restore retry preflight decisionでは、Loop 274のartifact validation passを受けて、restore retryへ進む前のoperator decision packageをdocs-onlyで作成しました。推奨方針は `operator_side_restore_preflight_only` で、Loop 275ではrestore、pg_restore、psql、Supabase、DB変更、artifact path/name/content/hash/exact size、raw log、secretの記録は行っていません。詳細は [Loop 275 task doc](docs/11_codex_tasks/275_dr_restore_retry_preflight_decision.md) と [DR restore retry preflight decision](docs/15_runbooks/dr_restore_retry_preflight_decision.md) を参照してください。次は `Loop 276: DR restore retry controlled execution approval` です。
 
+Loop 276 DR restore retry controlled execution approvalでは、Loop 275のoperator decision packageを受けて、次Loopでoperator側のみが1回だけrestore retryを実行するための承認範囲、停止条件、sanitized result template、handoffをdocs-onlyで整理しました。Loop 276ではrestore、pg_restore、psql、Supabase、DB変更、artifact path/name/content/hash/exact size、raw log、secret、VPS direct workは行っていません。詳細は [Loop 276 task doc](docs/11_codex_tasks/276_dr_restore_retry_controlled_execution_approval.md) と [DR restore retry controlled execution approval](docs/15_runbooks/dr_restore_retry_controlled_execution_approval.md) を参照してください。次は `Loop 277: operator-side DR restore retry controlled execution` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

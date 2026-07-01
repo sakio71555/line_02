@@ -176,6 +176,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 274 Obsidian Log](loop_274_dr_artifact_metadata_intake_and_validation.md)
 - [Loop 275 DR Restore Retry Preflight Decision](../11_codex_tasks/275_dr_restore_retry_preflight_decision.md)
 - [Loop 275 Obsidian Log](loop_275_dr_restore_retry_preflight_decision.md)
+- [Loop 276 DR Restore Retry Controlled Execution Approval](../11_codex_tasks/276_dr_restore_retry_controlled_execution_approval.md)
+- [Loop 276 Obsidian Log](loop_276_dr_restore_retry_controlled_execution_approval.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
 - [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
 - [DR Backup Artifact Validation Preflight](../15_runbooks/dr_backup_artifact_validation_preflight.md)
@@ -334,6 +336,8 @@ Loop 273 status: `dr_backup_artifact_validation_preflight_created=true`, `artifa
 Loop 274 status: `dr_artifact_metadata_intake_created=true`, `operator_artifact_metadata_provided=true`, `selected_artifact_candidate=candidate_a`, `dr_backup_artifact_validation_preflight_status=pass`, `candidate_b_status=rejected`, `candidate_b_rejection_reason=artifact_nonempty_false`, `production_go=true`, `production_go_scope=line_api_admin_current_runtime`, `post_go_monitoring_status=pass`, `dr_readiness_status=not_ready_restore_failed`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `artifact_path_recorded=false`, `artifact_filename_recorded=false`, `artifact_content_read=false`, `artifact_hash_recorded=false`, `artifact_size_exact_recorded=false`, `next=Loop 275 DR restore retry preflight decision`.
 
 Loop 275 status: `dr_restore_retry_preflight_decision_created=true`, `anti_proliferation_check=pass`, `recommended_restore_preflight_path=operator_side_restore_preflight_only`, `restore_retry_preflight_status=ready_for_operator_decision`, `production_go=true`, `production_go_scope=line_api_admin_current_runtime`, `post_go_monitoring_status=pass`, `dr_readiness_status=not_ready_restore_failed`, `dr_risk_acceptance_status=accepted_with_known_risk`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `vps_direct_work_used=false`, `restricted_actions_remain_no_go=true`, `next=Loop 276 DR restore retry controlled execution approval`.
+
+Loop 276 status: `dr_restore_retry_controlled_execution_approval_created=true`, `anti_proliferation_check=pass`, `recommended_execution_mode=operator_side_only`, `approval_scope=single_restore_retry_attempt_operator_side_only`, `restore_retry_attempt_limit=1`, `stop_on_first_failure=true`, `retry_allowed=false`, `operator_side_execution_required=true`, `codex_direct_restore_execution_allowed=false`, `codex_direct_db_access_allowed=false`, `production_go=true`, `production_go_scope=line_api_admin_current_runtime`, `post_go_monitoring_status=pass`, `dr_readiness_status=not_ready_restore_failed`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `vps_direct_work_used=false`, `restricted_actions_remain_no_go=true`, `next=Loop 277 operator-side DR restore retry controlled execution`.
 
 ## Obsidian Helpers
 

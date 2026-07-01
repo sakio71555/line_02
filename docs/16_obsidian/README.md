@@ -112,6 +112,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 273 creates the DR backup artifact validation preflight, adds the strict sanitized artifact metadata schema, records `operator_metadata_required`, and keeps artifact path/name/content/hash/exact size, restore, `pg_restore`, `psql`, Supabase, DB changes, raw logs, and secrets No-Go.
 - Loop 274 validates operator-provided sanitized artifact metadata, records `dr_backup_artifact_validation_preflight_status=pass` for candidate A, rejects candidate B due to `artifact_nonempty_false`, and keeps restore, `pg_restore`, `psql`, Supabase, DB changes, artifact path/name/content/hash/exact size, raw logs, and secrets No-Go.
 - Loop 275 creates the DR restore retry preflight decision package, selects `operator_side_restore_preflight_only`, requires a separate Loop 276 operator decision, and keeps restore, `pg_restore`, `psql`, Supabase, DB changes, artifact path/name/content/hash/exact size, raw logs, and secrets No-Go.
+- Loop 276 creates the DR restore retry controlled execution approval package, selects `operator_side_only`, limits the future action to one attempt with stop-on-first-failure, and keeps restore, `pg_restore`, `psql`, Supabase, DB changes, artifact path/name/content/hash/exact size, raw logs, and secrets No-Go in Loop 276.
 
 ## .obsidian Policy
 
