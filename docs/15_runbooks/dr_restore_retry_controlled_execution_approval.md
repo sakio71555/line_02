@@ -272,3 +272,27 @@ next_minimal_action=Loop 279 operator-side DR restore retry execution approval d
 ```
 
 Use [DR Operator-Side Restore Execution Followup](dr_operator_side_restore_execution_followup.md) as the followup runbook for the final approval decision.
+
+## Loop 279 Operator-Side Execution Approval Decision
+
+Loop 279 consumed the sanitized operator decision block and classified it as approved for one operator-side DR restore retry attempt. The approval does not authorize Codex direct restore execution or direct DB access.
+
+```txt
+operator_side_restore_execution_approval_decision_created=true
+operator_restore_execution_decision=approved
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_restore_execution_allowed_next_loop=true
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+pg_restore_allowed=true_operator_side_only_if_required
+psql_allowed=true_operator_side_only_if_required
+supabase_connection_allowed=true_operator_side_only_if_required
+db_change_allowed=true_operator_side_only_with_stop_conditions
+stop_on_first_failure=true
+retry_allowed=false
+production_go_unchanged=true
+next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
+```
+
+The next Loop should record only sanitized operator-side execution results. It must not record secrets, DB URLs, artifact paths, artifact filenames, raw logs, SQL, DB object names, role names, package names, extension names, LINE identifiers, message bodies, or production logs.

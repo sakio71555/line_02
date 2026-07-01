@@ -112,6 +112,7 @@
 - Loop 277 operator-side DR restore retry result intake: `11_codex_tasks/277_operator_side_dr_restore_retry_result_intake.md`
 - Loop 278 operator-side restore execution followup: `11_codex_tasks/278_operator_side_restore_execution_followup.md`
 - DR operator-side restore execution followup runbook: `15_runbooks/dr_operator_side_restore_execution_followup.md`
+- Loop 279 operator-side DR restore retry execution approval decision: `11_codex_tasks/279_operator_side_dr_restore_retry_execution_approval_decision.md`
 
 ## Prompts and Templates
 

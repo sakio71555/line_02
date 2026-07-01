@@ -115,6 +115,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 276 creates the DR restore retry controlled execution approval package, selects `operator_side_only`, limits the future action to one attempt with stop-on-first-failure, and keeps restore, `pg_restore`, `psql`, Supabase, DB changes, artifact path/name/content/hash/exact size, raw logs, and secrets No-Go in Loop 276.
 - Loop 277 records the operator-side restore retry result as `not_attempted`, keeps production Go unchanged, and keeps DR readiness as `not_ready_restore_failed` because no restore retry ran.
 - Loop 278 prepares the operator-side restore execution followup, requires a separate approval block before actual execution, and keeps restore, `pg_restore`, `psql`, Supabase, DB changes, raw logs, artifact details, and secrets No-Go in Loop 278.
+- Loop 279 records the operator decision as approved for one operator-side DR restore retry attempt, keeps Codex direct restore/DB access No-Go, and selects Loop 280 result intake as the next minimal action.
 
 ## .obsidian Policy
 

@@ -221,3 +221,28 @@ restore_execution_allowed_in_loop_278=false
 next_operator_approval_required=true
 next_minimal_action=single_action_for_loop_279
 ```
+
+## Loop 279 Operator-Side Execution Approval Decision
+
+Loop 279 records the operator decision to approve one operator-side DR restore retry attempt. This is an approval decision only; Codex still does not execute restore, run `pg_restore`, run `psql`, connect to Supabase, change DB state, read artifacts, or reveal secrets/raw logs.
+
+```txt
+operator_side_restore_execution_approval_decision_created=true
+operator_restore_execution_decision=approved
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_restore_execution_allowed_next_loop=true
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+pg_restore_allowed=true_operator_side_only_if_required
+psql_allowed=true_operator_side_only_if_required
+supabase_connection_allowed=true_operator_side_only_if_required
+db_change_allowed=true_operator_side_only_with_stop_conditions
+stop_on_first_failure=true
+retry_allowed=false
+production_go_unchanged=true
+next_execution_sequence_status=ready_for_operator_side_restore_execution
+next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
+```
+
+Operator-side execution remains constrained to one attempt. The next Codex Loop may only intake a sanitized result block.

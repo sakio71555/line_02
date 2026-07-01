@@ -234,3 +234,22 @@ production_go_unchanged=true
 production_go_scope_expanded=false
 next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
 ```
+
+## Loop 279 Operator-Side Execution Approval Decision
+
+Loop 279 records the separate operator approval decision required by Loop 278. The decision approves one operator-side attempt only.
+
+```txt
+operator_side_restore_execution_approval_decision_created=true
+operator_restore_execution_decision=approved
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_restore_execution_allowed_next_loop=true
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+stop_on_first_failure=true
+retry_allowed=false
+production_go_unchanged=true
+production_go_scope_expanded=false
+next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
+```

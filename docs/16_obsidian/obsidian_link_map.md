@@ -17,7 +17,7 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Latest Codex Result Template](../16_handoff/latest_codex_result.md)
 - [Latest GPT Review Prompt Template](../16_handoff/latest_gpt_review_prompt.md)
 - [Latest Dev Log: 2026-06-28](../14_dev_logs/2026-06-28.md)
-- [Current Dev Log: 2026-06-30](../14_dev_logs/2026-06-30.md)
+- [Current Dev Log: 2026-07-01](../14_dev_logs/2026-07-01.md)
 
 ## Current Production / Operations
 
@@ -182,6 +182,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 277 Obsidian Log](loop_277_operator_side_dr_restore_retry_result_intake.md)
 - [Loop 278 Operator-Side Restore Execution Followup](../11_codex_tasks/278_operator_side_restore_execution_followup.md)
 - [Loop 278 Obsidian Log](loop_278_operator_side_restore_execution_followup.md)
+- [Loop 279 Operator-Side DR Restore Retry Execution Approval Decision](../11_codex_tasks/279_operator_side_dr_restore_retry_execution_approval_decision.md)
+- [Loop 279 Obsidian Log](loop_279_operator_side_dr_restore_retry_execution_approval_decision.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
 - [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
 - [DR Backup Artifact Validation Preflight](../15_runbooks/dr_backup_artifact_validation_preflight.md)

@@ -246,6 +246,32 @@ codex_direct_db_access_allowed=false
 selected_next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
 ```
 
+## Loop 279 Operator-Side DR Restore Retry Execution Approval Decision
+
+Loop 279 records the operator decision as approved for one operator-side DR restore retry attempt. The approval is not a successful restore result, so DR readiness remains `not_ready_restore_failed`.
+
+```txt
+operator_side_restore_execution_approval_decision_created=true
+operator_restore_execution_decision=approved
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_restore_execution_allowed_next_loop=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_artifact_validation_preflight_status=pass
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+stop_on_first_failure=true
+retry_allowed=false
+selected_next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

@@ -189,6 +189,23 @@ loop_278_production_go_scope_expanded=false
 loop_278_next_minimal_action=Loop 279 operator-side DR restore retry execution approval decision
 ```
 
+Loop 279 records that the operator approved one operator-side DR restore retry attempt. Codex direct restore execution and Codex direct DB access remain forbidden; Loop 279 itself does not execute restore.
+
+```txt
+loop_279_operator_side_restore_execution_approval_decision_created=true
+loop_279_operator_restore_execution_decision=approved
+loop_279_approval_scope=single_restore_retry_attempt_operator_side_only
+loop_279_restore_retry_attempt_limit=1
+loop_279_operator_side_restore_execution_allowed_next_loop=true
+loop_279_codex_direct_restore_execution_allowed=false
+loop_279_codex_direct_db_access_allowed=false
+loop_279_stop_on_first_failure=true
+loop_279_retry_allowed=false
+loop_279_production_go_unchanged=true
+loop_279_production_go_scope_expanded=false
+loop_279_next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
+```
+
 ## Artifact And Secret Policy
 
 ```txt

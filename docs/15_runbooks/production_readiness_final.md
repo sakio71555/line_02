@@ -3481,3 +3481,45 @@ secrets_recorded=false
 ```
 
 Next safe step: Loop 201.1 Supabase backup export operator secret injection retry.
+
+## Loop 279 Current Status Override
+
+Loop 279 records the operator-side DR restore retry execution approval decision. Production Go remains scoped to the current LINE/API/Admin runtime, and DR readiness remains incomplete until a sanitized successful restore result is recorded.
+
+```txt
+loop_279_current_status_override=true
+operator_side_restore_execution_approval_decision_created=true
+operator_restore_execution_decision=approved
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_restore_execution_allowed_next_loop=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+restore_execution_status=approved_for_operator_side_next_loop
+codex_direct_restore_execution=no_go
+codex_direct_db_access=no_go
+stop_on_first_failure=true
+retry_allowed=false
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
+```
+
+Current Loop 279 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| DR readiness | `not_ready_restore_failed` | Restore has not yet succeeded. |
+| Operator-side retry | `approved_for_next_loop` | One operator-side attempt may be performed outside Codex. |
+| Codex direct restore | `no_go` | Codex must not execute restore or `pg_restore`. |
+| Codex direct DB access | `no_go` | Codex must not run `psql` or connect to Supabase. |
+| Retry after failure | `no_go` | Requires new explicit approval. |

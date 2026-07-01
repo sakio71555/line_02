@@ -2288,3 +2288,36 @@ secrets_recorded=false
 ```
 
 Operator next action: run `Loop 201.1: Supabase backup export operator secret injection retry` with the database URL injected into the exact non-interactive execution context. Do not record the value.
+
+## Loop 279 Current Status Override
+
+Loop 279 records the operator decision to approve one operator-side DR restore retry attempt. The approval is operator-side only; Codex direct restore execution and Codex direct DB access remain No-Go.
+
+```txt
+loop_279_current_status_override=true
+operator_side_restore_execution_approval_decision_created=true
+operator_restore_execution_decision=approved
+approval_scope=single_restore_retry_attempt_operator_side_only
+restore_retry_attempt_limit=1
+operator_side_restore_execution_allowed_next_loop=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+dr_artifact_validation_preflight_status=pass
+codex_direct_restore_execution_allowed=false
+codex_direct_db_access_allowed=false
+stop_on_first_failure=true
+retry_allowed=false
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 280 operator-side DR restore retry execution result intake
+```
+
+Operator handoff:
+
+- If the operator performs the retry, it is one attempt only and must stop on first failure.
+- Return only sanitized result metadata in the next Loop.
+- Do not share secrets, DB URLs, artifact paths or filenames, raw logs, SQL, DB object names, role names, package names, extension names, LINE identifiers, message bodies, or production logs.
+- Do not ask Codex to execute restore, run `pg_restore`, run `psql`, connect to Supabase, or change DB state.
