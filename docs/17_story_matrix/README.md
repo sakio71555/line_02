@@ -50,6 +50,14 @@ public_api_health=200
 public_admin_root=200
 public_customers_no_auth=401
 post_go_monitoring_baseline_created=true
+post_go_monitoring_review_created=true
+post_go_monitoring_readonly_check_status=pass
+public_api_health_current=200
+public_admin_root_current=200
+public_customers_no_auth_current=401
+post_go_monitoring_status=pass
+dr_remediation_plan_created=true
+dr_remediation_priority=high_after_post_go_stability
 restricted_actions_remain_no_go=true
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
@@ -111,7 +119,7 @@ duplicate_send_detected=false
 additional_line_send_allowed=false
 retry_allowed=false
 bulk_send_allowed=false
-selected_next_minimal_action=post_go_monitoring_review
+selected_next_minimal_action=DR_remediation_strategy_review_after_production_Go
 ```
 
 ## Loop 266 Line Runtime Permission Gate Without Message Send
@@ -249,4 +257,37 @@ package_install_allowed=false
 apt_operation_allowed=false
 next_execution_sequence_status=post_go_monitoring_or_dr_remediation
 selected_next_minimal_action=post_go_monitoring_review
+```
+
+## Loop 271 Post-Go Monitoring Review
+
+Loop 271 reviews the Loop 270 scope-limited production Go state and runs the approved read-only public monitoring checks. The API health, admin root, and unauthenticated customers guard match baseline. DR remains incomplete and is planned as a separate remediation track.
+
+```txt
+post_go_monitoring_review_created=true
+post_go_monitoring_readonly_check_status=pass
+public_api_health_current=200
+public_admin_root_current=200
+public_customers_no_auth_current=401
+post_go_monitoring_status=pass
+monitoring_failure_reason=none
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+restricted_actions_remain_no_go=true
+dr_remediation_plan_created=true
+dr_remediation_priority=high_after_post_go_stability
+restore_execution_allowed=false
+pg_restore_allowed=false
+psql_allowed=false
+supabase_connection_allowed=false
+db_change_allowed=false
+additional_line_send_allowed=false
+retry_allowed=false
+bulk_send_allowed=false
+openai_auto_reply_production_allowed=false
+next_execution_sequence_status=DR_remediation_strategy_review_after_production_Go
+selected_next_minimal_action=DR_remediation_strategy_review_after_production_Go
 ```

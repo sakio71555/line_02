@@ -6,7 +6,7 @@
 対象:
 
 ```txt
-Loop 270: production Go decision record and post-Go monitoring baseline
+Loop 271: post-Go monitoring review and DR remediation planning
 ```
 
 結果:
@@ -18,21 +18,18 @@ operator_final_decision=production_go
 production_go=true
 production_no_go=false
 production_go_scope=line_api_admin_current_runtime
-production_go_record_scope_limited=true
 dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
-line_real_push_smoke_status=pass
-line_message_send_attempt_count=1
-line_message_send_success=true
-line_message_send_retry_executed=false
-post_send_api_health=200
-public_smoke_status=pass
-public_api_health=200
-public_admin_root=200
-public_customers_no_auth=401
-post_go_monitoring_baseline_created=true
+post_go_monitoring_review_created=true
+post_go_monitoring_readonly_check_status=pass
+public_api_health_current=200
+public_admin_root_current=200
+public_customers_no_auth_current=401
+post_go_monitoring_status=pass
+monitoring_failure_reason=none
 restricted_actions_remain_no_go=true
-next_recommended_loop=Loop 271 post-Go monitoring review
+dr_remediation_plan_created=true
+next_recommended_loop=Loop 272 DR remediation strategy review after production Go
 ```
 
 Safety:
@@ -46,9 +43,11 @@ line_multicast_executed=false
 line_broadcast_executed=false
 public_smoke_rerun=false
 openai_api_executed=false
+supabase_connection_executed=false
 supabase_restore_executed=false
 psql_executed=false
 pg_restore_executed=false
+restore_executed=false
 db_changed=false
 schema_changed=false
 role_changed=false
@@ -63,24 +62,29 @@ runtime_code_changed=false
 package_or_config_changed=false
 secret_values_recorded=false
 env_values_recorded=false
+db_url_recorded=false
 raw_log_recorded=false
 line_identifier_recorded=false
 message_body_recorded=false
 line_api_response_body_recorded=false
+production_log_recorded=false
+dump_content_recorded=false
+row_content_recorded=false
 ```
 
 必ず以下の順で判定してください。
 
 1. このLoopは complete / partial / blocked のどれか
 2. `production_go=true` は `line_api_admin_current_runtime` にscope限定されているか
-3. `dr_readiness_status=not_ready_restore_failed` と `dr_risk_acceptance_status=accepted_with_known_risk` が矛盾なく記録されているか
-4. restricted actions remain No-Go が維持されているか
-5. secret / raw log / LINE identifier / message body / LINE API response body が記録されていないか
-6. 次に取るべき方針は post-Go monitoring / DR remediation / no-go のどれか
-7. 次LoopのCodex文章を作ってよいか
+3. read-only monitoring結果はbaseline通りか
+4. `dr_readiness_status=not_ready_restore_failed` と `dr_risk_acceptance_status=accepted_with_known_risk` が矛盾なく維持されているか
+5. restricted actions remain No-Go が維持されているか
+6. secret / raw log / LINE identifier / message body / LINE API response body / production log が記録されていないか
+7. 次に取るべき方針は DR remediation strategy review / no-go / route freeze のどれか
+8. 次LoopのCodex文章を作ってよいか
 
 レビュー観点:
 
-- Current runtimeはGoになったが、追加LINE送信、retry、bulk、OpenAI自動返信、Supabase restore、DB/Nginx/DNS/HTTPS/package変更はNo-Goのままか。
-- DRは未完成だが、operatorがknown riskとして受容したためproduction Go scopeと分離できているか。
-- 次Loop候補を `Loop 271: post-Go monitoring review` のみにしてよいか。
+- Current runtimeはGoのまま維持し、追加LINE送信、retry、bulk、OpenAI自動返信、Supabase restore、DB/Nginx/DNS/HTTPS/package変更をNo-Goにできているか。
+- post-Go monitoringが通っている一方で、DRはまだ未完成であることを分離できているか。
+- 次Loop候補を `Loop 272: DR remediation strategy review after production Go` のみにしてよいか。

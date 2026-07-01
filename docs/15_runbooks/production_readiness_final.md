@@ -64,6 +64,45 @@ Current runtime Go / No-Go reading:
 | retry / bulk / multicast / broadcast | `no_go` | Still forbidden. |
 | infra / DB / package / OpenAI activation | `no_go` | Separate future approvals required. |
 
+## Loop 271 Current Status Override
+
+Loop 271 reviews the Loop 270 scope-limited production Go record, runs the allowed read-only public monitoring checks, and records DR remediation planning without restore execution.
+
+```txt
+loop_271_current_status_override=true
+post_go_monitoring_review_created=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+current_runtime_production_status=production_go
+current_runtime_scope=line_api_admin_current_runtime
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+restricted_actions_remain_no_go=true
+post_go_monitoring_readonly_check_status=pass
+public_api_health_current=200
+public_admin_root_current=200
+public_customers_no_auth_current=401
+post_go_monitoring_status=pass
+dr_remediation_plan_created=true
+restore_execution_allowed=false
+pg_restore_allowed=false
+psql_allowed=false
+supabase_connection_allowed=false
+db_change_allowed=false
+next_minimal_action=Loop 272 DR remediation strategy review after production Go
+```
+
+Current post-Go reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| read-only monitoring | `pass` | Public API health, admin root, and unauthenticated customers guard match baseline. |
+| DR readiness | `not_ready_restore_failed` | Accepted as known risk, not remediated in this Loop. |
+| DR remediation | `planned` | Planning only; no restore, DB, or Supabase execution. |
+| restricted actions | `no_go` | Additional LINE send, retry, bulk, OpenAI, restore, DB/infra/package changes remain No-Go. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

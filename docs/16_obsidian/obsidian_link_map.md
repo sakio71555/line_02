@@ -166,7 +166,10 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 269 Obsidian Log](loop_269_single_controlled_line_message_send_with_operator_attestation.md)
 - [Loop 270 Production Go Decision Record](../11_codex_tasks/270_production_go_decision_record.md)
 - [Loop 270 Obsidian Log](loop_270_production_go_decision_record.md)
+- [Loop 271 Post-Go Monitoring Review](../11_codex_tasks/271_post_go_monitoring_review.md)
+- [Loop 271 Obsidian Log](loop_271_post_go_monitoring_review.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
+- [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
 - [Loop 262 Obsidian Log](loop_262_line_runtime_env_injection_permission_gate.md)
 - [Goal Story Matrix Inventory](goal_story_matrix_inventory.md)
 - [Codex to ChatGPT Handoff v1 Runbook](../15_runbooks/codex_chatgpt_handoff_v1.md)
@@ -312,6 +315,8 @@ Loop 268 status: `approval_block_present=true`, `operator_approval_status=approv
 Loop 269 status: `operator_attestation_used=true`, `operator_controlled_target_confirmed=operator_attested`, `customer_target_confirmed=false`, `send_method_category=existing_internal_cli_one_message_category`, `route_preflight_status=blocked`, `line_message_send_execution_status=blocked`, `line_message_send_attempt_count=0`, `line_message_send_executed=false`, `line_external_api_connection_attempted=false`, `public_smoke_executed=false`, `production_no_go=true`, `dr_readiness_status=not_ready_restore_failed`, `classifier_route_status=frozen`, `next=Loop 270 controlled LINE send route review required`.
 
 Loop 270 status: `operator_final_decision=production_go`, `production_go=true`, `production_no_go=false`, `production_go_scope=line_api_admin_current_runtime`, `dr_readiness_status=not_ready_restore_failed`, `dr_risk_acceptance_status=accepted_with_known_risk`, `line_real_push_smoke_status=pass`, `line_message_send_attempt_count=1`, `line_message_send_success=true`, `public_smoke_status=pass`, `post_go_monitoring_baseline_created=true`, `restricted_actions_remain_no_go=true`, `next=Loop 271 post-Go monitoring review`.
+
+Loop 271 status: `post_go_monitoring_readonly_check_status=pass`, `public_api_health_current=200`, `public_admin_root_current=200`, `public_customers_no_auth_current=401`, `production_go=true`, `production_no_go=false`, `production_go_scope=line_api_admin_current_runtime`, `dr_readiness_status=not_ready_restore_failed`, `dr_risk_acceptance_status=accepted_with_known_risk`, `restricted_actions_remain_no_go=true`, `dr_remediation_plan_created=true`, `next=Loop 272 DR remediation strategy review after production Go`.
 
 ## Obsidian Helpers
 

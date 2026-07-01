@@ -99,6 +99,8 @@
 - Loop 269 single controlled LINE message send with operator attestation: `11_codex_tasks/269_single_controlled_line_message_send_with_operator_attestation.md`
 - Loop 270 production Go decision record: `11_codex_tasks/270_production_go_decision_record.md`
 - Loop 270 post-Go monitoring baseline: `15_runbooks/post_go_monitoring_baseline.md`
+- Loop 271 post-Go monitoring review: `11_codex_tasks/271_post_go_monitoring_review.md`
+- Loop 271 DR remediation after production Go: `15_runbooks/dr_remediation_after_production_go.md`
 
 ## Prompts and Templates
 

@@ -46,6 +46,34 @@ Operator handoff:
 - Continue post-Go monitoring using sanitized health/auth-guard statuses.
 - Treat DR restore readiness as a known accepted risk until a future DR remediation Loop resolves it.
 
+## Loop 271 Current Status Override
+
+Loop 271 ran read-only post-Go monitoring checks and planned DR remediation after production Go.
+
+```txt
+loop_271_current_status_override=true
+post_go_monitoring_review_created=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+restricted_actions_remain_no_go=true
+post_go_monitoring_readonly_check_status=pass
+public_api_health_current=200
+public_admin_root_current=200
+public_customers_no_auth_current=401
+dr_remediation_plan_created=true
+next_recommended_action=post_go_monitoring_review_or_dr_remediation_planning
+selected_next_minimal_action=Loop 272 DR remediation strategy review after production Go
+```
+
+Operator handoff:
+
+- Keep current runtime production Go scoped to `line_api_admin_current_runtime`.
+- Continue read-only health/auth-guard monitoring after future changes or customer reports.
+- Do not retry LINE sends; preserve the one-send lock and record only sanitized statuses.
+- Treat DR remediation as high priority after post-Go stability, but do not execute restore without a future explicit Loop.
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation as the target-control proof model, selected the existing internal CLI one-message category, and ran only dry-run route preflight. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

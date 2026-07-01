@@ -621,6 +621,8 @@ Loop 269 single controlled LINE message send with operator attestationでは、o
 
 Loop 270 production Go decision recordでは、operator側で実行済みのsanitized結果を正式記録し、`production_go=true` / `production_no_go=false` を `production_go_scope=line_api_admin_current_runtime` に限定して更新しました。LINE real push smoke、post-send API health、public API health、admin root、unauthenticated customers guardはpassとして記録し、DRは `not_ready_restore_failed` のまま `accepted_with_known_risk` として扱います。追加LINE送信、retry、bulk、OpenAI自動返信、Supabase restore、DB/Nginx/DNS/HTTPS/package変更はNo-Goのままです。詳細は [Loop 270 task doc](docs/11_codex_tasks/270_production_go_decision_record.md) と [post-Go monitoring baseline](docs/15_runbooks/post_go_monitoring_baseline.md) を参照してください。次は `Loop 271: post-Go monitoring review` です。
 
+Loop 271 post-Go monitoring review and DR remediation planningでは、Loop 270のscope-limited production Goを維持したまま、read-only public monitoring checksでpublic API health、admin root、unauthenticated customers guardがbaseline通りであることを記録しました。DRは `not_ready_restore_failed` / `accepted_with_known_risk` のまま、restore実行ではなくDR remediation計画だけを追加しています。追加LINE送信、retry、bulk、OpenAI、Supabase restore、DB/Nginx/DNS/HTTPS/package変更はNo-Goのままです。詳細は [Loop 271 task doc](docs/11_codex_tasks/271_post_go_monitoring_review.md) と [DR remediation after production Go](docs/15_runbooks/dr_remediation_after_production_go.md) を参照してください。次は `Loop 272: DR remediation strategy review after production Go` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

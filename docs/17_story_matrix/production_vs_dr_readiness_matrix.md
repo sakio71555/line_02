@@ -1,14 +1,14 @@
 # Production Vs DR Readiness Matrix
 
-This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate.
+This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution.
 
 | area | status | reason_scope | evidence | next_review | go_status |
 | --- | --- | --- | --- | --- | --- |
-| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md` | future DR remediation | Known risk accepted |
+| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md` | Loop 272 DR remediation strategy review | Known risk accepted |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 271 post-Go monitoring review | Included in current runtime Go |
-| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed | `docs/11_codex_tasks/270_production_go_decision_record.md` | Loop 271 post-Go monitoring review | Go for current runtime |
-| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md` | Loop 271 post-Go monitoring review | `production_go` scoped |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 272 DR remediation strategy review | Included in current runtime Go |
+| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 272 DR remediation strategy review | Go for current runtime |
+| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 272 DR remediation strategy review | `production_go` scoped |
 
 ## Current State
 
@@ -37,6 +37,14 @@ public_api_health=200
 public_admin_root=200
 public_customers_no_auth=401
 post_go_monitoring_baseline_created=true
+post_go_monitoring_review_created=true
+post_go_monitoring_readonly_check_status=pass
+public_api_health_current=200
+public_admin_root_current=200
+public_customers_no_auth_current=401
+post_go_monitoring_status=pass
+dr_remediation_plan_created=true
+dr_remediation_priority=high_after_post_go_stability
 restricted_actions_remain_no_go=true
 operator_approval_pack_created=true
 final_external_runtime_approval_request_pack_completed=true
@@ -136,6 +144,44 @@ dns_change_allowed=false
 https_certbot_change_allowed=false
 package_install_allowed=false
 apt_operation_allowed=false
+```
+
+## Loop 271 Post-Go Monitoring Review
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | Monitoring review and DR remediation planning, not a new gate chain. |
+| Read-only monitoring | `pass` | Public API health, admin root, and unauthenticated customers guard match baseline. |
+| Production Go | `unchanged` | Still scoped to current LINE/API/Admin runtime. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains accepted; remediation is planned separately. |
+| Restricted actions | `no_go` | Additional send, retry, bulk, OpenAI activation, restore, DB/infra/package changes remain blocked. |
+| Next action | `selected` | Loop 272 DR remediation strategy review after production Go. |
+
+```txt
+loop_271_post_go_monitoring_review_created=true
+loop_271_post_go_monitoring_readonly_check_status=pass
+loop_271_public_api_health_current=200
+loop_271_public_admin_root_current=200
+loop_271_public_customers_no_auth_current=401
+loop_271_post_go_monitoring_status=pass
+loop_271_monitoring_failure_reason=none
+loop_271_production_go=true
+loop_271_production_no_go=false
+loop_271_production_go_scope=line_api_admin_current_runtime
+loop_271_dr_readiness_status=not_ready_restore_failed
+loop_271_dr_risk_acceptance_status=accepted_with_known_risk
+loop_271_restricted_actions_remain_no_go=true
+loop_271_dr_remediation_plan_created=true
+loop_271_restore_execution_allowed=false
+loop_271_pg_restore_allowed=false
+loop_271_psql_allowed=false
+loop_271_supabase_connection_allowed=false
+loop_271_db_change_allowed=false
+loop_271_additional_line_send_allowed=false
+loop_271_retry_allowed=false
+loop_271_bulk_send_allowed=false
+loop_271_openai_auto_reply_production_allowed=false
+loop_271_next_minimal_action=Loop 272 DR remediation strategy review after production Go
 ```
 
 ## Loop 270 Production Go Decision Record

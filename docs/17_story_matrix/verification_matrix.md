@@ -59,6 +59,7 @@ These checks do not require production, external APIs, DB connections, restore, 
 | V-049 | Single controlled LINE message send | approval and send-method review for one controlled LINE send | send blocked before attempt because operator-controlled non-customer target was not independently confirmed without identifier/body exposure | true | false | false | false | false | false | false | false | pending_loop_268_verification | No LINE external API connection, no send, no retry, no identifier/body/API response body recording, no public smoke, no production Go. |
 | V-050 | Single controlled LINE message send with operator attestation | operator attestation plus internal CLI dry-run route preflight | attestation accepted, route preflight blocked before send, no external LINE API attempt | true | false | false | false | false | false | false | false | pending_loop_269_verification | Dry-run only; no execute mode, no send, no retry, no identifier/body/API response body recording, no public smoke, no production Go. |
 | V-051 | Production Go decision record and post-Go monitoring baseline | sanitized operator-side result recording only | scope-limited production Go recorded, DR known risk accepted, post-Go monitoring baseline created | true | false | false | false | false | false | false | false | pending_loop_270_verification | Does not execute additional LINE send, retry, public smoke rerun, OpenAI, Supabase restore, DB, infra, package, or runtime changes. |
+| V-052 | Post-Go monitoring review | read-only public health and auth guard checks | public API health 200, admin root 200, unauthenticated customers 401, DR remediation plan created | true | false | true | true | false | false | false | false | pending_loop_271_verification | Read-only public checks only; no send, retry, OpenAI, Supabase restore, DB, infra, package, raw log, or secret exposure. |
 
 ## Blocked Or Operator Approval Required
 
@@ -77,6 +78,7 @@ These checks are not allowed in this goal.
 | BV-009 | LINE real send after Loop 268 block | Target proof is not independently confirmed without identifier/body exposure. | false | true | true | true | false | false | false | true | Loop 269 controlled LINE send route human decision |
 | BV-010 | LINE real send after Loop 269 block | Current route cannot fetch target from this Codex shell and execute-mode runtime categories are unavailable. | false | true | true | true | false | false | false | true | Loop 270 controlled LINE send route review required |
 | BV-011 | Restricted actions after production Go | Additional LINE send, retry, bulk/multicast/broadcast, OpenAI auto-reply activation, Supabase restore, DB/infra/package changes remain No-Go without future explicit approval. | false | true | true | true | true | true | true | true | Loop 271 post-Go monitoring review |
+| BV-012 | DR remediation execution after post-Go monitoring | Restore, `pg_restore`, `psql`, Supabase connection, target DB creation, and DB changes remain blocked until a future explicit DR execution approval. | false | true | true | false | false | true | true | true | Loop 272 DR remediation strategy review after production Go |
 
 ## Loop 216 Verification Note
 
@@ -1615,6 +1617,40 @@ loop_255_package_name_recorded=false
 loop_255_extension_name_recorded=false
 loop_255_production_runtime_changed=false
 loop_255_selected_next_loop=Loop 256 operator env injection dry-run checklist
+```
+
+## Loop 271 Verification Note
+
+```txt
+loop_271_post_go_monitoring_review_created=true
+loop_271_post_go_monitoring_readonly_check_status=pass
+loop_271_public_api_health_current=200
+loop_271_public_admin_root_current=200
+loop_271_public_customers_no_auth_current=401
+loop_271_post_go_monitoring_status=pass
+loop_271_monitoring_failure_reason=none
+loop_271_production_go=true
+loop_271_production_no_go=false
+loop_271_production_go_scope=line_api_admin_current_runtime
+loop_271_dr_readiness_status=not_ready_restore_failed
+loop_271_dr_risk_acceptance_status=accepted_with_known_risk
+loop_271_restricted_actions_remain_no_go=true
+loop_271_dr_remediation_plan_created=true
+loop_271_restore_executed=false
+loop_271_pg_restore_executed=false
+loop_271_psql_executed=false
+loop_271_supabase_connection_executed=false
+loop_271_db_changed=false
+loop_271_line_message_send_executed=false
+loop_271_line_retry_executed=false
+loop_271_openai_api_executed=false
+loop_271_nginx_changed=false
+loop_271_dns_changed=false
+loop_271_https_certbot_operation_executed=false
+loop_271_package_install_executed=false
+loop_271_secret_recorded=false
+loop_271_raw_log_recorded=false
+loop_271_next_loop=Loop 272 DR remediation strategy review after production Go
 ```
 
 ## Stage 2 Rule
