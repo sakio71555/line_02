@@ -172,6 +172,8 @@ Use this map as a compact index when reviewing project history in Obsidian.
 - [Loop 272 Obsidian Log](loop_272_dr_remediation_strategy_review.md)
 - [Loop 273 DR Backup Artifact Validation Preflight](../11_codex_tasks/273_dr_backup_artifact_validation_preflight.md)
 - [Loop 273 Obsidian Log](loop_273_dr_backup_artifact_validation_preflight.md)
+- [Loop 274 DR Artifact Metadata Intake And Validation](../11_codex_tasks/274_dr_artifact_metadata_intake_and_validation.md)
+- [Loop 274 Obsidian Log](loop_274_dr_artifact_metadata_intake_and_validation.md)
 - [Post-Go Monitoring Baseline](../15_runbooks/post_go_monitoring_baseline.md)
 - [DR Remediation After Production Go](../15_runbooks/dr_remediation_after_production_go.md)
 - [DR Backup Artifact Validation Preflight](../15_runbooks/dr_backup_artifact_validation_preflight.md)
@@ -326,6 +328,8 @@ Loop 271 status: `post_go_monitoring_readonly_check_status=pass`, `public_api_he
 Loop 272 status: `dr_remediation_strategy_review_created=true`, `production_go=true`, `production_go_scope=line_api_admin_current_runtime`, `post_go_monitoring_status=pass`, `dr_readiness_status=not_ready_restore_failed`, `dr_risk_acceptance_status=accepted_with_known_risk`, `recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry`, `dr_next_operator_decision_required=true`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `restricted_actions_remain_no_go=true`, `next=Loop 273 DR backup artifact validation preflight`.
 
 Loop 273 status: `dr_backup_artifact_validation_preflight_created=true`, `artifact_metadata_schema_created=true`, `operator_artifact_metadata_required=true`, `dr_backup_artifact_validation_preflight_status=operator_metadata_required`, `production_go=true`, `production_go_scope=line_api_admin_current_runtime`, `post_go_monitoring_status=pass`, `dr_readiness_status=not_ready_restore_failed`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `artifact_path_recorded=false`, `artifact_filename_recorded=false`, `artifact_content_read=false`, `artifact_hash_recorded=false`, `artifact_size_exact_recorded=false`, `next=Loop 274 DR artifact metadata intake and validation`.
+
+Loop 274 status: `dr_artifact_metadata_intake_created=true`, `operator_artifact_metadata_provided=true`, `selected_artifact_candidate=candidate_a`, `dr_backup_artifact_validation_preflight_status=pass`, `candidate_b_status=rejected`, `candidate_b_rejection_reason=artifact_nonempty_false`, `production_go=true`, `production_go_scope=line_api_admin_current_runtime`, `post_go_monitoring_status=pass`, `dr_readiness_status=not_ready_restore_failed`, `restore_execution_performed=false`, `pg_restore_executed=false`, `psql_executed=false`, `supabase_connection_attempted=false`, `db_change_performed=false`, `artifact_path_recorded=false`, `artifact_filename_recorded=false`, `artifact_content_read=false`, `artifact_hash_recorded=false`, `artifact_size_exact_recorded=false`, `next=Loop 275 DR restore retry preflight decision`.
 
 ## Obsidian Helpers
 

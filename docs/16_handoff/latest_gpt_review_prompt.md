@@ -6,7 +6,7 @@
 対象:
 
 ```txt
-Loop 273: DR backup artifact validation preflight
+Loop 274: DR artifact metadata intake and validation
 ```
 
 結果:
@@ -20,16 +20,16 @@ production_go_scope=line_api_admin_current_runtime
 post_go_monitoring_status=pass
 dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
-dr_backup_artifact_validation_preflight_created=true
-artifact_metadata_schema_created=true
-operator_artifact_metadata_provided=false
-operator_artifact_metadata_required=true
-dr_backup_artifact_validation_preflight_status=operator_metadata_required
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
+candidate_b_status=rejected
+candidate_b_rejection_reason=artifact_nonempty_false
 artifact_validation_pass_does_not_authorize_restore=true
 restore_retry_requires_separate_operator_approval=true
 restore_retry_requires_restore_preflight_loop=true
 restricted_actions_remain_no_go=true
-next_recommended_loop=Loop 274 DR artifact metadata intake and validation
+next_recommended_loop=Loop 275 DR restore retry preflight decision
 ```
 
 Safety:
@@ -64,16 +64,16 @@ row_content_recorded=false
 必ず以下の順で判定してください。
 
 1. このLoopは complete / partial / blocked のどれか
-2. preflight作成は増殖ではなく前進か
-3. `operator_metadata_required` は妥当か
-4. artifact validation passがrestore authorizationに変換されていないか
+2. artifact metadata validation pass が妥当か
+3. path/filename/hash/exact size/secret/raw logを記録していないか
+4. restore実行を誤って許可していないか
 5. production_go状態を崩していないか
-6. secret/path/raw log/DB/artifact detailsを記録していないか
-7. 次に取るべき方針は DR artifact metadata intake and validation / no-go / route freeze / human input required のどれか
+6. 次Loopが増殖ではなくrestore retry preflight decisionに進んでいるか
+7. 次に取るべき方針は DR restore retry preflight decision / no-go / route freeze のどれか
 8. 次LoopのCodex文章を作ってよいか
 
 レビュー観点:
 
-- Loop 274へ進む場合は、operatorがsanitized metadata schemaだけを貼る必要があります。
-- artifact path、filename、exact size、hash/checksum value、storage URL、raw log、DB URL、secret、SQL、object name、role name、dump content、row contentは貼らないでください。
-- Loop 274でmetadataがpassしても、それだけではrestore retryを許可しないでください。
+- Candidate A pass is based only on sanitized operator metadata.
+- Candidate B was rejected because sanitized `artifact_nonempty=false`.
+- Loop 275 may decide restore retry preflight only. It must not execute restore, `pg_restore`, `psql`, Supabase connection, or DB changes.

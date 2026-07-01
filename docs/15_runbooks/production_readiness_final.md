@@ -185,6 +185,53 @@ Current Loop 273 reading:
 | restore execution | `no_go` | Artifact validation cannot authorize restore. |
 | restricted actions | `no_go` | Additional LINE send, retry, bulk, OpenAI, DB/infra/package changes remain No-Go. |
 
+## Loop 274 Current Status Override
+
+Loop 274 records operator-provided sanitized artifact metadata as pass for candidate A. Candidate B is rejected because it is not nonempty by sanitized metadata. Production Go remains scoped to the current runtime; DR readiness remains incomplete until a future restore drill succeeds.
+
+```txt
+loop_274_current_status_override=true
+dr_artifact_metadata_intake_created=true
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
+candidate_b_status=rejected
+candidate_b_rejection_reason=artifact_nonempty_false
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+artifact_validation_pass_does_not_authorize_restore=true
+restore_retry_requires_separate_operator_approval=true
+restore_retry_requires_restore_preflight_loop=true
+restore_execution_status=not_executed
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_read=false
+artifact_hash_recorded=false
+artifact_size_exact_recorded=false
+restricted_actions_remain_no_go=true
+next_minimal_action=Loop 275 DR restore retry preflight decision
+```
+
+Current Loop 274 reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR readiness | `not_ready_restore_failed` | Still accepted as known risk, not resolved. |
+| DR artifact validation | `pass` | Sanitized operator metadata passes for candidate A. |
+| restore execution | `no_go` | Artifact validation cannot authorize restore. |
+| next action | `restore_retry_preflight_decision` | Loop 275 may decide the next restore retry preflight only. |
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation for target control, selected the existing internal CLI one-message category, and ran dry-run route preflight only. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.
@@ -1152,10 +1199,10 @@ docs、dev log、test snapshot、error responseに以下を書かない。
 - Loop 117ではreal domain decision and DNS provider confirmation planとして、domain decision packet、DNS provider checklist、production domain approval sheetを追加した。候補は分類したがcanonical hostnameは `unknown` のまま維持し、DNS query、DNS変更、Nginx active config変更、reload/restart、certbot、external smoke、LINE webhook登録は未実施。
 - Loop 118では `admin.taiyolabel.site` を検証/管理用ホストとして承認し、TXTを除くread-only DNS confirmationを実施した。A recordは `160.251.174.201` と一致し、AAAA/CNAME/CAA/DSは未設定だった。NSから `dnsv.jp / GMO DNS` と推定したが、DNS ownerとrollback ownerは未確定。VPS read-only確認では `nginx -t` 成功、`sites-enabled` candidateなし、localhost API/Admin 200を確認した。Nginx reload/restart、certbot、DNS変更、external smoke、LINE/OpenAI/Supabase実接続は未実施。
 - Loop 119ではdomain and release approval recordとDNS/Nginx rollback owner checklistを追加した。`admin.taiyolabel.site` はreview/admin hostnameとして記録し、client-facing final hostnameはundecidedのまま。DNS owner、DNS rollback owner、Nginx enable approver、Certificate approver、ACME method、LINE webhook approver、Maintenance window、Final Go/No-Go ownerが未確定のため、actual enable、certbot、HTTPS、external smokeへ進めない。
-- Loop 120ではrelease candidateとrollback candidateを明示し、VPS localhost-only review環境のsource整合を監査した。VPS deployed sourceは `176cb34fc6059ecabfb9826daacaabc2a437bebe` のままで、release directoryがcopy-basedかつ `.git` なしだったため `git pull --ff-only origin main` は未実行。evidenceは `/root/deploy-backups/amami-line-crm/loop120-20260626-174138` に保存し、direct API `/health`、Admin `/login` / `/select-tenant` / `/customers` / `/alerts` は既存sourceで `200`。Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
-- Loop 121ではcopy-based release archiveをVPS stagingへ転送し、checksum一致、`.env*` 除外、install、lint、typecheck、buildを確認した。しかしfull `test` がcopy-based/no-env-template/Node.js 20 compatibilityで失敗したため、active source更新、systemd restart、Nginx reload/restartへ進まずNo-Goとした。active sourceは `176cb34fc6059ecabfb9826daacaabc2a437bebe` のまま。evidenceは `/root/deploy-backups/amami-line-crm/loop121-20260626-180347` に保存した。
+- Loop 120ではrelease candidateとrollback candidateを明示し、VPS localhost-only review環境のsource整合を監査した。VPS deployed sourceは `176cb34fc6059ecabfb9826daacaabc2a437bebe` のままで、release directoryがcopy-basedかつ `.git` なしだったため `git pull --ff-only origin main` は未実行。evidenceは `repo_outside_root_only_storage_path_omitted` に保存し、direct API `/health`、Admin `/login` / `/select-tenant` / `/customers` / `/alerts` は既存sourceで `200`。Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
+- Loop 121ではcopy-based release archiveをVPS stagingへ転送し、checksum一致、`.env*` 除外、install、lint、typecheck、buildを確認した。しかしfull `test` がcopy-based/no-env-template/Node.js 20 compatibilityで失敗したため、active source更新、systemd restart、Nginx reload/restartへ進まずNo-Goとした。active sourceは `176cb34fc6059ecabfb9826daacaabc2a437bebe` のまま。evidenceは `repo_outside_root_only_storage_path_omitted` に保存した。
 - Loop 121.1ではcopy-based staging test compatibility patchを追加し、patched archive `loop1211-20260626-185306` をVPS stagingで検証した。staging sourceは `.git` / `.env*` なしで、`install --frozen-lockfile`、`lint`、`typecheck`、`test`、`test:integration`、`build` が成功した。ただしactive source更新、systemd restart、Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施で、active sourceは `176cb34fc6059ecabfb9826daacaabc2a437bebe` のまま。
-- Loop 122ではcopy-based release archiveを `.env*` / `.git` / `node_modules` なしで再作成し、VPS staging `/root/deploy-staging/amami-line-crm/loop122-extract-20260626-190958/source` で `install --frozen-lockfile`、`lint`、`typecheck`、`test`、`test:integration`、`build` を成功させた。active source backupは `/root/deploy-backups/amami-line-crm/loop122-20260626-190958/active-source-before.tar`、active source afterは `2a9a746940b5f7a707af4c042bb9225d3dea258b`。active `.env*` はファイル名のみ前後一致を確認し、既存 `amami-line-crm-api.service` / `amami-line-crm-admin.service` をrestart、API `/health` とAdmin `/login` / `/select-tenant` / `/customers` / `/alerts` はlocalhostで `200`。Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
+- Loop 122ではcopy-based release archiveを `.env*` / `.git` / `node_modules` なしで再作成し、VPS staging `/root/deploy-staging/amami-line-crm/loop122-extract-20260626-190958/source` で `install --frozen-lockfile`、`lint`、`typecheck`、`test`、`test:integration`、`build` を成功させた。active source backupは `repo_outside_root_only_storage_path_omitted`、active source afterは `2a9a746940b5f7a707af4c042bb9225d3dea258b`。active `.env*` はファイル名のみ前後一致を確認し、既存 `amami-line-crm-api.service` / `amami-line-crm-admin.service` をrestart、API `/health` とAdmin `/login` / `/select-tenant` / `/customers` / `/alerts` はlocalhostで `200`。Nginx reload/restart、DNS、certbot、HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
 - Loop 123ではcorrected Nginx candidateを `amami-line-crm.invalid` のまま一時 `sites-enabled` symlinkでincludeし、`sudo nginx -t` と `sudo systemctl reload nginx` を実行した。Host header smokeは `/` が `200`、`/api/health` が `404` で、`X-Amami-Line-Crm-Proxy` diagnostic headerもabsentだったためNo-Go。cleanup trapでsymlink削除、rollback `nginx -t`、rollback reloadを実行し、direct API `/health` とAdmin `/login` は `200` へ戻った。実ドメイン、DNS、certbot/HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
 - Loop 124ではNginx server selectionをreload/restartなしで診断した。`nginx.conf` は `conf.d/*.conf` と `sites-enabled/*` をincludeし、temporary symlink中の `nginx -T` にはcandidate、`amami-line-crm.invalid`、`127.0.0.1:3002`、`127.0.0.1:8788`、`X-Amami-Line-Crm-Proxy`、`/api/health` mappingが出た。symlink削除後 `nginx -t` は成功。現在active curlは `/=200`、`/api/health=404`、`/login=404`、diagnostic header absentで、Loop 123と同じfailure shape。修正は未適用で、実ドメイン、DNS、certbot/HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
 - Loop 125ではdiagnostic専用probe server blockを一時作成し、`amami-line-crm.invalid` のHost headerがreload後にprobeへ到達するかを確認した。probeは `nginx -T` に出たが、reload smokeでは `/__amami_probe=404`、`X-Amami-Line-Crm-Probe` absent、`/=200`、`/api/health=404` となり、`server_selection=probe_not_reached`。probe symlinkとcandidateは削除済み、rollback `nginx -t` とrollback reloadは完了。real domain、`admin.taiyolabel.site` Host header、DNS変更、certbot/HTTPS、external smoke、LINE/OpenAI/Supabase実接続は未実施。
@@ -1283,7 +1330,7 @@ Project owner email configured; value not recorded
 Evidence:
 
 ```txt
-evidence_dir=/root/deploy-backups/amami-line-crm/loop137-139-20260627-135350
+evidence_dir=repo_outside_root_only_storage_path_omitted
 rollback_executed=no
 ```
 

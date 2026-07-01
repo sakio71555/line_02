@@ -147,6 +147,57 @@ supabase_connection_attempted=false
 db_change_performed=false
 ```
 
+## Loop 274 Metadata Intake Result
+
+Loop 274 received operator-provided sanitized artifact metadata and validated it against the Loop 273 contract. Candidate labels are abstract labels only; artifact path, filename, storage URL, exact size, hash/checksum, raw log, and content are not recorded.
+
+```txt
+dr_artifact_metadata_intake_created=true
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
+candidate_b_status=rejected
+candidate_b_rejection_reason=artifact_nonempty_false
+candidate_b_path_recorded=false
+candidate_b_filename_recorded=false
+candidate_b_content_read=false
+artifact_exists=true
+artifact_nonempty=true
+artifact_generation_status=known
+artifact_age_category=recent
+artifact_storage_category=vps_outside_repo
+artifact_format_category=logical_backup
+artifact_restore_candidate=true
+artifact_integrity_status=operator_attested_pass
+artifact_access_status=operator_accessible
+artifact_secret_exposure_risk=none_recorded
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_read=false
+artifact_hash_recorded=false
+artifact_size_exact_recorded=false
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+```
+
+The pass result means the artifact metadata can move to a restore retry preflight decision. It still does not authorize restore execution.
+
+```txt
+artifact_validation_pass_does_not_authorize_restore=true
+restore_retry_requires_separate_operator_approval=true
+restore_retry_requires_restore_preflight_loop=true
+restore_execution_allowed=false
+pg_restore_allowed=false
+psql_allowed=false
+supabase_connection_allowed=false
+db_change_allowed=false
+next_execution_sequence_status=ready_for_restore_retry_preflight_decision
+next_recommended_loop=Loop 275 DR restore retry preflight decision
+```
+
 ## Operator Decision Package
 
 Recommended approval format:
@@ -194,8 +245,10 @@ Stop before any write, commit, or execution if any of the following is requested
 ```txt
 dr_backup_artifact_validation_preflight_created=true
 artifact_metadata_schema_created=true
-operator_artifact_metadata_required=true
-dr_backup_artifact_validation_preflight_status=operator_metadata_required
+operator_artifact_metadata_required=false
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 restore_execution_performed=false
 pg_restore_executed=false
@@ -209,5 +262,5 @@ artifact_hash_recorded=false
 artifact_size_exact_recorded=false
 secret_recorded=false
 restricted_actions_remain_no_go=true
-next_minimal_action=Loop 274 DR artifact metadata intake and validation
+next_minimal_action=Loop 275 DR restore retry preflight decision
 ```

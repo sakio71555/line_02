@@ -2,7 +2,7 @@
 
 ## Loop
 
-Loop 273: DR backup artifact validation preflight
+Loop 274: DR artifact metadata intake and validation
 
 ## Status
 
@@ -11,15 +11,15 @@ loop_status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=dr_artifact_validation_preflight
-next_loop_requires_new_operator_input=true
+forward_progress_type=dr_artifact_metadata_intake_and_validation
+next_loop_requires_new_operator_input=false
 ```
 
 ## Summary
 
-Loop 273 created the DR backup artifact validation preflight and strict sanitized operator metadata schema. The repo does not contain sufficient sanitized operator artifact metadata, so the validation status is `operator_metadata_required`.
+Loop 274 validated operator-provided sanitized DR artifact metadata against the Loop 273 preflight contract. Candidate A is selected and classified as pass. Candidate B is rejected because its sanitized nonempty status is false.
 
-No artifact access, artifact content read, artifact path/filename/hash/exact-size recording, restore, `pg_restore`, `psql`, Supabase connection, DB/schema/role/extension/cluster change, package/apt operation, LINE send, OpenAI call, Nginx/DNS/HTTPS/certbot operation, service restart, runtime code, package, or config change was executed.
+No artifact path, filename, storage URL, exact size, hash/checksum, content, raw log, DB URL, secret, SQL, object name, role name, package name, extension name, dump content, row content, LINE identifier, message body, or production log was recorded. No restore, `pg_restore`, `psql`, Supabase connection, DB/schema/role/extension/cluster change, package/apt operation, SSH/remote command, Nginx/DNS/HTTPS/certbot operation, service restart, LINE send, OpenAI call, runtime code, package, or config change was executed.
 
 ## Production And Monitoring State
 
@@ -34,34 +34,25 @@ dr_risk_acceptance_status=accepted_with_known_risk
 restricted_actions_remain_no_go=true
 ```
 
-## DR Artifact Validation Preflight
+## DR Artifact Metadata Validation
 
 ```txt
-dr_backup_artifact_validation_preflight_created=true
-artifact_metadata_schema_created=true
-operator_artifact_metadata_provided=false
-operator_artifact_metadata_required=true
-dr_backup_artifact_validation_preflight_status=operator_metadata_required
-artifact_validation_pass_does_not_authorize_restore=true
-restore_retry_requires_separate_operator_approval=true
-restore_retry_requires_restore_preflight_loop=true
-next_minimal_action=Loop 274 DR artifact metadata intake and validation
-```
-
-## Operator Metadata Schema
-
-```txt
-operator_artifact_metadata_provided=true_or_false
-artifact_exists=true_or_false_or_unknown
-artifact_nonempty=true_or_false_or_unknown
-artifact_generation_status=known_or_unknown
-artifact_age_category=same_day_or_recent_or_stale_or_unknown
-artifact_storage_category=operator_managed_outside_repo_or_vps_outside_repo_or_external_backup_storage_or_unknown
-artifact_format_category=logical_backup_or_platform_backup_or_unknown
-artifact_restore_candidate=true_or_false_or_unknown
-artifact_integrity_status=not_checked_or_operator_attested_pass_or_operator_attested_fail_or_unknown
-artifact_access_status=operator_accessible_or_not_accessible_or_unknown
-artifact_secret_exposure_risk=none_recorded_or_risk_unknown
+dr_artifact_metadata_intake_created=true
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
+candidate_b_status=rejected
+candidate_b_rejection_reason=artifact_nonempty_false
+artifact_exists=true
+artifact_nonempty=true
+artifact_generation_status=known
+artifact_age_category=recent
+artifact_storage_category=vps_outside_repo
+artifact_format_category=logical_backup
+artifact_restore_candidate=true
+artifact_integrity_status=operator_attested_pass
+artifact_access_status=operator_accessible
+artifact_secret_exposure_risk=none_recorded
 artifact_path_recorded=false
 artifact_filename_recorded=false
 artifact_content_read=false
@@ -69,62 +60,31 @@ artifact_hash_recorded=false
 artifact_size_exact_recorded=false
 ```
 
-## Restricted Actions
+## Restore Boundary
 
 ```txt
+artifact_validation_pass_does_not_authorize_restore=true
+restore_retry_requires_separate_operator_approval=true
+restore_retry_requires_restore_preflight_loop=true
+restore_execution_allowed=false
+pg_restore_allowed=false
+psql_allowed=false
+supabase_connection_allowed=false
+db_change_allowed=false
 restore_execution_performed=false
 pg_restore_executed=false
 psql_executed=false
 supabase_connection_attempted=false
 db_change_performed=false
-schema_change_performed=false
-role_change_performed=false
-extension_created=false
-cluster_changed=false
-backup_artifact_accessed=false
-artifact_path_recorded=false
-artifact_filename_recorded=false
-artifact_content_read=false
-artifact_hash_recorded=false
-artifact_size_exact_recorded=false
-package_install_executed=false
-apt_operation_executed=false
-line_additional_send_executed=false
-line_retry_executed=false
-line_bulk_send_executed=false
-openai_api_executed=false
-nginx_dns_https_change_executed=false
-runtime_code_changed=false
-package_or_config_changed=false
-classifier_route_status=frozen
-```
-
-## Safety
-
-```txt
-secret_values_recorded=false
-env_values_recorded=false
-db_url_recorded=false
-raw_log_recorded=false
-command_output_body_recorded=false
-sql_recorded=false
-db_object_name_recorded=false
-role_name_recorded=false
-package_name_recorded=false
-extension_name_recorded=false
-line_identifier_recorded=false
-message_body_recorded=false
-line_api_response_body_recorded=false
-production_log_recorded=false
-dump_content_recorded=false
-row_content_recorded=false
+next_execution_sequence_status=ready_for_restore_retry_preflight_decision
+next_recommended_loop=Loop 275 DR restore retry preflight decision
 ```
 
 ## Changed Files
 
 - `README.md`
 - `docs/00_index.md`
-- `docs/11_codex_tasks/273_dr_backup_artifact_validation_preflight.md`
+- `docs/11_codex_tasks/274_dr_artifact_metadata_intake_and_validation.md`
 - `docs/14_dev_logs/2026-07-01.md`
 - `docs/15_runbooks/dr_backup_artifact_validation_preflight.md`
 - `docs/15_runbooks/dr_remediation_after_production_go.md`
@@ -133,7 +93,7 @@ row_content_recorded=false
 - `docs/16_handoff/latest_codex_result.md`
 - `docs/16_handoff/latest_gpt_review_prompt.md`
 - `docs/16_obsidian/README.md`
-- `docs/16_obsidian/loop_273_dr_backup_artifact_validation_preflight.md`
+- `docs/16_obsidian/loop_274_dr_artifact_metadata_intake_and_validation.md`
 - `docs/16_obsidian/obsidian_link_map.md`
 - `docs/17_story_matrix/README.md`
 - `docs/17_story_matrix/production_vs_dr_readiness_matrix.md`
@@ -142,5 +102,5 @@ row_content_recorded=false
 ## Next
 
 ```txt
-next_recommended_loop=Loop 274 DR artifact metadata intake and validation
+next_recommended_loop=Loop 275 DR restore retry preflight decision
 ```

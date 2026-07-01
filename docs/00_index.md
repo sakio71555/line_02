@@ -103,6 +103,7 @@
 - Loop 271 DR remediation after production Go: `15_runbooks/dr_remediation_after_production_go.md`
 - Loop 272 DR remediation strategy review: `11_codex_tasks/272_dr_remediation_strategy_review_after_production_go.md`
 - Loop 273 DR backup artifact validation preflight: `11_codex_tasks/273_dr_backup_artifact_validation_preflight.md`
+- Loop 274 DR artifact metadata intake and validation: `11_codex_tasks/274_dr_artifact_metadata_intake_and_validation.md`
 - DR backup artifact validation preflight runbook: `15_runbooks/dr_backup_artifact_validation_preflight.md`
 
 ## Prompts and Templates

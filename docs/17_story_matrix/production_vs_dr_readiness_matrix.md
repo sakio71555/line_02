@@ -1,14 +1,14 @@
 # Production Vs DR Readiness Matrix
 
-This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution. Loop 272 reviews the DR strategy and selects backup artifact validation preflight before restore retry. Loop 273 creates the artifact metadata schema and records that operator metadata is required before validation can pass.
+This matrix separates app / production readiness from disaster recovery readiness. Loop 270 records a scope-limited production Go for the current LINE/API/Admin runtime while keeping DR readiness and restricted actions separate. Loop 271 confirms read-only post-Go monitoring still matches baseline and adds a DR remediation plan without restore execution. Loop 272 reviews the DR strategy and selects backup artifact validation preflight before restore retry. Loop 273 creates the artifact metadata schema and records that operator metadata is required before validation can pass. Loop 274 validates sanitized operator metadata as pass while keeping restore execution blocked.
 
 | area | status | reason_scope | evidence | next_review | go_status |
 | --- | --- | --- | --- | --- | --- |
-| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md`, `docs/15_runbooks/dr_backup_artifact_validation_preflight.md` | Loop 274 DR artifact metadata intake and validation | Known risk accepted |
+| DR readiness | `not_ready_restore_failed` | restore drill has not succeeded, accepted as known risk for current runtime Go | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md`, `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/dr_remediation_after_production_go.md`, `docs/15_runbooks/dr_backup_artifact_validation_preflight.md` | Loop 275 DR restore retry preflight decision | Known risk accepted |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 274 DR artifact metadata intake and validation | Included in current runtime Go |
-| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 274 DR artifact metadata intake and validation | Go for current runtime |
-| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 274 DR artifact metadata intake and validation | `production_go` scoped |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 275 DR restore retry preflight decision | Included in current runtime Go |
+| External runtime readiness | `line_real_push_and_public_smoke_pass` | operator-side sanitized LINE real push, post-send health, public smoke, and auth guard passed; Loop 271 read-only monitoring remained pass | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 275 DR restore retry preflight decision | Go for current runtime |
+| Production readiness | `production_go_line_api_admin_current_runtime` | operator final decision accepted current LINE/API/Admin runtime, with DR known risk and restricted actions still separated | `docs/11_codex_tasks/270_production_go_decision_record.md`, `docs/15_runbooks/post_go_monitoring_baseline.md`, `docs/11_codex_tasks/271_post_go_monitoring_review.md` | Loop 275 DR restore retry preflight decision | `production_go` scoped |
 
 ## Current State
 
@@ -51,8 +51,10 @@ recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 dr_next_operator_decision_required=true
 dr_backup_artifact_validation_preflight_created=true
 artifact_metadata_schema_created=true
-operator_artifact_metadata_required=true
-dr_backup_artifact_validation_preflight_status=operator_metadata_required
+operator_artifact_metadata_required=false
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
 restore_execution_status=not_executed
 restricted_actions_remain_no_go=true
 operator_approval_pack_created=true
@@ -229,6 +231,51 @@ loop_273_artifact_hash_recorded=false
 loop_273_artifact_size_exact_recorded=false
 loop_273_restricted_actions_remain_no_go=true
 loop_273_next_loop=Loop 274 DR artifact metadata intake and validation
+```
+
+## Loop 274 DR Artifact Metadata Intake And Validation
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Anti-proliferation | `pass` | Consumes provided metadata and classifies it; does not add another protocol loop. |
+| Production Go | `unchanged` | Still scoped to current LINE/API/Admin runtime. |
+| Post-Go monitoring | `pass` | Loop 271 baseline remains the current monitoring reference. |
+| DR readiness | `not_ready_restore_failed` | Known risk remains accepted; not resolved. |
+| Artifact validation | `pass` | Sanitized operator metadata passes for candidate A. |
+| Candidate B | `rejected` | Sanitized metadata marks it not nonempty. |
+| Restore execution | `no_go` | Artifact validation cannot authorize restore. |
+| Next action | `selected` | Loop 275 DR restore retry preflight decision. |
+
+```txt
+loop_274_dr_artifact_metadata_intake_created=true
+loop_274_operator_artifact_metadata_provided=true
+loop_274_selected_artifact_candidate=candidate_a
+loop_274_dr_backup_artifact_validation_preflight_status=pass
+loop_274_candidate_b_status=rejected
+loop_274_candidate_b_rejection_reason=artifact_nonempty_false
+loop_274_artifact_exists=true
+loop_274_artifact_nonempty=true
+loop_274_artifact_generation_status=known
+loop_274_artifact_age_category=recent
+loop_274_artifact_storage_category=vps_outside_repo
+loop_274_artifact_format_category=logical_backup
+loop_274_artifact_restore_candidate=true
+loop_274_artifact_integrity_status=operator_attested_pass
+loop_274_artifact_access_status=operator_accessible
+loop_274_artifact_secret_exposure_risk=none_recorded
+loop_274_artifact_path_recorded=false
+loop_274_artifact_filename_recorded=false
+loop_274_artifact_content_read=false
+loop_274_artifact_hash_recorded=false
+loop_274_artifact_size_exact_recorded=false
+loop_274_artifact_validation_pass_does_not_authorize_restore=true
+loop_274_restore_execution_performed=false
+loop_274_pg_restore_executed=false
+loop_274_psql_executed=false
+loop_274_supabase_connection_attempted=false
+loop_274_db_change_performed=false
+loop_274_restricted_actions_remain_no_go=true
+loop_274_next_loop=Loop 275 DR restore retry preflight decision
 ```
 
 ## Loop 271 Post-Go Monitoring Review

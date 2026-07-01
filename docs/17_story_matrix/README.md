@@ -140,6 +140,21 @@ dr_readiness_status=not_ready_restore_failed
 selected_next_minimal_action=Loop 274 DR artifact metadata intake and validation
 ```
 
+## Loop 274 DR Artifact Metadata Intake And Validation
+
+Loop 274 validates operator-provided sanitized artifact metadata. Candidate A passes the preflight metadata check, and candidate B is rejected because its sanitized nonempty status is false. Restore execution remains blocked.
+
+```txt
+dr_artifact_metadata_intake_created=true
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
+candidate_b_status=rejected
+candidate_b_rejection_reason=artifact_nonempty_false
+dr_readiness_status=not_ready_restore_failed
+selected_next_minimal_action=Loop 275 DR restore retry preflight decision
+```
+
 ## Loop 266 Line Runtime Permission Gate Without Message Send
 
 Loop 266 validated the LINE runtime path with status-only non-send checks. API health, LINE webhook route shape, and invalid-signature handling passed without LINE external API connection, message send, public smoke, secret value output, or production Go change.

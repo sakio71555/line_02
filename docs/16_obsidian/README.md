@@ -110,6 +110,7 @@ The repo root `/Users/sakio/Desktop/PROJECT/amami-line-crm` may be opened as an 
 - Loop 271 reviews the scope-limited production Go record with read-only public monitoring checks, records API health/admin root/auth guard as baseline pass, adds DR remediation planning after production Go, and keeps additional sends, retry, OpenAI, Supabase restore, DB/infra/package changes, raw logs, and secrets No-Go.
 - Loop 272 reviews the remaining DR risk after production Go, keeps production Go and post-Go monitoring pass unchanged, selects `backup_artifact_validation_plan_before_restore_retry`, and keeps restore, `pg_restore`, `psql`, Supabase, DB/infra/package changes, raw logs, paths, and secrets No-Go.
 - Loop 273 creates the DR backup artifact validation preflight, adds the strict sanitized artifact metadata schema, records `operator_metadata_required`, and keeps artifact path/name/content/hash/exact size, restore, `pg_restore`, `psql`, Supabase, DB changes, raw logs, and secrets No-Go.
+- Loop 274 validates operator-provided sanitized artifact metadata, records `dr_backup_artifact_validation_preflight_status=pass` for candidate A, rejects candidate B due to `artifact_nonempty_false`, and keeps restore, `pg_restore`, `psql`, Supabase, DB changes, artifact path/name/content/hash/exact size, raw logs, and secrets No-Go.
 
 ## .obsidian Policy
 

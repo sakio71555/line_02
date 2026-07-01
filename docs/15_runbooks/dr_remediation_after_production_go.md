@@ -74,9 +74,9 @@ The production Go decision is not a DR completion signal. DR should be resumed o
 ```txt
 recommended_dr_strategy=backup_artifact_validation_plan_before_restore_retry
 recommended_strategy_reason=lowest_risk_next_step_after_post_go_monitoring_pass
-next_recommended_loop=Loop 274 DR artifact metadata intake and validation
+next_recommended_loop=Loop 275 DR restore retry preflight decision
 dr_next_operator_decision_required=true
-next_minimal_action=Loop 274 DR artifact metadata intake and validation
+next_minimal_action=Loop 275 DR restore retry preflight decision
 ```
 
 Loop 273 completed the preflight contract and found that no sufficient sanitized operator artifact metadata is present in the repo. The next DR step is therefore metadata intake, not restore execution.
@@ -89,6 +89,24 @@ loop_273_dr_backup_artifact_validation_preflight_status=operator_metadata_requir
 loop_273_artifact_validation_pass_does_not_authorize_restore=true
 loop_273_restore_retry_requires_separate_operator_approval=true
 loop_273_restore_retry_requires_restore_preflight_loop=true
+```
+
+Loop 274 consumed operator-provided sanitized artifact metadata and classified the DR backup artifact validation preflight as pass. This allows only a restore retry preflight decision next; it does not authorize restore execution.
+
+```txt
+loop_274_dr_artifact_metadata_intake_created=true
+loop_274_operator_artifact_metadata_provided=true
+loop_274_selected_artifact_candidate=candidate_a
+loop_274_dr_backup_artifact_validation_preflight_status=pass
+loop_274_candidate_b_status=rejected
+loop_274_candidate_b_rejection_reason=artifact_nonempty_false
+loop_274_artifact_validation_pass_does_not_authorize_restore=true
+loop_274_restore_execution_performed=false
+loop_274_pg_restore_executed=false
+loop_274_psql_executed=false
+loop_274_supabase_connection_attempted=false
+loop_274_db_change_performed=false
+loop_274_next_minimal_action=Loop 275 DR restore retry preflight decision
 ```
 
 ## Artifact And Secret Policy

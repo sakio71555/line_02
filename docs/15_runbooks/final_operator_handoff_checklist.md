@@ -156,6 +156,46 @@ Operator handoff:
 - Do not provide artifact path, artifact filename, exact size, hash/checksum value, storage URL, raw output, DB URL, secret, SQL, object name, role name, package name, extension name, dump content, row content, LINE identifier, message body, or production log.
 - A future artifact validation pass still does not authorize restore.
 
+## Loop 274 Current Status Override
+
+Loop 274 validates the operator-provided sanitized artifact metadata. Candidate A is selected and passes the DR artifact validation preflight; candidate B is rejected because its sanitized nonempty status is false. Restore execution remains No-Go.
+
+```txt
+loop_274_current_status_override=true
+dr_artifact_metadata_intake_created=true
+operator_artifact_metadata_provided=true
+selected_artifact_candidate=candidate_a
+dr_backup_artifact_validation_preflight_status=pass
+candidate_b_status=rejected
+candidate_b_rejection_reason=artifact_nonempty_false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+post_go_monitoring_status=pass
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+artifact_validation_pass_does_not_authorize_restore=true
+restore_retry_requires_separate_operator_approval=true
+restore_retry_requires_restore_preflight_loop=true
+restore_execution_performed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_read=false
+artifact_hash_recorded=false
+artifact_size_exact_recorded=false
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 275 DR restore retry preflight decision
+```
+
+Operator handoff:
+
+- Artifact metadata pass means only that a restore retry preflight decision may be prepared.
+- Do not run restore, `pg_restore`, `psql`, Supabase connection, or DB changes until a separate explicit Loop authorizes the correct preflight or execution step.
+- Continue not recording artifact path, filename, exact size, hash/checksum value, raw output, DB URL, secret, SQL, object names, role names, dump content, row content, LINE identifiers, message bodies, or production logs.
+
 ## Loop 269 Current Status Override
 
 Loop 269 accepted operator attestation as the target-control proof model, selected the existing internal CLI one-message category, and ran only dry-run route preflight. The send was blocked before execution because the route could not fetch a target from the current Codex execution environment and execute-mode runtime categories were not available in this shell.

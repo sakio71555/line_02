@@ -1716,6 +1716,45 @@ loop_273_restricted_actions_remain_no_go=true
 loop_273_next_loop=Loop 274 DR artifact metadata intake and validation
 ```
 
+## Loop 274 Verification Note
+
+```txt
+loop_274_dr_artifact_metadata_intake_created=true
+loop_274_operator_artifact_metadata_provided=true
+loop_274_selected_artifact_candidate=candidate_a
+loop_274_dr_backup_artifact_validation_preflight_status=pass
+loop_274_candidate_b_status=rejected
+loop_274_candidate_b_rejection_reason=artifact_nonempty_false
+loop_274_artifact_exists=true
+loop_274_artifact_nonempty=true
+loop_274_artifact_generation_status=known
+loop_274_artifact_age_category=recent
+loop_274_artifact_storage_category=vps_outside_repo
+loop_274_artifact_format_category=logical_backup
+loop_274_artifact_restore_candidate=true
+loop_274_artifact_integrity_status=operator_attested_pass
+loop_274_artifact_access_status=operator_accessible
+loop_274_artifact_secret_exposure_risk=none_recorded
+loop_274_artifact_path_recorded=false
+loop_274_artifact_filename_recorded=false
+loop_274_artifact_content_read=false
+loop_274_artifact_hash_recorded=false
+loop_274_artifact_size_exact_recorded=false
+loop_274_artifact_validation_pass_does_not_authorize_restore=true
+loop_274_production_go=true
+loop_274_production_go_scope=line_api_admin_current_runtime
+loop_274_post_go_monitoring_status=pass
+loop_274_dr_readiness_status=not_ready_restore_failed
+loop_274_dr_risk_acceptance_status=accepted_with_known_risk
+loop_274_restore_execution_performed=false
+loop_274_pg_restore_executed=false
+loop_274_psql_executed=false
+loop_274_supabase_connection_attempted=false
+loop_274_db_change_performed=false
+loop_274_restricted_actions_remain_no_go=true
+loop_274_next_loop=Loop 275 DR restore retry preflight decision
+```
+
 ## Stage 2 Rule
 
 Stage 2 may run only `safe_to_run_now=true` checks. If a story needs a blocked check, record it as `blocked_operator_approval_required` and split it into a future loop.
