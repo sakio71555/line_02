@@ -6,9 +6,9 @@ This matrix separates app / production readiness from disaster recovery readines
 | --- | --- | --- | --- | --- | --- |
 | DR readiness | `not_ready_restore_failed` | restore drill has not succeeded | `docs/15_runbooks/restore_drill_planning.md`, `docs/17_story_matrix/dr_readiness_story_matrix.md` | minimum DR fallback plan or future isolated restore remediation | No-Go |
 | Classifier route | `frozen` | repeated operator payload absent | `docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md` | resume only after `human_provided_valid_strict_sanitized_payload` | No-Go for classifier route |
-| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 263 wait for operator line runtime env injection approval decision | Not final Go |
-| External runtime readiness | `line_runtime_env_injection_permission_gate_created` | Loop 262 created the permission gate for the single missing line runtime category | `docs/11_codex_tasks/262_line_runtime_env_injection_permission_gate.md` | Loop 263 wait for operator line runtime env injection approval decision | Not final Go |
-| Production readiness | `production_no_go_line_runtime_env_permission_required` | DR, classifier, line runtime env injection approval, env injection, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/262_line_runtime_env_injection_permission_gate.md` | Loop 263 wait for operator line runtime env injection approval decision | `production_no_go` maintained |
+| App readiness | `local_production_start_verified` | Loop 253 verified API/Admin local production start path with safe defaults | `docs/11_codex_tasks/253_local_production_start_verification_checklist_execution.md` | Loop 265 operator line runtime env action required | Not final Go |
+| External runtime readiness | `line_runtime_env_action_required` | Loop 264 consumed approval but operator-side injection completion was not confirmed | `docs/11_codex_tasks/264_line_runtime_env_category_injection_and_boolean_verification.md` | Loop 265 operator line runtime env action required | Not final Go |
+| Production readiness | `production_no_go_line_runtime_env_action_required` | DR, classifier, line runtime env action, external runtime, and operator decision reasons remain | `docs/11_codex_tasks/264_line_runtime_env_category_injection_and_boolean_verification.md` | Loop 265 operator line runtime env action required | `production_no_go` maintained |
 
 ## Current State
 
@@ -32,7 +32,13 @@ runtime_input_category_matrix_created=true
 secret_redaction_policy_confirmed=true
 env_injection_validation_plan_created=true
 operator_env_injection_dry_run_approval_gate_completed=true
-operator_approval_status=not_provided
+operator_approval_status=approved
+line_runtime_env_injection_approval_consumed=true
+line_runtime_env_injection_approval_status=approved
+line_runtime_env_category_injection_status=blocked
+post_injection_presence_check_status=blocked
+line_runtime_env_category_present_after_injection=unknown
+operator_side_injection_status=not_completed
 env_dry_run_approval_status=not_approved
 approved_scope=none
 human_input_required=true
@@ -52,15 +58,55 @@ line_runtime_env_injection_permission_gate_created=true
 line_runtime_env_injection_execution_allowed=false
 production_go_judgement_ready=true
 unknown_blocker_count=0
-next_execution_sequence_status=operator_env_input_required
+next_execution_sequence_status=operator_line_env_input_required
 placeholder_only_dry_run_execution_status=pass
 env_injection_execution_allowed=false
 external_runtime_execution_allowed=false
 next_loop_requires_explicit_operator_approval=true
-production_readiness_status=production_no_go_line_runtime_env_permission_required
+production_readiness_status=production_no_go_line_runtime_env_action_required
 production_no_go=true
 production_no_go_reason_scope=fully_split
 production_go_changed=false
+```
+
+## Loop 264 Line Runtime Env Category Injection And Boolean Verification
+
+| bucket | status | scope |
+| --- | --- | --- |
+| Approval | `consumed` | `line_runtime_env_category` only. |
+| Operator-side injection | `not_completed` | Approval did not include completion confirmation. |
+| Presence verification | `blocked` | Do not infer category presence without completed injection. |
+| Actual Codex injection | `not_executed` | Codex did not receive or enter secrets. |
+| LINE runtime execution | `not_allowed` | No LINE API call or message send. |
+| Secret handling | `no_value_output` | No values, lengths, hashes, prefixes, suffixes, env files, or secret files. |
+| Production judgement readiness | `ready_to_review` | This is not production Go approval. |
+| Execution | `not_allowed` | No env file operation, external runtime, public smoke, DB operation, or production change. |
+| Next action | `selected` | Loop 265 operator line runtime env action required. |
+
+```txt
+loop_264_line_runtime_env_injection_approval_consumed=true
+loop_264_operator_approval_status=approved
+loop_264_line_runtime_env_injection_approval_status=approved
+loop_264_target_missing_category=line_runtime_env_category
+loop_264_operator_side_injection_status=not_completed
+loop_264_line_runtime_env_category_injection_status=blocked
+loop_264_post_injection_presence_check_status=blocked
+loop_264_line_runtime_env_category_present_after_injection=unknown
+loop_264_remaining_missing_required_categories_count=1
+loop_264_remaining_missing_required_categories=line_runtime_env_category
+loop_264_actual_secret_injection_executed_by_codex=false
+loop_264_env_value_output_occurred=false
+loop_264_env_file_operation_executed=false
+loop_264_line_runtime_execution_allowed=false
+loop_264_line_message_send_allowed=false
+loop_264_external_runtime_execution_allowed=false
+loop_264_production_no_go=true
+loop_264_production_go_changed=false
+loop_264_production_go_judgement_ready=true
+loop_264_unknown_blocker_count=0
+loop_264_dr_readiness_status=not_ready_restore_failed
+loop_264_classifier_route_status=frozen
+loop_264_next_minimal_action=Loop 265 operator line runtime env action required
 ```
 
 ## Loop 262 Line Runtime Env Injection Permission Gate

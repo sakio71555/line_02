@@ -607,6 +607,8 @@ Loop 250 strict operator package classifier payload collectionでは、operator 
 
 Loop 251 classifier route freeze and DR-production readiness splitでは、Loop 248〜250で同じ `operator_payload_absent` blockerが繰り返されたため、classifier routeを `frozen` にしました。今後は `human_provided_valid_strict_sanitized_payload` が明示されるまで classifier系Loopを再開しません。また、`dr_readiness_status=not_ready_restore_failed` と、app / production readinessの `separate_review_required` を分けて記録し、`production_no_go` の理由をDR起因とアプリ本体レビュー未実施に分離しました。詳細は [Loop 251 task doc](docs/11_codex_tasks/251_classifier_route_freeze_and_dr_production_readiness_split.md) と [production vs DR readiness matrix](docs/17_story_matrix/production_vs_dr_readiness_matrix.md) を参照してください。
 
+Loop 264 line runtime env category injection and boolean verificationでは、`line_runtime_env_category` のoperator承認を消費しましたが、operator-side injection完了確認が無いため `operator_side_injection_status=not_completed` とし、post-injection presence checkを安全にblocked分類しました。secret値、env値、長さ、hash、prefix/suffix、env file、secret fileは表示せず、LINE runtime実行、LINE送信、外部API接続、production Go変更も行っていません。詳細は [Loop 264 task doc](docs/11_codex_tasks/264_line_runtime_env_category_injection_and_boolean_verification.md) を参照してください。次は `Loop 265: operator line runtime env action required` です。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

@@ -6,6 +6,45 @@ Give the operator a short checklist after Loop 157-160.
 
 The system is reviewable, but production remains No-Go until the remaining approvals and controlled smokes are complete.
 
+## Loop 264 Current Status Override
+
+Loop 264 consumed the operator approval for `line_runtime_env_category` scope, but it did not receive a separate operator completion confirmation for the actual injection. It did not inject secrets by Codex, display env values, display env file contents, connect to LINE, send messages, change runtime, or change production Go.
+
+```txt
+loop_264_current_status_override=true
+line_runtime_env_injection_approval_consumed=true
+operator_approval_status=approved
+line_runtime_env_injection_approval_status=approved
+target_missing_category=line_runtime_env_category
+operator_side_injection_status=not_completed
+line_runtime_env_category_injection_status=blocked
+post_injection_presence_check_status=blocked
+line_runtime_env_category_present_after_injection=unknown
+remaining_missing_required_categories_count=1
+remaining_missing_required_categories=line_runtime_env_category
+actual_secret_injection_executed_by_codex=false
+secret_values_recorded=false
+env_value_output_occurred=false
+env_value_length_output_occurred=false
+env_value_hash_output_occurred=false
+env_prefix_suffix_output_occurred=false
+env_file_operation_executed=false
+secret_file_operation_executed=false
+line_runtime_execution_allowed=false
+line_message_send_allowed=false
+external_runtime_execution_allowed=false
+public_smoke_executed=false
+production_no_go=true
+production_go_changed=false
+production_go_judgement_ready=true
+unknown_blocker_count=0
+dr_readiness_status=not_ready_restore_failed
+classifier_route_status=frozen
+selected_next_minimal_action=Loop 265 operator line runtime env action required
+```
+
+Next operator action should confirm the approved category has been injected outside docs/chat/logs, still without exposing values, lengths, hashes, prefixes, suffixes, env files, or secret files. Do not run LINE runtime, LINE message send, public smoke, or production Go until separately approved.
+
 ## Loop 262 Current Status Override
 
 Loop 262 created the operator permission gate for `line_runtime_env_category`. It did not inject secrets, display env values, display env file contents, connect to LINE, send messages, change runtime, or change production Go.
