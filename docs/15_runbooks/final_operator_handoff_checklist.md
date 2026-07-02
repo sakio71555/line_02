@@ -120,6 +120,43 @@ Operator handoff:
 - Do not execute restore, `pg_restore`, `psql`, Supabase connection, or DB changes in Loop 273.
 - Keep production Go unchanged while DR remains a known accepted risk.
 
+## Loop 302 Current Status Override
+
+Loop 302 finalizes the Friday demo rehearsal and final read-only production smoke verification. It does not expand production Go scope.
+
+```txt
+loop_302_current_status_override=true
+loop_302_status=complete
+friday_demo_rehearsal_completed=true
+final_production_smoke_verification_status=pass
+friday_demo_readiness_status=ready
+safe_demo_scope_confirmed=true
+friday_demo_scope=admin_health_line_api_current_runtime_readonly
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+api_service_active=true
+nginx_service_active=true
+disk_capacity_status=ok
+memory_capacity_status=ok
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 303 final demo delivery handoff and production change freeze
+```
+
+Friday handoff:
+
+- Demo current production baseline and Admin availability using read-only checks.
+- Explain LINE CRM and FAQ AI flow without real LINE send or OpenAI API execution.
+- Do not show authenticated customer data unless separately approved.
+- Do not run restore, `pg_restore`, `psql`, Supabase DB connection, production DB connection, DB changes, service restart, Nginx reload, DNS/HTTPS/certbot, LINE send, or OpenAI API execution.
+- Explain DR restore as frozen known risk and a next-phase alternative strategy item.
+- If live smoke becomes limited or blocked, switch to docs/static walkthrough and preserve production safety.
+
 ## Loop 273 Current Status Override
 
 Loop 273 creates the DR backup artifact validation preflight and the sanitized operator metadata schema. No sufficient sanitized operator artifact metadata is present yet, so validation cannot pass in this Loop.

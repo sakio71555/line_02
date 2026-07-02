@@ -103,6 +103,45 @@ Current post-Go reading:
 | DR remediation | `planned` | Planning only; no restore, DB, or Supabase execution. |
 | restricted actions | `no_go` | Additional LINE send, retry, bulk, OpenAI, restore, DB/infra/package changes remain No-Go. |
 
+## Loop 302 Current Status Override
+
+Loop 302 completes the Friday demo rehearsal and final production read-only smoke verification. It keeps production Go scoped to the current LINE/API/Admin runtime and keeps DR readiness incomplete.
+
+```txt
+loop_302_current_status_override=true
+loop_302_status=complete
+friday_demo_rehearsal_decision=approved
+friday_demo_rehearsal_completed=true
+final_production_smoke_verification_completed=true
+final_production_smoke_verification_status=pass
+friday_demo_readiness_package_finalized=true
+friday_demo_readiness_status=ready
+safe_demo_scope_confirmed=true
+friday_demo_scope=admin_health_line_api_current_runtime_readonly
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+api_service_active=true
+nginx_service_active=true
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Current readiness reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| Friday demo | `ready` | Required read-only smoke checks passed. |
+| safe demo boundary | `confirmed` | No send, no paid API execution, no DB change, no restore. |
+| DR readiness | `not_ready_restore_failed` | Frozen known risk; not part of Friday demo proof. |
+| restricted actions | `no_go` | Additional LINE send, OpenAI call, restore, DB/infra/package changes remain No-Go. |
+
 ## Loop 272 Current Status Override
 
 Loop 272 reviews the DR strategy after production Go and selects the backup artifact validation preflight as the next minimal DR action. It does not execute restore, `pg_restore`, `psql`, Supabase connection, DB changes, package operations, LINE sends, OpenAI calls, or infra changes.

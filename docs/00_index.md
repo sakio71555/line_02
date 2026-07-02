@@ -137,6 +137,7 @@
 - Loop 299 sanitized helper taxonomy improvement without restore: `11_codex_tasks/299_sanitized_helper_taxonomy_improvement_without_restore.md`
 - Loop 300 DR restore route freeze and production operations resume: `11_codex_tasks/300_dr_restore_route_freeze_and_production_operations_resume.md`
 - Loop 301 production operations hardening package: `11_codex_tasks/301_production_operations_hardening_package.md`
+- Loop 302 Friday demo rehearsal and final production smoke verification: `11_codex_tasks/302_friday_demo_rehearsal_and_final_production_smoke.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 

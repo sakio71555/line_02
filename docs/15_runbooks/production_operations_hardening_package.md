@@ -116,3 +116,113 @@ loop_302_should_confirm_no_send_no_charge_demo_path=true
 loop_302_should_finalize_friday_handoff=true
 loop_302_should_restart_dr_restore=false
 ```
+
+## Loop 302 Friday Demo Rehearsal Final Package
+
+Loop 302 completed the final rehearsal package and read-only production smoke classification.
+
+```txt
+loop_302_status=complete
+friday_demo_rehearsal_decision=approved
+friday_demo_rehearsal_completed=true
+final_production_smoke_verification_completed=true
+final_production_smoke_verification_status=pass
+friday_demo_readiness_package_finalized=true
+friday_demo_readiness_status=ready
+safe_demo_scope_confirmed=true
+friday_demo_scope=admin_health_line_api_current_runtime_readonly
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
+### Demo Objective
+
+The Friday demo should prove the current production operations baseline, not DR readiness.
+
+Use this order:
+
+1. State that current production Go is scoped to the LINE/API/Admin runtime.
+2. Show read-only baseline status: API active, Nginx active, public health, admin root, and no-auth customer guard.
+3. Show safe Admin availability only.
+4. Explain LINE CRM / FAQ AI flow without real send or paid API execution.
+5. Show the operator daily check and incident response handoff.
+6. Explain DR restore as a frozen known risk.
+7. Close with next phase: monitoring, UI polish, and alternative DR strategy.
+
+### Demo No-Go Boundary
+
+```txt
+line_real_send_in_demo=false
+line_retry_bulk_multicast_broadcast_in_demo=false
+openai_api_execution_in_demo=false
+restore_in_demo=false
+pg_restore_in_demo=false
+psql_in_demo=false
+production_db_connection_in_demo=false
+production_db_change_in_demo=false
+supabase_write_in_demo=false
+service_restart_in_demo=false
+nginx_reload_restart_in_demo=false
+dns_https_certbot_in_demo=false
+raw_log_display_in_demo=false
+secret_display_in_demo=false
+authenticated_customer_data_demo_allowed=false_unless_separately_approved
+```
+
+### Final Smoke Classification
+
+```txt
+ssh_access_available=true
+vps_working_directory_available=true
+api_service_active=true
+nginx_service_active=true
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+disk_capacity_status=ok
+memory_capacity_status=ok
+helper_bash_validation_status=pass
+classifier_validation_status=pass
+production_readonly_smoke_script_bash_validation_status=pass
+production_readonly_smoke_script_runtime_status=not_run
+production_read_only_baseline_checked=true
+production_baseline_check_changed_runtime=false
+```
+
+The reusable smoke script was validated locally. It was not run with endpoint values in Loop 302, and no endpoint values were recorded.
+
+### Fallback Script
+
+If smoke is pass:
+
+- say the production baseline is green
+- show API/Admin safe surfaces
+- explain known DR risk as frozen
+
+If smoke is limited:
+
+- use this runbook and the latest sanitized baseline
+- do not improvise destructive checks
+- describe only the sanitized blocker category
+
+If smoke is blocked:
+
+- do not demo live production
+- switch to a static/docs walkthrough
+- preserve production safety over demo completeness
+
+### Known Risk Wording
+
+本番運用に必要な API / Admin / runtime baseline は確認済みです。
+DR restore は検証で失敗したため、既知リスクとして凍結しています。
+本番価値の高い運用・管理・問い合わせ対応導線を優先し、DRは次フェーズで新しい復旧戦略として再開します。
+
+### Next Loop Boundary
+
+```txt
+next_loop_candidate=Loop 303: final demo delivery handoff and production change freeze
+loop_303_auto_progression_allowed=false
+```
