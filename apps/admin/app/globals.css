@@ -383,6 +383,30 @@ dl.detail-grid {
   padding: 14px;
 }
 
+.real-send-gate-card,
+.real-send-confirmation-card {
+  background: #fff7f4;
+  border: 2px solid #f26d5b;
+}
+
+.real-send-gate-card {
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.danger-action-button {
+  background: #d92d20;
+  border-color: #d92d20;
+  color: #fff;
+}
+
+.danger-action-button:hover:not(:disabled) {
+  background: #b42318;
+  border-color: #b42318;
+}
+
 .confirmation-card h4 {
   font-size: 16px;
   margin: 0;

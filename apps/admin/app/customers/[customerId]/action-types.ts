@@ -29,4 +29,5 @@ export interface StaffReplyActionState {
   status: ActionStatus;
   result?: AdminStaffReplyResponse;
   error?: string;
+  deliveryMode?: "demo_save" | "real_line_push";
 }

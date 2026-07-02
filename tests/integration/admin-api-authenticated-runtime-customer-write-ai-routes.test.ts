@@ -20,6 +20,7 @@ import {
 } from "@amami-line-crm/domain";
 import type { LineClient, LineReplyMessage } from "@amami-line-crm/line";
 import { createApiApp } from "../../apps/api/src/index";
+import { REAL_LINE_PUSH_CONFIRMATION_VALUE } from "../../apps/api/src/admin/line-real-push-gate";
 import type {
   AuthSessionVerifier,
   AuthSessionVerifierResult
@@ -35,7 +36,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
     await seedCustomerWriteAiData(customerRepository);
 
     const response = await app.fetch(
-      staffReplyRequest("customer_amami", {
+      realLinePushStaffReplyRequest("customer_amami", {
         authorization: "Bearer fake-valid-owner"
       })
     );
@@ -102,7 +103,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
     await seedCustomerWriteAiData(customerRepository);
 
     const response = await app.fetch(
-      staffReplyRequest("customer_other", {
+      realLinePushStaffReplyRequest("customer_other", {
         authorization: "Bearer fake-valid-multi",
         "x-selected-tenant-id": "tenant_other"
       })
@@ -422,7 +423,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
       "x-tenant-id": "tenant_amamihome",
       "x-selected-tenant-id": "tenant invalid"
     };
-    const replyResponse = await app.fetch(staffReplyRequest("customer_amami", headers));
+    const replyResponse = await app.fetch(realLinePushStaffReplyRequest("customer_amami", headers));
     const summaryResponse = await app.fetch(
       new Request("http://localhost/api/admin/customers/customer_amami/ai-summary", {
         method: "POST",
@@ -579,6 +580,23 @@ function staffReplyRequest(customerId: string, headers: HeadersInit = {}): Reque
       ...headers
     },
     body: JSON.stringify({ body: "確認しました。担当者から返信します。" })
+  });
+}
+
+function realLinePushStaffReplyRequest(customerId: string, headers: HeadersInit = {}): Request {
+  return new Request(`http://localhost/api/admin/customers/${customerId}/reply`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...headers
+    },
+    body: JSON.stringify({
+      body: "確認しました。担当者から返信します。",
+      delivery_mode: "real_line_push",
+      real_line_push_confirmed: true,
+      line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
+      idempotency_key: `idem_${customerId}`
+    })
   });
 }
 

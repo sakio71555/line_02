@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
   adminApiFetch,
   adminCustomerDetailPath,
+  adminLineRealSendCapabilityPath,
   checkUnrepliedAlerts,
   createAiReplyDraft,
   createAiSummary,
@@ -13,6 +15,7 @@ import {
   DEFAULT_TENANT_ID,
   formatAdminApiKnownError,
   getAdminApiConfig,
+  getAdminLineRealSendCapability,
   listAlerts,
   notifyOpenAlerts,
   sendStaffReply,
@@ -64,6 +67,12 @@ describe("admin read-only API client", () => {
 
   it("builds encoded customer detail paths", () => {
     expect(adminCustomerDetailPath("customer 1/2")).toBe("/api/admin/customers/customer%201%2F2");
+  });
+
+  it("builds the admin line real send capability path", () => {
+    expect(adminLineRealSendCapabilityPath()).toBe(
+      "/api/admin/runtime/line-real-send-capability"
+    );
   });
 
   it("attaches x-tenant-id and no-store cache to fetch requests", async () => {
@@ -469,8 +478,9 @@ describe("admin read-only API client", () => {
       {
         customerId: "customer_001",
         body: "確認済みの返信です。",
+        deliveryMode: "real_line_push",
         realLinePushConfirmed: true,
-        linePushConfirmation: "CONFIRM_REAL_LINE_PUSH",
+        linePushConfirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
         idempotencyKey: "idem_admin_helper"
       },
       {
@@ -488,11 +498,48 @@ describe("admin read-only API client", () => {
     expect(calls[0]?.init?.body).toBe(
       JSON.stringify({
         body: "確認済みの返信です。",
+        delivery_mode: "real_line_push",
         real_line_push_confirmed: true,
-        line_push_confirmation: "CONFIRM_REAL_LINE_PUSH",
+        line_push_confirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
         idempotency_key: "idem_admin_helper"
       })
     );
+  });
+
+  it("reads the line real send capability with selected tenant transport", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    const response = await getAdminLineRealSendCapability({
+      config: {
+        apiBaseUrl: "http://localhost:4000",
+        tenantId: "tenant_amamihome",
+        selectedTenantId: "tenant_amamihome"
+      },
+      fetchFn: async (input, init) => {
+        calls.push({ input, init });
+        return jsonResponse({
+          ok: true,
+          tenant_id: "tenant_amamihome",
+          line_real_send_window_open: false,
+          real_send_action_visible: false,
+          delivery_mode_required: "real_line_push",
+          explicit_confirmation_required: true,
+          single_send_only: true,
+          retry_allowed: false,
+          bulk_multicast_broadcast_allowed: false
+        });
+      }
+    });
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(calls[0]?.input).toBe(
+      "http://localhost:4000/api/admin/runtime/line-real-send-capability"
+    );
+    expect(headers.get("x-selected-tenant-id")).toBe("tenant_amamihome");
+    expect(response.real_send_action_visible).toBe(false);
+    expect(response.retry_allowed).toBe(false);
+    expect(response.bulk_multicast_broadcast_allowed).toBe(false);
   });
 
   it("marks UI staff replies as demo-save requests when requested", async () => {

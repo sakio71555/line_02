@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
   createAiReplyDraft,
   createAiSummary,
   createRagAnswerDraft,
@@ -98,16 +99,35 @@ export async function runStaffReplyAction(
     };
   }
 
+  const deliveryMode = readStaffReplyDeliveryMode(formData);
+
+  if (deliveryMode === "real_line_push" && !isRealLinePushConfirmed(formData)) {
+    return {
+      status: "error",
+      error: "本番LINE送信の確認チェックが必要です。"
+    };
+  }
+
   try {
     const result = await sendStaffReply(
-      { customerId, body, deliveryMode: "demo_save" },
+      deliveryMode === "real_line_push"
+        ? {
+            customerId,
+            body,
+            deliveryMode,
+            realLinePushConfirmed: true,
+            linePushConfirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+            idempotencyKey: readTrimmedFormValue(formData, "idempotency_key")
+          }
+        : { customerId, body, deliveryMode },
       await getServerAdminApiRequestOptions()
     );
     revalidatePath(`/customers/${customerId}`);
 
     return {
       status: "success",
-      result
+      result,
+      deliveryMode
     };
   } catch (error) {
     return {
@@ -115,6 +135,21 @@ export async function runStaffReplyAction(
       error: formatActionError(error)
     };
   }
+}
+
+function readStaffReplyDeliveryMode(formData: FormData): "demo_save" | "real_line_push" {
+  return readTrimmedFormValue(formData, "delivery_mode") === "real_line_push"
+    ? "real_line_push"
+    : "demo_save";
+}
+
+function isRealLinePushConfirmed(formData: FormData): boolean {
+  return (
+    readTrimmedFormValue(formData, "confirm_single_canary_send") === "on" &&
+    readTrimmedFormValue(formData, "line_push_confirmation") ===
+      ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE &&
+    Boolean(readTrimmedFormValue(formData, "idempotency_key"))
+  );
 }
 
 function readTrimmedFormValue(formData: FormData, key: string): string {

@@ -4,6 +4,7 @@ import {
   getAdminApiConfig,
   getAdminCustomerDetail,
   getAdminCustomerTimeline,
+  getAdminLineRealSendCapability,
   type AdminApiRequestOptions,
   type AdminCustomerDetailResponse,
   type AdminCustomerTimelineResponse
@@ -26,6 +27,7 @@ export default async function CustomerDetailPage({
   const config = requestOptions.config ?? getAdminApiConfig();
   const detail = await loadCustomerDetail(customerId, requestOptions);
   const timeline = await loadCustomerTimeline(customerId, requestOptions);
+  const lineRealSendCapability = await loadLineRealSendCapability(requestOptions);
 
   return (
     <main>
@@ -156,12 +158,31 @@ export default async function CustomerDetailPage({
       {detail.status === "error" ? null : (
         <CustomerActionPanel
           customerId={customerId}
+          lineRealSendActionVisible={
+            lineRealSendCapability.realSendActionVisible && Boolean(detail.customer.line_user_id)
+          }
           recipientLabel={getCustomerRecipientLabel(detail.customer)}
           tenantId={config.selectedTenantId ?? config.tenantId}
         />
       )}
     </main>
   );
+}
+
+async function loadLineRealSendCapability(options: AdminApiRequestOptions) {
+  try {
+    const capability = await getAdminLineRealSendCapability(options);
+
+    return {
+      status: "ok" as const,
+      realSendActionVisible: capability.real_send_action_visible === true
+    };
+  } catch {
+    return {
+      status: "error" as const,
+      realSendActionVisible: false
+    };
+  }
 }
 
 async function loadCustomerDetail(customerId: string, options: AdminApiRequestOptions) {

@@ -18,6 +18,7 @@ import { formatAdminApiErrorCodeForUi, validateSelectedTenantId } from "./select
 export const DEFAULT_API_BASE_URL = "http://localhost:4000";
 export const DEFAULT_TENANT_ID = "tenant_amamihome";
 export const DEFAULT_STAFF_ID = "dev_staff";
+export const ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE = "CONFIRM_REAL_LINE_PUSH";
 
 export interface AdminApiConfig {
   apiBaseUrl: string;
@@ -100,6 +101,18 @@ export interface AdminRagAnswerDraftResponse {
   handoff_required: boolean;
   recommended_response_mode: ResponseMode;
   provider?: "mock" | "openai";
+}
+
+export interface AdminLineRealSendCapabilityResponse {
+  ok: true;
+  tenant_id: string;
+  line_real_send_window_open: boolean;
+  real_send_action_visible: boolean;
+  delivery_mode_required: "real_line_push";
+  explicit_confirmation_required: boolean;
+  single_send_only: boolean;
+  retry_allowed: boolean;
+  bulk_multicast_broadcast_allowed: boolean;
 }
 
 export interface AdminStaffReplyResponse {
@@ -284,6 +297,10 @@ export function adminCustomerReplyPath(customerId: string): string {
   return `/api/admin/customers/${encodeURIComponent(customerId)}/reply`;
 }
 
+export function adminLineRealSendCapabilityPath(): string {
+  return "/api/admin/runtime/line-real-send-capability";
+}
+
 export async function getAdminCustomers(
   options: AdminApiRequestOptions = {}
 ): Promise<AdminCustomersResponse> {
@@ -307,6 +324,16 @@ export async function getAdminCustomerTimeline(
 ): Promise<AdminCustomerTimelineResponse> {
   return adminApiFetch<AdminCustomerTimelineResponse>(
     adminCustomerTimelinePath(customerId),
+    {},
+    options
+  );
+}
+
+export async function getAdminLineRealSendCapability(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminLineRealSendCapabilityResponse> {
+  return adminApiFetch<AdminLineRealSendCapabilityResponse>(
+    adminLineRealSendCapabilityPath(),
     {},
     options
   );

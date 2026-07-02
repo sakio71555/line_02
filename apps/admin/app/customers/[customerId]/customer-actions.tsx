@@ -3,6 +3,7 @@
 import React, { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE } from "../../../src/admin-api";
 import {
   runAiReplyDraftAction,
   runAiSummaryAction,
@@ -39,10 +40,12 @@ type FormAction = (formData: FormData) => void;
 
 export function CustomerActionPanel({
   customerId,
+  lineRealSendActionVisible,
   recipientLabel,
   tenantId
 }: {
   customerId: string;
+  lineRealSendActionVisible: boolean;
   recipientLabel: string;
   tenantId: string;
 }) {
@@ -86,6 +89,7 @@ export function CustomerActionPanel({
       runReplyDraft={runReplyDraft}
       runStaffReply={runStaffReply}
       runSummary={runSummary}
+      staffReplyLineRealSendActionVisible={lineRealSendActionVisible}
       staffReplyRecipientLabel={recipientLabel}
       staffReplyPending={staffReplyPending}
       staffReplyState={staffReplyState}
@@ -106,6 +110,7 @@ export function CustomerActionPanelView({
   runStaffReply,
   runSummary,
   staffReplyForm,
+  staffReplyLineRealSendActionVisible,
   staffReplyRecipientLabel,
   staffReplyPending,
   staffReplyState,
@@ -122,6 +127,7 @@ export function CustomerActionPanelView({
   runStaffReply: FormAction;
   runSummary: FormAction;
   staffReplyForm?: React.ReactNode;
+  staffReplyLineRealSendActionVisible: boolean;
   staffReplyRecipientLabel: string;
   staffReplyPending: boolean;
   staffReplyState: StaffReplyActionState;
@@ -237,6 +243,7 @@ export function CustomerActionPanelView({
         </p>
         {staffReplyForm ?? (
           <StaffReplyConfirmationForm
+            lineRealSendActionVisible={staffReplyLineRealSendActionVisible}
             pending={staffReplyPending}
             recipientLabel={staffReplyRecipientLabel}
             runStaffReply={runStaffReply}
@@ -251,12 +258,14 @@ export function CustomerActionPanelView({
 }
 
 function StaffReplyConfirmationForm({
+  lineRealSendActionVisible,
   pending,
   recipientLabel,
   runStaffReply,
   state,
   tenantId
 }: {
+  lineRealSendActionVisible: boolean;
   pending: boolean;
   recipientLabel: string;
   runStaffReply: FormAction;
@@ -264,30 +273,37 @@ function StaffReplyConfirmationForm({
   tenantId: string;
 }) {
   const [replyText, setReplyText] = useState("");
-  const [isConfirming, setIsConfirming] = useState(false);
+  const [confirmationMode, setConfirmationMode] = useState<"demo_save" | "real_line_push" | null>(
+    null
+  );
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState("");
   const replyPreview = replyText.trim();
+  const isConfirming = confirmationMode !== null;
 
   useEffect(() => {
     if (state.status === "success") {
       setReplyText("");
-      setIsConfirming(false);
+      setConfirmationMode(null);
       setIsConfirmed(false);
+      setIdempotencyKey("");
     }
   }, [state.status, state.result?.message.id]);
 
-  function handlePrepareConfirmation() {
+  function handlePrepareConfirmation(mode: "demo_save" | "real_line_push") {
     if (!replyPreview) {
       return;
     }
 
-    setIsConfirming(true);
+    setConfirmationMode(mode);
     setIsConfirmed(false);
+    setIdempotencyKey(mode === "real_line_push" ? createIdempotencyKey() : "");
   }
 
   function handleEdit() {
-    setIsConfirming(false);
+    setConfirmationMode(null);
     setIsConfirmed(false);
+    setIdempotencyKey("");
   }
 
   return (
@@ -297,6 +313,8 @@ function StaffReplyConfirmationForm({
           <input type="hidden" name="body" value={replyPreview} />
           <StaffReplyConfirmationCard
             bodyPreview={replyPreview}
+            deliveryMode={confirmationMode}
+            idempotencyKey={idempotencyKey}
             isConfirmed={isConfirmed}
             onConfirmChange={setIsConfirmed}
             onEdit={handleEdit}
@@ -319,18 +337,53 @@ function StaffReplyConfirmationForm({
           <button
             type="button"
             disabled={!replyPreview || pending}
-            onClick={handlePrepareConfirmation}
+            onClick={() => handlePrepareConfirmation("demo_save")}
           >
-            送信前に確認する
+            デモ保存前に確認する
           </button>
+          {lineRealSendActionVisible ? (
+            <div className="real-send-gate-card" aria-label="本番LINE送信の危険操作">
+              <div className="action-card-header">
+                <p className="result-label">危険操作</p>
+                <h4>本番LINEへ1通送信</h4>
+              </div>
+              <div className="status-pill-list">
+                <span className="status-pill status-pill-danger">1通だけ</span>
+                <span className="status-pill status-pill-danger">再送信禁止</span>
+                <span className="status-pill status-pill-danger">一斉送信なし</span>
+              </div>
+              <p className="meta">
+                canary windowが開いている時だけ使う操作です。送信後はwindowを閉じてください。
+                OpenAI、再送信、一斉送信、broadcast、multicastは行いません。
+              </p>
+              <button
+                className="danger-action-button"
+                type="button"
+                disabled={!replyPreview || pending}
+                onClick={() => handlePrepareConfirmation("real_line_push")}
+              >
+                本番LINEへ1通送信する確認へ進む
+              </button>
+            </div>
+          ) : null}
         </>
       )}
     </form>
   );
 }
 
+function createIdempotencyKey(): string {
+  if (globalThis.crypto?.randomUUID) {
+    return `staff-reply-${globalThis.crypto.randomUUID()}`;
+  }
+
+  return `staff-reply-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function StaffReplyConfirmationCard({
   bodyPreview,
+  deliveryMode = "demo_save",
+  idempotencyKey = "",
   isConfirmed,
   onConfirmChange,
   onEdit,
@@ -339,6 +392,8 @@ export function StaffReplyConfirmationCard({
   tenantId
 }: {
   bodyPreview: string;
+  deliveryMode?: "demo_save" | "real_line_push";
+  idempotencyKey?: string;
   isConfirmed: boolean;
   onConfirmChange: (checked: boolean) => void;
   onEdit: () => void;
@@ -346,46 +401,90 @@ export function StaffReplyConfirmationCard({
   recipientLabel: string;
   tenantId: string;
 }) {
+  const isRealLinePush = deliveryMode === "real_line_push";
+
   return (
-    <div className="confirmation-card">
+    <div className={isRealLinePush ? "confirmation-card real-send-confirmation-card" : "confirmation-card"}>
       <div className="action-card-header">
         <p className="result-label">送信前の確認</p>
-        <h4>この内容でデモ保存しますか？</h4>
+        <h4>{isRealLinePush ? "本番LINEへ1通送信しますか？" : "この内容でデモ保存しますか？"}</h4>
       </div>
       <div className="status-pill-list">
-        <span className="status-pill">これはデモ保存です</span>
-        <span className="status-pill">デモ用</span>
-        <span className="status-pill">本物のLINEには送信されません</span>
+        {isRealLinePush ? (
+          <>
+            <span className="status-pill status-pill-danger">本番LINE送信</span>
+            <span className="status-pill status-pill-danger">1通だけ</span>
+            <span className="status-pill status-pill-danger">再送信禁止</span>
+          </>
+        ) : (
+          <>
+            <span className="status-pill">これはデモ保存です</span>
+            <span className="status-pill">デモ用</span>
+            <span className="status-pill">本物のLINEには送信されません</span>
+          </>
+        )}
       </div>
+      <input type="hidden" name="delivery_mode" value={deliveryMode} />
+      {isRealLinePush ? (
+        <>
+          <input
+            type="hidden"
+            name="line_push_confirmation"
+            value={ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE}
+          />
+          <input type="hidden" name="idempotency_key" value={idempotencyKey} />
+        </>
+      ) : null}
       <dl className="compact-detail confirmation-detail">
         <dt>宛先</dt>
         <dd>{recipientLabel}</dd>
         <dt>利用先</dt>
         <dd>{tenantId}</dd>
         <dt>送信種別</dt>
-        <dd>デモ用。本物LINEには送信されません。</dd>
+        <dd>
+          {isRealLinePush
+            ? "本番LINEへ1通だけ送信します。retry / broadcast / multicastは禁止です。"
+            : "デモ用。本物LINEには送信されません。"}
+        </dd>
         <dt>送信内容</dt>
         <dd className="message-body">{bodyPreview}</dd>
         <dt>注意</dt>
-        <dd>この内容はタイムラインにスタッフ返信として保存されます。</dd>
+        <dd>
+          {isRealLinePush
+            ? "送信後はoperator canary windowを閉じてください。"
+            : "この内容はタイムラインにスタッフ返信として保存されます。"}
+        </dd>
       </dl>
       <label className="confirmation-check">
         <input
           checked={isConfirmed}
+          name={isRealLinePush ? "confirm_single_canary_send" : undefined}
           onChange={(event) => onConfirmChange(event.currentTarget.checked)}
           required
           type="checkbox"
         />
         <span>
-          この内容を確認しました。本物LINEには送信されず、デモ用に保存されることを理解しました。
+          {isRealLinePush
+            ? "本番LINEへ1通だけ送信すること、再送信や一斉送信をしないこと、送信後にwindowを閉じることを確認しました。"
+            : "この内容を確認しました。本物LINEには送信されず、デモ用に保存されることを理解しました。"}
         </span>
       </label>
       <div className="confirmation-actions">
         <button type="button" onClick={onEdit} disabled={pending}>
           内容を修正する
         </button>
-        <button type="submit" disabled={!isConfirmed || pending}>
-          {pending ? "デモ保存中..." : "この内容でデモ保存する"}
+        <button
+          className={isRealLinePush ? "danger-action-button" : undefined}
+          type="submit"
+          disabled={!isConfirmed || pending}
+        >
+          {isRealLinePush
+            ? pending
+              ? "本番LINE送信中..."
+              : "本番LINEへ1通送信する"
+            : pending
+              ? "デモ保存中..."
+              : "この内容でデモ保存する"}
         </button>
       </div>
     </div>
@@ -410,7 +509,11 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
   return (
     <div className="action-result">
       <p className="result-label">送信結果</p>
-      <p>担当者返信をデモ用送信として確認し、タイムラインへ保存しました。</p>
+      <p>
+        {state.deliveryMode === "real_line_push"
+          ? "担当者返信を本番LINEへ1通送信し、タイムラインへ保存しました。windowを閉じてください。"
+          : "担当者返信をデモ用送信として確認し、タイムラインへ保存しました。"}
+      </p>
       <ResultField label="保存したメッセージID" value={result.message.id} />
       <ResultField label="対応モード" value={formatResponseMode(result.customer.response_mode)} />
       <ResultField

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
+import { REAL_LINE_PUSH_CONFIRMATION_VALUE } from "../../apps/api/src/admin/line-real-push-gate";
 import {
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
@@ -43,6 +44,16 @@ function signedLineWebhookRequest(webhookSecret: string, body: string): Request 
     },
     body
   });
+}
+
+function realLinePushBody(body: string, idempotencyKey: string) {
+  return {
+    body,
+    delivery_mode: "real_line_push",
+    real_line_push_confirmed: true,
+    line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
+    idempotency_key: idempotencyKey
+  };
 }
 
 function createTestApp(input: {
@@ -166,7 +177,7 @@ describe("admin staff reply API", () => {
       new Request("http://localhost/api/admin/customers/customer_missing/reply", {
         method: "POST",
         headers: { "x-tenant-id": "tenant_amamihome" },
-        body: JSON.stringify({ body: "承知しました" })
+        body: JSON.stringify(realLinePushBody("承知しました", "idem_no_line_user"))
       })
     );
     const otherTenantResponse = await amamiApp.fetch(
@@ -238,7 +249,7 @@ describe("admin staff reply API", () => {
       new Request("http://localhost/api/admin/customers/customer_without_line/reply", {
         method: "POST",
         headers: { "x-tenant-id": "tenant_amamihome" },
-        body: JSON.stringify({ body: "承知しました" })
+        body: JSON.stringify(realLinePushBody("承知しました", "idem_no_line_user"))
       })
     );
 
@@ -273,7 +284,9 @@ describe("admin staff reply API", () => {
           "x-tenant-id": "tenant_amamihome",
           "x-staff-id": "staff_001"
         },
-        body: JSON.stringify({ body: "ご見学について担当者からご案内します" })
+        body: JSON.stringify(
+          realLinePushBody("ご見学について担当者からご案内します", "idem_staff_reply_push")
+        )
       })
     );
     const body = await response.json();
@@ -361,7 +374,7 @@ describe("admin staff reply API", () => {
       new Request(`http://localhost/api/admin/customers/${customer.id}/reply`, {
         method: "POST",
         headers: { "x-tenant-id": "tenant_amamihome" },
-        body: JSON.stringify({ body: "送信失敗テスト" })
+        body: JSON.stringify(realLinePushBody("送信失敗テスト", "idem_staff_reply_failure"))
       })
     );
     const updatedCustomer = await customerRepository.findByIdForTenant(

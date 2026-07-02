@@ -344,6 +344,36 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     });
   });
 
+  api.get("/api/admin/runtime/line-real-send-capability", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.sendStaffReply,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const lineRealSendWindowOpen = isLineRealSendWindowOpen({ env, lineClientMode });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      line_real_send_window_open: lineRealSendWindowOpen,
+      real_send_action_visible: lineRealSendWindowOpen,
+      delivery_mode_required: "real_line_push",
+      explicit_confirmation_required: true,
+      single_send_only: true,
+      retry_allowed: false,
+      bulk_multicast_broadcast_allowed: false
+    });
+  });
+
   api.post("/api/admin/customers/:customerId/ai-summary", async (c) => {
     const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
@@ -1179,7 +1209,7 @@ async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushR
 
   return {
     body,
-    deliveryMode: parsed.delivery_mode === "demo_save" ? "demo_save" : "real_line_push",
+    deliveryMode: parsed.delivery_mode === "real_line_push" ? "real_line_push" : "demo_save",
     realLinePushConfirmed: parsed.real_line_push_confirmed === true,
     linePushConfirmation:
       typeof parsed.line_push_confirmation === "string"
@@ -1190,6 +1220,21 @@ async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushR
         ? parsed.idempotency_key.trim()
         : null
   };
+}
+
+function isLineRealSendWindowOpen(input: {
+  env: NodeJS.ProcessEnv;
+  lineClientMode: LineClientMode;
+}): boolean {
+  return (
+    input.lineClientMode === "real" &&
+    isEnabledRuntimeFlag(input.env.LINE_MESSAGING_ENABLED) &&
+    isEnabledRuntimeFlag(input.env.LINE_REAL_PUSH_ENABLED)
+  );
+}
+
+function isEnabledRuntimeFlag(value: string | undefined): boolean {
+  return value?.trim().toLowerCase() === "true";
 }
 
 async function readRagSearchBody(

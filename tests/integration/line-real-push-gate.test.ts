@@ -20,7 +20,7 @@ import type { LineClient, LineReplyMessage } from "@amami-line-crm/line";
 const now = "2026-06-17T06:00:00.000Z";
 
 describe("Loop 102 LINE real push gate", () => {
-  it("keeps default staff reply on the mock path when real push flags are absent", async () => {
+  it("keeps default staff reply on the demo-save path when delivery_mode is omitted", async () => {
     const setup = createRealPushGateApp({ lineClientMode: "mock" });
 
     const response = await setup.app.fetch(
@@ -32,7 +32,7 @@ describe("Loop 102 LINE real push gate", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(setup.lineClient.pushes).toHaveLength(1);
+    expect(setup.lineClient.pushes).toHaveLength(0);
     expect(setup.messageRepository.list()).toEqual([
       expect.objectContaining({
         tenant_id: "tenant_amamihome",
@@ -55,6 +55,7 @@ describe("Loop 102 LINE real push gate", () => {
       authenticatedStaffReplyRequest({
         body: {
           body: "本物送信はまだ不可です。",
+          delivery_mode: "real_line_push",
           real_line_push_confirmed: true,
           line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
           idempotency_key: "idem_disabled"
@@ -97,6 +98,49 @@ describe("Loop 102 LINE real push gate", () => {
     ]);
   });
 
+  it("returns a closed real-send capability when the canary window is disabled", async () => {
+    const setup = createRealPushGateApp({
+      env: {
+        LINE_MESSAGING_ENABLED: "true",
+        LINE_REAL_PUSH_ENABLED: "false"
+      }
+    });
+
+    const response = await setup.app.fetch(authenticatedCapabilityRequest());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      line_real_send_window_open: false,
+      real_send_action_visible: false,
+      delivery_mode_required: "real_line_push",
+      explicit_confirmation_required: true,
+      single_send_only: true,
+      retry_allowed: false,
+      bulk_multicast_broadcast_allowed: false
+    });
+  });
+
+  it("returns an open real-send capability only when both runtime flags are enabled", async () => {
+    const setup = createRealPushGateApp();
+
+    const response = await setup.app.fetch(authenticatedCapabilityRequest());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      line_real_send_window_open: true,
+      real_send_action_visible: true,
+      delivery_mode_required: "real_line_push",
+      explicit_confirmation_required: true,
+      single_send_only: true,
+      retry_allowed: false,
+      bulk_multicast_broadcast_allowed: false
+    });
+  });
+
   it("requires authenticated_staff and selectedTenantId before real push", async () => {
     const devHeaderSetup = createRealPushGateApp();
     const devHeaderResponse = await devHeaderSetup.app.fetch(
@@ -105,6 +149,7 @@ describe("Loop 102 LINE real push gate", () => {
         headers: { "x-tenant-id": "tenant_amamihome" },
         body: {
           body: "dev headerでは本物送信不可です。",
+          delivery_mode: "real_line_push",
           real_line_push_confirmed: true,
           line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
           idempotency_key: "idem_dev_header"
@@ -118,6 +163,7 @@ describe("Loop 102 LINE real push gate", () => {
         includeSelectedTenantId: false,
         body: {
           body: "selectedTenantIdなしでは本物送信不可です。",
+          delivery_mode: "real_line_push",
           real_line_push_confirmed: true,
           line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
           idempotency_key: "idem_missing_selected"
@@ -146,6 +192,7 @@ describe("Loop 102 LINE real push gate", () => {
       authenticatedStaffReplyRequest({
         body: {
           body: "権限なしでは本物送信不可です。",
+          delivery_mode: "real_line_push",
           real_line_push_confirmed: true,
           line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
           idempotency_key: "idem_permission"
@@ -166,6 +213,7 @@ describe("Loop 102 LINE real push gate", () => {
         customerId: "customer_other",
         body: {
           body: "別tenant顧客には送れません。",
+          delivery_mode: "real_line_push",
           real_line_push_confirmed: true,
           line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
           idempotency_key: "idem_other_tenant"
@@ -184,6 +232,7 @@ describe("Loop 102 LINE real push gate", () => {
       authenticatedStaffReplyRequest({
         body: {
           body: "確認なしでは本物送信不可です。",
+          delivery_mode: "real_line_push",
           idempotency_key: "idem_missing_confirmation"
         }
       })
@@ -194,6 +243,7 @@ describe("Loop 102 LINE real push gate", () => {
       authenticatedStaffReplyRequest({
         body: {
           body: "idempotencyなしでは本物送信不可です。",
+          delivery_mode: "real_line_push",
           real_line_push_confirmed: true,
           line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE
         }
@@ -219,6 +269,7 @@ describe("Loop 102 LINE real push gate", () => {
 
     const requestBody = {
       body: "確認済みの本物送信gateテストです。",
+      delivery_mode: "real_line_push",
       real_line_push_confirmed: true,
       line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
       idempotency_key: "idem_confirmed_once"
@@ -319,6 +370,15 @@ function authenticatedStaffReplyRequest(input: {
         : { "x-selected-tenant-id": "tenant_amamihome" })
     },
     body: input.body
+  });
+}
+
+function authenticatedCapabilityRequest(): Request {
+  return new Request("http://localhost/api/admin/runtime/line-real-send-capability", {
+    headers: {
+      authorization: "Bearer test-admin-token",
+      "x-selected-tenant-id": "tenant_amamihome"
+    }
   });
 }
 
