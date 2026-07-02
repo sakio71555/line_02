@@ -17,53 +17,59 @@
 ## Review Target
 
 ```txt
-loop=Loop 309 unexpected LINE real send disable and safety reset
+loop=Loop 311 LINE canary blocker remediation by operator-controlled canary window
 status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=resolved_unexpected_runtime_enabled_state_before_canary
-forward_progress_type=runtime_external_send_safety_reset
+proliferation_reason=converted_hidden_input_blocker_to_operator_controlled_canary_window_tool
+forward_progress_type=operator_window_tool_and_result_intake_created
 next_loop_requires_new_operator_input=true
-loop_308_status=blocked
-line_real_send_unexpected_enabled_detected=true
-line_real_send_disable_decision=approved
-line_real_send_disable_status=disabled_successfully
-line_real_send_disable_attempted=true
-line_real_send_disabled_after_loop=true
-line_real_send_currently_enabled_after_loop=false
-runtime_config_changed_in_loop_309=true
-runtime_config_change_scope=line_real_send_disable_only
-api_app_service_restart_executed=true
-admin_app_service_restart_executed=false
-post_disable_smoke_status=pass
-line_canary_send_attempted_in_loop_309=false
-line_real_send_executed_in_loop_309=false
-line_retry_executed=false
-line_bulk_multicast_broadcast_executed=false
+loop_310_status=blocked
+line_canary_blocker_remediation_status=complete
+previous_blocker=line_canary_hidden_inputs_not_provided
+previous_blocker_resolution=operator_controlled_canary_window
+codex_hidden_input_collection_retired=true
+operator_controlled_canary_window_created=true
+operator_canary_window_helper_created=true
+operator_canary_window_helper_default_mode=no_send
+operator_canary_window_helper_sends_line=false
+operator_canary_window_helper_handles_recipient_or_message=false
+operator_manual_send_path=admin_ui_or_existing_admin_api_staff_reply
+operator_send_limit=1
+operator_retry_allowed=false
+operator_bulk_multicast_broadcast_allowed=false
+operator_openai_allowed=false
+operator_post_window_disable_required=true
+operator_post_window_smoke_required=true
+vps_script_delivery_status=success
+line_real_send_executed_in_loop_311=false
+runtime_config_changed_in_loop_311=false
+service_restart_executed_in_loop_311=false
 openai_api_executed=false
 production_db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
-next_loop_candidate=Loop 310: operator-side LINE canary execution with hidden inputs
-loop_310_auto_progression_allowed=false
+next_loop_candidate=Loop 312: operator-controlled LINE canary window execution result intake
+loop_312_auto_progression_allowed=false
 ```
 
 ## Review Focus
 
-- Confirm that Loop 309 resolved the unexpected current real-send enabled state before any canary.
-- Confirm that only the LINE real-send disable runtime flag changed and only the API app service restarted.
-- Confirm that no LINE send, retry, bulk/multicast/broadcast, OpenAI call, DB/Supabase/restore action, Nginx reload/restart, DNS/HTTPS/certbot, package operation, daemon reload, or reboot occurred.
+- Confirm that Loop 311 did not attempt another Codex hidden-input collection.
+- Confirm that the blocker was converted into an operator-controlled canary window path.
+- Confirm that the helper default is no-send and does not handle recipient/message or send LINE by itself.
+- Confirm that Loop 311 ran only non-mutating helper checks locally and on VPS.
+- Confirm that no LINE send, retry, bulk/multicast/broadcast, OpenAI call, DB/Supabase/restore action, runtime config change, service restart, Nginx reload/restart, DNS/HTTPS/certbot, package operation, daemon reload, or reboot occurred.
 - Confirm that production Go scope stayed `line_api_admin_current_runtime` and DR restore route stayed `frozen_known_risk`.
-- Decide whether Loop 310 should proceed to an operator-side canary with hidden inputs, or whether another human review is needed.
-- Do not generate a Loop 310 Codex prompt until the user explicitly asks for it.
+- Decide whether Loop 312 should intake an operator-side sanitized result after the operator runs the canary window, or whether human input is still required.
+- Do not generate a Loop 312 Codex prompt until the user explicitly asks for it.
 
 ## Safety Boundary
 
 ```txt
 line_real_send_executed=false
-line_canary_send_attempted=false
 line_retry_executed=false
 line_bulk_multicast_broadcast_executed=false
 openai_api_executed=false
@@ -74,7 +80,8 @@ supabase_connection_attempted=false
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
-runtime_code_changed=false
+runtime_config_changed_in_loop_311=false
+service_restart_executed_in_loop_311=false
 nginx_reload_executed=false
 nginx_restart_executed=false
 dns_https_certbot_executed=false

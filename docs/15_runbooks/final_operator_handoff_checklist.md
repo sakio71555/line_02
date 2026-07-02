@@ -2973,3 +2973,27 @@ Loop 307 controlled LINE real send canary activationでは、1通限定LINE cana
 Loop 308 line canary blocker remediationでは、Loop 307のmissing input blockerをoperator-side hidden-input packageへ変換しました。ただしread-only baselineでrunning processのreal-send enabled状態が検出されたため、script delivery、runtime変更、service restart、LINE送信は行わずblockedとして停止しました。次のoperator-side intakeでは、canary送信より先にcurrent runtime enabled stateのdisable/verificationをsanitized resultで確認してください。詳細は [Loop 308 task doc](../11_codex_tasks/308_line_canary_blocker_remediation_and_operator_package.md) を参照してください。
 
 Loop 309 unexpected LINE real send disable and safety resetでは、canary実行前の安全リセットとしてLINE real sendをdisabledへ戻し、API app serviceだけをrestartして反映確認しました。post-disableでは `line_real_send_currently_enabled_after_loop=false` です。LINE送信、retry/bulk/multicast/broadcast、OpenAI API、DB/Supabase/restore、Nginx/DNS/HTTPS/certbotは行っていません。次の候補は hidden inputs を使うoperator-side LINE canary executionですが、別Loopの明示承認が必要です。
+
+Loop 311 line canary blocker remediation by operator-controlled canary windowでは、Codexへcanary recipient/messageを渡す方式をやめ、operatorが短時間だけwindowを開き、Admin UIまたは既存Admin API staff reply経路で1通だけ手動送信し、すぐwindowを閉じる方式へ切り替えました。`scripts/ops/line_canary_window_operator.sh` はno-send defaultで、Loop 311ではself-check/dry-run/statusのみ実行しました。LINE送信、runtime config変更、service restart、OpenAI API、DB/Supabase/restore、Nginx/DNS/HTTPS/certbotは行っていません。次の候補は `Loop 312: operator-controlled LINE canary window execution result intake` です。
+
+Future Loop 312 result intake fields:
+
+```txt
+operator_controlled_canary_result_provided=true_or_false
+operator_window_opened=true_or_false
+operator_window_closed=true_or_false
+line_canary_send_attempted=true_or_false
+line_canary_send_count=0_or_1
+line_canary_send_status=success_or_failed_or_not_attempted
+line_canary_failure_category=sanitized_category_or_none
+line_real_send_enabled_during_window=true_or_false
+line_real_send_disabled_after_window=true_or_false
+line_real_send_currently_enabled_after_operator_run=false_or_true_or_unknown
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+recipient_recorded=false
+message_body_recorded=false
+raw_response_body_recorded=false
+secret_recorded=false
+```

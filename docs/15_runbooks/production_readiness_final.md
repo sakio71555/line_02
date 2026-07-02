@@ -158,6 +158,41 @@ restricted_actions_remain_no_go=true
 
 Loop 309 reset the unexpected LINE real-send enabled state before canary execution. No LINE canary send, OpenAI API execution, production DB/Supabase operation, DR restore work, or infrastructure change was performed. Production remains scope-limited Go, and DR remains not ready with the restore route frozen as a known risk.
 
+## Loop 311 LINE Canary Operator Window
+
+```txt
+loop_311_status=complete
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+previous_blocker=line_canary_hidden_inputs_not_provided
+previous_blocker_resolution=operator_controlled_canary_window
+codex_hidden_input_collection_retired=true
+operator_controlled_canary_window_created=true
+operator_canary_window_helper_created=true
+operator_canary_window_helper_default_mode=no_send
+operator_canary_window_helper_sends_line=false
+operator_canary_window_helper_handles_recipient_or_message=false
+operator_manual_send_path=admin_ui_or_existing_admin_api_staff_reply
+operator_send_limit=1
+operator_retry_allowed=false
+operator_bulk_multicast_broadcast_allowed=false
+operator_openai_allowed=false
+operator_post_window_disable_required=true
+operator_post_window_smoke_required=true
+vps_script_delivery_status=success
+line_real_send_executed_in_loop_311=false
+runtime_config_changed_in_loop_311=false
+service_restart_executed_in_loop_311=false
+openai_api_executed=false
+production_db_change_performed=false
+restricted_actions_remain_no_go=true
+```
+
+Readiness interpretation: Loop 311 does not expand production Go and does not prove broader LINE sending. It creates the operator-controlled one-message canary window procedure and helper. Future execution must be operator-side, one send only, no retry, no bulk/multicast/broadcast, no OpenAI, and no protected value recording.
+
 ## Loop 305 Production Runtime Rollout
 
 ```txt

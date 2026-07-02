@@ -1993,3 +1993,46 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 310: operator-side LINE canary execution with hidden inputs
 ```
+
+## Loop 311 LINE Canary Operator Window
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Previous blocker | `converted` | Codex hidden-input collection is retired. |
+| Canary window | `created` | Operator-controlled open/manual-one-send/close procedure exists. |
+| Helper | `created` | No-send default helper was added and delivered script-only. |
+| Send attempt | `not_attempted` | No LINE send, retry, bulk, multicast, or broadcast in Loop 311. |
+| Runtime config | `unchanged` | No real-send enable, service restart, or config mutation in Loop 311. |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| DR restore route | `frozen_known_risk` | Not part of this Loop. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `operator_controlled_canary_window_result_intake` | Single next Loop candidate is Loop 312. |
+
+```txt
+loop_311_status=complete
+codex_hidden_input_collection_retired=true
+operator_controlled_canary_window_created=true
+operator_canary_window_helper_created=true
+operator_canary_window_helper_default_mode=no_send
+operator_canary_window_helper_sends_line=false
+operator_canary_window_helper_handles_recipient_or_message=false
+operator_manual_send_path=admin_ui_or_existing_admin_api_staff_reply
+operator_send_limit=1
+operator_retry_allowed=false
+operator_bulk_multicast_broadcast_allowed=false
+operator_openai_allowed=false
+operator_post_window_disable_required=true
+vps_script_delivery_status=success
+line_real_send_executed_in_loop_311=false
+runtime_config_changed_in_loop_311=false
+service_restart_executed_in_loop_311=false
+openai_api_executed=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 312: operator-controlled LINE canary window execution result intake
+```

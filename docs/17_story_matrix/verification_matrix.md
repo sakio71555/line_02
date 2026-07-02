@@ -2610,6 +2610,37 @@ dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 311 Verification Note
+
+```txt
+loop_311_status=complete
+git_diff_check_status=pass
+local_lint_status=pass
+local_typecheck_status=pass
+local_test_status=pass
+local_integration_test_status=pass
+local_helper_bash_validation_status=pass
+local_helper_self_check_status=pass
+local_helper_dry_run_check_status=pass
+local_helper_status_check_status=pass
+vps_script_delivery_status=success
+vps_helper_bash_validation_status=pass
+vps_helper_self_check_status=pass
+vps_helper_dry_run_check_status=pass
+vps_helper_status_check_status=pass
+line_real_send_executed_in_loop_311=false
+runtime_config_changed_in_loop_311=false
+service_restart_executed_in_loop_311=false
+openai_api_executed=false
+production_db_change_performed=false
+line_identifier_recorded=false
+message_body_recorded=false
+raw_response_body_recorded=false
+secret_recorded=false
+production_go=true
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 306 Verification Note
 
 ```txt

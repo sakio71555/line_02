@@ -146,8 +146,10 @@
 - Loop 307 controlled LINE real send canary activation: `11_codex_tasks/307_controlled_line_real_send_canary_activation.md`
 - Loop 308 LINE canary blocker remediation and operator package: `11_codex_tasks/308_line_canary_blocker_remediation_and_operator_package.md`
 - Loop 309 unexpected LINE real send disable and safety reset: `11_codex_tasks/309_unexpected_line_real_send_disable_and_safety_reset.md`
+- Loop 311 LINE canary blocker remediation by operator-controlled window: `11_codex_tasks/311_line_canary_blocker_remediation_by_operator_window.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
+- LINE canary operator window helper: `../scripts/ops/line_canary_window_operator.sh`
 
 ## Prompts and Templates
 

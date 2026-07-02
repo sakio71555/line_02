@@ -566,3 +566,43 @@ Operational meaning:
 - The next canary may only proceed in a separate Loop with operator-side hidden inputs.
 - The next canary remains one message only, no retry, no bulk/multicast/broadcast, and no protected values in docs or handoff.
 - OpenAI API execution, production DB/Supabase work, DR restore work, and infrastructure changes remain out of scope.
+
+## Loop 311 LINE Canary Operator Window
+
+Loop 311 retires Codex-side hidden canary input collection and creates an operator-controlled canary window tool. Codex does not send LINE messages or open the window in this Loop.
+
+```txt
+loop_311_status=complete
+line_canary_blocker_remediation_status=complete
+previous_blocker=line_canary_hidden_inputs_not_provided
+previous_blocker_resolution=operator_controlled_canary_window
+codex_hidden_input_collection_retired=true
+operator_controlled_canary_window_created=true
+operator_canary_window_helper_created=true
+operator_canary_window_helper_default_mode=no_send
+operator_canary_window_helper_sends_line=false
+operator_canary_window_helper_handles_recipient_or_message=false
+operator_canary_execution_checklist_created=true
+operator_canary_result_intake_template_created=true
+vps_script_delivery_status=success
+line_real_send_executed_in_loop_311=false
+runtime_config_changed_in_loop_311=false
+service_restart_executed_in_loop_311=false
+openai_api_executed=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 312: operator-controlled LINE canary window execution result intake
+```
+
+Operational meaning:
+
+- The canary recipient and message stay operator-side only.
+- The helper provides no-send status/self-check/dry-run and guarded future open/close modes.
+- The helper does not execute read-only smoke scripts by itself; post-window smoke remains an explicit operator-side verification step.
+- Future canary execution must be exactly one manual send through Admin UI or the existing Admin API staff reply path.
+- The window must be closed immediately, even if the canary fails.
