@@ -705,6 +705,8 @@ Loop 305 production rollout blocker remediationでは、Loop 304のblockerだっ
 
 Loop 306 production external-send enablement decision gateでは、LINE実送信とOpenAI実行をまだ行わず、production runtimeのread-only baseline、config key presence、コード上のLINE/OpenAI gate、canary境界、disable/rollback境界を整理しました。判断は `line_only_canary_activation` で、LINEは次Loopで1通だけのoperator-approved canary候補、OpenAIは課金と応答品質リスクのためdeferredです。値、識別子、本文、URL、raw logは記録していません。詳細は [Loop 306 task doc](docs/11_codex_tasks/306_production_external_send_enablement_decision_gate.md) を参照してください。
 
+Loop 307 controlled LINE real send canary activationでは、1通限定LINE canary承認を受けてlocal validation、runtime baseline、canary input availabilityを確認しましたが、operator-provided canary recipient/message が実行コンテキストに無かったため、LINE real send有効化前にblockedしました。送信回数は0、LINE retry/bulk/multicast/broadcast、OpenAI API、runtime config変更、service restart、production DB接続/変更、Nginx/DNS/HTTPS/certbot変更は行っていません。詳細は [Loop 307 task doc](docs/11_codex_tasks/307_controlled_line_real_send_canary_activation.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

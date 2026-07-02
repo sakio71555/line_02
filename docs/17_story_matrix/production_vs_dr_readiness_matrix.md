@@ -1876,3 +1876,39 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 307: controlled LINE real send canary activation
 ```
+
+## Loop 307 Controlled LINE Canary Activation
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| LINE canary | `blocked_before_enable` | Required operator-provided canary runtime inputs were not available. |
+| Send attempt | `not_attempted` | Send count stayed `0`; retry/bulk/multicast/broadcast stayed false. |
+| Runtime config | `unchanged` | Real send was not enabled; no service restart was needed. |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| DR restore route | `frozen_known_risk` | Not part of this Loop. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `line_canary_blocker_remediation` | Single next Loop candidate is Loop 308. |
+
+```txt
+loop_307_status=blocked
+line_canary_activation_status=blocked_before_enable
+failure_reason=line_canary_runtime_inputs_not_provided
+line_canary_runtime_inputs_available=false
+line_real_send_enabled_for_canary=false
+line_canary_send_attempted=false
+line_canary_send_count=0
+line_canary_send_status=not_attempted
+line_real_send_currently_enabled_after_loop=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+production_db_direct_connection_executed=false
+production_db_manual_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 308: LINE canary blocker remediation
+```

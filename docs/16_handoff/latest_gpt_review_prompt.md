@@ -17,42 +17,43 @@
 ## Review Target
 
 ```txt
-loop=Loop 306 production external-send enablement decision gate
-status=complete
+loop=Loop 307 controlled LINE real send canary activation
+status=blocked
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=produced_concrete_external_send_decision_and_canary_boundary_without_execution
-forward_progress_type=external_send_gate_review_config_presence_and_one_path_decision
+proliferation_reason=checked_canary_runtime_input_availability_and_stopped_before_enable
+forward_progress_type=blocked_on_concrete_missing_canary_runtime_input
 next_loop_requires_new_operator_input=true
-line_real_send_enablement_decision=ready_for_canary
-openai_api_enablement_decision=deferred
-recommended_external_send_rollout_path=line_only_canary_activation
-external_send_enablement_gate_status=ready
-line_canary_boundary_created=true
-line_canary_send_limit=1
-line_canary_retry_allowed=false
-openai_canary_boundary_created=true
-openai_canary_request_limit=1
-openai_canary_cost_guard_required=true
-line_real_send_executed_in_loop_306=false
-openai_api_executed_in_loop_306=false
-runtime_config_changed_in_loop_306=false
-production_db_change_performed=false
+production_line_canary_activation_decision=approved
+line_canary_activation_status=blocked_before_enable
+failure_reason=line_canary_runtime_inputs_not_provided
+line_canary_runtime_inputs_available=false
+line_canary_recipient_input_present=false
+line_canary_message_input_present=false
+line_canary_auth_context_available=false
+line_real_send_enabled_for_canary=false
+line_canary_send_attempted=false
+line_canary_send_count=0
+line_canary_send_status=not_attempted
+line_real_send_currently_enabled_after_loop=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
-next_loop_candidate=Loop 307: controlled LINE real send canary activation
-loop_307_auto_progression_allowed=false
+next_loop_candidate=Loop 308: LINE canary blocker remediation
+loop_308_auto_progression_allowed=false
 ```
 
 ## Review Focus
 
-- Confirm that Loop 306 did not execute LINE real send or OpenAI API calls.
-- Confirm that the selected rollout path is exactly one path: `line_only_canary_activation`.
-- Confirm that OpenAI is deferred because of cost and response-quality risk.
-- Confirm that the next Loop requires fresh explicit operator approval, an operator-approved recipient, no recorded identifier/body, one send only, no retry, and rollback/disable boundary.
-- Decide whether Loop 307 should proceed, wait for human input, or stay frozen.
+- Confirm that Loop 307 made forward progress by checking canary input availability and stopping before enablement.
+- Confirm that LINE real send was not enabled and no send was attempted.
+- Confirm that the blocker is missing operator-provided canary runtime input, not a LINE send failure.
+- Decide whether Loop 308 should be accepted, or whether this should be treated as human input required before any further Codex Loop.
+- Do not generate a Loop 308 Codex prompt until the user explicitly asks for it.
 
 ## Safety Boundary
 
@@ -61,13 +62,13 @@ restore_executed=false
 pg_restore_executed=false
 psql_executed=false
 supabase_connection_attempted=false
-production_db_connection_executed=false
-production_db_change_performed=false
+production_db_direct_connection_executed=false
+production_db_manual_change_performed=false
 line_real_send_executed=false
 openai_api_executed=false
-nginx_reload_executed=false
-service_restart_executed=false
 runtime_config_changed=false
+service_restart_executed=false
+nginx_reload_executed=false
 raw_log_recorded=false
 secret_recorded=false
 env_value_recorded=false

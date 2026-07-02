@@ -184,6 +184,41 @@ restricted_actions_remain_no_go=true
 
 Production remains Go for the current runtime, but external-send enablement still requires a separate canary activation Loop. OpenAI remains deferred.
 
+## Loop 307 Controlled LINE Canary Activation
+
+```txt
+loop_307_status=blocked
+production_line_canary_activation_decision=approved
+line_canary_activation_status=blocked_before_enable
+failure_reason=line_canary_runtime_inputs_not_provided
+line_canary_runtime_inputs_available=false
+line_canary_recipient_input_present=false
+line_canary_message_input_present=false
+line_canary_auth_context_available=false
+runtime_config_changed_for_line_canary=false
+line_real_send_enabled_for_canary=false
+line_canary_send_attempted=false
+line_canary_send_count=0
+line_canary_send_status=not_attempted
+line_canary_failure_category=line_canary_runtime_inputs_not_provided
+line_real_send_disabled_after_canary=not_needed
+line_real_send_currently_enabled_after_loop=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+production_db_direct_connection_executed=false
+production_db_manual_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 308: LINE canary blocker remediation
+```
+
+Loop 307 did not enable LINE real send because the required canary runtime inputs were missing. No send, retry, bulk/multicast/broadcast, runtime config change, app service restart, OpenAI call, DB connection/change, restore, Nginx reload/restart, DNS/HTTPS/certbot change, package operation, or protected value recording occurred.
+
 Current readiness reading:
 
 | bucket | current_status | decision |

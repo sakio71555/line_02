@@ -451,3 +451,42 @@ Canary boundary:
 - LINE identifier and message body must not be recorded.
 - OpenAI canary is deferred; if later approved, it must be one request only with cost guard and no prompt/response body recording.
 - Emergency stop is config-disable first, then sanitized status confirmation.
+
+## Loop 307 Controlled LINE Canary Activation
+
+Loop 307 attempted to move from the Loop 306 decision gate to the controlled LINE canary boundary, but stopped before enablement because required operator-provided runtime inputs were absent.
+
+```txt
+loop_307_status=blocked
+production_line_canary_activation_decision=approved
+line_canary_activation_status=blocked_before_enable
+failure_reason=line_canary_runtime_inputs_not_provided
+line_canary_runtime_inputs_available=false
+line_canary_recipient_input_present=false
+line_canary_message_input_present=false
+line_canary_auth_context_available=false
+runtime_config_changed_for_line_canary=false
+line_real_send_enabled_for_canary=false
+line_canary_send_attempted=false
+line_canary_send_count=0
+line_canary_send_status=not_attempted
+line_real_send_disable_attempted=false
+line_real_send_disabled_after_canary=not_needed
+line_real_send_currently_enabled_after_loop=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+production_db_direct_connection_executed=false
+production_db_manual_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
+Operational meaning:
+
+- LINE real send remains disabled and no one-message canary was sent.
+- The next attempt must provide the canary recipient and canary message only in the execution context, never in docs, handoff, final reports, or commit messages.
+- The next attempt must still be one send only, no retry, no bulk/multicast/broadcast, no OpenAI API call, and must disable real send after the attempt if it ever enables the runtime flag.

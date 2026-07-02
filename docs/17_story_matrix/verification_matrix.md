@@ -2634,6 +2634,40 @@ production_go=true
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 307 Verification Note
+
+```txt
+loop_307_status=blocked
+git_diff_check_status=pass
+local_lint_status=pass
+local_typecheck_status=pass
+local_test_status=pass
+local_integration_test_status=pass
+demo_save_bypass_limited_to_demo_save=true
+real_send_guard_still_present=true
+line_canary_execution_path_identified=true
+production_read_only_baseline_status_pre=pass
+public_api_health_status_code_pre=200
+public_admin_root_status_code_pre=200
+public_customers_no_auth_status_code_pre=401
+line_config_presence_status=pass
+line_real_send_currently_enabled_pre=false
+line_canary_runtime_inputs_available=false
+line_canary_send_attempted=false
+line_canary_send_count=0
+line_canary_send_status=not_attempted
+line_real_send_currently_enabled_after_loop=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+production_db_direct_connection_executed=false
+production_db_manual_change_performed=false
+secret_value_check_required=true
+production_go=true
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 304 Verification Note
 
 ```txt
