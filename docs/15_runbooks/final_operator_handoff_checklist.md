@@ -2965,3 +2965,5 @@ Operator handoff:
 - Do not restart services, reload Nginx, change DNS/HTTPS, run package operations, connect to DBs, or resume DR restore without a new explicit approval.
 
 Loop 305 production rollout blocker remediationでは、Loop 304で不足していたAdmin app service restartの明示許可を受け、`ed3c5a2` のdemo-save fixをactive production runtimeへ反映しました。copy-based runbookでstaging validation、active backup/snapshot、active frozen install/build、API/Admin app service restart、public smokeを実施し、post-deploy smokeはpassです。runtime markerは `ed3c5a2`、rollbackは未実行です。LINE実送信、OpenAI API実行、production DB接続/変更、DR restore、Nginx reload/restart、DNS/HTTPS/certbotは行っていません。詳細は [Loop 305 task doc](docs/11_codex_tasks/305_production_rollout_blocker_remediation.md) を参照してください。
+
+Loop 306 production external-send enablement decision gateでは、LINE実送信とOpenAI実行をまだ行わず、config key presence、コード上の送信/AIゲート、canary境界、disable/rollback境界を整理しました。判断は `line_only_canary_activation` で、LINEは次Loopで1通だけのoperator-approved canary候補、OpenAIは課金と応答品質リスクのためdeferredです。値、識別子、本文、URL、raw logは記録していません。詳細は [Loop 306 task doc](docs/11_codex_tasks/306_production_external_send_enablement_decision_gate.md) を参照してください。

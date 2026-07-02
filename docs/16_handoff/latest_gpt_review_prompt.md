@@ -17,49 +17,42 @@
 ## Review Target
 
 ```txt
-loop=Loop 305 production rollout blocker remediation
+loop=Loop 306 production external-send enablement decision gate
 status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=resolved_concrete_loop_304_active_rollout_blocker_with_bounded_deploy
-forward_progress_type=active_production_runtime_updated_and_smoked
+proliferation_reason=produced_concrete_external_send_decision_and_canary_boundary_without_execution
+forward_progress_type=external_send_gate_review_config_presence_and_one_path_decision
 next_loop_requires_new_operator_input=true
-loop_304_status=blocked
-loop_305_status=complete
-production_rollout_blocker_remediation_decision=approved
-previous_blocker=admin_service_restart_required_but_not_explicitly_covered
-previous_blocker_resolved=true
-production_change_freeze_exception=approved_for_controlled_runtime_rollout
-controlled_rollout_scope=admin_api_runtime_demo_save_fix
-target_runtime_commit_expected=ed3c5a2
-vps_runtime_pre_deploy_commit=01ad8b3
-vps_runtime_post_deploy_commit=ed3c5a2
-vps_runtime_contains_ed3c5a2=true
-controlled_active_deploy_executed=true
-copy_based_active_deploy_executed=true
-restart_scope_confirmed=api_and_admin_app_services_only
-post_deploy_smoke_status=pass
-demo_save_fix_production_rollout_status=deployed
-rollback_executed=false
-real_line_push_still_disabled=true
-line_real_send_executed=false
-openai_api_executed=false
+line_real_send_enablement_decision=ready_for_canary
+openai_api_enablement_decision=deferred
+recommended_external_send_rollout_path=line_only_canary_activation
+external_send_enablement_gate_status=ready
+line_canary_boundary_created=true
+line_canary_send_limit=1
+line_canary_retry_allowed=false
+openai_canary_boundary_created=true
+openai_canary_request_limit=1
+openai_canary_cost_guard_required=true
+line_real_send_executed_in_loop_306=false
+openai_api_executed_in_loop_306=false
+runtime_config_changed_in_loop_306=false
 production_db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
-next_loop_candidate=Loop 306: production external-send enablement decision gate
-loop_306_auto_progression_allowed=false
+next_loop_candidate=Loop 307: controlled LINE real send canary activation
+loop_307_auto_progression_allowed=false
 ```
 
 ## Review Focus
 
-- Confirm that Loop 305 resolved the exact Loop 304 blocker by explicitly allowing the existing API/Admin app service restarts.
-- Confirm that the active copy-based runtime now contains `ed3c5a2` and post-deploy smoke passed.
-- Confirm that the demo-save direct production write smoke was intentionally not run because it would require private workflow input or a production write.
-- Confirm that this Loop did not authorize LINE real send, OpenAI API execution, DB changes, DR restore, Nginx reload/restart, DNS/HTTPS/certbot, runtime config change, or production Go scope expansion.
-- Decide whether the only next candidate, `Loop 306: production external-send enablement decision gate`, should be accepted, delayed, or replaced by human review.
+- Confirm that Loop 306 did not execute LINE real send or OpenAI API calls.
+- Confirm that the selected rollout path is exactly one path: `line_only_canary_activation`.
+- Confirm that OpenAI is deferred because of cost and response-quality risk.
+- Confirm that the next Loop requires fresh explicit operator approval, an operator-approved recipient, no recorded identifier/body, one send only, no retry, and rollback/disable boundary.
+- Decide whether Loop 307 should proceed, wait for human input, or stay frozen.
 
 ## Safety Boundary
 
@@ -73,11 +66,11 @@ production_db_change_performed=false
 line_real_send_executed=false
 openai_api_executed=false
 nginx_reload_executed=false
+service_restart_executed=false
 runtime_config_changed=false
-package_lock_changed=false
 raw_log_recorded=false
 secret_recorded=false
-db_url_recorded=false
+env_value_recorded=false
 line_identifier_recorded=false
 message_body_recorded=false
 host_or_url_recorded=false

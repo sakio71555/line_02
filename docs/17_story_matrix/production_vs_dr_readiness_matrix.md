@@ -1839,3 +1839,40 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 306: production external-send enablement decision gate
 ```
+
+## Loop 306 Production External-Send Enablement Gate
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| External-send gate | `ready` | LINE-only canary path selected with one-send/no-retry boundary. |
+| LINE send | `ready_for_canary` | Required categories are present and code gate remains explicit. |
+| OpenAI | `deferred` | Config categories are present, but paid/API quality risk stays behind a later canary. |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| DR restore route | `frozen_known_risk` | Not part of this decision gate. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `controlled_line_real_send_canary_activation` | Single next Loop candidate is Loop 307. |
+
+```txt
+loop_306_status=complete
+production_external_send_enablement_decision_gate_created=true
+line_real_send_enablement_decision=ready_for_canary
+openai_api_enablement_decision=deferred
+recommended_external_send_rollout_path=line_only_canary_activation
+external_send_enablement_gate_status=ready
+line_canary_boundary_created=true
+openai_canary_boundary_created=true
+line_disable_boundary_created=true
+openai_disable_boundary_created=true
+external_send_emergency_stop_created=true
+line_real_send_executed_in_loop_306=false
+openai_api_executed_in_loop_306=false
+runtime_config_changed_in_loop_306=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 307: controlled LINE real send canary activation
+```

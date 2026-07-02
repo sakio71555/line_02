@@ -142,6 +142,7 @@
 - Loop 303 demo save real_push_disabled blocker fix: `11_codex_tasks/303_demo_save_real_push_disabled_blocker_fix.md`
 - Loop 304 controlled production rollout for admin/API runtime: `11_codex_tasks/304_controlled_production_rollout_admin_api_runtime.md`
 - Loop 305 production rollout blocker remediation: `11_codex_tasks/305_production_rollout_blocker_remediation.md`
+- Loop 306 production external-send enablement decision gate: `11_codex_tasks/306_production_external_send_enablement_decision_gate.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 

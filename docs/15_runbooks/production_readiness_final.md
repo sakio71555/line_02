@@ -161,6 +161,29 @@ restricted_actions_remain_no_go=true
 
 Production remains Go for the current LINE/API/Admin runtime. Loop 305 updates that runtime with the demo-save fix, but does not authorize external-send expansion, OpenAI activation, production DB changes, infra changes, or DR restore work.
 
+## Loop 306 External-Send Decision Gate
+
+```txt
+loop_306_status=complete
+production_external_send_enablement_decision_gate_created=true
+line_real_send_enablement_decision=ready_for_canary
+openai_api_enablement_decision=deferred
+recommended_external_send_rollout_path=line_only_canary_activation
+external_send_enablement_gate_status=ready
+line_real_send_executed_in_loop_306=false
+openai_api_executed_in_loop_306=false
+runtime_config_changed_in_loop_306=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Production remains Go for the current runtime, but external-send enablement still requires a separate canary activation Loop. OpenAI remains deferred.
+
 Current readiness reading:
 
 | bucket | current_status | decision |

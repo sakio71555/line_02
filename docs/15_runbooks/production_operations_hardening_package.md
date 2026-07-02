@@ -422,3 +422,32 @@ Operational notes:
 - Treat the demo-save fix as deployed by commit/source evidence, local regression tests, staging validation, active build/restart, and public smoke.
 - Do not treat this Loop as approval for LINE real send, OpenAI API execution, production DB connection/change, DB migration, DR restore, Nginx reload/restart, DNS/HTTPS/certbot, or production Go scope expansion.
 - The next action is exactly one candidate: `Loop 306: production external-send enablement decision gate`.
+
+## Loop 306 Production External-Send Enablement Gate
+
+Loop 306 prepares the external-send enablement decision and canary boundary without executing sends or paid API calls.
+
+```txt
+loop_306_status=complete
+production_external_send_enablement_decision_gate_created=true
+line_real_send_enablement_decision=ready_for_canary
+openai_api_enablement_decision=deferred
+recommended_external_send_rollout_path=line_only_canary_activation
+external_send_enablement_gate_status=ready
+line_canary_boundary_created=true
+openai_canary_boundary_created=true
+line_disable_boundary_created=true
+openai_disable_boundary_created=true
+external_send_emergency_stop_created=true
+line_real_send_executed_in_loop_306=false
+openai_api_executed_in_loop_306=false
+runtime_config_changed_in_loop_306=false
+production_db_change_performed=false
+```
+
+Canary boundary:
+
+- LINE canary is one operator-approved recipient, one send only, no retry, no multicast/broadcast/group/room send.
+- LINE identifier and message body must not be recorded.
+- OpenAI canary is deferred; if later approved, it must be one request only with cost guard and no prompt/response body recording.
+- Emergency stop is config-disable first, then sanitized status confirmation.

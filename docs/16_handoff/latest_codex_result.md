@@ -3,7 +3,7 @@
 ## Loop
 
 ```txt
-loop=Loop 305 production rollout blocker remediation
+loop=Loop 306 production external-send enablement decision gate
 status=complete
 ```
 
@@ -12,44 +12,35 @@ status=complete
 ```txt
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=resolved_concrete_loop_304_active_rollout_blocker_with_bounded_deploy
-forward_progress_type=active_production_runtime_updated_and_smoked
+proliferation_reason=produced_concrete_external_send_decision_and_canary_boundary_without_execution
+forward_progress_type=external_send_gate_review_config_presence_and_one_path_decision
 next_loop_requires_new_operator_input=true
-loop_304_status=blocked
 loop_305_status=complete
-production_rollout_blocker_remediation_decision=approved
-previous_blocker=admin_service_restart_required_but_not_explicitly_covered
-previous_blocker_resolved=true
-production_change_freeze_exception=approved_for_controlled_runtime_rollout
-controlled_rollout_scope=admin_api_runtime_demo_save_fix
-target_runtime_commit_expected=ed3c5a2
-local_head_short=3316657
+loop_306_status=complete
+production_external_send_enablement_decision_gate_created=true
+local_head_short=1fc9a04
 local_contains_ed3c5a2=true
-deploy_runbook_found=true
-deploy_method_selected=existing_copy_based_runbook_active_deploy
-restart_scope_confirmed=api_and_admin_app_services_only
-controlled_active_deploy_executed=true
-copy_based_active_deploy_executed=true
-active_backup_or_snapshot_created=true
-vps_runtime_pre_deploy_commit=01ad8b3
-vps_runtime_post_deploy_commit=ed3c5a2
+demo_save_bypass_limited_to_demo_save=true
+real_send_guard_still_present=true
+line_send_code_path_identified=true
+openai_execution_code_path_identified=true
+external_send_gate_review_status=pass
+vps_runtime_current_commit=ed3c5a2
 vps_runtime_contains_ed3c5a2=true
-build_executed=true
-build_status=pass
-api_app_service_restart_executed=true
-api_app_service_restart_status=pass
-admin_app_service_restart_executed=true
-admin_app_service_restart_status=pass
-app_service_restart_executed=true
-app_service_restart_status=pass
-post_deploy_smoke_status=pass
-demo_save_fix_production_rollout_status=deployed
-demo_save_fix_production_smoke_status=limited_not_run
-demo_save_fix_production_smoke_reason=commit_and_source_evidence_plus_public_smoke_only_no_private_write
-rollback_executed=false
-real_line_push_still_disabled=true
-line_real_send_executed=false
-openai_api_executed=false
+production_read_only_baseline_status=pass
+external_send_config_presence_check_status=pass
+line_real_send_enablement_decision=ready_for_canary
+openai_api_enablement_decision=deferred
+recommended_external_send_rollout_path=line_only_canary_activation
+external_send_enablement_gate_status=ready
+line_canary_boundary_created=true
+openai_canary_boundary_created=true
+line_disable_boundary_created=true
+openai_disable_boundary_created=true
+external_send_emergency_stop_created=true
+line_real_send_executed_in_loop_306=false
+openai_api_executed_in_loop_306=false
+runtime_config_changed_in_loop_306=false
 production_db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
@@ -67,26 +58,30 @@ local_lint_status=pass
 local_typecheck_status=pass
 local_test_status=pass
 local_integration_test_status=pass
-local_build_status=pass
-targeted_demo_save_and_guard_tests_status=pass
-staging_install_status=pass
-staging_lint_status=pass
-staging_typecheck_status=pass
-staging_test_status=pass
-staging_integration_status=pass
-staging_build_status=pass
-public_api_health_status_code_post=200
-public_admin_root_status_code_post=200
-public_customers_no_auth_status_code_post=401
+targeted_external_send_gate_tests_status=pass
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+```
+
+## Config Presence
+
+```txt
+line_channel_access_token_present=true
+line_channel_secret_present=true
+line_real_send_enable_flag_present=true
+line_real_send_currently_enabled=false
+openai_api_key_present=true
+openai_model_config_present=true
+openai_execution_enable_flag_present=true
+openai_execution_currently_enabled=true
+config_values_recorded=false
+secret_values_recorded=false
 ```
 
 ## Safety
 
 ```txt
-nginx_reload_executed=false
-db_migration_executed=false
-runtime_config_changed=false
-package_lock_changed=false
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
@@ -95,9 +90,12 @@ production_db_connection_executed=false
 production_db_change_performed=false
 line_real_send_executed=false
 openai_api_executed=false
+nginx_reload_executed=false
+service_restart_executed=false
+runtime_config_changed=false
 raw_log_recorded=false
 secret_recorded=false
-db_url_recorded=false
+env_value_recorded=false
 line_identifier_recorded=false
 message_body_recorded=false
 host_or_url_recorded=false
@@ -107,6 +105,6 @@ public_endpoint_url_recorded=false
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 306: production external-send enablement decision gate
-loop_306_auto_progression_allowed=false
+next_loop_candidate=Loop 307: controlled LINE real send canary activation
+loop_307_auto_progression_allowed=false
 ```
