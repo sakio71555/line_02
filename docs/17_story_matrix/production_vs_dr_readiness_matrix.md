@@ -1332,17 +1332,19 @@ dr_risk_acceptance_status=accepted_with_known_risk
 ## Loop 290 One-Time DR Restore Retry Execution
 
 ```txt
-loop_290_status=blocked
+loop_290_status=failed_no_retry
 runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=not_provided
-operator_side_restore_retry_execution_status=not_attempted
-restore_retry_attempt_count=0
-restore_retry_success=not_attempted
-failure_reason=runtime_inputs_not_provided_by_operator
-pg_restore_executed=false
+runtime_input_handoff_status=operator_side_sanitized_result_only
+operator_side_restore_retry_execution_status=failed_no_retry
+restore_retry_attempted=true
+restore_retry_attempt_count=1
+restore_retry_success=false
+failure_reason=sanitized_restore_failed
+retry_allowed=false
+pg_restore_executed=true
 psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
+supabase_connection_attempted=true
+db_change_performed=true
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false

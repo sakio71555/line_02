@@ -2109,13 +2109,23 @@ vps_helper_bash_validation_status=pass
 vps_helper_no_input_preflight_status=blocked_safely
 runtime_presence_check=value_hidden_boolean_only
 runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=not_provided
-helper_preflight_status=not_run
-restore_executed=false
-pg_restore_executed=false
+runtime_input_handoff_status=operator_side_sanitized_result_only
+helper_preflight_status=pass_operator_side_sanitized
+restore_retry_attempted=true
+restore_retry_attempt_count=1
+restore_retry_success=false
+failure_reason=sanitized_restore_failed
+restore_executed=true_operator_side_sanitized
+pg_restore_executed=true
 psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
+supabase_connection_attempted=true
+db_change_performed=true
+retry_allowed=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
 ```
 
 ## Loop 290 Verification Note

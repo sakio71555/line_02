@@ -445,27 +445,30 @@ Loop 289 does not run preflight or execute restore. It only records the future e
 ## Loop 290 Result
 
 ```txt
-loop_290_status=blocked
+loop_290_status=failed_no_retry
 runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=not_provided
-runtime_input_injection_method=blocked
-restore_target_scope_input_present=false
-restore_confirm_input_present=false
-db_url_input_present=false
-artifact_path_input_present=false
-restore_tool_input_present=false
-psql_allow_input_present=false
-helper_preflight_status=not_run
-restore_retry_attempt_count=0
-restore_retry_success=not_attempted
-failure_reason=runtime_inputs_not_provided_by_operator
-pg_restore_executed=false
+runtime_input_handoff_status=operator_side_sanitized_result_only
+runtime_input_injection_method=operator_side_only
+restore_target_scope_input_present=not_recorded_operator_side
+restore_confirm_input_present=not_recorded_operator_side
+db_url_input_present=not_recorded_operator_side
+artifact_path_input_present=not_recorded_operator_side
+restore_tool_input_present=not_recorded_operator_side
+psql_allow_input_present=not_recorded_operator_side
+helper_preflight_status=pass_operator_side_sanitized
+operator_side_restore_retry_execution_status=failed_no_retry
+restore_retry_attempted=true
+restore_retry_attempt_count=1
+restore_retry_success=false
+failure_reason=sanitized_restore_failed
+retry_allowed=false
+pg_restore_executed=true
 psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
+supabase_connection_attempted=true
+db_change_performed=true
 dr_readiness_status=not_ready_restore_failed
-next_recommended_loop=Loop 291 operator runtime input execution retry
-next_loop_requires_new_operator_input=true
+next_recommended_loop=Loop 291 DR restore failure diagnosis without retry
+next_loop_requires_new_operator_input=false
 ```
 
-Loop 290 stopped before helper preflight with inputs and before restore execution. The next step must not proceed without fresh operator input and review.
+Loop 290 has one human-side restore retry result recorded as sanitized `failed_no_retry` metadata. The next step must not run another restore retry and should be limited to failure diagnosis without secret, artifact, raw log, or DB URL disclosure.

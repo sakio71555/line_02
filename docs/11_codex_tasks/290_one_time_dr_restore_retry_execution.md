@@ -4,7 +4,7 @@
 
 Execute the Loop 289 next-loop-only approval only if every strict precondition passes.
 
-Loop 290 reached the runtime input handoff check, but the required runtime inputs were not present in the Codex VPS execution context. The Loop therefore stopped before helper preflight with inputs and before restore execution.
+Loop 290 initially reached the runtime input handoff check, but the required runtime inputs were not present in the Codex VPS execution context. A later human-side execution result was provided as sanitized metadata only. This document records the final DR-side result as `failed_no_retry`; Codex did not perform a second `--execute`, did not receive runtime input values, and did not record secrets, DB URLs, artifact details, raw logs, SQL, objects, roles, package names, or extension names.
 
 ## Initial State
 
@@ -45,43 +45,47 @@ api_service_active=true
 
 ## Runtime Input Handoff Check
 
-Runtime input presence was checked by boolean presence only. Values, prefixes, suffixes, lengths, hashes, DB URLs, artifact details, and raw logs were not displayed or recorded.
+Runtime input values remained unavailable to Codex. The restore attempt was performed on the operator side, and only sanitized result metadata was provided back to the repository docs.
 
 ```txt
 runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=not_provided
-runtime_input_injection_method=blocked
-restore_target_scope_input_present=false
-restore_confirm_input_present=false
-db_url_input_present=false
-artifact_path_input_present=false
-restore_tool_input_present=false
-psql_allow_input_present=false
+runtime_input_handoff_status=operator_side_sanitized_result_only
+runtime_input_injection_method=operator_side_only
+operator_side_runtime_inputs_used=true
+restore_target_scope_input_present=not_recorded_operator_side
+restore_confirm_input_present=not_recorded_operator_side
+db_url_input_present=not_recorded_operator_side
+artifact_path_input_present=not_recorded_operator_side
+restore_tool_input_present=not_recorded_operator_side
+psql_allow_input_present=not_recorded_operator_side
 ```
 
 ## Result Classification
 
 ```txt
-loop_290_status=blocked
-failure_reason=runtime_inputs_not_provided_by_operator
-dr_restore_retry_status=blocked_before_execution
-operator_side_restore_retry_execution_status=not_attempted
-restore_retry_attempt_count=0
-restore_retry_success=not_attempted
+loop_290_status=failed_no_retry
+human_side_restore_execution_result_intake=true
+failure_reason=sanitized_restore_failed
+dr_restore_retry_status=failed_no_retry
+operator_side_restore_retry_execution_status=failed_no_retry
+restore_retry_attempted=true
+restore_retry_attempt_count=1
+restore_retry_success=false
 restore_retry_retry_executed=false
-helper_preflight_status=not_run
+retry_allowed=false
+helper_preflight_status=pass_operator_side_sanitized
 temporary_codex_direct_restore_execution_override_used=false
-restore_target_scope_confirmed=false
-restore_target_scope_category=unknown
-operator_secret_context_available=false
-operator_artifact_context_available=false
-artifact_exists=not_checked
-artifact_nonempty=not_checked
-restore_tool_selected=none
-pg_restore_executed=false
+restore_target_scope_confirmed=true_operator_side_sanitized
+restore_target_scope_category=dr_validation_target
+operator_secret_context_available=operator_side_only
+operator_artifact_context_available=operator_side_only
+artifact_exists=not_recorded
+artifact_nonempty=not_recorded
+restore_tool_selected=pg_restore
+pg_restore_executed=true
 psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
+supabase_connection_attempted=true
+db_change_performed=true
 post_restore_public_api_health_current=not_checked
 post_restore_public_admin_root_current=not_checked
 post_restore_public_customers_no_auth_current=not_checked
@@ -118,17 +122,17 @@ restricted_actions_remain_no_go=true
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=one_time_dr_restore_retry_execution
-next_loop_requires_new_operator_input=true
+forward_progress_type=human_side_failed_no_retry_result_intake
+next_loop_requires_new_operator_input=false
 ```
 
-The Loop made forward progress by performing the approved local/VPS helper checks and runtime input presence check. It stopped before execution because the required runtime input handoff was not available to Codex.
+The Loop made forward progress by recording the already-completed human-side restore attempt as sanitized `failed_no_retry` metadata. The single allowed attempt has been consumed, and no second execution is allowed.
 
 ## Stop Conditions Applied
 
-- Helper with runtime inputs was not run.
-- `--execute` was not run.
-- Restore was not attempted.
+- A second `--execute` was not run.
+- Retry remained disallowed after the single human-side attempt.
+- Restore retry was recorded as attempted once and failed without retry.
 - No retry was possible or attempted.
 - No production scope was used.
 - No secret, DB URL, artifact detail, raw log, SQL, object name, role name, package name, extension name, LINE identifier, message body, or production log was recorded.
@@ -136,12 +140,12 @@ The Loop made forward progress by performing the approved local/VPS helper check
 ## Next Candidate
 
 ```txt
-next_recommended_loop=Loop 291 operator runtime input execution retry
-next_loop_requires_new_operator_input=true
+next_recommended_loop=Loop 291 DR restore failure diagnosis without retry
+next_loop_requires_new_operator_input=false
 loop_291_auto_progression_allowed=false
 ```
 
-Loop 291 must not start automatically. It requires fresh operator input and review because Loop 290 stopped on missing runtime inputs.
+Loop 291 must not start automatically. It should diagnose the sanitized failed restore outcome without running another restore retry.
 
 ## Verification
 

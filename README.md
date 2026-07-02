@@ -669,7 +669,7 @@ Loop 285 guarded DR restore runtime input injectionでは、local/VPSのguarded 
 
 Loop 286 operator-provided runtime input handoffでは、operator側のruntime input handoffがVPS実行コンテキストに存在するかを値なしbooleanのみで確認しました。runtime input handoffは未提供だったため、helper input preflight、restore retry、pg_restore、psql、Supabase接続、DB変更は未実行です。secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。次は `Loop 287: operator runtime input execution` です。
 
-Loop 290 one-time DR restore retry executionでは、Loop 289のnext-loop-only承認にもとづき、local/VPS helper確認とruntime input presence checkを実施しました。VPS helperは利用可能でしたが、CodexのVPS実行コンテキストにruntime inputsが未提供だったため、helper input preflight、restore retry、pg_restore、psql、Supabase接続、DB変更は未実行でblockedしました。secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。
+Loop 290 one-time DR restore retry executionでは、Loop 289のnext-loop-only承認にもとづくlocal/VPS helper確認後、人間側で実行済みのrestore retry結果をsanitized metadataのみで取り込みました。Codexにはruntime input値を渡さず、DR側結果は `failed_no_retry`、attempt countは1、retry_allowedはfalseのままです。pg_restore実行、Supabase接続、DB変更は人間側sanitized resultとして記録し、Codexは2回目のexecute、restore、pg_restore、psql、Supabase接続、DB変更、Loop 291への自動進行を実行していません。secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。
 
 ## Secrets
 

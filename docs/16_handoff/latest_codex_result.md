@@ -4,7 +4,7 @@
 
 ```txt
 loop=Loop 290 one-time DR restore retry execution
-status=blocked
+status=failed_no_retry
 ```
 
 ## Result
@@ -17,40 +17,43 @@ dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
 anti_proliferation_check=pass
 runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=not_provided
-runtime_input_injection_method=blocked
-restore_target_scope_input_present=false
-restore_confirm_input_present=false
-db_url_input_present=false
-artifact_path_input_present=false
-restore_tool_input_present=false
-psql_allow_input_present=false
-helper_preflight_status=not_run
+runtime_input_handoff_status=operator_side_sanitized_result_only
+runtime_input_injection_method=operator_side_only
+operator_side_runtime_inputs_used=true
+restore_target_scope_input_present=not_recorded_operator_side
+restore_confirm_input_present=not_recorded_operator_side
+db_url_input_present=not_recorded_operator_side
+artifact_path_input_present=not_recorded_operator_side
+restore_tool_input_present=not_recorded_operator_side
+psql_allow_input_present=not_recorded_operator_side
+helper_preflight_status=pass_operator_side_sanitized
 temporary_codex_direct_restore_execution_override_used=false
 ssh_access_available=true
 vps_working_directory_available=true
 vps_helper_available=true
 vps_helper_bash_validation_status=pass
 vps_helper_no_input_preflight_status=blocked_safely
-restore_target_scope_confirmed=false
-restore_target_scope_category=unknown
-operator_secret_context_available=false
-operator_artifact_context_available=false
-artifact_exists=not_checked
-artifact_nonempty=not_checked
-restore_tool_selected=none
-operator_side_restore_retry_execution_status=not_attempted
-restore_retry_attempt_count=0
-restore_retry_success=not_attempted
-failure_reason=runtime_inputs_not_provided_by_operator
+restore_target_scope_confirmed=true_operator_side_sanitized
+restore_target_scope_category=dr_validation_target
+operator_secret_context_available=operator_side_only
+operator_artifact_context_available=operator_side_only
+artifact_exists=not_recorded
+artifact_nonempty=not_recorded
+restore_tool_selected=pg_restore
+operator_side_restore_retry_execution_status=failed_no_retry
+restore_retry_attempted=true
+restore_retry_attempt_count=1
+restore_retry_success=false
+failure_reason=sanitized_restore_failed
 restore_retry_retry_executed=false
-pg_restore_executed=false
+retry_allowed=false
+pg_restore_executed=true
 psql_executed=false
-supabase_connection_attempted=false
+supabase_connection_attempted=true
 production_db_connection_executed=false
-db_change_performed=false
+db_change_performed=true
 api_service_active=true
-next_loop_requires_new_operator_input=true
+next_loop_requires_new_operator_input=false
 ```
 
 ## Safety
@@ -79,6 +82,6 @@ apt_package_operation_executed=false
 ## Next Action
 
 ```txt
-next_recommended_loop=Loop 291 operator runtime input execution retry
+next_recommended_loop=Loop 291 DR restore failure diagnosis without retry
 loop_291_auto_progression_allowed=false
 ```
