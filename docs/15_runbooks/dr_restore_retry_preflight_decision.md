@@ -551,3 +551,41 @@ next_loop_requires_new_operator_input=true
 ```
 
 No allowed category was selected by a human/operator, so no remediation direction can be chosen safely. The next step requires an operator-provided sanitized category from the allowed set.
+
+## Loop 293 Sanitized Category Accepted
+
+```txt
+loop_293_status=complete
+human_operator_sanitized_failure_category_intake=true
+sanitized_failure_category_provided_by_operator=true
+operator_sanitized_failure_category_found=true
+operator_sanitized_failure_category_allowed=true
+operator_sanitized_failure_category_intake_status=accepted
+operator_sanitized_failure_category=schema_or_object_conflict_category
+operator_sanitized_failure_evidence_level=dashboard_log_category_only
+operator_raw_log_shared=false
+sanitized_failure_category=schema_or_object_conflict_category
+next_remediation_direction=sanitized_schema_conflict_plan_without_db_change
+diagnosis_without_retry=true
+loop_290_status=failed_no_retry
+loop_291_status=complete
+loop_292_status=blocked
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+second_restore_attempt_executed=false
+raw_log_accessed=false
+raw_log_recorded=false
+secret_accessed=false
+db_url_accessed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_requires_new_operator_input=false
+```
+
+The next remediation direction is a category-only plan without DB changes or restore retry.

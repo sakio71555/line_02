@@ -33,6 +33,58 @@ forward_progress_type=operator_side_restore_execution_followup
 next_loop_requires_new_operator_input=true
 ```
 
+## Loop 293 Sanitized Failure Category Intake and Remediation Direction
+
+Loop 293 accepted the operator-provided category-only failure classification and selected the next remediation direction without executing remediation.
+
+```txt
+loop_293_status=complete
+human_operator_sanitized_failure_category_intake=true
+sanitized_failure_category_provided_by_operator=true
+operator_sanitized_failure_category_found=true
+operator_sanitized_failure_category_allowed=true
+operator_sanitized_failure_category_intake_status=accepted
+operator_sanitized_failure_category=schema_or_object_conflict_category
+operator_sanitized_failure_evidence_level=dashboard_log_category_only
+operator_raw_log_shared=false
+sanitized_failure_category=schema_or_object_conflict_category
+next_remediation_direction=sanitized_schema_conflict_plan_without_db_change
+diagnosis_without_retry=true
+loop_290_status=failed_no_retry
+loop_291_status=complete
+loop_292_status=blocked
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+second_restore_attempt_executed=false
+pg_restore_executed_in_loop_293=false
+psql_executed_in_loop_293=false
+supabase_connection_attempted_in_loop_293=false
+db_change_performed_in_loop_293=false
+raw_log_accessed=false
+raw_log_recorded=false
+secret_accessed=false
+db_url_accessed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+artifact_hash_recorded=false
+artifact_exact_size_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+anti_proliferation_check=pass
+forward_progress_type=sanitized_failure_category_acceptance_and_remediation_direction
+next_loop_requires_new_operator_input=false
+```
+
 Loop 278 is forward progress because it turns the Loop 277 `not_attempted` result into a concrete operator-side execution approval decision boundary.
 
 ## Followup Decision

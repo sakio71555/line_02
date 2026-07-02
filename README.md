@@ -675,6 +675,8 @@ Loop 291 DR restore failure diagnosis without retryでは、Loop 290の `failed_
 
 Loop 292 human/operator sanitized failure category intakeでは、Loop 291のlimited diagnosisを受けて、人間/運用者が選択したsanitized failure categoryが提示されているかを確認しました。今回の入力にはallowed categoryの例示はありますが、実際のoperator-selected categoryは未提供だったため、`loop_292_status=blocked` / `operator_sanitized_failure_category_intake_status=blocked_not_provided` として停止しました。原因推測、remediation選択、restore retry、pg_restore restore、psql、Supabase接続、DB変更、VPS操作は行っていません。次はcategory-onlyの人間入力が必要です。
 
+Loop 293 sanitized failure category intake and remediation directionでは、人間/運用者から提供されたcategory-only情報を受け付け、`operator_sanitized_failure_category_intake_status=accepted` として記録しました。カテゴリは `schema_or_object_conflict_category`、証跡レベルは `dashboard_log_category_only`、raw log共有はfalseです。次の方向性は `sanitized_schema_conflict_plan_without_db_change` とし、remediation実行、restore retry、pg_restore restore、psql、Supabase接続、DB変更、VPS操作は行っていません。production Goは維持し、DR readinessは `not_ready_restore_failed` のままです。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

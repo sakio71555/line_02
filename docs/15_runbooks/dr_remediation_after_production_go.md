@@ -18,6 +18,32 @@ post_go_monitoring_status=pass
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 293 Sanitized Category Accepted
+
+Loop 293 accepted the operator-provided sanitized category and selected a category-only remediation direction. No remediation action was executed.
+
+```txt
+loop_293_status=complete
+human_operator_sanitized_failure_category_intake=true
+sanitized_failure_category_provided_by_operator=true
+operator_sanitized_failure_category_found=true
+operator_sanitized_failure_category_allowed=true
+operator_sanitized_failure_category_intake_status=accepted
+sanitized_failure_category=schema_or_object_conflict_category
+operator_sanitized_failure_evidence_level=dashboard_log_category_only
+operator_raw_log_shared=false
+next_remediation_direction=sanitized_schema_conflict_plan_without_db_change
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+second_restore_attempt_executed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
 ## Loop 292 Sanitized Category Intake Blocked
 
 Loop 292 attempted to intake a human/operator sanitized failure category for the Loop 290 failed restore result. No operator-selected category was provided, so remediation planning remains blocked without retry.

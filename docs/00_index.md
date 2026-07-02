@@ -128,6 +128,7 @@
 - Loop 290 one-time DR restore retry execution: `11_codex_tasks/290_one_time_dr_restore_retry_execution.md`
 - Loop 291 DR restore failure diagnosis without retry: `11_codex_tasks/291_dr_restore_failure_diagnosis_without_retry.md`
 - Loop 292 human/operator sanitized failure category intake: `11_codex_tasks/292_human_operator_sanitized_failure_category_intake.md`
+- Loop 293 sanitized failure category intake and remediation direction: `11_codex_tasks/293_sanitized_failure_category_intake_and_remediation_direction.md`
 
 ## Prompts and Templates
 
