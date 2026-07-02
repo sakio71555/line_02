@@ -679,3 +679,33 @@ restricted_actions_remain_no_go=true
 ```
 
 The next Loop must not retry automatically. It may only intake operator-side execution results or refreshed runtime input confirmation.
+
+## Loop 297 Operator-Side Failed Result Intake
+
+```txt
+loop_297_status=complete
+operator_side_fresh_restore_result_intake=true
+loop_296_human_side_execution_status=failed_no_retry
+helper_preflight_status=pass
+restore_target_scope_confirmed=true
+restore_target_scope_category=dr_validation_target
+restore_tool_selected=pg_restore
+restore_retry_attempt_limit=1
+retry_allowed=false
+stop_on_first_failure=true
+restore_attempt_count_fresh_target=1
+restore_success_fresh_target=false
+failure_reason=sanitized_restore_failed
+restore_retry_retry_executed=false
+second_restore_attempt_executed=false
+pg_restore_executed=true
+psql_executed=false
+supabase_connection_attempted=true
+db_change_performed=true
+operator_side_restore_execution_status=failed_no_retry
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+The next Loop must diagnose the fresh target failed result without retry.

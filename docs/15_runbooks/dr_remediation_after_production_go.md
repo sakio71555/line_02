@@ -170,6 +170,40 @@ next_loop_candidate=Loop 297: operator-side fresh DR restore execution result in
 loop_297_auto_progression_allowed=false
 ```
 
+## Loop 297 Fresh Target Failed Result Intake
+
+Loop 297 records the operator-side one-attempt fresh target execution result as failed with no retry.
+
+```txt
+loop_297_status=complete
+operator_side_fresh_restore_result_intake=true
+loop_296_human_side_execution_status=failed_no_retry
+restore_attempt_count_fresh_target=1
+restore_success_fresh_target=false
+failure_reason=sanitized_restore_failed
+retry_allowed=false
+second_restore_attempt_executed=false
+pg_restore_executed=true
+psql_executed=false
+supabase_connection_attempted=true
+db_change_performed=true
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+```txt
+next_loop_candidate=Loop 298 fresh DR restore failure diagnosis without retry
+loop_298_auto_progression_allowed=false
+```
+
 ## Loop 292 Sanitized Category Intake Blocked
 
 Loop 292 attempted to intake a human/operator sanitized failure category for the Loop 290 failed restore result. No operator-selected category was provided, so remediation planning remains blocked without retry.

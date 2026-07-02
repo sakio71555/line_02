@@ -683,6 +683,8 @@ Loop 295 fresh DR validation target restore preflight approval packageでは、L
 
 Loop 296 fresh DR validation target one-time restore executionでは、fresh targetのoperator確認を受けて実行前提を確認しましたが、runtime inputsがCodex実行コンテキストに無かったため `loop_296_status=blocked` として停止しました。helper preflight、helper execute、restore、pg_restore、psql、Supabase接続、DB変更は行っていません。既存の空ロックはrestore関連プロセスなしを確認した上でstale cleanup済みです。production Goは維持し、DR readinessは `not_ready_restore_failed` のままです。
 
+Loop 297 operator-side fresh DR restore execution result intakeでは、人間側で実施されたfresh DR validation targetへの1回限りrestore結果をsanitized metadataとして取り込みました。結果は `failed_no_retry`、attempt countは1、successはfalse、failure reasonは `sanitized_restore_failed` です。pg_restore実行、Supabase接続、DB変更はhuman-side sanitized resultとして記録し、Codexはrestore再実行、helper実行、psql、Supabase接続、DB変更、raw log確認を行っていません。production Goは維持し、DR readinessは `not_ready_restore_failed` のままです。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

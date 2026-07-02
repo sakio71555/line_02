@@ -3,8 +3,8 @@
 ## Loop
 
 ```txt
-loop=Loop 296 fresh DR validation target one-time restore execution
-status=blocked
+loop=Loop 297 operator-side fresh DR restore execution result intake
+status=complete
 ```
 
 ## Result
@@ -12,56 +12,32 @@ status=blocked
 ```txt
 loop_295_status=complete
 loop_296_status=blocked
+loop_297_status=complete
+operator_side_fresh_restore_result_intake=true
+loop_296_human_side_execution_status=failed_no_retry
 fresh_target_operator_confirmation_complete=true
-fresh_project_deleted_and_recreated=true
-fresh_project_name_category=dr_validation_target
-fresh_project_status=Healthy
-fresh_project_is_production=false
-fresh_project_is_clean=true
-fresh_project_can_be_overwritten=true
-connection_string_obtained=true
-connection_string_belongs_to_fresh_dr_target=not_checked
-connection_string_not_production=not_checked
-runtime_inputs_available_to_execution_context=false
-runtime_input_handoff_status=not_provided
-runtime_input_injection_method=blocked
-restore_target_scope_input_present=false
-restore_confirm_input_present=false
-db_url_input_present=false
-artifact_path_input_present=false
-restore_tool_input_present=false
-psql_allow_input_present=false
-vps_helper_available=true
-vps_helper_bash_validation_status=pass
-pg_restore_available=true
-pg_restore_running=false
-psql_running=false
-attempt_lock_exists=true
-attempt_lock_state=removed_stale_empty
-attempt_lock_removed=true
-artifact_candidate_available=false
-artifact_exists=false
-artifact_nonempty=false
-helper_preflight_status=not_run
-temporary_codex_direct_restore_execution_override_used=false
-restore_target_scope_confirmed=false
-restore_target_scope_category=unknown
-operator_secret_context_available=false
-operator_artifact_context_available=false
-restore_tool_selected=none
-operator_side_restore_execution_status=not_attempted
-restore_attempt_count_fresh_target=0
-restore_success_fresh_target=not_attempted
-failure_reason=runtime_inputs_not_provided_to_execution_context
+helper_preflight_status=pass
+restore_target_scope_confirmed=true
+restore_target_scope_category=dr_validation_target
+operator_secret_context_available=true
+operator_artifact_context_available=true
+artifact_exists=true
+artifact_nonempty=true
+restore_tool_selected=pg_restore
+restore_retry_attempt_limit=1
+retry_allowed=false
+stop_on_first_failure=true
+restore_retry_attempted=true
+restore_attempt_count_fresh_target=1
+restore_success_fresh_target=false
+failure_reason=sanitized_restore_failed
 restore_retry_retry_executed=false
-pg_restore_executed=false
+second_restore_attempt_executed=false
+pg_restore_executed=true
 psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
-post_restore_public_api_health_current=not_checked
-post_restore_public_admin_root_current=not_checked
-post_restore_public_customers_no_auth_current=not_checked
-api_service_active=not_checked
+supabase_connection_attempted=true
+db_change_performed=true
+operator_side_restore_execution_status=failed_no_retry
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
@@ -70,12 +46,26 @@ dr_risk_acceptance_status=accepted_with_known_risk
 production_restore_allowed=false
 ```
 
+## Codex Execution Boundary
+
+```txt
+restore_executed_in_loop_297=false
+helper_preflight_executed_in_loop_297=false
+helper_execute_executed_in_loop_297=false
+pg_restore_executed_in_loop_297=false
+psql_executed_in_loop_297=false
+supabase_connection_attempted_in_loop_297=false
+db_change_performed_in_loop_297=false
+vps_operation_executed_in_loop_297=false
+```
+
 ## Safety
 
 ```txt
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
+password_recorded=false
 artifact_path_recorded=false
 artifact_filename_recorded=false
 artifact_content_recorded=false
@@ -84,10 +74,14 @@ artifact_exact_size_recorded=false
 sql_recorded=false
 db_object_recorded=false
 role_recorded=false
+schema_name_recorded=false
+table_name_recorded=false
+relation_name_recorded=false
 package_name_recorded=false
 extension_name_recorded=false
 host_or_url_recorded=false
 project_ref_recorded=false
+sqlstate_recorded=false
 restricted_actions_remain_no_go=true
 ```
 
@@ -97,13 +91,13 @@ restricted_actions_remain_no_go=true
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=fresh_dr_validation_target_one_time_restore_execution
+forward_progress_type=operator_side_fresh_restore_execution_result_intake
 next_loop_requires_new_operator_input=true
 ```
 
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 297: operator-side fresh DR restore execution result intake
-loop_297_auto_progression_allowed=false
+next_loop_candidate=Loop 298 fresh DR restore failure diagnosis without retry
+loop_298_auto_progression_allowed=false
 ```

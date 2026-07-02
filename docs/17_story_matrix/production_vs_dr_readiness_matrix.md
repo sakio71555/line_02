@@ -1527,3 +1527,31 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 297: operator-side fresh DR restore execution result intake
 ```
+
+## Loop 297 Operator-Side Fresh DR Restore Execution Result Intake
+
+```txt
+loop_297_status=complete
+operator_side_fresh_restore_result_intake=true
+loop_296_human_side_execution_status=failed_no_retry
+helper_preflight_status=pass
+restore_target_scope_category=dr_validation_target
+restore_retry_attempt_limit=1
+retry_allowed=false
+restore_retry_attempted=true
+restore_attempt_count_fresh_target=1
+restore_success_fresh_target=false
+failure_reason=sanitized_restore_failed
+second_restore_attempt_executed=false
+pg_restore_executed=true
+psql_executed=false
+supabase_connection_attempted=true
+db_change_performed=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+production_restore_allowed=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 298 fresh DR restore failure diagnosis without retry
+```

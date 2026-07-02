@@ -132,6 +132,7 @@
 - Loop 294 schema conflict remediation execution package without DB change: `11_codex_tasks/294_schema_conflict_remediation_execution_package_without_db_change.md`
 - Loop 295 fresh DR validation target restore preflight approval package: `11_codex_tasks/295_fresh_dr_validation_target_restore_preflight_approval_package.md`
 - Loop 296 fresh DR validation target one-time restore execution: `11_codex_tasks/296_fresh_dr_validation_target_one_time_restore_execution.md`
+- Loop 297 operator-side fresh DR restore execution result intake: `11_codex_tasks/297_operator_side_fresh_dr_restore_execution_result_intake.md`
 
 ## Prompts and Templates
 

@@ -2099,6 +2099,44 @@ supabase_connection_attempted=false
 db_change_performed=false
 ```
 
+## Loop 297 Verification Note
+
+```txt
+loop_297_status=complete
+operator_side_fresh_restore_result_intake=true
+loop_296_human_side_execution_status=failed_no_retry
+restore_attempt_count_fresh_target=1
+restore_success_fresh_target=false
+retry_allowed=false
+second_restore_attempt_executed=false
+pg_restore_executed=true
+psql_executed=false
+supabase_connection_attempted=true
+db_change_performed=true
+restore_executed_in_loop_297=false
+helper_preflight_executed_in_loop_297=false
+helper_execute_executed_in_loop_297=false
+pg_restore_executed_in_loop_297=false
+psql_executed_in_loop_297=false
+supabase_connection_attempted_in_loop_297=false
+db_change_performed_in_loop_297=false
+vps_operation_executed_in_loop_297=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+production_go=true
+dr_readiness_status=not_ready_restore_failed
+git_diff_check=pass
+local_helper_bash_validation_status=pass
+docs_link_check=pass
+secret_artifact_value_check=pass
+lint=pass
+typecheck=not_run_result_intake_only
+test=not_run_result_intake_only
+```
+
 ## Loop 286 Verification Note
 
 ```txt
