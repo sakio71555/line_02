@@ -383,3 +383,34 @@ dr_readiness_status=not_ready_restore_failed
 dr_restore_validation_status=paused_waiting_for_operator_runtime_input
 next_action=wait_for_operator_to_provide_runtime_input
 ```
+
+## Loop 288 Result
+
+```txt
+loop_288_status=complete
+helper_preflight_status=pass
+restore_target_scope_confirmed=true
+restore_target_scope_category=dr_validation_target
+operator_secret_context_available=true
+operator_artifact_context_available=true
+artifact_exists=true
+artifact_nonempty=true
+restore_tool_selected=pg_restore
+restore_retry_attempt_limit=1
+retry_allowed=false
+stop_on_first_failure=true
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=sanitized_result_only
+restore_retry_attempted=false
+restore_retry_success=not_attempted
+failure_reason=none
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+dr_readiness_status=not_ready_restore_failed
+dr_restore_validation_status=preflight_pass_waiting_for_operator_execution_decision
+next_action=operator_approval_decision_for_restore_execution
+```
+
+Loop 288 does not execute restore. The preflight result only proves that the operator-side helper preflight can pass when runtime input values exist in the operator-side shell.

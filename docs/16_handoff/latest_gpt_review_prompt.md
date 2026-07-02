@@ -17,13 +17,14 @@
 ## Review Target
 
 ```txt
-loop=Loop 287 operator runtime input readiness gate
-status=blocked
-blocked_reason=operator_runtime_input_still_not_provided
+loop=Loop 288 operator-side runtime input helper preflight result intake
+status=complete
 runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=still_not_provided
-helper_preflight_status=not_run
-restore_retry_attempt_count=0
+runtime_input_handoff_status=sanitized_result_only
+helper_preflight_status=pass
+restore_target_scope_confirmed=true
+restore_target_scope_category=dr_validation_target
+restore_retry_attempted=false
 restore_retry_success=not_attempted
 pg_restore_executed=false
 psql_executed=false
@@ -32,9 +33,9 @@ db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_readiness_status=not_ready_restore_failed
-dr_restore_validation_status=paused_waiting_for_operator_runtime_input
-next_action=wait_for_operator_to_provide_runtime_input
-human_input_required=true
+dr_restore_validation_status=preflight_pass_waiting_for_operator_execution_decision
+next_action=operator_approval_decision_for_restore_execution
+loop_289_auto_progression_allowed=false
 ```
 
 ## Safety Boundary
@@ -47,6 +48,8 @@ raw_log_recorded=false
 artifact_path_recorded=false
 artifact_filename_recorded=false
 artifact_content_recorded=false
+artifact_hash_recorded=false
+artifact_exact_size_recorded=false
 sql_recorded=false
 db_object_recorded=false
 role_recorded=false

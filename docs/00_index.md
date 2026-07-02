@@ -123,6 +123,7 @@
 - Loop 285 guarded DR restore runtime input injection: `11_codex_tasks/285_guarded_dr_restore_runtime_input_injection.md`
 - Loop 286 operator-provided runtime input handoff: `11_codex_tasks/286_operator_provided_runtime_input_handoff.md`
 - Loop 287 operator runtime input readiness gate: `11_codex_tasks/287_operator_runtime_input_readiness_gate.md`
+- Loop 288 operator runtime input preflight result intake: `11_codex_tasks/288_operator_runtime_input_preflight_result_intake.md`
 
 ## Prompts and Templates
 
