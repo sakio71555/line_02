@@ -417,3 +417,32 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 ```
+
+## Loop 291 Current DR Diagnosis
+
+Loop 291 records the current post-Go DR state after the single approved restore retry was consumed and failed without retry. Diagnosis stayed read-only and sanitized.
+
+```txt
+loop_291_status=complete
+loop_290_status=failed_no_retry
+diagnosis_without_retry=true
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+second_restore_attempt_executed=false
+sanitized_restore_failure_diagnosis_status=limited
+likely_failure_domain=restore_target_compatibility_or_permission_unknown
+raw_log_needed_for_exact_cause=true
+artifact_readability_checked_sanitized=true
+archive_list_status=pass
+raw_log_accessed=false
+secret_accessed=false
+db_url_accessed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```

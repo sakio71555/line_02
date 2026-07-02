@@ -17,42 +17,49 @@
 ## Review Target
 
 ```txt
-loop=Loop 290 one-time DR restore retry execution
-status=failed_no_retry
-failure_reason=sanitized_restore_failed
-anti_proliferation_check=pass
-runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=operator_side_sanitized_result_only
-runtime_input_injection_method=operator_side_only
-helper_preflight_status=pass_operator_side_sanitized
-vps_helper_available=true
-vps_helper_bash_validation_status=pass
-vps_helper_no_input_preflight_status=blocked_safely
-restore_target_scope_input_present=not_recorded_operator_side
-restore_confirm_input_present=not_recorded_operator_side
-db_url_input_present=not_recorded_operator_side
-artifact_path_input_present=not_recorded_operator_side
-restore_tool_input_present=not_recorded_operator_side
-psql_allow_input_present=not_recorded_operator_side
-restore_retry_attempted=true
+loop=Loop 291 DR restore failure diagnosis without retry
+status=complete
+diagnosis_without_retry=true
+loop_290_status=failed_no_retry
 restore_retry_attempt_count=1
 restore_retry_success=false
 retry_allowed=false
-pg_restore_executed=true
-psql_executed=false
-supabase_connection_attempted=true
-db_change_performed=true
+second_restore_attempt_executed=false
+helper_failure_taxonomy_reviewed=true
+helper_failure_taxonomy_current=sanitized_restore_failed_only
+helper_exact_failure_cause_available_without_raw_log=false
+artifact_readability_checked_sanitized=true
+archive_list_status=pass
+sanitized_restore_failure_diagnosis_status=limited
+likely_failure_domain=restore_target_compatibility_or_permission_unknown
+raw_log_needed_for_exact_cause=true
+raw_log_accessed=false
+secret_accessed=false
+db_url_accessed=false
+pg_restore_version_checked=true
+pg_restore_running=false
+psql_running=false
+attempt_lock_exists=true
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_readiness_status=not_ready_restore_failed
-next_recommended_loop=Loop 291 DR restore failure diagnosis without retry
-next_loop_requires_new_operator_input=false
-loop_291_auto_progression_allowed=false
+anti_proliferation_check=pass
+next_recommended_loop=Loop 292 human/operator sanitized failure category intake
+next_loop_requires_new_operator_input=true
+loop_292_auto_progression_allowed=false
 ```
 
 ## Safety Boundary
 
 ```txt
+restore_executed=false
+pg_restore_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+production_db_connection_executed=false
+db_change_performed=false
+helper_preflight_executed=false
+helper_execute_executed=false
 secret_recorded=false
 db_url_recorded=false
 password_recorded=false

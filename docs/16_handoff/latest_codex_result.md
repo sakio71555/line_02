@@ -3,8 +3,8 @@
 ## Loop
 
 ```txt
-loop=Loop 290 one-time DR restore retry execution
-status=failed_no_retry
+loop=Loop 291 DR restore failure diagnosis without retry
+status=complete
 ```
 
 ## Result
@@ -16,49 +16,43 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
 anti_proliferation_check=pass
-runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=operator_side_sanitized_result_only
-runtime_input_injection_method=operator_side_only
-operator_side_runtime_inputs_used=true
-restore_target_scope_input_present=not_recorded_operator_side
-restore_confirm_input_present=not_recorded_operator_side
-db_url_input_present=not_recorded_operator_side
-artifact_path_input_present=not_recorded_operator_side
-restore_tool_input_present=not_recorded_operator_side
-psql_allow_input_present=not_recorded_operator_side
-helper_preflight_status=pass_operator_side_sanitized
-temporary_codex_direct_restore_execution_override_used=false
-ssh_access_available=true
-vps_working_directory_available=true
-vps_helper_available=true
-vps_helper_bash_validation_status=pass
-vps_helper_no_input_preflight_status=blocked_safely
-restore_target_scope_confirmed=true_operator_side_sanitized
-restore_target_scope_category=dr_validation_target
-operator_secret_context_available=operator_side_only
-operator_artifact_context_available=operator_side_only
-artifact_exists=not_recorded
-artifact_nonempty=not_recorded
-restore_tool_selected=pg_restore
-operator_side_restore_retry_execution_status=failed_no_retry
-restore_retry_attempted=true
+is_this_loop_proliferation_risk=false
+proliferation_reason=none
+forward_progress_type=dr_restore_failure_diagnosis_without_retry
+diagnosis_without_retry=true
+loop_290_status=failed_no_retry
 restore_retry_attempt_count=1
 restore_retry_success=false
-failure_reason=sanitized_restore_failed
-restore_retry_retry_executed=false
 retry_allowed=false
-pg_restore_executed=true
-psql_executed=false
-supabase_connection_attempted=true
-production_db_connection_executed=false
-db_change_performed=true
+second_restore_attempt_executed=false
+helper_failure_taxonomy_reviewed=true
+helper_failure_taxonomy_current=sanitized_restore_failed_only
+helper_raw_output_suppressed=true
+helper_exact_failure_cause_available_without_raw_log=false
+artifact_readability_checked_sanitized=true
+archive_list_status=pass
+sanitized_restore_failure_diagnosis_status=limited
+likely_failure_domain=restore_target_compatibility_or_permission_unknown
+raw_log_needed_for_exact_cause=true
+pg_restore_version_checked=true
+pg_restore_running=false
+psql_running=false
+attempt_lock_exists=true
 api_service_active=true
-next_loop_requires_new_operator_input=false
+next_loop_requires_new_operator_input=true
 ```
 
 ## Safety
 
 ```txt
+restore_executed=false
+pg_restore_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+production_db_connection_executed=false
+db_change_performed=false
+helper_preflight_executed=false
+helper_execute_executed=false
 secret_recorded=false
 db_url_recorded=false
 password_recorded=false
@@ -77,11 +71,12 @@ line_send_executed=false
 openai_api_executed=false
 nginx_dns_https_certbot_changed=false
 apt_package_operation_executed=false
+restricted_actions_remain_no_go=true
 ```
 
 ## Next Action
 
 ```txt
-next_recommended_loop=Loop 291 DR restore failure diagnosis without retry
-loop_291_auto_progression_allowed=false
+next_recommended_loop=Loop 292 human/operator sanitized failure category intake
+loop_292_auto_progression_allowed=false
 ```

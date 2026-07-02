@@ -2128,6 +2128,35 @@ artifact_path_recorded=false
 artifact_filename_recorded=false
 ```
 
+## Loop 291 Verification Note
+
+```txt
+git_status_initial=clean
+local_helper_bash_validation=pass
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+pg_restore_available=true
+pg_restore_version_checked=true
+pg_restore_running=false
+psql_running=false
+attempt_lock_exists=true
+api_service_active=true
+artifact_readability_checked_sanitized=true
+archive_list_status=pass
+restore_executed=false
+pg_restore_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+raw_log_accessed=false
+secret_accessed=false
+db_url_accessed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+sanitized_restore_failure_diagnosis_status=limited
+likely_failure_domain=restore_target_compatibility_or_permission_unknown
+```
+
 ## Loop 290 Verification Note
 
 ```txt

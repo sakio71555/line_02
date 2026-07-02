@@ -472,3 +472,48 @@ next_loop_requires_new_operator_input=false
 ```
 
 Loop 290 has one human-side restore retry result recorded as sanitized `failed_no_retry` metadata. The next step must not run another restore retry and should be limited to failure diagnosis without secret, artifact, raw log, or DB URL disclosure.
+
+## Loop 291 Diagnosis Result
+
+```txt
+loop_291_status=complete
+diagnosis_without_retry=true
+loop_290_status=failed_no_retry
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+second_restore_attempt_executed=false
+pg_restore_executed_in_loop_291=false
+psql_executed_in_loop_291=false
+supabase_connection_attempted_in_loop_291=false
+db_change_performed_in_loop_291=false
+helper_failure_taxonomy_reviewed=true
+helper_failure_taxonomy_current=sanitized_restore_failed_only
+helper_exact_failure_cause_available_without_raw_log=false
+artifact_readability_checked_sanitized=true
+archive_list_status=pass
+sanitized_restore_failure_diagnosis_status=limited
+likely_failure_domain=restore_target_compatibility_or_permission_unknown
+raw_log_needed_for_exact_cause=true
+raw_log_accessed=false
+secret_accessed=false
+db_url_accessed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+artifact_hash_recorded=false
+artifact_exact_size_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_requires_new_operator_input=true
+```
+
+Loop 291 confirmed that the archive is list-readable and the helper/tooling path is available, but the helper's execution-failure taxonomy remains intentionally sanitized. Exact root cause cannot be obtained without raw restore output or protected detail disclosure, so DR readiness remains not ready and no retry is allowed.

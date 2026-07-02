@@ -547,3 +547,53 @@ next_loop_requires_new_operator_input=false
 ```
 
 The single allowed restore retry attempt has already been consumed on the human side and failed without retry. Loop 291 must not start automatically; it should be limited to DR restore failure diagnosis without retry.
+
+## Loop 291 DR Restore Failure Diagnosis Without Retry
+
+Loop 291 diagnosed the Loop 290 `failed_no_retry` result without running another restore retry. The diagnosis remained sanitized and read-only: helper taxonomy was reviewed, VPS helper/tool/process/lock/service state was checked, and archive list readability was checked with output discarded.
+
+```txt
+loop_291_status=complete
+diagnosis_without_retry=true
+loop_290_status=failed_no_retry
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+second_restore_attempt_executed=false
+pg_restore_executed_in_loop_291=false
+psql_executed_in_loop_291=false
+supabase_connection_attempted_in_loop_291=false
+db_change_performed_in_loop_291=false
+helper_failure_taxonomy_reviewed=true
+helper_failure_taxonomy_current=sanitized_restore_failed_only
+helper_raw_output_suppressed=true
+helper_exact_failure_cause_available_without_raw_log=false
+artifact_readability_checked_sanitized=true
+archive_list_status=pass
+sanitized_restore_failure_diagnosis_status=limited
+likely_failure_domain=restore_target_compatibility_or_permission_unknown
+raw_log_needed_for_exact_cause=true
+raw_log_accessed=false
+secret_accessed=false
+db_url_accessed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+artifact_hash_recorded=false
+artifact_exact_size_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+anti_proliferation_check=pass
+forward_progress_type=dr_restore_failure_diagnosis_without_retry
+next_loop_requires_new_operator_input=true
+```
+
+The archive is readable and restore tooling is present, but the helper intentionally suppresses raw restore output and only reports `sanitized_restore_failed` on unsuccessful execution. The exact cause therefore requires separate human/operator sanitized review; no retry is allowed.
