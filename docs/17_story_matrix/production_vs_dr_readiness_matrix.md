@@ -1952,3 +1952,44 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 309: operator-side LINE canary execution result intake
 ```
+
+## Loop 309 LINE Real Send Disable Safety Reset
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Unexpected enabled state | `detected_and_resolved` | Loop 308 enabled baseline was rechecked and disabled in Loop 309. |
+| Runtime config | `line_real_send_disable_only` | The only runtime config change was the real-send disable. |
+| Service restart | `api_only` | API app service restart was required and passed; Admin restart was not required. |
+| Send attempt | `not_attempted` | No canary send, retry, bulk, multicast, or broadcast was executed. |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| DR restore route | `frozen_known_risk` | Not part of this Loop. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `operator_side_line_canary_with_hidden_inputs` | Single next Loop candidate is Loop 310. |
+
+```txt
+loop_309_status=complete
+line_real_send_unexpected_enabled_detected=true
+line_real_send_disable_decision=approved
+line_real_send_disable_status=disabled_successfully
+line_real_send_disable_attempted=true
+line_real_send_disabled_after_loop=true
+line_real_send_currently_enabled_after_loop=false
+runtime_config_changed_in_loop_309=true
+runtime_config_change_scope=line_real_send_disable_only
+api_app_service_restart_executed=true
+admin_app_service_restart_executed=false
+post_disable_smoke_status=pass
+line_canary_send_attempted_in_loop_309=false
+line_real_send_executed_in_loop_309=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 310: operator-side LINE canary execution with hidden inputs
+```

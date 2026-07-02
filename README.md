@@ -709,6 +709,8 @@ Loop 307 controlled LINE real send canary activationでは、1通限定LINE cana
 
 Loop 308 LINE canary blocker remediationでは、Loop 307のmissing input blockerをoperator-side hidden-input packageへ変換し、sanitized result-intake templateを作成しました。ただしread-only baselineでrunning processのreal-send enabled状態が検出されたため、script delivery、runtime変更、service restart、LINE送信は行わずblockedとして停止しました。Production Goは `line_api_admin_current_runtime` のまま、DR restore routeは `frozen_known_risk` のままです。詳細は [Loop 308 task doc](docs/11_codex_tasks/308_line_canary_blocker_remediation_and_operator_package.md) を参照してください。
 
+Loop 309 unexpected LINE real send disable and safety resetでは、Loop 308で見つかったunexpected enabled stateを、LINE送信なしでdisabledへ戻しました。approved helperを値なしで実行し、API app serviceだけをrestart、post-disable smokeはpassです。LINE canary送信、retry/bulk/multicast/broadcast、OpenAI API、DB/Supabase/restore、Nginx/DNS/HTTPS/certbotは行っていません。Production Goは `line_api_admin_current_runtime`、DR restore routeは `frozen_known_risk` を維持しています。詳細は [Loop 309 task doc](docs/11_codex_tasks/309_unexpected_line_real_send_disable_and_safety_reset.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

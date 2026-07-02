@@ -132,6 +132,32 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 309 LINE Real Send Safety Reset
+
+```txt
+loop_309_status=complete
+line_real_send_unexpected_enabled_detected=true
+line_real_send_disable_status=disabled_successfully
+line_real_send_currently_enabled_after_loop=false
+line_real_send_disabled_after_loop=true
+runtime_config_change_scope=line_real_send_disable_only
+api_app_service_restart_executed=true
+admin_app_service_restart_executed=false
+post_disable_smoke_status=pass
+line_canary_send_attempted_in_loop_309=false
+line_real_send_executed_in_loop_309=false
+openai_api_executed=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Loop 309 reset the unexpected LINE real-send enabled state before canary execution. No LINE canary send, OpenAI API execution, production DB/Supabase operation, DR restore work, or infrastructure change was performed. Production remains scope-limited Go, and DR remains not ready with the restore route frozen as a known risk.
+
 ## Loop 305 Production Runtime Rollout
 
 ```txt

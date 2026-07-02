@@ -524,3 +524,45 @@ Operational meaning:
 - Future result intake must be sanitized only and must not include protected values, identifiers, bodies, raw responses, endpoint values, or logs.
 - The next attempt must provide the canary recipient and canary message only in the execution context, never in docs, handoff, final reports, or commit messages.
 - The next attempt must still be one send only, no retry, no bulk/multicast/broadcast, no OpenAI API call, and must disable real send after the attempt if it ever enables the runtime flag.
+
+## Loop 309 LINE Real Send Disable Safety Reset
+
+Loop 309 resolves the Loop 308 unexpected runtime enabled state before any canary execution.
+
+```txt
+loop_309_status=complete
+line_real_send_unexpected_enabled_detected=true
+line_real_send_disable_decision=approved
+line_real_send_disable_status=disabled_successfully
+line_real_send_disable_attempted=true
+line_real_send_disabled_after_loop=true
+line_real_send_currently_enabled_after_loop=false
+runtime_config_changed_in_loop_309=true
+runtime_config_change_scope=line_real_send_disable_only
+api_app_service_restart_executed=true
+api_app_service_restart_status=pass
+admin_app_service_restart_executed=false
+admin_app_service_restart_status=not_required
+post_disable_smoke_status=pass
+line_canary_send_attempted_in_loop_309=false
+line_real_send_executed_in_loop_309=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+nginx_reload_executed=false
+dns_https_certbot_executed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Operational meaning:
+
+- The runtime is back to a disabled real-send state.
+- The next canary may only proceed in a separate Loop with operator-side hidden inputs.
+- The next canary remains one message only, no retry, no bulk/multicast/broadcast, and no protected values in docs or handoff.
+- OpenAI API execution, production DB/Supabase work, DR restore work, and infrastructure changes remain out of scope.

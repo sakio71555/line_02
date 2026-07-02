@@ -2703,6 +2703,46 @@ dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 309 Verification Note
+
+```txt
+loop_309_status=complete
+git_diff_check_status=pass
+local_lint_status=pass
+local_typecheck_status=pass
+local_test_status=pass
+local_integration_test_status=pass
+line_real_send_unexpected_enabled_detected=true
+line_disable_method_found=true
+line_disable_method=sanitized_config_flag_update
+line_real_send_disable_status=disabled_successfully
+line_real_send_disable_attempted=true
+runtime_config_changed_in_loop_309=true
+runtime_config_change_scope=line_real_send_disable_only
+api_app_service_restart_executed=true
+api_app_service_restart_status=pass
+admin_app_service_restart_executed=false
+admin_app_service_restart_status=not_required
+line_real_send_currently_enabled_after_loop=false
+line_real_send_disabled_after_loop=true
+public_api_health_status_code_post=200
+public_admin_root_status_code_post=200
+public_customers_no_auth_status_code_post=401
+post_disable_smoke_status=pass
+line_canary_send_attempted_in_loop_309=false
+line_real_send_executed_in_loop_309=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+nginx_reload_executed=false
+dns_https_certbot_executed=false
+secret_value_check_required=true
+production_go=true
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 304 Verification Note
 
 ```txt

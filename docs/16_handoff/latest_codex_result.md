@@ -3,8 +3,8 @@
 ## Loop
 
 ```txt
-loop=Loop 308 LINE canary blocker remediation and operator package
-status=blocked
+loop=Loop 309 unexpected LINE real send disable and safety reset
+status=complete
 ```
 
 ## Result
@@ -12,44 +12,26 @@ status=blocked
 ```txt
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=translated_missing_input_blocker_to_operator_hidden_input_package_and_found_new_runtime_precondition_blocker
-forward_progress_type=operator_side_hidden_input_package_plus_unexpected_runtime_gate_blocker
+proliferation_reason=resolved_unexpected_runtime_enabled_state_before_canary
+forward_progress_type=runtime_external_send_safety_reset
 next_loop_requires_new_operator_input=true
-loop_307_status=blocked
 loop_308_status=blocked
-line_canary_blocker_remediation_status=blocked_unexpected_runtime_enabled
-previous_blocker=line_canary_runtime_inputs_not_provided
-previous_blocker_resolution=operator_side_hidden_input_execution_package
-local_head_short=669c003
-local_contains_ed3c5a2=true
-demo_save_bypass_limited_to_demo_save=true
-real_send_guard_still_present=true
-line_send_code_path_identified=true
-line_canary_execution_path_identified=true
-line_canary_gate_review_status=blocked_unexpected_runtime_enabled
-vps_runtime_current_commit=unknown
-vps_runtime_contains_ed3c5a2=source_shape_present
-production_read_only_baseline_status=blocked_unexpected_runtime_enabled
-line_config_presence_status=pass
-line_real_send_currently_enabled=true
-operator_side_hidden_input_flow_created=true
-operator_side_canary_recipient_required=true
-operator_side_canary_message_required=true
-operator_side_canary_auth_context_required=true
-operator_side_line_send_limit=1
-operator_side_retry_allowed=false
-operator_side_bulk_multicast_broadcast_allowed=false
-operator_side_post_canary_disable_required=true
-operator_side_line_canary_script_created=false
-operator_side_line_canary_script_blocker=app_specific_send_route_not_safely_scriptable
-vps_script_delivery_attempted=false
-vps_script_delivery_status=skipped
-operator_side_line_canary_result_intake_template_created=true
-line_canary_send_attempted_in_loop_308=false
-line_real_send_executed_in_loop_308=false
-openai_api_executed=false
-runtime_config_changed_in_loop_308=false
-production_db_change_performed=false
+loop_309_status=complete
+line_real_send_unexpected_enabled_detected=true
+line_real_send_disable_decision=approved
+line_real_send_disable_status=disabled_successfully
+line_real_send_disable_attempted=true
+line_real_send_disabled_after_loop=true
+line_real_send_currently_enabled_after_loop=false
+runtime_config_changed_in_loop_309=true
+runtime_config_change_scope=line_real_send_disable_only
+api_app_service_restart_executed=true
+api_app_service_restart_status=pass
+admin_app_service_restart_executed=false
+admin_app_service_restart_status=not_required
+post_disable_smoke_status=pass
+operator_side_hidden_input_flow_preserved=true
+operator_side_line_canary_result_intake_template_preserved=true
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
@@ -66,9 +48,9 @@ local_lint_status=pass
 local_typecheck_status=pass
 local_test_status=pass
 local_integration_test_status=pass
-public_api_health_status_code=200
-public_admin_root_status_code=200
-public_customers_no_auth_status_code=401
+public_api_health_status_code_post=200
+public_admin_root_status_code_post=200
+public_customers_no_auth_status_code_post=401
 ```
 
 ## Safety
@@ -79,15 +61,20 @@ line_canary_send_attempted=false
 line_retry_executed=false
 line_bulk_multicast_broadcast_executed=false
 openai_api_executed=false
-runtime_config_changed=false
-service_restart_executed=false
-nginx_reload_executed=false
 production_db_direct_connection_executed=false
 production_db_manual_change_performed=false
+production_db_change_performed=false
 supabase_connection_attempted=false
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
+runtime_code_changed=false
+nginx_reload_executed=false
+nginx_restart_executed=false
+dns_https_certbot_executed=false
+package_operation_executed=false
+daemon_reload_executed=false
+reboot_executed=false
 raw_log_recorded=false
 secret_recorded=false
 env_value_recorded=false
@@ -101,7 +88,7 @@ public_endpoint_url_recorded=false
 ## Files
 
 ```txt
-task_doc=docs/11_codex_tasks/308_line_canary_blocker_remediation_and_operator_package.md
+task_doc=docs/11_codex_tasks/309_unexpected_line_real_send_disable_and_safety_reset.md
 dev_log=docs/14_dev_logs/2026-07-02.md
 runbooks_updated=true
 handoff_updated=true
@@ -112,6 +99,6 @@ readme_index_updated=true
 ## Next
 
 ```txt
-next_loop_candidate=Loop 309: operator-side LINE canary execution result intake
-loop_309_auto_progression_allowed=false
+next_loop_candidate=Loop 310: operator-side LINE canary execution with hidden inputs
+loop_310_auto_progression_allowed=false
 ```
