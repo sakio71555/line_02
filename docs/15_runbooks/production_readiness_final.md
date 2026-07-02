@@ -223,6 +223,51 @@ Current demo-save reading:
 | DR readiness | `not_ready_restore_failed` | Frozen known risk; not changed by this blocker fix. |
 | restricted actions | `no_go` | LINE real send, OpenAI API, restore, DB/infra/package changes remain No-Go. |
 
+## Loop 304 Controlled Production Rollout Override
+
+Loop 304 attempted the controlled rollout for the demo-save fix, but stopped before active production mutation.
+
+```txt
+loop_304_current_status_override=true
+loop_304_status=blocked
+production_rollout_decision=approved
+production_change_freeze_exception=approved_for_controlled_runtime_rollout
+production_change_freeze_status=active_with_controlled_rollout_exception
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+target_runtime_commit_expected=ed3c5a2
+local_validation_status=pass
+production_precheck_status=pass
+staging_validation_status=pass
+controlled_deploy_executed=false
+production_runtime_contains_demo_save_fix=false
+demo_save_fix_production_rollout_status=blocked
+rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
+real_line_push_still_disabled=true
+line_real_send_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+nginx_reload_executed=false
+runtime_config_changed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 305: production rollout blocker remediation
+```
+
+Current reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| local validation | `pass` | The fix commit and regression tests are still valid. |
+| staging rollout validation | `pass` | Copy-based staging install/test/build passed. |
+| active production runtime | `unchanged` | Active source was not replaced and app services were not restarted. |
+| rollout blocker | `admin_service_restart_approval_boundary` | Admin UI/server-action change needs Admin app service restart, which must be explicitly approved. |
+| production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| DR readiness | `not_ready_restore_failed` | Frozen known risk; not changed by this rollout attempt. |
+
 ## Loop 272 Current Status Override
 
 Loop 272 reviews the DR strategy after production Go and selects the backup artifact validation preflight as the next minimal DR action. It does not execute restore, `pg_restore`, `psql`, Supabase connection, DB changes, package operations, LINE sends, OpenAI calls, or infra changes.

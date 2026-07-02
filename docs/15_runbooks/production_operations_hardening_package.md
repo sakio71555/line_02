@@ -316,6 +316,43 @@ next_loop_candidate=Loop 304: post-demo feedback intake and production follow-up
 loop_304_auto_progression_allowed=false
 ```
 
+## Loop 304 Controlled Runtime Rollout Attempt
+
+Loop 304 used a controlled production change-freeze exception to attempt rollout of the Admin/API demo-save fix.
+
+```txt
+loop_304_status=blocked
+production_rollout_decision=approved
+production_change_freeze_exception=approved_for_controlled_runtime_rollout
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+target_runtime_commit_expected=ed3c5a2
+local_validation_status=pass
+production_baseline_status=pass
+deploy_runbook_found=true
+deploy_method_selected=existing_copy_based_runbook_staging_validated_only
+staging_validation_status=pass
+controlled_deploy_executed=false
+app_service_restart_executed=false
+nginx_reload_executed=false
+db_migration_executed=false
+runtime_config_changed=false
+demo_save_fix_production_rollout_status=blocked
+rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Operational reading:
+
+- Staging proved the selected source can install, validate, and build under the existing copy-based deployment shape.
+- Active production was not changed.
+- The next rollout attempt must explicitly include the existing Admin app service restart, or choose a narrower API-only rollout with the limitation clearly accepted.
+- Do not run LINE real send, OpenAI API, production DB connection/change, DR restore, Nginx reload, DNS/HTTPS/certbot, or endpoint/body/log/secret recording from this runbook.
+
 ## Loop 303 Demo Save Blocker Fix
 
 Loop 303 was intentionally reused for a demo-save blocker fix after the final handoff. The Admin staff reply flow now has an explicit timeline-only delivery mode.

@@ -3,8 +3,8 @@
 ## Loop
 
 ```txt
-loop=Loop 303 demo save real_push_disabled blocker fix
-status=complete
+loop=Loop 304 controlled production rollout for admin/API runtime
+status=blocked
 ```
 
 ## Result
@@ -12,30 +12,28 @@ status=complete
 ```txt
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=none
-forward_progress_type=demo_save_blocker_code_fix_and_regression_test
-same_blocker_repeated_count=1
-next_loop_requires_new_operator_input=false
-demo_reply_save_blocker_detected=true
-demo_reply_save_error_category=real_push_disabled_applied_to_demo_save
-demo_reply_ui_found=true
-admin_api_route_found=true
-real_push_guard_found=true
-demo_save_path_found=true
-likely_root_cause=staff_reply_ui_text_described_demo_save_but_request_did_not_mark_demo_save_so_real_push_gate_blocked_when_real_push_disabled
-demo_reply_save_blocker_fixed=true
-demo_save_real_push_disabled_bypass_for_demo_only=true
-admin_ui_staff_reply_delivery_mode=demo_save
-api_demo_save_path_skips_line_push=true
-api_demo_save_path_records_timeline=true
-real_line_push_guard_preserved=true
+proliferation_reason=blocked_after_concrete_staging_validation_not_protocol_loop
+forward_progress_type=local_validation_and_vps_staging_validation_completed
+next_loop_requires_new_operator_input=true
+production_rollout_decision=approved
+production_change_freeze_exception=approved_for_controlled_runtime_rollout
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+target_runtime_commit_expected=ed3c5a2
+local_head_short=ed3c5a2
+local_contains_ed3c5a2=true
+production_precheck_status=pass
+deploy_runbook_found=true
+deploy_method_selected=existing_copy_based_runbook_staging_validated_only
+staging_validation_status=pass
+controlled_deploy_executed=false
+app_service_restart_executed=false
+production_runtime_contains_demo_save_fix=false
+demo_save_fix_production_rollout_status=blocked
+rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
 real_line_push_still_disabled=true
-demo_save_with_real_push_disabled_test=pass
-real_send_guard_still_blocks_test=pass
-admin_api_client_demo_save_request_test=pass
-admin_demo_save_regression_status=pass
-friday_demo_readiness_status=ready
-production_change_freeze_status=active_after_fix
+line_real_send_executed=false
+openai_api_executed=false
+production_db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
@@ -47,39 +45,46 @@ restricted_actions_remain_no_go=true
 ## Validation
 
 ```txt
-targeted_regression_command=npx pnpm@10.12.1 vitest run tests/integration/line-real-push-gate.test.ts tests/integration/admin-api-client.test.ts
-targeted_regression_status=pass
-targeted_regression_test_files_passed=2
-targeted_regression_tests_passed=35
+git_diff_check_status=pass
+local_lint_status=pass
+local_typecheck_status=pass
+local_test_status=pass
+local_integration_test_status=pass
+staging_install_status=pass
+staging_lint_status=pass
+staging_typecheck_status=pass
+staging_test_status=pass
+staging_integration_test_status=pass
+staging_build_status=pass
 ```
 
 ## Safety
 
 ```txt
-restore_execution_in_loop_303=false
-helper_preflight_executed_in_loop_303=false
-helper_execute_executed_in_loop_303=false
-pg_restore_restore_executed_in_loop_303=false
-psql_executed_in_loop_303=false
-supabase_connection_attempted_in_loop_303=false
-production_db_connection_executed_in_loop_303=false
+active_runtime_changed=false
+rollback_executed=false
+restore_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+production_db_connection_executed=false
 production_db_change_performed=false
-db_change_performed_in_loop_303=false
-line_real_send_executed_in_loop_303=false
-openai_api_executed_in_loop_303=false
-vps_operation_executed_in_loop_303=false
-nginx_dns_https_certbot_operation_executed_in_loop_303=false
+line_real_send_executed=false
+openai_api_executed=false
+nginx_reload_executed=false
+runtime_config_changed=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
 line_identifier_recorded=false
 message_body_recorded=false
-customer_private_data_recorded=false
+host_or_url_recorded=false
+public_endpoint_url_recorded=false
 ```
 
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 304: final demo delivery handoff and production change freeze
-loop_304_auto_progression_allowed=false
+next_loop_candidate=Loop 305: production rollout blocker remediation
+loop_305_auto_progression_allowed=false
 ```

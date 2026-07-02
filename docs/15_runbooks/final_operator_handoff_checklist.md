@@ -231,6 +231,36 @@ Operator handoff:
 - Do not retry, bulk send, multicast, broadcast, or call OpenAI without a separate approval.
 - Keep DR restore route frozen as known risk.
 
+## Loop 304 Controlled Rollout Handoff
+
+```txt
+loop_304_status=blocked
+production_rollout_decision=approved
+production_change_freeze_exception=approved_for_controlled_runtime_rollout
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+local_validation_status=pass
+production_precheck_status=pass
+staging_validation_status=pass
+active_production_runtime_changed=false
+controlled_deploy_executed=false
+app_service_restart_executed=false
+rollback_executed=false
+demo_save_fix_production_rollout_status=blocked
+rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+selected_next_minimal_action=Loop 305 production rollout blocker remediation
+```
+
+Operator handoff:
+
+- The code selected for rollout validated locally and in VPS staging.
+- Active production was not changed, so the demo-save fix is still not confirmed in production runtime.
+- Next approval must explicitly decide whether the existing Admin app service restart is allowed in the same controlled rollout as the API service restart.
+- Keep LINE real send, OpenAI API execution, production DB connection/change, DR restore, Nginx reload, DNS/HTTPS/certbot, raw log display, secret display, and endpoint URL recording out of scope.
+
 ## Loop 273 Current Status Override
 
 Loop 273 creates the DR backup artifact validation preflight and the sanitized operator metadata schema. No sufficient sanitized operator artifact metadata is present yet, so validation cannot pass in this Loop.

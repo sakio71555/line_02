@@ -699,6 +699,8 @@ Loop 303 final demo delivery handoff and production change freezeでは、金曜
 
 Loop 303 demo save real_push_disabled blocker fixでは、管理画面の「担当者として返信する」デモ保存が `real_push_disabled` で止まる不整合を修正しました。Admin UIは `delivery_mode=demo_save` を送るようになり、APIはこの場合だけLINE pushを呼ばずにタイムライン保存します。本物LINE pushの既存ガードは維持しており、real push disabled時の本物送信は引き続きblockされます。LINE実送信、OpenAI API実行、restore、pg_restore、psql、Supabase接続、production DB接続、DB変更、VPS/infra操作は行っていません。詳細は [Loop 303 demo-save blocker task doc](docs/11_codex_tasks/303_demo_save_real_push_disabled_blocker_fix.md) を参照してください。
 
+Loop 304 controlled production rollout for admin/API runtimeでは、`ed3c5a2` のデモ保存修正を本番反映するため、local validationとVPS staging validationまで実施しました。既存copy-based runbookによるstagingのfrozen install、lint、typecheck、test、integration、buildは通過しましたが、active rolloutにはAPI/Admin両方の既存app service restartが必要で、Loop 304のrestart許可境界がAdmin restartまで明示していなかったため、active production runtimeは変更せずblockedで停止しました。production Goは `line_api_admin_current_runtime` のまま、DR restore routeは `frozen_known_risk`、DR readinessは `not_ready_restore_failed` のままです。詳細は [Loop 304 task doc](docs/11_codex_tasks/304_controlled_production_rollout_admin_api_runtime.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

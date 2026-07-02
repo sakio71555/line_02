@@ -1763,3 +1763,39 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 304: post-demo feedback intake and production follow-up plan
 ```
+
+## Loop 304 Controlled Production Rollout
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Controlled rollout | `blocked` | Local and staging validation passed, but active rollout requires explicit Admin app service restart approval. |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| Active runtime | `unchanged` | Source replacement and service restart were not executed. |
+| Demo-save fix in production | `not_deployed` | Active runtime still lacks the expected fix. |
+| DR restore route | `frozen_known_risk` | Not part of this rollout. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `rollout_blocker_remediation` | Single next Loop candidate is Loop 305. |
+
+```txt
+loop_304_status=blocked
+production_rollout_decision=approved
+production_change_freeze_exception=approved_for_controlled_runtime_rollout
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+local_validation_status=pass
+production_precheck_status=pass
+staging_validation_status=pass
+controlled_deploy_executed=false
+production_runtime_contains_demo_save_fix=false
+demo_save_fix_production_rollout_status=blocked
+rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
+line_real_send_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 305: production rollout blocker remediation
+```
