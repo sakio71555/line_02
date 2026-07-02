@@ -2665,3 +2665,40 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 selected_next_minimal_action=Loop 298 fresh DR restore failure diagnosis without retry
 ```
+
+## Loop 298 Current Status Override
+
+Loop 298 records the scoped diagnosis result after the fresh target one-attempt restore failed. It does not authorize another restore attempt.
+
+```txt
+loop_298_status=complete
+fresh_dr_restore_failure_diagnosis_status=limited
+diagnosis_scope=vps_and_fresh_dr_target_scoped_diagnostics
+likely_failure_domain=helper_taxonomy_insufficient_category
+diagnosis_confidence=medium
+next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore
+archive_list_status=pass
+raw_log_internally_reviewed=true
+psql_diagnostic_executed=false
+psql_connection_status=not_attempted_runtime_input_missing
+helper_taxonomy_improvement_needed=true
+helper_runtime_behavior_changed=false
+helper_script_changed=false
+restore_executed_in_loop_298=false
+pg_restore_restore_executed_in_loop_298=false
+psql_diagnostic_scope=not_used
+supabase_connection_attempted_in_loop_298=false
+db_change_performed_in_loop_298=false
+retry_allowed=false
+second_restore_attempt_executed=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 299 sanitized helper taxonomy improvement without restore
+```

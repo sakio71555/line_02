@@ -709,3 +709,30 @@ restricted_actions_remain_no_go=true
 ```
 
 The next Loop must diagnose the fresh target failed result without retry.
+
+## Loop 298 Scoped Failure Diagnosis Decision
+
+Loop 298 confirms that the fresh target restore failure cannot be safely narrowed from helper output alone.
+
+```txt
+loop_298_status=complete
+fresh_dr_restore_failure_diagnosis_status=limited
+archive_list_status=pass
+archive_list_internally_reviewed=true
+raw_log_available=true
+raw_log_internally_reviewed=true
+raw_log_signal_classification=mixed_or_not_fresh_specific
+psql_diagnostic_executed=false
+psql_connection_status=not_attempted_runtime_input_missing
+helper_failure_taxonomy_current=sanitized_restore_failed_only
+helper_taxonomy_limitation=generic_failure_output_insufficient_for_safe_remediation
+likely_failure_domain=helper_taxonomy_insufficient_category
+diagnosis_confidence=medium
+next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore
+retry_allowed=false
+second_restore_attempt_executed=false
+db_change_performed_in_loop_298=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+The next Loop must improve the sanitized helper taxonomy or decision package without running restore.

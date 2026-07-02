@@ -2137,6 +2137,47 @@ typecheck=not_run_result_intake_only
 test=not_run_result_intake_only
 ```
 
+## Loop 298 Verification Note
+
+```txt
+loop_298_status=complete
+fresh_dr_restore_failure_diagnosis_status=limited
+local_helper_bash_validation_status=pass
+vps_helper_bash_validation_status=pass
+pg_restore_available=true
+psql_available=true
+pg_restore_running=false
+psql_running=false
+attempt_lock_exists=true
+artifact_candidate_available=true
+artifact_exists=true
+artifact_nonempty=true
+archive_list_status=pass
+archive_list_internally_reviewed=true
+raw_log_available=true
+raw_log_internally_reviewed=true
+raw_log_recorded=false
+psql_diagnostic_executed=false
+psql_connection_status=not_attempted_runtime_input_missing
+likely_failure_domain=helper_taxonomy_insufficient_category
+diagnosis_confidence=medium
+next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore
+restore_executed_in_loop_298=false
+pg_restore_restore_executed_in_loop_298=false
+supabase_connection_attempted_in_loop_298=false
+db_change_performed_in_loop_298=false
+retry_allowed=false
+second_restore_attempt_executed=false
+production_go=true
+dr_readiness_status=not_ready_restore_failed
+git_diff_check=pass
+docs_link_check=pass
+secret_artifact_value_check=pass
+lint=pass
+typecheck=not_run_result_intake_and_docs_only
+test=not_run_result_intake_and_docs_only
+```
+
 ## Loop 286 Verification Note
 
 ```txt

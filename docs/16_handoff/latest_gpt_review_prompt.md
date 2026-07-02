@@ -17,57 +17,48 @@
 ## Review Target
 
 ```txt
-loop=Loop 297 operator-side fresh DR restore execution result intake
+loop=Loop 298 fresh DR restore failure diagnosis with scoped diagnostics
 status=complete
 anti_proliferation_check=pass
-is_this_loop_proliferation_risk=false
-proliferation_reason=none
-forward_progress_type=operator_side_fresh_restore_execution_result_intake
-next_loop_requires_new_operator_input=true
-loop_296_status=blocked
-loop_297_status=complete
-operator_side_fresh_restore_result_intake=true
-loop_296_human_side_execution_status=failed_no_retry
-helper_preflight_status=pass
-restore_target_scope_confirmed=true
-restore_target_scope_category=dr_validation_target
-restore_retry_attempt_limit=1
-retry_allowed=false
-restore_retry_attempted=true
+fresh_dr_restore_failure_diagnosis_status=limited
+diagnosis_scope=vps_and_fresh_dr_target_scoped_diagnostics
 restore_attempt_count_fresh_target=1
 restore_success_fresh_target=false
-failure_reason=sanitized_restore_failed
+retry_allowed=false
 second_restore_attempt_executed=false
-pg_restore_executed=true
-psql_executed=false
-supabase_connection_attempted=true
-db_change_performed=true
+archive_list_status=pass
+raw_log_available=true
+raw_log_internally_reviewed=true
+raw_log_signal_classification=mixed_or_not_fresh_specific
+psql_diagnostic_executed=false
+psql_connection_status=not_attempted_runtime_input_missing
+likely_failure_domain=helper_taxonomy_insufficient_category
+diagnosis_confidence=medium
+next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore
+helper_taxonomy_improvement_needed=true
+helper_runtime_behavior_changed=false
+helper_script_changed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_readiness_status=not_ready_restore_failed
-next_loop_candidate=Loop 298 fresh DR restore failure diagnosis without retry
+next_loop_candidate=Loop 299 sanitized helper taxonomy improvement without restore
 ```
 
 ## Safety Boundary
 
 ```txt
-restore_executed_in_loop_297=false
-helper_preflight_executed_in_loop_297=false
-helper_execute_executed_in_loop_297=false
-pg_restore_executed_in_loop_297=false
-psql_executed_in_loop_297=false
-supabase_connection_attempted_in_loop_297=false
-db_change_performed_in_loop_297=false
-vps_operation_executed_in_loop_297=false
+restore_executed_in_loop_298=false
+pg_restore_restore_executed_in_loop_298=false
+helper_preflight_executed_in_loop_298=false
+helper_execute_executed_in_loop_298=false
+psql_diagnostic_executed=false
+supabase_connection_attempted_in_loop_298=false
+db_change_performed_in_loop_298=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
-password_recorded=false
 artifact_path_recorded=false
 artifact_filename_recorded=false
-artifact_content_recorded=false
-artifact_hash_recorded=false
-artifact_exact_size_recorded=false
 sql_recorded=false
 db_object_recorded=false
 role_recorded=false

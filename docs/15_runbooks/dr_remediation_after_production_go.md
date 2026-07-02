@@ -204,6 +204,31 @@ next_loop_candidate=Loop 298 fresh DR restore failure diagnosis without retry
 loop_298_auto_progression_allowed=false
 ```
 
+## Loop 298 Scoped Diagnosis Result
+
+```txt
+loop_298_status=complete
+fresh_dr_restore_failure_diagnosis_status=limited
+diagnosis_scope=vps_and_fresh_dr_target_scoped_diagnostics
+archive_list_status=pass
+raw_log_internally_reviewed=true
+psql_diagnostic_executed=false
+psql_connection_status=not_attempted_runtime_input_missing
+likely_failure_domain=helper_taxonomy_insufficient_category
+diagnosis_confidence=medium
+next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore
+helper_taxonomy_improvement_needed=true
+retry_allowed=false
+second_restore_attempt_executed=false
+db_change_performed_in_loop_298=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 299 sanitized helper taxonomy improvement without restore
+```
+
 ## Loop 292 Sanitized Category Intake Blocked
 
 Loop 292 attempted to intake a human/operator sanitized failure category for the Loop 290 failed restore result. No operator-selected category was provided, so remediation planning remains blocked without retry.

@@ -685,6 +685,8 @@ Loop 296 fresh DR validation target one-time restore executionでは、fresh tar
 
 Loop 297 operator-side fresh DR restore execution result intakeでは、人間側で実施されたfresh DR validation targetへの1回限りrestore結果をsanitized metadataとして取り込みました。結果は `failed_no_retry`、attempt countは1、successはfalse、failure reasonは `sanitized_restore_failed` です。pg_restore実行、Supabase接続、DB変更はhuman-side sanitized resultとして記録し、Codexはrestore再実行、helper実行、psql、Supabase接続、DB変更、raw log確認を行っていません。production Goは維持し、DR readinessは `not_ready_restore_failed` のままです。
 
+Loop 298 fresh DR restore failure diagnosis with scoped diagnosticsでは、fresh DR validation targetの失敗結果に対して、許可範囲内のVPS/helper/artifact/raw-log category診断を実施しました。artifactはlist可能で、helperとrestore toolingも利用可能ですが、raw-log側はmixed or not-fresh-specific signalで1カテゴリへ安全に確定できず、Codex実行コンテキストにfresh DR DB URLが無いためpsql診断は未実行です。最終分類は `fresh_dr_restore_failure_diagnosis_status=limited`、`likely_failure_domain=helper_taxonomy_insufficient_category`、`next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore` です。restore再実行、helper execute、pg_restore restore、psql、Supabase接続、DB変更は行っていません。production Goは維持し、DR readinessは `not_ready_restore_failed` のままです。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
