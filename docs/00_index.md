@@ -139,6 +139,7 @@
 - Loop 301 production operations hardening package: `11_codex_tasks/301_production_operations_hardening_package.md`
 - Loop 302 Friday demo rehearsal and final production smoke verification: `11_codex_tasks/302_friday_demo_rehearsal_and_final_production_smoke.md`
 - Loop 303 final demo delivery handoff and production change freeze: `11_codex_tasks/303_final_demo_delivery_handoff_and_production_change_freeze.md`
+- Loop 303 demo save real_push_disabled blocker fix: `11_codex_tasks/303_demo_save_real_push_disabled_blocker_fix.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 

@@ -8,6 +8,7 @@ export type LineClientMode = "mock" | "real";
 
 export interface StaffReplyLinePushRequest {
   body: string;
+  deliveryMode: "demo_save" | "real_line_push";
   realLinePushConfirmed: boolean;
   linePushConfirmation: string | null;
   idempotencyKey: string | null;

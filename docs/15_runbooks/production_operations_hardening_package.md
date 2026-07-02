@@ -315,3 +315,37 @@ recommended_next_action=sanitized_action
 next_loop_candidate=Loop 304: post-demo feedback intake and production follow-up plan
 loop_304_auto_progression_allowed=false
 ```
+
+## Loop 303 Demo Save Blocker Fix
+
+Loop 303 was intentionally reused for a demo-save blocker fix after the final handoff. The Admin staff reply flow now has an explicit timeline-only delivery mode.
+
+```txt
+loop_303_demo_save_blocker_fix=true
+demo_reply_save_blocker_detected=true
+demo_reply_save_error_category=real_push_disabled_applied_to_demo_save
+demo_reply_save_blocker_fixed=true
+demo_save_real_push_disabled_bypass_for_demo_only=true
+admin_ui_staff_reply_delivery_mode=demo_save
+api_demo_save_path_skips_line_push=true
+api_demo_save_path_records_timeline=true
+real_line_push_guard_preserved=true
+real_line_push_still_disabled=true
+demo_save_with_real_push_disabled_test=pass
+real_send_guard_still_blocks_test=pass
+line_real_send_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+friday_demo_readiness_status=ready
+production_change_freeze_status=active_after_fix
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
+Demo implication:
+
+- Staff reply demo-save can be used to show timeline behavior without real LINE send.
+- Real LINE push remains behind the existing safety gate and still blocks when real push is disabled.
+- This fix does not authorize any new external send, paid API call, DB operation, infrastructure change, or DR restore work.

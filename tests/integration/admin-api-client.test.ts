@@ -495,6 +495,35 @@ describe("admin read-only API client", () => {
     );
   });
 
+  it("marks UI staff replies as demo-save requests when requested", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await sendStaffReply(
+      {
+        customerId: "customer_001",
+        body: "デモ保存の返信です。",
+        deliveryMode: "demo_save"
+      },
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome"
+        },
+        fetchFn: async (input, init) => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    expect(calls[0]?.init?.body).toBe(
+      JSON.stringify({
+        body: "デモ保存の返信です。",
+        delivery_mode: "demo_save"
+      })
+    );
+  });
+
   it("uses the default staff id for staff replies when config omits staffId", async () => {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
 

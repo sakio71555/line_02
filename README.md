@@ -697,6 +697,8 @@ Loop 302 Friday demo rehearsal and final production smoke verificationでは、L
 
 Loop 303 final demo delivery handoff and production change freezeでは、金曜デモ直前の最終ハンドオフとして、production change freezeを有効化し、demo-day start checklist、固定demo sequence、demo no-go boundary、fallback talk track、post-demo feedback intake templateを追加しました。final read-only smokeはbaseline範囲で、`final_demo_go_status=go` と分類しています。freeze中はdocs/handoff/read-only smoke以外のruntime code/config、DB、infra、external send、paid API execution変更を行いません。DR restore routeは `frozen_known_risk`、DR readinessは `not_ready_restore_failed` のままです。次は `Loop 304: post-demo feedback intake and production follow-up plan` の1本だけです。詳細は [Loop 303 task doc](docs/11_codex_tasks/303_final_demo_delivery_handoff_and_production_change_freeze.md) と [production operations hardening package](docs/15_runbooks/production_operations_hardening_package.md) を参照してください。
 
+Loop 303 demo save real_push_disabled blocker fixでは、管理画面の「担当者として返信する」デモ保存が `real_push_disabled` で止まる不整合を修正しました。Admin UIは `delivery_mode=demo_save` を送るようになり、APIはこの場合だけLINE pushを呼ばずにタイムライン保存します。本物LINE pushの既存ガードは維持しており、real push disabled時の本物送信は引き続きblockされます。LINE実送信、OpenAI API実行、restore、pg_restore、psql、Supabase接続、production DB接続、DB変更、VPS/infra操作は行っていません。詳細は [Loop 303 demo-save blocker task doc](docs/11_codex_tasks/303_demo_save_real_push_disabled_blocker_fix.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

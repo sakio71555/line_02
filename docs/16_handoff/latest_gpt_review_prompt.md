@@ -17,39 +17,43 @@
 ## Review Target
 
 ```txt
-loop=Loop 303 final demo delivery handoff and production change freeze
+loop=Loop 303 demo save real_push_disabled blocker fix
 status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=final_demo_delivery_handoff_and_production_change_freeze
-next_loop_requires_new_operator_input=false
-loop_302_status=complete
-loop_303_status=complete
-production_change_freeze_status=active
-production_change_freeze_allowed_actions=docs_handoff_readonly_smoke_only
-final_demo_delivery_handoff_created=true
-demo_day_start_checklist_created=true
-demo_sequence_finalized=true
-demo_no_go_boundary_finalized=true
-demo_fallback_talk_track_created=true
-post_demo_feedback_intake_template_created=true
-final_read_only_smoke_status=pass
-final_demo_go_status=go
-safe_demo_scope_confirmed=true
-dr_restore_route_status=frozen_known_risk
+forward_progress_type=demo_save_blocker_code_fix_and_regression_test
+same_blocker_repeated_count=1
+demo_reply_save_blocker_detected=true
+demo_reply_save_error_category=real_push_disabled_applied_to_demo_save
+demo_reply_save_blocker_fixed=true
+demo_save_real_push_disabled_bypass_for_demo_only=true
+admin_ui_staff_reply_delivery_mode=demo_save
+api_demo_save_path_skips_line_push=true
+api_demo_save_path_records_timeline=true
+real_line_push_guard_preserved=true
+real_line_push_still_disabled=true
+demo_save_with_real_push_disabled_test=pass
+real_send_guard_still_blocks_test=pass
+admin_api_client_demo_save_request_test=pass
+admin_demo_save_regression_status=pass
+friday_demo_readiness_status=ready
+production_change_freeze_status=active_after_fix
 production_go=true
 production_go_scope=line_api_admin_current_runtime
+dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
-next_loop_candidate=Loop 304: post-demo feedback intake and production follow-up plan
+next_loop_candidate=Loop 304: final demo delivery handoff and production change freeze
+loop_304_auto_progression_allowed=false
 ```
 
 ## Review Focus
 
-- Confirm that Loop 303 is final delivery handoff and production change freeze work, not another DR loop.
-- Confirm that `final_demo_go_status=go` is reasonable because required read-only smoke checks passed.
-- Confirm that production change freeze blocks runtime code/config, DB, infra, external sends, and paid API execution.
-- Confirm that the next Loop is post-demo feedback intake only after demo execution, not auto-started.
+- Confirm that this is a concrete blocker fix, not another gate/protocol Loop.
+- Confirm that Admin staff reply demo-save now matches the UI wording and saves to timeline without real LINE push.
+- Confirm that real LINE push remains guarded and disabled unless separately approved.
+- Confirm that no LINE real send, OpenAI API call, restore, DB change, VPS/infra operation, or secret/raw data recording occurred.
+- Confirm whether Loop 304 should be accepted, rejected, or delayed until after human review.
 
 ## Safety Boundary
 
@@ -60,20 +64,16 @@ helper_execute_executed_in_loop_303=false
 pg_restore_restore_executed_in_loop_303=false
 psql_executed_in_loop_303=false
 supabase_connection_attempted_in_loop_303=false
+production_db_connection_executed_in_loop_303=false
 db_change_performed_in_loop_303=false
 line_real_send_executed_in_loop_303=false
 openai_api_executed_in_loop_303=false
+vps_operation_executed_in_loop_303=false
+nginx_dns_https_certbot_operation_executed_in_loop_303=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
-artifact_path_recorded=false
-artifact_filename_recorded=false
-sql_recorded=false
-db_object_recorded=false
-role_recorded=false
-package_name_recorded=false
-extension_name_recorded=false
-host_or_url_recorded=false
-project_ref_recorded=false
-public_endpoint_url_recorded=false
+line_identifier_recorded=false
+message_body_recorded=false
+customer_private_data_recorded=false
 ```

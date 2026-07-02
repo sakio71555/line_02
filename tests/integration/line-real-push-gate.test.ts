@@ -68,6 +68,35 @@ describe("Loop 102 LINE real push gate", () => {
     expect(setup.messageRepository.list()).toHaveLength(0);
   });
 
+  it("allows explicit demo-save staff replies while real push remains disabled", async () => {
+    const setup = createRealPushGateApp({
+      env: {
+        LINE_MESSAGING_ENABLED: "true",
+        LINE_REAL_PUSH_ENABLED: "false"
+      }
+    });
+
+    const response = await setup.app.fetch(
+      authenticatedStaffReplyRequest({
+        body: {
+          body: "デモ保存の返信です。",
+          delivery_mode: "demo_save"
+        }
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(setup.lineClient.pushes).toHaveLength(0);
+    expect(setup.messageRepository.list()).toEqual([
+      expect.objectContaining({
+        tenant_id: "tenant_amamihome",
+        customer_id: "customer_amami",
+        role: "staff",
+        body: "デモ保存の返信です。"
+      })
+    ]);
+  });
+
   it("requires authenticated_staff and selectedTenantId before real push", async () => {
     const devHeaderSetup = createRealPushGateApp();
     const devHeaderResponse = await devHeaderSetup.app.fetch(

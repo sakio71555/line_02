@@ -100,7 +100,7 @@ export async function runStaffReplyAction(
 
   try {
     const result = await sendStaffReply(
-      { customerId, body },
+      { customerId, body, deliveryMode: "demo_save" },
       await getServerAdminApiRequestOptions()
     );
     revalidatePath(`/customers/${customerId}`);

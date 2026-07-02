@@ -593,37 +593,44 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "invalid_reply_body" }, 400);
     }
 
-    if (!customer.line_user_id) {
-      return c.json({ ok: false, error: "cannot_reply_without_line_user_id" }, 409);
-    }
+    const isDemoSave = replyRequest.deliveryMode === "demo_save";
 
-    const linePushGate = evaluateStaffReplyLinePushGate({
-      env,
-      lineClientMode,
-      tenantContext: tenant.context,
-      selectedTenantId: tenant.selectedTenantId,
-      customer,
-      request: replyRequest
-    });
+    if (!isDemoSave) {
+      const lineUserId = customer.line_user_id;
 
-    if (!linePushGate.ok) {
-      return c.json({ ok: false, error: linePushGate.error }, linePushGate.status);
-    }
-
-    if (linePushGate.idempotencyScope && !linePushIdempotencyStore.reserve(linePushGate.idempotencyScope)) {
-      return c.json({ ok: false, error: "real_push_duplicate" }, 409);
-    }
-
-    try {
-      await lineClient.pushMessage(customer.line_user_id, [
-        { type: "text", text: replyRequest.body }
-      ]);
-    } catch {
-      if (linePushGate.idempotencyScope) {
-        linePushIdempotencyStore.release(linePushGate.idempotencyScope);
+      if (!lineUserId) {
+        return c.json({ ok: false, error: "cannot_reply_without_line_user_id" }, 409);
       }
 
-      return c.json({ ok: false, error: "line_send_failed" }, 502);
+      const linePushGate = evaluateStaffReplyLinePushGate({
+        env,
+        lineClientMode,
+        tenantContext: tenant.context,
+        selectedTenantId: tenant.selectedTenantId,
+        customer,
+        request: replyRequest
+      });
+
+      if (!linePushGate.ok) {
+        return c.json({ ok: false, error: linePushGate.error }, linePushGate.status);
+      }
+
+      if (
+        linePushGate.idempotencyScope &&
+        !linePushIdempotencyStore.reserve(linePushGate.idempotencyScope)
+      ) {
+        return c.json({ ok: false, error: "real_push_duplicate" }, 409);
+      }
+
+      try {
+        await lineClient.pushMessage(lineUserId, [{ type: "text", text: replyRequest.body }]);
+      } catch {
+        if (linePushGate.idempotencyScope) {
+          linePushIdempotencyStore.release(linePushGate.idempotencyScope);
+        }
+
+        return c.json({ ok: false, error: "line_send_failed" }, 502);
+      }
     }
 
     const result = await recordStaffTextReply({
@@ -1172,6 +1179,7 @@ async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushR
 
   return {
     body,
+    deliveryMode: parsed.delivery_mode === "demo_save" ? "demo_save" : "real_line_push",
     realLinePushConfirmed: parsed.real_line_push_confirmed === true,
     linePushConfirmation:
       typeof parsed.line_push_confirmation === "string"

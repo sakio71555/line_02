@@ -3,7 +3,7 @@
 ## Loop
 
 ```txt
-loop=Loop 303 final demo delivery handoff and production change freeze
+loop=Loop 303 demo save real_push_disabled blocker fix
 status=complete
 ```
 
@@ -13,75 +13,44 @@ status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=final_demo_delivery_handoff_and_production_change_freeze
+forward_progress_type=demo_save_blocker_code_fix_and_regression_test
+same_blocker_repeated_count=1
 next_loop_requires_new_operator_input=false
-loop_302_status=complete
-loop_303_status=complete
-final_demo_delivery_decision=approved
-production_change_freeze_decision=approved
-production_change_freeze_status=active
-production_change_freeze_scope=runtime_code_config_db_infra_external_send_and_paid_api
-production_change_freeze_allowed_actions=docs_handoff_readonly_smoke_only
-production_change_freeze_emergency_override_requires_operator=true
-final_demo_delivery_handoff_created=true
-demo_day_start_checklist_created=true
-demo_sequence_finalized=true
-demo_no_go_boundary_finalized=true
-demo_fallback_talk_track_created=true
-post_demo_feedback_intake_template_created=true
-final_read_only_smoke_completed=true
-final_read_only_smoke_status=pass
-final_demo_go_status=go
-friday_demo_scope=admin_health_line_api_current_runtime_readonly
-safe_demo_scope_confirmed=true
-line_real_send_in_demo=false
-line_real_send_executed_in_loop_303=false
-openai_api_execution_in_demo=false
-openai_api_executed_in_loop_303=false
-authenticated_customer_data_demo_allowed=false_unless_separately_approved
-production_db_change_in_demo=false
-production_db_connection_executed_in_loop_303=false
-dr_restore_route_status=frozen_known_risk
-dr_restore_known_risk_accepted=true
-dr_restore_retry_allowed=false_without_new_strategy
+demo_reply_save_blocker_detected=true
+demo_reply_save_error_category=real_push_disabled_applied_to_demo_save
+demo_reply_ui_found=true
+admin_api_route_found=true
+real_push_guard_found=true
+demo_save_path_found=true
+likely_root_cause=staff_reply_ui_text_described_demo_save_but_request_did_not_mark_demo_save_so_real_push_gate_blocked_when_real_push_disabled
+demo_reply_save_blocker_fixed=true
+demo_save_real_push_disabled_bypass_for_demo_only=true
+admin_ui_staff_reply_delivery_mode=demo_save
+api_demo_save_path_skips_line_push=true
+api_demo_save_path_records_timeline=true
+real_line_push_guard_preserved=true
+real_line_push_still_disabled=true
+demo_save_with_real_push_disabled_test=pass
+real_send_guard_still_blocks_test=pass
+admin_api_client_demo_save_request_test=pass
+admin_demo_save_regression_status=pass
+friday_demo_readiness_status=ready
+production_change_freeze_status=active_after_fix
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
-next_loop_candidate=Loop 304: post-demo feedback intake and production follow-up plan
 ```
 
-## Final Read-Only Production Smoke
+## Validation
 
 ```txt
-ssh_access_available=true
-vps_working_directory_available=true
-api_service_active=true
-nginx_service_active=true
-public_api_health_status_code=200
-public_admin_root_status_code=200
-public_customers_no_auth_status_code=401
-disk_capacity_status=ok
-memory_capacity_status=ok
-helper_bash_validation_status=pass
-classifier_validation_status=pass
-production_readonly_smoke_script_exists=true
-production_readonly_smoke_script_bash_validation_status=pass
-production_readonly_smoke_script_runtime_status=not_configured
-production_baseline_check_changed_runtime=false
-```
-
-## Demo Delivery Package
-
-```txt
-production_change_freeze_active=true
-demo_day_start_checklist_created=true
-demo_sequence_finalized=true
-demo_no_go_boundary_finalized=true
-demo_fallback_talk_track_created=true
-known_risk_wording_ready=true
-post_demo_feedback_intake_template_created=true
+targeted_regression_command=npx pnpm@10.12.1 vitest run tests/integration/line-real-push-gate.test.ts tests/integration/admin-api-client.test.ts
+targeted_regression_status=pass
+targeted_regression_test_files_passed=2
+targeted_regression_tests_passed=35
 ```
 
 ## Safety
@@ -93,27 +62,24 @@ helper_execute_executed_in_loop_303=false
 pg_restore_restore_executed_in_loop_303=false
 psql_executed_in_loop_303=false
 supabase_connection_attempted_in_loop_303=false
+production_db_connection_executed_in_loop_303=false
+production_db_change_performed=false
 db_change_performed_in_loop_303=false
 line_real_send_executed_in_loop_303=false
 openai_api_executed_in_loop_303=false
+vps_operation_executed_in_loop_303=false
+nginx_dns_https_certbot_operation_executed_in_loop_303=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
-artifact_path_recorded=false
-artifact_filename_recorded=false
-sql_recorded=false
-db_object_recorded=false
-role_recorded=false
-package_name_recorded=false
-extension_name_recorded=false
-host_or_url_recorded=false
-project_ref_recorded=false
-public_endpoint_url_recorded=false
+line_identifier_recorded=false
+message_body_recorded=false
+customer_private_data_recorded=false
 ```
 
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 304: post-demo feedback intake and production follow-up plan
+next_loop_candidate=Loop 304: final demo delivery handoff and production change freeze
 loop_304_auto_progression_allowed=false
 ```

@@ -177,6 +177,52 @@ Current demo/freeze reading:
 | safe demo boundary | `confirmed` | Demo remains no-send, no-charge, no-DB-change, no-restore. |
 | DR readiness | `not_ready_restore_failed` | Frozen known risk; not part of demo Go. |
 
+## Loop 303 Demo Save Blocker Fix Override
+
+Loop 303 was intentionally reused for a blocker fix after the final handoff: Admin staff reply demo-save now matches the UI safety wording and no longer depends on the real LINE push gate.
+
+```txt
+loop_303_demo_save_blocker_fix=true
+loop_303_status=complete
+demo_reply_save_blocker_detected=true
+demo_reply_save_error_category=real_push_disabled_applied_to_demo_save
+demo_reply_ui_found=true
+admin_api_route_found=true
+real_push_guard_found=true
+demo_save_path_found=true
+demo_reply_save_blocker_fixed=true
+demo_save_real_push_disabled_bypass_for_demo_only=true
+admin_ui_staff_reply_delivery_mode=demo_save
+api_demo_save_path_skips_line_push=true
+api_demo_save_path_records_timeline=true
+demo_save_with_real_push_disabled_test=pass
+real_send_guard_still_blocks_test=pass
+admin_demo_save_regression_status=pass
+line_real_send_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+production_db_connection_executed=false
+db_change_performed=false
+friday_demo_readiness_status=ready
+production_change_freeze_status=active_after_fix
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Current demo-save reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| Admin demo save | `fixed` | Staff reply demo-save records a timeline message without LINE push. |
+| Real LINE push | `guarded` | Non-demo real push still blocks when real push is disabled. |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| DR readiness | `not_ready_restore_failed` | Frozen known risk; not changed by this blocker fix. |
+| restricted actions | `no_go` | LINE real send, OpenAI API, restore, DB/infra/package changes remain No-Go. |
+
 ## Loop 272 Current Status Override
 
 Loop 272 reviews the DR strategy after production Go and selects the backup artifact validation preflight as the next minimal DR action. It does not execute restore, `pg_restore`, `psql`, Supabase connection, DB changes, package operations, LINE sends, OpenAI calls, or infra changes.

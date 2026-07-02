@@ -395,6 +395,7 @@ export async function sendStaffReply(
   input: {
     customerId: string;
     body: string;
+    deliveryMode?: "demo_save" | "real_line_push";
     realLinePushConfirmed?: boolean;
     linePushConfirmation?: string;
     idempotencyKey?: string;
@@ -404,12 +405,17 @@ export async function sendStaffReply(
   const config = options.config ?? getAdminApiConfig();
   const requestBody: {
     body: string;
+    delivery_mode?: "demo_save" | "real_line_push";
     real_line_push_confirmed?: boolean;
     line_push_confirmation?: string;
     idempotency_key?: string;
   } = {
     body: input.body
   };
+
+  if (input.deliveryMode !== undefined) {
+    requestBody.delivery_mode = input.deliveryMode;
+  }
 
   if (input.realLinePushConfirmed !== undefined) {
     requestBody.real_line_push_confirmed = input.realLinePushConfirmed;
