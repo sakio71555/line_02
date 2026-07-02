@@ -18,6 +18,30 @@ post_go_monitoring_status=pass
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 292 Sanitized Category Intake Blocked
+
+Loop 292 attempted to intake a human/operator sanitized failure category for the Loop 290 failed restore result. No operator-selected category was provided, so remediation planning remains blocked without retry.
+
+```txt
+loop_292_status=blocked
+human_operator_sanitized_failure_category_intake=false
+sanitized_failure_category_provided_by_operator=false
+operator_sanitized_failure_category_found=false
+operator_sanitized_failure_category_intake_status=blocked_not_provided
+sanitized_failure_category=sanitized_category_not_provided
+next_remediation_direction=not_available
+failure_reason=operator_sanitized_failure_category_not_provided
+diagnosis_without_retry=true
+restore_retry_attempt_count=1
+retry_allowed=false
+second_restore_attempt_executed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
 ## Loop 285 Result
 
 ```txt

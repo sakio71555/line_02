@@ -3,8 +3,8 @@
 ## Loop
 
 ```txt
-loop=Loop 291 DR restore failure diagnosis without retry
-status=complete
+loop=Loop 292 human/operator sanitized failure category intake
+status=blocked
 ```
 
 ## Result
@@ -14,49 +14,40 @@ production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
-dr_risk_acceptance_status=accepted_with_known_risk
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=none
-forward_progress_type=dr_restore_failure_diagnosis_without_retry
+forward_progress_type=human_operator_sanitized_failure_category_intake
 diagnosis_without_retry=true
 loop_290_status=failed_no_retry
+loop_291_status=complete
 restore_retry_attempt_count=1
 restore_retry_success=false
 retry_allowed=false
 second_restore_attempt_executed=false
-helper_failure_taxonomy_reviewed=true
-helper_failure_taxonomy_current=sanitized_restore_failed_only
-helper_raw_output_suppressed=true
-helper_exact_failure_cause_available_without_raw_log=false
-artifact_readability_checked_sanitized=true
-archive_list_status=pass
-sanitized_restore_failure_diagnosis_status=limited
-likely_failure_domain=restore_target_compatibility_or_permission_unknown
-raw_log_needed_for_exact_cause=true
-pg_restore_version_checked=true
-pg_restore_running=false
-psql_running=false
-attempt_lock_exists=true
-api_service_active=true
+human_operator_sanitized_failure_category_intake=false
+sanitized_failure_category_provided_by_operator=false
+operator_sanitized_failure_category_found=false
+operator_sanitized_failure_category_allowed=not_applicable
+operator_sanitized_failure_category_intake_status=blocked_not_provided
+sanitized_failure_category=sanitized_category_not_provided
+sanitized_failure_evidence_level=not_provided
+next_remediation_direction=not_available
+failure_reason=operator_sanitized_failure_category_not_provided
 next_loop_requires_new_operator_input=true
 ```
 
 ## Safety
 
 ```txt
-restore_executed=false
-pg_restore_restore_executed=false
-psql_executed=false
-supabase_connection_attempted=false
-production_db_connection_executed=false
-db_change_performed=false
-helper_preflight_executed=false
-helper_execute_executed=false
-secret_recorded=false
-db_url_recorded=false
-password_recorded=false
+pg_restore_executed_in_loop_292=false
+psql_executed_in_loop_292=false
+supabase_connection_attempted_in_loop_292=false
+db_change_performed_in_loop_292=false
+raw_log_accessed=false
 raw_log_recorded=false
+secret_accessed=false
+db_url_accessed=false
 artifact_path_recorded=false
 artifact_filename_recorded=false
 artifact_content_recorded=false
@@ -67,16 +58,12 @@ db_object_recorded=false
 role_recorded=false
 package_name_recorded=false
 extension_name_recorded=false
-line_send_executed=false
-openai_api_executed=false
-nginx_dns_https_certbot_changed=false
-apt_package_operation_executed=false
 restricted_actions_remain_no_go=true
 ```
 
 ## Next Action
 
 ```txt
-next_recommended_loop=Loop 292 human/operator sanitized failure category intake
-loop_292_auto_progression_allowed=false
+next_recommended_loop=Loop 293 operator sanitized failure category request
+loop_293_auto_progression_allowed=false
 ```

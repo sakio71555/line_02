@@ -517,3 +517,37 @@ next_loop_requires_new_operator_input=true
 ```
 
 Loop 291 confirmed that the archive is list-readable and the helper/tooling path is available, but the helper's execution-failure taxonomy remains intentionally sanitized. Exact root cause cannot be obtained without raw restore output or protected detail disclosure, so DR readiness remains not ready and no retry is allowed.
+
+## Loop 292 Sanitized Category Intake Result
+
+```txt
+loop_292_status=blocked
+human_operator_sanitized_failure_category_intake=false
+sanitized_failure_category_provided_by_operator=false
+operator_sanitized_failure_category_found=false
+operator_sanitized_failure_category_allowed=not_applicable
+operator_sanitized_failure_category_intake_status=blocked_not_provided
+sanitized_failure_category=sanitized_category_not_provided
+next_remediation_direction=not_available
+failure_reason=operator_sanitized_failure_category_not_provided
+diagnosis_without_retry=true
+loop_290_status=failed_no_retry
+loop_291_status=complete
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+second_restore_attempt_executed=false
+raw_log_accessed=false
+secret_accessed=false
+db_url_accessed=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_requires_new_operator_input=true
+```
+
+No allowed category was selected by a human/operator, so no remediation direction can be chosen safely. The next step requires an operator-provided sanitized category from the allowed set.
