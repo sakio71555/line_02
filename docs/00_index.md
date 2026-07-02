@@ -144,6 +144,7 @@
 - Loop 305 production rollout blocker remediation: `11_codex_tasks/305_production_rollout_blocker_remediation.md`
 - Loop 306 production external-send enablement decision gate: `11_codex_tasks/306_production_external_send_enablement_decision_gate.md`
 - Loop 307 controlled LINE real send canary activation: `11_codex_tasks/307_controlled_line_real_send_canary_activation.md`
+- Loop 308 LINE canary blocker remediation and operator package: `11_codex_tasks/308_line_canary_blocker_remediation_and_operator_package.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 

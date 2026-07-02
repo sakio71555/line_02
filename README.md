@@ -707,6 +707,8 @@ Loop 306 production external-send enablement decision gateでは、LINE実送信
 
 Loop 307 controlled LINE real send canary activationでは、1通限定LINE canary承認を受けてlocal validation、runtime baseline、canary input availabilityを確認しましたが、operator-provided canary recipient/message が実行コンテキストに無かったため、LINE real send有効化前にblockedしました。送信回数は0、LINE retry/bulk/multicast/broadcast、OpenAI API、runtime config変更、service restart、production DB接続/変更、Nginx/DNS/HTTPS/certbot変更は行っていません。詳細は [Loop 307 task doc](docs/11_codex_tasks/307_controlled_line_real_send_canary_activation.md) を参照してください。
 
+Loop 308 LINE canary blocker remediationでは、Loop 307のmissing input blockerをoperator-side hidden-input packageへ変換し、sanitized result-intake templateを作成しました。ただしread-only baselineでrunning processのreal-send enabled状態が検出されたため、script delivery、runtime変更、service restart、LINE送信は行わずblockedとして停止しました。Production Goは `line_api_admin_current_runtime` のまま、DR restore routeは `frozen_known_risk` のままです。詳細は [Loop 308 task doc](docs/11_codex_tasks/308_line_canary_blocker_remediation_and_operator_package.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

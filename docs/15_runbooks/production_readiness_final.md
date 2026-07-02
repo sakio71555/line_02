@@ -219,6 +219,30 @@ next_loop_candidate=Loop 308: LINE canary blocker remediation
 
 Loop 307 did not enable LINE real send because the required canary runtime inputs were missing. No send, retry, bulk/multicast/broadcast, runtime config change, app service restart, OpenAI call, DB connection/change, restore, Nginx reload/restart, DNS/HTTPS/certbot change, package operation, or protected value recording occurred.
 
+## Loop 308 LINE Canary Blocker Remediation
+
+```txt
+loop_308_status=blocked
+line_canary_blocker_remediation_status=blocked_unexpected_runtime_enabled
+operator_side_line_canary_package_created=true
+operator_side_hidden_input_flow_created=true
+operator_side_line_canary_script_created=false
+operator_side_line_canary_script_blocker=app_specific_send_route_not_safely_scriptable
+operator_side_line_canary_result_intake_template_created=true
+line_real_send_currently_enabled=true
+line_canary_send_attempted_in_loop_308=false
+line_real_send_executed_in_loop_308=false
+runtime_config_changed_in_loop_308=false
+service_restart_executed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
+Production readiness remains scoped to the current LINE/API/Admin runtime. Loop 308 does not expand production scope. It records that the operator-side hidden-input canary package exists, but the current runtime enabled state blocks canary execution until an operator-side sanitized result resolves it.
+
 Current readiness reading:
 
 | bucket | current_status | decision |

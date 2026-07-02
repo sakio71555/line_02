@@ -3,7 +3,7 @@
 ## Loop
 
 ```txt
-loop=Loop 307 controlled LINE real send canary activation
+loop=Loop 308 LINE canary blocker remediation and operator package
 status=blocked
 ```
 
@@ -12,42 +12,44 @@ status=blocked
 ```txt
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=checked_canary_runtime_input_availability_and_stopped_before_enable
-forward_progress_type=blocked_on_concrete_missing_canary_runtime_input
+proliferation_reason=translated_missing_input_blocker_to_operator_hidden_input_package_and_found_new_runtime_precondition_blocker
+forward_progress_type=operator_side_hidden_input_package_plus_unexpected_runtime_gate_blocker
 next_loop_requires_new_operator_input=true
-loop_306_status=complete
 loop_307_status=blocked
-production_line_canary_activation_decision=approved
-line_canary_activation_status=blocked_before_enable
-failure_reason=line_canary_runtime_inputs_not_provided
-local_head_short=fe40067
+loop_308_status=blocked
+line_canary_blocker_remediation_status=blocked_unexpected_runtime_enabled
+previous_blocker=line_canary_runtime_inputs_not_provided
+previous_blocker_resolution=operator_side_hidden_input_execution_package
+local_head_short=669c003
 local_contains_ed3c5a2=true
 demo_save_bypass_limited_to_demo_save=true
 real_send_guard_still_present=true
+line_send_code_path_identified=true
 line_canary_execution_path_identified=true
-vps_runtime_current_commit=ed3c5a2
-vps_runtime_contains_ed3c5a2=true
-production_read_only_baseline_status_pre=pass
+line_canary_gate_review_status=blocked_unexpected_runtime_enabled
+vps_runtime_current_commit=unknown
+vps_runtime_contains_ed3c5a2=source_shape_present
+production_read_only_baseline_status=blocked_unexpected_runtime_enabled
 line_config_presence_status=pass
-line_real_send_currently_enabled_pre=false
-line_canary_runtime_inputs_available=false
-line_canary_recipient_input_present=false
-line_canary_message_input_present=false
-line_canary_auth_context_available=false
-runtime_config_changed_for_line_canary=false
-line_real_send_enabled_for_canary=false
-line_canary_send_attempted=false
-line_canary_send_count=0
-line_canary_send_status=not_attempted
-line_canary_failure_category=line_canary_runtime_inputs_not_provided
-line_real_send_disable_attempted=false
-line_real_send_disabled_after_canary=not_needed
-line_real_send_currently_enabled_after_loop=false
-line_retry_executed=false
-line_bulk_multicast_broadcast_executed=false
+line_real_send_currently_enabled=true
+operator_side_hidden_input_flow_created=true
+operator_side_canary_recipient_required=true
+operator_side_canary_message_required=true
+operator_side_canary_auth_context_required=true
+operator_side_line_send_limit=1
+operator_side_retry_allowed=false
+operator_side_bulk_multicast_broadcast_allowed=false
+operator_side_post_canary_disable_required=true
+operator_side_line_canary_script_created=false
+operator_side_line_canary_script_blocker=app_specific_send_route_not_safely_scriptable
+vps_script_delivery_attempted=false
+vps_script_delivery_status=skipped
+operator_side_line_canary_result_intake_template_created=true
+line_canary_send_attempted_in_loop_308=false
+line_real_send_executed_in_loop_308=false
 openai_api_executed=false
-production_db_direct_connection_executed=false
-production_db_manual_change_performed=false
+runtime_config_changed_in_loop_308=false
+production_db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
@@ -64,17 +66,16 @@ local_lint_status=pass
 local_typecheck_status=pass
 local_test_status=pass
 local_integration_test_status=pass
-public_api_health_status_code_pre=200
-public_admin_root_status_code_pre=200
-public_customers_no_auth_status_code_pre=401
-post_canary_smoke_status=pass
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
 ```
 
 ## Safety
 
 ```txt
 line_real_send_executed=false
-line_canary_send_count_not_greater_than_one=true
+line_canary_send_attempted=false
 line_retry_executed=false
 line_bulk_multicast_broadcast_executed=false
 openai_api_executed=false
@@ -92,13 +93,25 @@ secret_recorded=false
 env_value_recorded=false
 line_identifier_recorded=false
 message_body_recorded=false
+raw_response_body_recorded=false
 host_or_url_recorded=false
 public_endpoint_url_recorded=false
 ```
 
-## Next Action
+## Files
 
 ```txt
-next_loop_candidate=Loop 308: LINE canary blocker remediation
-loop_308_auto_progression_allowed=false
+task_doc=docs/11_codex_tasks/308_line_canary_blocker_remediation_and_operator_package.md
+dev_log=docs/14_dev_logs/2026-07-02.md
+runbooks_updated=true
+handoff_updated=true
+matrices_updated=true
+readme_index_updated=true
+```
+
+## Next
+
+```txt
+next_loop_candidate=Loop 309: operator-side LINE canary execution result intake
+loop_309_auto_progression_allowed=false
 ```

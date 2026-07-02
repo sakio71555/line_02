@@ -2668,6 +2668,41 @@ dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 308 Verification Note
+
+```txt
+loop_308_status=blocked
+git_diff_check_status=pass
+local_lint_status=pass
+local_typecheck_status=pass
+local_test_status=pass
+local_integration_test_status=pass
+demo_save_bypass_limited_to_demo_save=true
+real_send_guard_still_present=true
+line_send_code_path_identified=true
+line_canary_execution_path_identified=true
+production_read_only_baseline_status=blocked_unexpected_runtime_enabled
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+line_config_presence_status=pass
+line_real_send_currently_enabled=true
+operator_side_hidden_input_flow_created=true
+operator_side_line_canary_script_created=false
+operator_side_line_canary_result_intake_template_created=true
+line_canary_send_attempted_in_loop_308=false
+line_real_send_executed_in_loop_308=false
+line_retry_executed=false
+line_bulk_multicast_broadcast_executed=false
+openai_api_executed=false
+runtime_config_changed_in_loop_308=false
+production_db_change_performed=false
+secret_value_check_required=true
+production_go=true
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
 ## Loop 304 Verification Note
 
 ```txt

@@ -488,5 +488,39 @@ dr_readiness_status=not_ready_restore_failed
 Operational meaning:
 
 - LINE real send remains disabled and no one-message canary was sent.
+
+## Loop 308 LINE Canary Blocker Remediation
+
+Loop 308 creates the operator-side hidden-input canary package, but it does not authorize or perform a LINE send.
+
+```txt
+loop_308_status=blocked
+line_canary_blocker_remediation_status=blocked_unexpected_runtime_enabled
+previous_blocker=line_canary_runtime_inputs_not_provided
+previous_blocker_resolution=operator_side_hidden_input_execution_package
+operator_side_line_canary_package_created=true
+operator_side_hidden_input_flow_created=true
+operator_side_line_canary_script_created=false
+operator_side_line_canary_script_blocker=app_specific_send_route_not_safely_scriptable
+operator_side_line_canary_result_intake_template_created=true
+line_real_send_currently_enabled=true
+line_canary_send_attempted_in_loop_308=false
+line_real_send_executed_in_loop_308=false
+openai_api_executed=false
+runtime_config_changed_in_loop_308=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
+Operational meaning:
+
+- The missing canary input blocker is no longer handled by asking Codex to receive protected values. The canary input path is operator-side only.
+- The current runtime enabled state must be resolved by an operator-side disable/verification action before any canary send is considered.
+- No direct-send script is created because the reviewed app-safe send routes do not expose a safe hidden-recipient/message operator path without bypassing the current production scope.
+- Future result intake must be sanitized only and must not include protected values, identifiers, bodies, raw responses, endpoint values, or logs.
 - The next attempt must provide the canary recipient and canary message only in the execution context, never in docs, handoff, final reports, or commit messages.
 - The next attempt must still be one send only, no retry, no bulk/multicast/broadcast, no OpenAI API call, and must disable real send after the attempt if it ever enables the runtime flag.
