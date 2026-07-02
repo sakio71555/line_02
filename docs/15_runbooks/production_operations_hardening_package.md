@@ -386,3 +386,39 @@ Demo implication:
 - Staff reply demo-save can be used to show timeline behavior without real LINE send.
 - Real LINE push remains behind the existing safety gate and still blocks when real push is disabled.
 - This fix does not authorize any new external send, paid API call, DB operation, infrastructure change, or DR restore work.
+
+## Loop 305 Production Rollout Blocker Remediation
+
+Loop 305 used the one-loop controlled rollout exception to deploy the `ed3c5a2` demo-save fix into the active copy-based production runtime.
+
+```txt
+loop_305_status=complete
+production_rollout_blocker_remediation_decision=approved
+previous_blocker=admin_service_restart_required_but_not_explicitly_covered
+previous_blocker_resolved=true
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+target_runtime_commit_expected=ed3c5a2
+deploy_method_selected=existing_copy_based_runbook_active_deploy
+restart_scope_confirmed=api_and_admin_app_services_only
+controlled_active_deploy_executed=true
+copy_based_active_deploy_executed=true
+active_backup_or_snapshot_created=true
+vps_runtime_pre_deploy_commit=01ad8b3
+vps_runtime_post_deploy_commit=ed3c5a2
+vps_runtime_contains_ed3c5a2=true
+api_app_service_restart_executed=true
+admin_app_service_restart_executed=true
+app_service_restart_status=pass
+post_deploy_smoke_status=pass
+public_api_health_status_code_post=200
+public_admin_root_status_code_post=200
+public_customers_no_auth_status_code_post=401
+rollback_executed=false
+```
+
+Operational notes:
+
+- Keep the production change freeze in place except for explicitly approved bounded runtime changes.
+- Treat the demo-save fix as deployed by commit/source evidence, local regression tests, staging validation, active build/restart, and public smoke.
+- Do not treat this Loop as approval for LINE real send, OpenAI API execution, production DB connection/change, DB migration, DR restore, Nginx reload/restart, DNS/HTTPS/certbot, or production Go scope expansion.
+- The next action is exactly one candidate: `Loop 306: production external-send enablement decision gate`.

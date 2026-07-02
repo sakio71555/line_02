@@ -3,8 +3,8 @@
 ## Loop
 
 ```txt
-loop=Loop 304 controlled production rollout for admin/API runtime
-status=blocked
+loop=Loop 305 production rollout blocker remediation
+status=complete
 ```
 
 ## Result
@@ -12,24 +12,41 @@ status=blocked
 ```txt
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=blocked_after_concrete_staging_validation_not_protocol_loop
-forward_progress_type=local_validation_and_vps_staging_validation_completed
+proliferation_reason=resolved_concrete_loop_304_active_rollout_blocker_with_bounded_deploy
+forward_progress_type=active_production_runtime_updated_and_smoked
 next_loop_requires_new_operator_input=true
-production_rollout_decision=approved
+loop_304_status=blocked
+loop_305_status=complete
+production_rollout_blocker_remediation_decision=approved
+previous_blocker=admin_service_restart_required_but_not_explicitly_covered
+previous_blocker_resolved=true
 production_change_freeze_exception=approved_for_controlled_runtime_rollout
 controlled_rollout_scope=admin_api_runtime_demo_save_fix
 target_runtime_commit_expected=ed3c5a2
-local_head_short=ed3c5a2
+local_head_short=3316657
 local_contains_ed3c5a2=true
-production_precheck_status=pass
 deploy_runbook_found=true
-deploy_method_selected=existing_copy_based_runbook_staging_validated_only
-staging_validation_status=pass
-controlled_deploy_executed=false
-app_service_restart_executed=false
-production_runtime_contains_demo_save_fix=false
-demo_save_fix_production_rollout_status=blocked
-rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
+deploy_method_selected=existing_copy_based_runbook_active_deploy
+restart_scope_confirmed=api_and_admin_app_services_only
+controlled_active_deploy_executed=true
+copy_based_active_deploy_executed=true
+active_backup_or_snapshot_created=true
+vps_runtime_pre_deploy_commit=01ad8b3
+vps_runtime_post_deploy_commit=ed3c5a2
+vps_runtime_contains_ed3c5a2=true
+build_executed=true
+build_status=pass
+api_app_service_restart_executed=true
+api_app_service_restart_status=pass
+admin_app_service_restart_executed=true
+admin_app_service_restart_status=pass
+app_service_restart_executed=true
+app_service_restart_status=pass
+post_deploy_smoke_status=pass
+demo_save_fix_production_rollout_status=deployed
+demo_save_fix_production_smoke_status=limited_not_run
+demo_save_fix_production_smoke_reason=commit_and_source_evidence_plus_public_smoke_only_no_private_write
+rollback_executed=false
 real_line_push_still_disabled=true
 line_real_send_executed=false
 openai_api_executed=false
@@ -50,19 +67,26 @@ local_lint_status=pass
 local_typecheck_status=pass
 local_test_status=pass
 local_integration_test_status=pass
+local_build_status=pass
+targeted_demo_save_and_guard_tests_status=pass
 staging_install_status=pass
 staging_lint_status=pass
 staging_typecheck_status=pass
 staging_test_status=pass
-staging_integration_test_status=pass
+staging_integration_status=pass
 staging_build_status=pass
+public_api_health_status_code_post=200
+public_admin_root_status_code_post=200
+public_customers_no_auth_status_code_post=401
 ```
 
 ## Safety
 
 ```txt
-active_runtime_changed=false
-rollback_executed=false
+nginx_reload_executed=false
+db_migration_executed=false
+runtime_config_changed=false
+package_lock_changed=false
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
@@ -71,8 +95,6 @@ production_db_connection_executed=false
 production_db_change_performed=false
 line_real_send_executed=false
 openai_api_executed=false
-nginx_reload_executed=false
-runtime_config_changed=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
@@ -85,6 +107,6 @@ public_endpoint_url_recorded=false
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 305: production rollout blocker remediation
-loop_305_auto_progression_allowed=false
+next_loop_candidate=Loop 306: production external-send enablement decision gate
+loop_306_auto_progression_allowed=false
 ```

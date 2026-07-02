@@ -5,7 +5,7 @@
 
 必ず以下の順で判定してください。
 
-1. このLoopは complete / blocked / failed のどれか
+1. このLoopは complete / blocked / failed / rolled_back のどれか
 2. blockedの場合、同じblockerが過去に何回出ているか
 3. Codexが提案した次Loop候補を採用するか、却下するか
 4. 却下する場合、理由は何か
@@ -17,26 +17,30 @@
 ## Review Target
 
 ```txt
-loop=Loop 304 controlled production rollout for admin/API runtime
-status=blocked
+loop=Loop 305 production rollout blocker remediation
+status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
-proliferation_reason=blocked_after_concrete_staging_validation_not_protocol_loop
-forward_progress_type=local_validation_and_vps_staging_validation_completed
+proliferation_reason=resolved_concrete_loop_304_active_rollout_blocker_with_bounded_deploy
+forward_progress_type=active_production_runtime_updated_and_smoked
 next_loop_requires_new_operator_input=true
-production_rollout_decision=approved
+loop_304_status=blocked
+loop_305_status=complete
+production_rollout_blocker_remediation_decision=approved
+previous_blocker=admin_service_restart_required_but_not_explicitly_covered
+previous_blocker_resolved=true
 production_change_freeze_exception=approved_for_controlled_runtime_rollout
 controlled_rollout_scope=admin_api_runtime_demo_save_fix
-local_validation_status=pass
-production_precheck_status=pass
-deploy_runbook_found=true
-deploy_method_selected=existing_copy_based_runbook_staging_validated_only
-staging_validation_status=pass
-controlled_deploy_executed=false
-app_service_restart_executed=false
-production_runtime_contains_demo_save_fix=false
-demo_save_fix_production_rollout_status=blocked
-rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
+target_runtime_commit_expected=ed3c5a2
+vps_runtime_pre_deploy_commit=01ad8b3
+vps_runtime_post_deploy_commit=ed3c5a2
+vps_runtime_contains_ed3c5a2=true
+controlled_active_deploy_executed=true
+copy_based_active_deploy_executed=true
+restart_scope_confirmed=api_and_admin_app_services_only
+post_deploy_smoke_status=pass
+demo_save_fix_production_rollout_status=deployed
+rollback_executed=false
 real_line_push_still_disabled=true
 line_real_send_executed=false
 openai_api_executed=false
@@ -45,23 +49,21 @@ production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
-next_loop_candidate=Loop 305: production rollout blocker remediation
-loop_305_auto_progression_allowed=false
+next_loop_candidate=Loop 306: production external-send enablement decision gate
+loop_306_auto_progression_allowed=false
 ```
 
 ## Review Focus
 
-- Confirm that this Loop made concrete progress through local and VPS staging validation, not another protocol-only Loop.
-- Confirm that active production was intentionally not changed because the existing deploy path needs Admin app service restart approval.
-- Decide whether the next action should explicitly approve the existing Admin app service restart, choose API-only rollout, or keep production unchanged.
-- Confirm that no LINE real send, OpenAI API call, restore, DB change, Nginx reload, secret/raw data recording, host/URL recording, or endpoint URL recording occurred.
-- Confirm whether Loop 305 should be accepted as the single blocker remediation Loop.
+- Confirm that Loop 305 resolved the exact Loop 304 blocker by explicitly allowing the existing API/Admin app service restarts.
+- Confirm that the active copy-based runtime now contains `ed3c5a2` and post-deploy smoke passed.
+- Confirm that the demo-save direct production write smoke was intentionally not run because it would require private workflow input or a production write.
+- Confirm that this Loop did not authorize LINE real send, OpenAI API execution, DB changes, DR restore, Nginx reload/restart, DNS/HTTPS/certbot, runtime config change, or production Go scope expansion.
+- Decide whether the only next candidate, `Loop 306: production external-send enablement decision gate`, should be accepted, delayed, or replaced by human review.
 
 ## Safety Boundary
 
 ```txt
-active_runtime_changed=false
-rollback_executed=false
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
@@ -72,6 +74,7 @@ line_real_send_executed=false
 openai_api_executed=false
 nginx_reload_executed=false
 runtime_config_changed=false
+package_lock_changed=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false

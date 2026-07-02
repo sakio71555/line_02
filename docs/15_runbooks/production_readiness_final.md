@@ -132,6 +132,35 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 305 Production Runtime Rollout
+
+```txt
+loop_305_status=complete
+production_rollout_blocker_remediation_decision=approved
+previous_blocker_resolved=true
+production_change_freeze_exception=approved_for_controlled_runtime_rollout
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+target_runtime_commit_expected=ed3c5a2
+demo_save_fix_production_rollout_status=deployed
+controlled_active_deploy_executed=true
+copy_based_active_deploy_executed=true
+vps_runtime_post_deploy_commit=ed3c5a2
+vps_runtime_contains_ed3c5a2=true
+post_deploy_smoke_status=pass
+public_api_health_status_code_post=200
+public_admin_root_status_code_post=200
+public_customers_no_auth_status_code_post=401
+rollback_executed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Production remains Go for the current LINE/API/Admin runtime. Loop 305 updates that runtime with the demo-save fix, but does not authorize external-send expansion, OpenAI activation, production DB changes, infra changes, or DR restore work.
+
 Current readiness reading:
 
 | bucket | current_status | decision |

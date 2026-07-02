@@ -1799,3 +1799,43 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 305: production rollout blocker remediation
 ```
+
+## Loop 305 Production Rollout Blocker Remediation
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Controlled rollout | `complete` | Loop 304 blocker resolved with explicit API/Admin app service restart approval. |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| Active runtime | `updated` | Copy-based active deploy moved runtime marker from `01ad8b3` to `ed3c5a2`. |
+| Demo-save fix in production | `deployed` | Active source contains `demo_save`; public smoke passed. |
+| DR restore route | `frozen_known_risk` | Not part of this rollout. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `external_send_enablement_decision_gate` | Single next Loop candidate is Loop 306. |
+
+```txt
+loop_305_status=complete
+production_rollout_blocker_remediation_decision=approved
+previous_blocker_resolved=true
+production_change_freeze_exception=approved_for_controlled_runtime_rollout
+controlled_rollout_scope=admin_api_runtime_demo_save_fix
+target_runtime_commit_expected=ed3c5a2
+controlled_active_deploy_executed=true
+copy_based_active_deploy_executed=true
+vps_runtime_post_deploy_commit=ed3c5a2
+vps_runtime_contains_ed3c5a2=true
+api_app_service_restart_executed=true
+admin_app_service_restart_executed=true
+post_deploy_smoke_status=pass
+demo_save_fix_production_rollout_status=deployed
+rollback_executed=false
+line_real_send_executed=false
+openai_api_executed=false
+production_db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 306: production external-send enablement decision gate
+```

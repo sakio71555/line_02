@@ -2665,3 +2665,27 @@ public_endpoint_url_recorded=false
 loop_304_status=blocked
 rollout_blocker=admin_service_restart_required_but_not_explicitly_covered_by_loop_304_restart_boundary
 ```
+
+## Loop 305 Verification Note
+
+```txt
+loop_305_status=complete
+git_diff_check_status=pass
+local_lint_status=pass
+local_typecheck_status=pass
+local_test_status=pass
+local_integration_test_status=pass
+local_build_status=pass
+targeted_demo_save_and_guard_tests_status=pass
+staging_validation_status=pass
+active_build_status=pass
+app_service_restart_status=pass
+public_api_health_status_code_post=200
+public_admin_root_status_code_post=200
+public_customers_no_auth_status_code_post=401
+post_deploy_smoke_status=pass
+rollback_executed=false
+secret_value_check_required=true
+production_go=true
+dr_readiness_status=not_ready_restore_failed
+```
