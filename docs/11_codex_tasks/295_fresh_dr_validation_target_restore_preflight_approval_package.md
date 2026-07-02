@@ -1,0 +1,260 @@
+# Loop 295: Fresh DR Validation Target Restore Preflight Approval Package
+
+## Purpose
+
+Prepare the approval package for a future one-time restore execution against a fresh clean DR validation target.
+
+This Loop does not execute restore, does not run `pg_restore` restore, does not run `psql`, does not connect to Supabase, does not change any DB, does not operate VPS/runtime/infra, and does not run the guarded helper. Loop 296 is the only next candidate and still requires a separate explicit operator instruction.
+
+## Official Input State
+
+```txt
+loop_290_commit=840d2d1
+loop_290_status=failed_no_retry
+restore_retry_attempted=true
+restore_retry_attempt_count=1
+restore_retry_success=false
+retry_allowed=false
+pg_restore_executed=true
+psql_executed=false
+supabase_connection_attempted=true
+db_change_performed=true
+loop_291_commit=e26ac34
+loop_291_status=complete
+diagnosis_without_retry=true
+sanitized_restore_failure_diagnosis_status=limited
+loop_292_commit=9220f40
+loop_292_status=blocked
+loop_293_commit=8b0356e
+loop_293_status=complete
+sanitized_failure_category=schema_or_object_conflict_category
+loop_294_commit=f3ecae8
+loop_294_status=complete
+remediation_strategy_selected=fresh_clean_dr_validation_target_restore_path
+current_failed_dr_target_reuse_allowed=false
+current_failed_dr_target_status=do_not_reuse_for_restore_retry
+new_or_recreated_dr_target_required=true
+clean_target_required=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+dr_readiness_status=not_ready_restore_failed
+```
+
+## Local Confirmation
+
+```txt
+local_working_directory_confirmed=true
+local_git_status_initial=clean
+local_helper_exists=true
+local_helper_bash_validation_status=pass
+loop_294_record_found=true
+fresh_clean_dr_path_recorded=true
+current_failed_target_reuse_disallowed_recorded=true
+clean_target_required_recorded=true
+schema_conflict_category_recorded=true
+```
+
+## Official Decisions
+
+```txt
+loop_295_status=complete
+fresh_dr_validation_target_preflight_approval_package_created=true
+fresh_clean_target_path_confirmed_as_next_path=true
+current_failed_dr_target_reuse_allowed=false
+current_failed_dr_target_status=do_not_reuse_for_restore_retry
+fresh_target_required=true
+fresh_target_must_be_clean=true
+fresh_target_must_be_dr_validation_only=true
+fresh_target_must_not_be_production=true
+fresh_target_must_be_healthy=true
+fresh_target_connection_string_must_belong_to_fresh_dr_target=true
+fresh_target_runtime_inputs_required=true
+fresh_target_operator_confirmation_required=true
+fresh_target_operator_confirmation_template_created=true
+fresh_target_runtime_input_handoff_plan_created=true
+fresh_target_stop_conditions_created=true
+fresh_target_result_classifications_created=true
+loop_296_execution_boundary_created=true
+restore_execution_in_loop_295=false
+restore_execution_allowed_next_loop=true_only_with_explicit_operator_approval
+loop_296_candidate=Loop 296: fresh DR validation target one-time restore execution
+production_restore_allowed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+## Recommended Strategy
+
+```txt
+recommended_strategy=create_or_recreate_fresh_clean_dr_validation_target
+```
+
+Reasoning:
+
+- Loop 290 consumed the single allowed restore attempt and recorded a failed result.
+- Loop 290 recorded that DB state changed during the human-side attempt.
+- Loop 293 accepted `schema_or_object_conflict_category`.
+- A partially changed target can amplify conflict symptoms and make the next result harder to interpret.
+- A fresh clean DR validation target gives the next execution a clearer pass/fail signal.
+
+## Operator Confirmation Template
+
+Use this category-only template for Loop 296 approval. Values must be `true` or `false`; protected target details must not be pasted into docs, handoff, or final reports.
+
+```txt
+operator_confirms_fresh_dr_target_available=true_or_false
+operator_confirms_fresh_dr_target_is_not_current_failed_target=true_or_false
+operator_confirms_fresh_dr_target_is_dr_validation_only=true_or_false
+operator_confirms_fresh_dr_target_is_not_production=true_or_false
+operator_confirms_fresh_dr_target_is_healthy=true_or_false
+operator_confirms_fresh_dr_target_is_clean=true_or_false
+operator_confirms_fresh_dr_target_can_be_overwritten=true_or_false
+operator_confirms_connection_string_belongs_to_fresh_dr_target=true_or_false
+operator_confirms_connection_string_not_production=true_or_false
+operator_confirms_artifact_candidate_available=true_or_false
+operator_confirms_pg_restore_tooling_available_or_preflight_required=true_or_false
+operator_confirms_secret_values_will_not_be_recorded=true_or_false
+operator_confirms_raw_logs_will_not_be_recorded=true_or_false
+operator_confirms_one_attempt_only_policy=true_or_false
+```
+
+## Runtime Input Handoff Policy
+
+Loop 296 may use sensitive runtime values only inside the operator/VPS execution context. Codex docs and final reports must receive only sanitized key/value status fields.
+
+```txt
+fresh_target_runtime_input_handoff_policy=operator_vps_execution_context_only
+runtime_input_values_recording_allowed=false
+runtime_input_prefix_suffix_length_hash_recording_allowed=false
+db_url_recording_allowed=false
+artifact_path_recording_allowed=false
+artifact_filename_recording_allowed=false
+raw_log_recording_allowed=false
+sanitized_key_value_result_required=true
+```
+
+## Loop 296 Execution Boundary
+
+Loop 296 may execute a one-time restore only if every field below is confirmed true or pass in that Loop.
+
+```txt
+fresh_target_operator_confirmation_complete=true
+fresh_target_is_dr_validation_only=true
+fresh_target_is_not_production=true
+fresh_target_is_healthy=true
+fresh_target_is_clean=true
+fresh_target_can_be_overwritten=true
+connection_string_belongs_to_fresh_dr_target=true
+connection_string_not_production=true
+artifact_candidate_available=true
+helper_preflight_status=pass
+restore_target_scope_category=dr_validation_target
+restore_tool_selected=pg_restore
+restore_retry_attempt_limit=1
+retry_allowed=false
+stop_on_first_failure=true
+production_restore_allowed=false
+```
+
+Loop 296 must stop if any field is false, missing, unknown, or requires protected values to be shown. Loop 296 must not reuse the current failed DR target and must not automatically proceed to Loop 297.
+
+## Stop Conditions
+
+```txt
+stop_if_fresh_target_confirmation_incomplete=true
+stop_if_target_is_current_failed_target=true
+stop_if_target_not_dr_validation_only=true
+stop_if_target_is_production=true
+stop_if_target_not_healthy=true
+stop_if_target_not_clean=true
+stop_if_target_cannot_be_overwritten=true
+stop_if_connection_scope_not_confirmed=true
+stop_if_artifact_candidate_unavailable=true
+stop_if_helper_preflight_not_pass=true
+stop_if_restore_tool_unavailable=true
+stop_if_attempt_limit_not_one=true
+stop_if_retry_requested=true
+stop_if_protected_values_or_raw_logs_needed=true
+```
+
+## Result Classifications For Loop 296
+
+```txt
+loop_296_result_classification_allowed_1=fresh_target_runtime_input_not_provided
+loop_296_result_classification_allowed_2=fresh_target_preflight_blocked
+loop_296_result_classification_allowed_3=fresh_target_restore_success
+loop_296_result_classification_allowed_4=fresh_target_restore_failed_no_retry
+```
+
+Any Loop 296 outcome must be recorded as sanitized metadata only. Success cannot expand production scope by itself, and failure must remain no-retry unless a later explicit Loop makes a new decision.
+
+## Safety Boundary
+
+```txt
+restore_execution_in_loop_295=false
+restore_executed_in_loop_295=false
+pg_restore_executed_in_loop_295=false
+psql_executed_in_loop_295=false
+supabase_connection_attempted_in_loop_295=false
+db_change_performed_in_loop_295=false
+vps_operation_executed_in_loop_295=false
+helper_preflight_executed_in_loop_295=false
+helper_execute_executed_in_loop_295=false
+second_restore_attempt_executed=false
+current_failed_dr_target_reuse_allowed=false
+retry_allowed=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+password_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+schema_name_recorded=false
+table_name_recorded=false
+relation_name_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+host_or_url_recorded=false
+project_ref_recorded=false
+sqlstate_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+## Anti-Proliferation Check
+
+```txt
+anti_proliferation_check=pass
+is_this_loop_proliferation_risk=false
+proliferation_reason=none
+forward_progress_type=fresh_dr_validation_target_preflight_approval_package
+next_loop_requires_new_operator_input=true
+```
+
+Loop 295 is forward progress because it creates the fresh target confirmation template, runtime input handoff policy, Loop 296 execution boundary, stop conditions, and result classifications. It does not merely re-summarize Loop 294.
+
+## Verification
+
+```txt
+git_diff_check=pass
+local_helper_bash_validation_status=pass
+docs_link_check=pass
+secret_artifact_value_check=pass
+validation_passed=true
+sanitized_docs_updated=true
+lint=pass
+typecheck=not_run_docs_only
+test=not_run_docs_only
+commit_created=true
+push_executed=true
+```

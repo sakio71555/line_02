@@ -2184,6 +2184,37 @@ typecheck=not_run_docs_only
 test=not_run_docs_only
 ```
 
+## Loop 295 Verification Note
+
+```txt
+loop_295_status=complete
+local_working_directory_confirmed=true
+local_git_status_initial=clean
+local_helper_exists=true
+local_helper_bash_validation_status=pass
+loop_294_record_found=true
+fresh_clean_dr_path_recorded=true
+current_failed_target_reuse_disallowed_recorded=true
+clean_target_required_recorded=true
+schema_conflict_category_recorded=true
+fresh_dr_validation_target_preflight_approval_package_created=true
+fresh_target_operator_confirmation_template_created=true
+fresh_target_runtime_input_handoff_plan_created=true
+fresh_target_stop_conditions_created=true
+fresh_target_result_classifications_created=true
+loop_296_execution_boundary_created=true
+restore_execution_in_loop_295=false
+second_restore_attempt_executed=false
+restricted_actions_remain_no_go=true
+git_diff_check=pass
+docs_link_check=pass
+secret_artifact_value_check=pass
+validation_passed=true
+lint=pass
+typecheck=not_run_docs_only
+test=not_run_docs_only
+```
+
 ## Loop 291 Verification Note
 
 ```txt

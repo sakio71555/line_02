@@ -90,6 +90,42 @@ future_loop_candidate=Loop 296: fresh DR validation target one-time restore exec
 loop_296_auto_progression_allowed=false
 ```
 
+## Loop 295 Fresh DR Validation Target Preflight Approval Package
+
+Loop 295 turns the Loop 294 remediation path into a concrete approval package for a future one-time execution. It still does not authorize or execute restore.
+
+```txt
+loop_295_status=complete
+fresh_dr_validation_target_preflight_approval_package_created=true
+fresh_clean_target_path_confirmed_as_next_path=true
+fresh_target_operator_confirmation_template_created=true
+fresh_target_runtime_input_handoff_plan_created=true
+fresh_target_stop_conditions_created=true
+fresh_target_result_classifications_created=true
+loop_296_execution_boundary_created=true
+current_failed_dr_target_reuse_allowed=false
+current_failed_dr_target_status=do_not_reuse_for_restore_retry
+fresh_target_required=true
+fresh_target_must_be_clean=true
+fresh_target_must_be_dr_validation_only=true
+fresh_target_must_not_be_production=true
+fresh_target_must_be_healthy=true
+fresh_target_connection_string_must_belong_to_fresh_dr_target=true
+fresh_target_runtime_inputs_required=true
+fresh_target_operator_confirmation_required=true
+restore_execution_in_loop_295=false
+restore_execution_allowed_next_loop=true_only_with_explicit_operator_approval
+loop_296_candidate=Loop 296: fresh DR validation target one-time restore execution
+production_restore_allowed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Loop 296 must stop unless the fresh target confirmations are complete, the target is DR-validation-only, clean, healthy, and overwrite-eligible, runtime input handoff remains operator/VPS-context-only, helper preflight passes, one-attempt policy is preserved, and no protected values need to be recorded.
+
 ## Loop 292 Sanitized Category Intake Blocked
 
 Loop 292 attempted to intake a human/operator sanitized failure category for the Loop 290 failed restore result. No operator-selected category was provided, so remediation planning remains blocked without retry.

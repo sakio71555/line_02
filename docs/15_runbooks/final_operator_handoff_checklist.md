@@ -2534,3 +2534,57 @@ Operator handoff:
 - Confirm only sanitized readiness fields for a fresh clean DR validation target.
 - Do not share secrets, DB URLs, artifact paths or filenames, raw logs, SQL, DB object names, role names, schema/table/relation names, package names, extension names, endpoint details, LINE identifiers, message bodies, or production logs.
 - Treat Loop 295 as approval/preflight only; do not run restore until a separate explicit future Loop.
+
+## Loop 295 Current Status Override
+
+Loop 295 creates the fresh target preflight approval package and the operator confirmation template for the future one-time restore execution Loop.
+
+```txt
+loop_295_current_status_override=true
+loop_295_status=complete
+fresh_dr_validation_target_preflight_approval_package_created=true
+fresh_clean_target_path_confirmed_as_next_path=true
+current_failed_dr_target_reuse_allowed=false
+current_failed_dr_target_status=do_not_reuse_for_restore_retry
+fresh_target_required=true
+fresh_target_must_be_clean=true
+fresh_target_must_be_dr_validation_only=true
+fresh_target_must_not_be_production=true
+fresh_target_must_be_healthy=true
+fresh_target_connection_string_must_belong_to_fresh_dr_target=true
+fresh_target_runtime_inputs_required=true
+fresh_target_operator_confirmation_required=true
+fresh_target_operator_confirmation_template_created=true
+fresh_target_runtime_input_handoff_plan_created=true
+fresh_target_stop_conditions_created=true
+fresh_target_result_classifications_created=true
+loop_296_execution_boundary_created=true
+restore_execution_in_loop_295=false
+restore_execution_allowed_next_loop=true_only_with_explicit_operator_approval
+loop_296_candidate=Loop 296: fresh DR validation target one-time restore execution
+production_restore_allowed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Loop 296 operator confirmation template:
+
+```txt
+operator_confirms_fresh_dr_target_available=true_or_false
+operator_confirms_fresh_dr_target_is_not_current_failed_target=true_or_false
+operator_confirms_fresh_dr_target_is_dr_validation_only=true_or_false
+operator_confirms_fresh_dr_target_is_not_production=true_or_false
+operator_confirms_fresh_dr_target_is_healthy=true_or_false
+operator_confirms_fresh_dr_target_is_clean=true_or_false
+operator_confirms_fresh_dr_target_can_be_overwritten=true_or_false
+operator_confirms_connection_string_belongs_to_fresh_dr_target=true_or_false
+operator_confirms_connection_string_not_production=true_or_false
+operator_confirms_artifact_candidate_available=true_or_false
+operator_confirms_pg_restore_tooling_available_or_preflight_required=true_or_false
+operator_confirms_secret_values_will_not_be_recorded=true_or_false
+operator_confirms_raw_logs_will_not_be_recorded=true_or_false
+operator_confirms_one_attempt_only_policy=true_or_false
+```

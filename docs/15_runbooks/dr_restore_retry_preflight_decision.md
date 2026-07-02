@@ -623,3 +623,35 @@ restricted_actions_remain_no_go=true
 ```
 
 Loop 295 must be a preflight approval package only. It should collect sanitized operator confirmations for a fresh clean DR validation target and should not execute restore. Loop 296 is future-only and requires separate explicit approval.
+
+## Loop 295 Fresh Target Approval Package
+
+Loop 295 defines the final preflight approval boundary before any future one-time execution. The current failed target remains No-Go.
+
+```txt
+loop_295_status=complete
+fresh_dr_validation_target_preflight_approval_package_created=true
+fresh_clean_target_path_confirmed_as_next_path=true
+current_failed_dr_target_reuse_allowed=false
+fresh_target_required=true
+fresh_target_must_be_clean=true
+fresh_target_must_be_dr_validation_only=true
+fresh_target_must_not_be_production=true
+fresh_target_must_be_healthy=true
+fresh_target_connection_string_must_belong_to_fresh_dr_target=true
+fresh_target_runtime_inputs_required=true
+fresh_target_operator_confirmation_required=true
+fresh_target_operator_confirmation_template_created=true
+fresh_target_runtime_input_handoff_plan_created=true
+fresh_target_stop_conditions_created=true
+fresh_target_result_classifications_created=true
+loop_296_execution_boundary_created=true
+restore_execution_in_loop_295=false
+restore_execution_allowed_next_loop=true_only_with_explicit_operator_approval
+loop_296_candidate=Loop 296: fresh DR validation target one-time restore execution
+production_restore_allowed=false
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+```
+
+Loop 296 must stop if any fresh target confirmation is false, missing, unknown, or would require protected values to be shown. Loop 296 must not automatically proceed to another Loop.

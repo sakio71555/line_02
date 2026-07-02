@@ -679,6 +679,8 @@ Loop 293 sanitized failure category intake and remediation directionでは、人
 
 Loop 294 schema conflict remediation execution package without DB changeでは、Loop 293のsanitizedカテゴリを受けて `fresh_clean_dr_validation_target_restore_path` を選択しました。Loop 290の1回限りの失敗済みDRターゲットは部分変更済みの可能性があるため、`current_failed_dr_target_reuse_allowed=false` とし、新規または再作成済みのクリーンなDR検証ターゲットを次Loopで確認する方針にしています。restore、pg_restore、psql、Supabase接続、DB変更、VPS操作、helper実行、2回目のrestore retryは行っていません。production Goは `line_api_admin_current_runtime` のまま維持し、DR readinessは `not_ready_restore_failed` のままです。
 
+Loop 295 fresh DR validation target restore preflight approval packageでは、Loop 294のfresh clean DR target方針を、次の1回限り実行Loopで迷わない承認パッケージに進めました。fresh targetのcategory-only確認テンプレート、operator/VPS execution context限定のruntime input handoff方針、Loop 296の実行境界、stop conditions、success/failed_no_retry分類を追加しています。Loop 295ではrestore、pg_restore、psql、Supabase接続、DB変更、VPS操作、helper実行は行っていません。次Loop候補は `Loop 296: fresh DR validation target one-time restore execution` の1つだけです。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
