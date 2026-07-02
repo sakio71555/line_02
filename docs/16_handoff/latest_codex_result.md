@@ -3,49 +3,60 @@
 ## Loop
 
 ```txt
-loop=Loop 299 sanitized helper taxonomy improvement without restore
+loop=Loop 300 DR restore route freeze and production operations resume
 status=complete
 ```
 
 ## Result
 
 ```txt
-loop_298_status=complete
 loop_299_status=complete
-helper_taxonomy_improvement_needed=true
-helper_taxonomy_improvement_implemented=true
-helper_restore_failure_category_output_added=true
-helper_failure_classifier_categories_added=true
-helper_current_taxonomy=sanitized_restore_failed_only
-helper_new_taxonomy=sanitized_restore_failure_category_output
-helper_raw_failure_output_printed=false
-helper_raw_failure_output_recorded=false
-helper_raw_failure_output_retained=false
-helper_transient_capture_cleanup_enforced=true
-helper_preflight_behavior_preserved=true
-helper_execute_one_attempt_behavior_preserved=true
-classifier_validation_status=pass
-local_helper_bash_validation_status=pass
-vps_helper_delivery_attempted=true
-vps_helper_delivery_status=success
-vps_helper_bash_validation_status=pass
-vps_classifier_validation_status=pass
+loop_300_status=complete
+dr_restore_route_freeze_decision=approved
+dr_restore_route_status=frozen_known_risk
+dr_restore_known_risk_accepted=true
+dr_restore_retry_allowed=false_without_new_strategy
+dr_restore_preflight_allowed=false_without_new_strategy
+dr_restore_diagnosis_loop_allowed=false_without_new_strategy
+dr_restore_resume_requires_new_operator_decision=true
+dr_restore_resume_requires_new_strategy=true
+production_operations_resume=true
+production_operations_baseline_package_created=true
+next_focus=production_operations_hardening
+next_loop_candidate=Loop 301: production operations hardening package
 production_go=true
 production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
+```
+
+## Read-Only Production Baseline
+
+```txt
+ssh_access_available=true
+vps_working_directory_available=true
+api_service_active=true
+nginx_service_active=true
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+disk_capacity_status=ok
+memory_capacity_status=ok
+production_read_only_baseline_checked=true
+production_baseline_check_changed_runtime=false
 ```
 
 ## Safety
 
 ```txt
-restore_execution_in_loop_299=false
-helper_preflight_executed_in_loop_299=false
-helper_execute_executed_in_loop_299=false
-pg_restore_restore_executed_in_loop_299=false
-psql_executed_in_loop_299=false
-supabase_connection_attempted_in_loop_299=false
-db_change_performed_in_loop_299=false
+restore_execution_in_loop_300=false
+helper_preflight_executed_in_loop_300=false
+helper_execute_executed_in_loop_300=false
+pg_restore_restore_executed_in_loop_300=false
+psql_executed_in_loop_300=false
+supabase_connection_attempted_in_loop_300=false
+db_change_performed_in_loop_300=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
@@ -60,9 +71,19 @@ host_or_url_recorded=false
 project_ref_recorded=false
 ```
 
+## Anti-Proliferation
+
+```txt
+anti_proliferation_check=pass
+is_this_loop_proliferation_risk=false
+proliferation_reason=none
+forward_progress_type=dr_restore_route_freeze_and_production_operations_resume
+next_loop_requires_new_operator_input=false
+```
+
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
-loop_300_auto_progression_allowed=false
+next_loop_candidate=Loop 301: production operations hardening package
+loop_301_auto_progression_allowed=false
 ```

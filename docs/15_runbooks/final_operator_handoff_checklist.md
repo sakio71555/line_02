@@ -2727,5 +2727,48 @@ db_change_performed_in_loop_299=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_readiness_status=not_ready_restore_failed
-selected_next_minimal_action=Loop 300 fresh DR restore preflight with improved helper taxonomy
+selected_next_minimal_action_superseded_by=Loop 300 DR restore route freeze and production operations resume
 ```
+
+## Loop 300 Current Status Override
+
+Loop 300 freezes the DR restore route as a known risk and resumes production operations hardening. This overrides the previous DR-next-loop momentum after Loop 299.
+
+```txt
+loop_300_current_status_override=true
+loop_300_status=complete
+dr_restore_route_freeze_decision=approved
+dr_restore_route_status=frozen_known_risk
+dr_restore_known_risk_accepted=true
+dr_restore_retry_allowed=false_without_new_strategy
+dr_restore_preflight_allowed=false_without_new_strategy
+dr_restore_diagnosis_loop_allowed=false_without_new_strategy
+dr_restore_resume_requires_new_operator_decision=true
+dr_restore_resume_requires_new_strategy=true
+helper_taxonomy_available_for_future=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+production_operations_resume=true
+production_operations_baseline_package_created=true
+production_read_only_baseline_checked=true
+api_service_active=true
+nginx_service_active=true
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+disk_capacity_status=ok
+memory_capacity_status=ok
+production_baseline_check_changed_runtime=false
+next_focus=production_operations_hardening
+selected_next_minimal_action=Loop 301 production operations hardening package
+```
+
+Operator handoff:
+
+- Treat DR restore as frozen known risk until a new operator decision and new strategy are provided.
+- Continue production operations from runtime monitoring, smoke checks, incident response, operator handoff clarity, and API/Admin runtime hardening.
+- Do not run helper preflight, helper execute, restore, `pg_restore` restore, `psql`, Supabase DB connection, production DB connection, DB changes, service restart, Nginx reload, package operations, additional LINE sends, or OpenAI API calls from this handoff.
+- Keep recording only sanitized statuses and categories.

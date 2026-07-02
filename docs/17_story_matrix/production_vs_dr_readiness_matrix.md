@@ -1602,5 +1602,40 @@ production_go_scope_expanded=false
 production_restore_allowed=false
 dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
-next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
+next_loop_candidate_superseded_by=Loop 300 DR restore route freeze and production operations resume
+```
+
+## Loop 300 DR Restore Route Freeze
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| DR restore route | `frozen_known_risk` | No more restore retry, preflight, or diagnosis without a new operator decision and new strategy. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Production operations | `resumed` | Read-only baseline package created and checked. |
+| Next focus | `production_operations_hardening` | Single next Loop candidate is Loop 301. |
+
+```txt
+loop_300_status=complete
+dr_restore_route_status=frozen_known_risk
+dr_restore_retry_allowed=false_without_new_strategy
+dr_restore_preflight_allowed=false_without_new_strategy
+dr_restore_diagnosis_loop_allowed=false_without_new_strategy
+production_operations_resume=true
+production_operations_baseline_package_created=true
+production_read_only_baseline_checked=true
+api_service_active=true
+nginx_service_active=true
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+disk_capacity_status=ok
+memory_capacity_status=ok
+production_baseline_check_changed_runtime=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 301: production operations hardening package
 ```

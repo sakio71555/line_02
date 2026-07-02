@@ -748,5 +748,5 @@ helper_preflight_behavior_preserved=true
 helper_execute_one_attempt_behavior_preserved=true
 restore_execution_in_loop_299=false
 db_change_performed_in_loop_299=false
-next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
+next_loop_candidate_superseded_by=Loop 300 DR restore route freeze and production operations resume
 ```

@@ -18,6 +18,44 @@ post_go_monitoring_status=pass
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 300 DR Restore Route Freeze
+
+Loop 300 freezes the DR restore route as a known accepted risk and switches the active workstream back to production operations. It does not authorize another restore retry, preflight, or diagnosis loop.
+
+```txt
+loop_300_status=complete
+dr_restore_route_freeze_decision=approved
+dr_restore_route_status=frozen_known_risk
+dr_restore_known_risk_accepted=true
+dr_restore_retry_allowed=false_without_new_strategy
+dr_restore_preflight_allowed=false_without_new_strategy
+dr_restore_diagnosis_loop_allowed=false_without_new_strategy
+dr_restore_resume_requires_new_operator_decision=true
+dr_restore_resume_requires_new_strategy=true
+dr_restore_resume_requires_new_target_or_alternative_path=true
+current_failed_dr_target_reuse_allowed=false
+fresh_failed_dr_target_reuse_allowed=false
+helper_taxonomy_available_for_future=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+DR work can resume only when a new operator decision and a new strategy are provided. Acceptable triggers are an approved alternative DR path, an approved non-`pg_restore` strategy, an approved new fresh target attempt with a new strategy, or a production risk profile change that makes DR the active priority again.
+
+Production operations resume immediately:
+
+```txt
+production_operations_resume=true
+production_operations_baseline_package_created=true
+next_focus=production_operations_hardening
+next_loop_candidate=Loop 301: production operations hardening package
+```
+
+The next Loop must not restart DR restore work.
+
 ## Loop 293 Sanitized Category Accepted
 
 Loop 293 accepted the operator-provided sanitized category and selected a category-only remediation direction. No remediation action was executed.
@@ -248,7 +286,7 @@ production_go=true
 production_go_scope=line_api_admin_current_runtime
 dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
-next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
+next_loop_candidate_superseded_by=Loop 300 DR restore route freeze and production operations resume
 ```
 
 ## Loop 292 Sanitized Category Intake Blocked

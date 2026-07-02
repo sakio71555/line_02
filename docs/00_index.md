@@ -135,6 +135,7 @@
 - Loop 297 operator-side fresh DR restore execution result intake: `11_codex_tasks/297_operator_side_fresh_dr_restore_execution_result_intake.md`
 - Loop 298 fresh DR restore failure diagnosis with scoped diagnostics: `11_codex_tasks/298_fresh_dr_restore_failure_diagnosis_with_scoped_diagnostics.md`
 - Loop 299 sanitized helper taxonomy improvement without restore: `11_codex_tasks/299_sanitized_helper_taxonomy_improvement_without_restore.md`
+- Loop 300 DR restore route freeze and production operations resume: `11_codex_tasks/300_dr_restore_route_freeze_and_production_operations_resume.md`
 
 ## Prompts and Templates
 

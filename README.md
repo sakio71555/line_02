@@ -689,6 +689,8 @@ Loop 298 fresh DR restore failure diagnosis with scoped diagnosticsでは、fres
 
 Loop 299 sanitized helper taxonomy improvement without restoreでは、guarded DR restore helperにsanitized failure taxonomyを実装しました。失敗時に `restore_failure_category`、confidence、source、classifier使用有無、raw failure output安全状態、transient capture cleanup statusを出せるようにし、raw outputは標準出力・docs・handoffへ出さず、永続保存しない方針を維持しています。classifier self-testとshell validation wrapperを追加し、local/VPS script-only delivery後の検証はいずれもpassしました。restore再実行、helper preflight/execute、pg_restore restore、psql、Supabase接続、DB変更は行っていません。production Goは維持し、DR readinessは `not_ready_restore_failed` のままです。
 
+Loop 300 DR restore route freeze and production operations resumeでは、DR restore routeを `frozen_known_risk` として固定し、`production_go=true` / `production_go_scope=line_api_admin_current_runtime` を維持したまま本番運用hardeningへ戻す方針を記録しました。read-only production baselineはsanitized statusのみで確認し、API service、Nginx、public health、admin root、unauthenticated customers guard、disk/memoryがbaseline範囲でした。restore、helper preflight/execute、pg_restore restore、psql、Supabase接続、DB変更、service restart、Nginx reload、LINE送信、OpenAI API実行は行っていません。次は `Loop 301: production operations hardening package` の1本だけです。詳細は [Loop 300 task doc](docs/11_codex_tasks/300_dr_restore_route_freeze_and_production_operations_resume.md) を参照してください。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

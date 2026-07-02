@@ -119,7 +119,7 @@ next_loop_requires_new_operator_input=true
 ## Next Loop
 
 ```txt
-next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
+next_loop_candidate_superseded_by=Loop 300 DR restore route freeze and production operations resume
 loop_300_auto_progression_allowed=false
 ```
 
