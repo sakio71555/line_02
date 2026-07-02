@@ -122,6 +122,7 @@
 - Loop 284 VPS guarded helper delivery / sync blocker resolution: `11_codex_tasks/284_vps_guarded_helper_delivery_sync_blocker_resolution.md`
 - Loop 285 guarded DR restore runtime input injection: `11_codex_tasks/285_guarded_dr_restore_runtime_input_injection.md`
 - Loop 286 operator-provided runtime input handoff: `11_codex_tasks/286_operator_provided_runtime_input_handoff.md`
+- Loop 287 operator runtime input readiness gate: `11_codex_tasks/287_operator_runtime_input_readiness_gate.md`
 
 ## Prompts and Templates
 

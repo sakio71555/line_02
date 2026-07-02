@@ -409,3 +409,19 @@ failure_reason=runtime_inputs_not_provided_by_operator
 dr_readiness_status=not_ready_restore_failed
 next_minimal_action=Loop 287 operator runtime input execution
 ```
+
+## Loop 287 Runtime Input Readiness Gate
+
+```txt
+loop_287_status=blocked
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=still_not_provided
+runtime_input_injection_method=blocked
+helper_preflight_status=not_run
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=operator_runtime_input_still_not_provided
+dr_readiness_status=not_ready_restore_failed
+dr_restore_validation_status=paused_waiting_for_operator_runtime_input
+next_action=wait_for_operator_to_provide_runtime_input
+```

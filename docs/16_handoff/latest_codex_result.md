@@ -3,66 +3,40 @@
 ## Loop
 
 ```txt
-loop=Loop 286 operator-provided runtime input handoff
+loop=Loop 287 operator runtime input readiness gate
 status=blocked
 ```
 
 ## Result
 
 ```txt
-anti_proliferation_check=pass
-is_this_loop_proliferation_risk=false
-proliferation_reason=none
-forward_progress_type=operator_runtime_input_handoff_and_optional_restore
-next_loop_requires_new_operator_input=true
-vps_helper_available=true
-vps_helper_bash_validation_status=pass
-vps_helper_no_input_preflight_status=blocked_safely
-runtime_inputs_available_to_codex=false
-runtime_input_handoff_status=not_provided
-runtime_input_injection_method=blocked
-restore_target_scope_input_present=false
-restore_confirm_input_present=false
-db_url_input_present=false
-artifact_path_input_present=false
-restore_tool_input_present=false
-psql_allow_input_present=false
-helper_preflight_status=not_run
-temporary_codex_direct_restore_execution_override_used=false
-ssh_access_available=true
-vps_working_directory_available=true
-restore_target_scope_confirmed=false
-restore_target_scope_category=unknown
-operator_secret_context_available=false
-operator_artifact_context_available=false
-selected_artifact_candidate=not_checked
-artifact_exists=not_checked
-artifact_nonempty=not_checked
-artifact_access_status=not_checked
-restore_tool_selected=none
-operator_side_restore_retry_execution_status=not_attempted
-restore_retry_attempt_count=0
-restore_retry_success=not_attempted
-failure_reason=runtime_inputs_not_provided_by_operator
-restore_retry_retry_executed=false
-pg_restore_executed=false
-psql_executed=false
-supabase_connection_attempted=false
-db_change_performed=false
 production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
-dr_risk_acceptance_status=accepted_with_known_risk
-restricted_actions_remain_no_go=true
+dr_restore_validation_status=paused_waiting_for_operator_runtime_input
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=still_not_provided
+runtime_input_injection_method=blocked
+helper_preflight_status=not_run
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=operator_runtime_input_still_not_provided
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+production_db_connection_executed=false
+db_change_performed=false
 ```
 
 ## Safety
 
 ```txt
-raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
+password_recorded=false
+raw_log_recorded=false
 artifact_path_recorded=false
 artifact_filename_recorded=false
 artifact_content_recorded=false
@@ -71,19 +45,15 @@ db_object_recorded=false
 role_recorded=false
 package_name_recorded=false
 extension_name_recorded=false
-line_identifier_recorded=false
-message_body_recorded=false
-line_api_response_body_recorded=false
+line_send_executed=false
+openai_api_executed=false
+nginx_dns_https_certbot_changed=false
+apt_package_operation_executed=false
 ```
 
-## Notes
-
-- Runtime input values were never displayed or recorded.
-- Restore retry was not attempted because the operator-provided runtime input handoff was not present.
-- Loop 286 stops here and does not auto-start Loop 287.
-
-## Next Candidate
+## Next Action
 
 ```txt
-next_recommended_loop=Loop 287 operator runtime input execution
+next_action=wait_for_operator_to_provide_runtime_input
+human_input_required=true
 ```
