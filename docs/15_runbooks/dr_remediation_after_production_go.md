@@ -44,6 +44,52 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 ```
 
+## Loop 294 Fresh Clean DR Validation Target Remediation Package
+
+Loop 294 turns the accepted sanitized category into a concrete non-execution remediation package. It rejects reuse of the current failed DR target and selects a fresh clean DR validation target path for future approval.
+
+```txt
+loop_294_status=complete
+schema_conflict_remediation_plan_created=true
+sanitized_failure_category=schema_or_object_conflict_category
+remediation_strategy_selected=fresh_clean_dr_validation_target_restore_path
+current_failed_dr_target_reuse_allowed=false
+current_failed_dr_target_status=do_not_reuse_for_restore_retry
+current_failed_dr_target_reason=schema_conflict_after_failed_restore_attempt
+new_or_recreated_dr_target_required=true
+clean_target_required=true
+target_must_be_dr_validation_only=true
+fresh_target_operator_confirmation_required=true
+current_target_retry_allowed=false
+second_restore_attempt_on_current_target_allowed=false
+retry_on_current_target_allowed=false
+next_restore_attempt_requires_new_operator_approval=true
+next_restore_attempt_requires_fresh_runtime_inputs=true
+next_restore_attempt_requires_clean_target_confirmation=true
+restore_retry_attempt_count_current_target=1
+restore_retry_success_current_target=false
+second_restore_attempt_executed=false
+retry_allowed=false
+production_restore_allowed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+anti_proliferation_check=pass
+forward_progress_type=fresh_clean_dr_validation_target_remediation_package
+next_loop_requires_new_operator_input=true
+```
+
+The current failed DR target is treated as potentially partially changed because the one consumed Loop 290 attempt failed after DB state changed. A future restore attempt must use a fresh or recreated clean DR validation target, and must be approved as a new one-attempt execution. It is not a retry on the current failed target.
+
+```txt
+next_loop_candidate=Loop 295: fresh DR validation target restore preflight approval package
+loop_295_restore_execution_allowed=false
+future_loop_candidate=Loop 296: fresh DR validation target one-time restore execution
+loop_296_auto_progression_allowed=false
+```
+
 ## Loop 292 Sanitized Category Intake Blocked
 
 Loop 292 attempted to intake a human/operator sanitized failure category for the Loop 290 failed restore result. No operator-selected category was provided, so remediation planning remains blocked without retry.

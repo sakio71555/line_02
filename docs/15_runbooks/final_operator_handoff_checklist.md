@@ -2498,3 +2498,39 @@ restore_retry_success=not_attempted
 failure_reason=vps_git_repository_unavailable
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## Loop 294 Current Status Override
+
+Loop 294 selects the fresh clean DR validation target remediation path after the sanitized schema/object conflict category. It does not execute restore or change any DB/runtime state.
+
+```txt
+loop_294_current_status_override=true
+loop_294_status=complete
+sanitized_failure_category=schema_or_object_conflict_category
+schema_conflict_remediation_plan_created=true
+remediation_strategy_selected=fresh_clean_dr_validation_target_restore_path
+current_failed_dr_target_reuse_allowed=false
+current_failed_dr_target_status=do_not_reuse_for_restore_retry
+current_failed_dr_target_reason=schema_conflict_after_failed_restore_attempt
+new_or_recreated_dr_target_required=true
+clean_target_required=true
+target_must_be_dr_validation_only=true
+fresh_target_operator_confirmation_required=true
+current_target_retry_allowed=false
+second_restore_attempt_executed=false
+retry_allowed=false
+production_restore_allowed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 295: fresh DR validation target restore preflight approval package
+```
+
+Operator handoff:
+
+- Do not reuse the current failed DR target for another restore attempt.
+- Confirm only sanitized readiness fields for a fresh clean DR validation target.
+- Do not share secrets, DB URLs, artifact paths or filenames, raw logs, SQL, DB object names, role names, schema/table/relation names, package names, extension names, endpoint details, LINE identifiers, message bodies, or production logs.
+- Treat Loop 295 as approval/preflight only; do not run restore until a separate explicit future Loop.

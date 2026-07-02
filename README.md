@@ -677,6 +677,8 @@ Loop 292 human/operator sanitized failure category intakeでは、Loop 291のlim
 
 Loop 293 sanitized failure category intake and remediation directionでは、人間/運用者から提供されたcategory-only情報を受け付け、`operator_sanitized_failure_category_intake_status=accepted` として記録しました。カテゴリは `schema_or_object_conflict_category`、証跡レベルは `dashboard_log_category_only`、raw log共有はfalseです。次の方向性は `sanitized_schema_conflict_plan_without_db_change` とし、remediation実行、restore retry、pg_restore restore、psql、Supabase接続、DB変更、VPS操作は行っていません。production Goは維持し、DR readinessは `not_ready_restore_failed` のままです。
 
+Loop 294 schema conflict remediation execution package without DB changeでは、Loop 293のsanitizedカテゴリを受けて `fresh_clean_dr_validation_target_restore_path` を選択しました。Loop 290の1回限りの失敗済みDRターゲットは部分変更済みの可能性があるため、`current_failed_dr_target_reuse_allowed=false` とし、新規または再作成済みのクリーンなDR検証ターゲットを次Loopで確認する方針にしています。restore、pg_restore、psql、Supabase接続、DB変更、VPS操作、helper実行、2回目のrestore retryは行っていません。production Goは `line_api_admin_current_runtime` のまま維持し、DR readinessは `not_ready_restore_failed` のままです。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。

@@ -129,6 +129,7 @@
 - Loop 291 DR restore failure diagnosis without retry: `11_codex_tasks/291_dr_restore_failure_diagnosis_without_retry.md`
 - Loop 292 human/operator sanitized failure category intake: `11_codex_tasks/292_human_operator_sanitized_failure_category_intake.md`
 - Loop 293 sanitized failure category intake and remediation direction: `11_codex_tasks/293_sanitized_failure_category_intake_and_remediation_direction.md`
+- Loop 294 schema conflict remediation execution package without DB change: `11_codex_tasks/294_schema_conflict_remediation_execution_package_without_db_change.md`
 
 ## Prompts and Templates
 

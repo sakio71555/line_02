@@ -699,3 +699,56 @@ anti_proliferation_check=pass
 forward_progress_type=human_operator_sanitized_failure_category_intake
 next_loop_requires_new_operator_input=true
 ```
+
+## Loop 294 Fresh Clean DR Target Followup
+
+Loop 294 records the next execution package after the Loop 293 sanitized category acceptance. It does not execute any restore operation. The current failed DR target is not eligible for another restore attempt.
+
+```txt
+loop_294_status=complete
+loop_290_status=failed_no_retry
+loop_293_status=complete
+sanitized_failure_category=schema_or_object_conflict_category
+schema_conflict_remediation_plan_created=true
+remediation_strategy_selected=fresh_clean_dr_validation_target_restore_path
+current_failed_dr_target_reuse_allowed=false
+current_failed_dr_target_status=do_not_reuse_for_restore_retry
+current_failed_dr_target_reason=schema_conflict_after_failed_restore_attempt
+new_or_recreated_dr_target_required=true
+clean_target_required=true
+target_must_be_dr_validation_only=true
+fresh_target_operator_confirmation_required=true
+current_target_retry_allowed=false
+restore_retry_attempt_count_current_target=1
+restore_retry_success_current_target=false
+second_restore_attempt_executed=false
+retry_allowed=false
+production_restore_allowed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Operator checklist for the next approval package:
+
+```txt
+operator_confirms_target_project_is_dr_validation_only=pending_operator_input
+operator_confirms_target_project_is_not_production=pending_operator_input
+operator_confirms_target_project_is_healthy=pending_operator_input
+operator_confirms_target_is_clean_or_newly_created=pending_operator_input
+operator_confirms_connection_string_belongs_to_dr_validation_target=pending_operator_input
+operator_confirms_artifact_candidate_available=pending_operator_input
+operator_confirms_no_secret_values_will_be_recorded=pending_operator_input
+operator_confirms_one_attempt_only_policy_for_next_execution=pending_operator_input
+```
+
+Next boundary:
+
+```txt
+next_loop_candidate=Loop 295: fresh DR validation target restore preflight approval package
+loop_295_restore_execution_allowed=false
+future_loop_candidate=Loop 296: fresh DR validation target one-time restore execution
+loop_296_auto_progression_allowed=false
+```
