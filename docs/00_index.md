@@ -124,6 +124,7 @@
 - Loop 286 operator-provided runtime input handoff: `11_codex_tasks/286_operator_provided_runtime_input_handoff.md`
 - Loop 287 operator runtime input readiness gate: `11_codex_tasks/287_operator_runtime_input_readiness_gate.md`
 - Loop 288 operator runtime input preflight result intake: `11_codex_tasks/288_operator_runtime_input_preflight_result_intake.md`
+- Loop 289 DR restore execution approval decision: `11_codex_tasks/289_dr_restore_execution_approval_decision.md`
 
 ## Prompts and Templates
 

@@ -414,3 +414,30 @@ next_action=operator_approval_decision_for_restore_execution
 ```
 
 Loop 288 does not execute restore. The preflight result only proves that the operator-side helper preflight can pass when runtime input values exist in the operator-side shell.
+
+## Loop 289 Approval Decision
+
+```txt
+loop_289_status=complete
+operator_restore_execution_decision=approved_for_next_loop_only
+approval_scope=single_restore_retry_attempt_dr_validation_target_only
+execute_allowed_in_loop_289=false
+execute_allowed_next_loop=true_only_with_explicit_operator_instruction
+restore_retry_attempt_limit=1
+retry_allowed=false
+target_scope=dr_validation_target
+production_restore_allowed=false
+pg_restore_allowed_next_loop=true_only_if_helper_preflight_still_passes
+psql_allowed_next_loop=false
+supabase_connection_allowed_next_loop=true_only_as_part_of_guarded_helper_execute
+db_change_allowed_next_loop=true_only_on_dr_validation_target
+secrets_recording_allowed=false
+raw_log_recording_allowed=false
+artifact_path_recording_allowed=false
+dr_readiness_status=not_ready_restore_failed
+next_loop_candidate=Loop 290 one-time DR restore retry execution
+loop_290_requires_explicit_operator_instruction=true
+loop_290_auto_progression_allowed=false
+```
+
+Loop 289 does not run preflight or execute restore. It only records the future execution decision and the stop conditions for a separately approved Loop.
