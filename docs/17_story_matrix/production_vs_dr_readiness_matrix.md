@@ -1328,3 +1328,24 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
 ```
+
+## Loop 290 One-Time DR Restore Retry Execution
+
+```txt
+loop_290_status=blocked
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+```

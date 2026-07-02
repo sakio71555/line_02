@@ -494,3 +494,53 @@ loop_290_auto_progression_allowed=false
 ```
 
 Loop 290 must stop if helper preflight no longer passes, target scope is not the DR validation target, production scope is detected, artifact metadata is missing or empty, `pg_restore` is unavailable, an attempt lock cannot be created, or any secret/detail/raw output would need to be displayed.
+
+## Loop 290 One-Time Restore Retry Execution Result
+
+Loop 290 used the next-loop-only approval to perform local/VPS helper checks and runtime input presence checks. It stopped before helper preflight with inputs and before restore execution because the runtime input handoff was not present in the Codex VPS execution context.
+
+```txt
+loop_290_status=blocked
+anti_proliferation_check=pass
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+restore_target_scope_input_present=false
+restore_confirm_input_present=false
+db_url_input_present=false
+artifact_path_input_present=false
+restore_tool_input_present=false
+psql_allow_input_present=false
+helper_preflight_status=not_run
+temporary_codex_direct_restore_execution_override_used=false
+ssh_access_available=true
+vps_working_directory_available=true
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+vps_helper_no_input_preflight_status=blocked_safely
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+operator_secret_context_available=false
+operator_artifact_context_available=false
+artifact_exists=not_checked
+artifact_nonempty=not_checked
+restore_tool_selected=none
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
+restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+restore_retry_retry_executed=false
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+api_service_active=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+dr_risk_acceptance_status=accepted_with_known_risk
+next_loop_requires_new_operator_input=true
+```
+
+No restore retry was attempted. Loop 291 must not start automatically and requires fresh operator input.

@@ -3,8 +3,8 @@
 ## Loop
 
 ```txt
-loop=Loop 289 DR restore execution approval decision
-status=complete
+loop=Loop 290 one-time DR restore retry execution
+status=blocked
 ```
 
 ## Result
@@ -14,30 +14,43 @@ production_go=true
 production_go_scope=line_api_admin_current_runtime
 production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
-operator_restore_execution_decision=approved_for_next_loop_only
-approval_scope=single_restore_retry_attempt_dr_validation_target_only
-execute_allowed_in_loop_289=false
-execute_allowed_next_loop=true_only_with_explicit_operator_instruction
-helper_preflight_status=pass
-restore_target_scope_confirmed=true
-restore_target_scope_category=dr_validation_target
-target_scope=dr_validation_target
-restore_retry_attempt_limit=1
-retry_allowed=false
-stop_on_first_failure=true
-production_restore_allowed=false
-pg_restore_allowed_next_loop=true_only_if_helper_preflight_still_passes
-psql_allowed_next_loop=false
-supabase_connection_allowed_next_loop=true_only_as_part_of_guarded_helper_execute
-db_change_allowed_next_loop=true_only_on_dr_validation_target
-restore_retry_attempted=false
+dr_risk_acceptance_status=accepted_with_known_risk
+anti_proliferation_check=pass
+runtime_inputs_available_to_codex=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+restore_target_scope_input_present=false
+restore_confirm_input_present=false
+db_url_input_present=false
+artifact_path_input_present=false
+restore_tool_input_present=false
+psql_allow_input_present=false
+helper_preflight_status=not_run
+temporary_codex_direct_restore_execution_override_used=false
+ssh_access_available=true
+vps_working_directory_available=true
+vps_helper_available=true
+vps_helper_bash_validation_status=pass
+vps_helper_no_input_preflight_status=blocked_safely
+restore_target_scope_confirmed=false
+restore_target_scope_category=unknown
+operator_secret_context_available=false
+operator_artifact_context_available=false
+artifact_exists=not_checked
+artifact_nonempty=not_checked
+restore_tool_selected=none
+operator_side_restore_retry_execution_status=not_attempted
+restore_retry_attempt_count=0
 restore_retry_success=not_attempted
+failure_reason=runtime_inputs_not_provided_by_operator
+restore_retry_retry_executed=false
 pg_restore_executed=false
 psql_executed=false
 supabase_connection_attempted=false
 production_db_connection_executed=false
 db_change_performed=false
-loop_290_auto_progression_allowed=false
+api_service_active=true
+next_loop_requires_new_operator_input=true
 ```
 
 ## Safety
@@ -66,6 +79,6 @@ apt_package_operation_executed=false
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 290 one-time DR restore retry execution
-loop_290_requires_explicit_operator_instruction=true
+next_recommended_loop=Loop 291 operator runtime input execution retry
+loop_291_auto_progression_allowed=false
 ```

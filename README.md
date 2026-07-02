@@ -669,6 +669,8 @@ Loop 285 guarded DR restore runtime input injectionでは、local/VPSのguarded 
 
 Loop 286 operator-provided runtime input handoffでは、operator側のruntime input handoffがVPS実行コンテキストに存在するかを値なしbooleanのみで確認しました。runtime input handoffは未提供だったため、helper input preflight、restore retry、pg_restore、psql、Supabase接続、DB変更は未実行です。secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。次は `Loop 287: operator runtime input execution` です。
 
+Loop 290 one-time DR restore retry executionでは、Loop 289のnext-loop-only承認にもとづき、local/VPS helper確認とruntime input presence checkを実施しました。VPS helperは利用可能でしたが、CodexのVPS実行コンテキストにruntime inputsが未提供だったため、helper input preflight、restore retry、pg_restore、psql、Supabase接続、DB変更は未実行でblockedしました。secret/DB URL/artifact detail/raw log/SQL/object/role/package/extension名の記録は行っていません。
+
 ## Secrets
 
 APIキーやトークンはコミットしません。ローカル値は `.env` や `.env.staging` に置く想定ですが、実envは `.gitignore` で除外しています。共有するのは `.env.example` や `.env.staging.example` のような値なしテンプレートだけです。
