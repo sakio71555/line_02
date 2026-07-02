@@ -2772,3 +2772,53 @@ Operator handoff:
 - Continue production operations from runtime monitoring, smoke checks, incident response, operator handoff clarity, and API/Admin runtime hardening.
 - Do not run helper preflight, helper execute, restore, `pg_restore` restore, `psql`, Supabase DB connection, production DB connection, DB changes, service restart, Nginx reload, package operations, additional LINE sends, or OpenAI API calls from this handoff.
 - Keep recording only sanitized statuses and categories.
+
+## Loop 301 Current Status Override
+
+Loop 301 creates the production operations hardening package and Friday demo readiness package after the DR restore route freeze.
+
+```txt
+loop_301_current_status_override=true
+loop_301_status=complete
+production_operations_hardening_decision=approved
+production_operations_hardening_package_created=true
+production_readonly_smoke_checklist_created=true
+production_readonly_smoke_script_created=true
+production_readonly_smoke_script_validation_status=pass
+operator_daily_check_template_created=true
+incident_response_handoff_created=true
+friday_demo_readiness_package_created=true
+friday_demo_runbook_created=true
+safe_demo_scope_defined=true
+friday_demo_scope=safe_read_only_and_no_external_send_demo
+line_real_send_in_demo=false
+openai_api_execution_in_demo=false
+authenticated_customer_data_demo_allowed=false_unless_separately_approved
+dr_restore_route_status=frozen_known_risk
+dr_restore_known_risk_accepted=true
+dr_restore_retry_allowed=false_without_new_strategy
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+production_read_only_baseline_checked=true
+api_service_active=true
+nginx_service_active=true
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+disk_capacity_status=ok
+memory_capacity_status=ok
+production_baseline_check_changed_runtime=false
+next_focus=friday_demo_rehearsal_and_final_smoke
+selected_next_minimal_action=Loop 302 Friday demo rehearsal and final production smoke verification
+```
+
+Operator handoff:
+
+- Use the daily check template before demo or daily operations review.
+- Use the read-only smoke script only with operator-provided public endpoint values.
+- Do not paste endpoint values, secrets, raw output, protected identifiers, or production logs into docs.
+- Do not run LINE real send or OpenAI API calls during the Friday demo.
+- Do not restart services, reload Nginx, change DNS/HTTPS, run package operations, connect to DBs, or resume DR restore without a new explicit approval.

@@ -136,6 +136,9 @@
 - Loop 298 fresh DR restore failure diagnosis with scoped diagnostics: `11_codex_tasks/298_fresh_dr_restore_failure_diagnosis_with_scoped_diagnostics.md`
 - Loop 299 sanitized helper taxonomy improvement without restore: `11_codex_tasks/299_sanitized_helper_taxonomy_improvement_without_restore.md`
 - Loop 300 DR restore route freeze and production operations resume: `11_codex_tasks/300_dr_restore_route_freeze_and_production_operations_resume.md`
+- Loop 301 production operations hardening package: `11_codex_tasks/301_production_operations_hardening_package.md`
+- Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
+- Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 
 ## Prompts and Templates
 

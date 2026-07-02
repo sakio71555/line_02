@@ -2133,6 +2133,43 @@ supabase_connection_attempted_in_loop_300=false
 db_change_performed_in_loop_300=false
 ```
 
+## Loop 301 Verification Note
+
+```txt
+loop_301_status=complete
+git_status_initial=clean
+local_helper_exists=true
+local_helper_bash_validation_status=pass
+local_classifier_validation_status=pass
+loop_300_record_found=true
+dr_frozen_record_found=true
+production_ops_resume_record_found=true
+ssh_access_available=true
+vps_working_directory_available=true
+helper_bash_validation_status=pass
+classifier_validation_status=pass
+api_service_active=true
+nginx_service_active=true
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+disk_capacity_status=ok
+memory_capacity_status=ok
+production_read_only_baseline_checked=true
+production_baseline_check_changed_runtime=false
+production_readonly_smoke_script_bash_validation_status=pass
+production_readonly_smoke_script_no_env_status=not_configured
+restore_execution_in_loop_301=false
+helper_preflight_executed_in_loop_301=false
+helper_execute_executed_in_loop_301=false
+pg_restore_restore_executed_in_loop_301=false
+psql_executed_in_loop_301=false
+supabase_connection_attempted_in_loop_301=false
+db_change_performed_in_loop_301=false
+line_real_send_executed_in_loop_301=false
+openai_api_executed_in_loop_301=false
+```
+
 ## Loop 297 Verification Note
 
 ```txt

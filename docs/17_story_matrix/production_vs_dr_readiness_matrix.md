@@ -1639,3 +1639,46 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 301: production operations hardening package
 ```
+
+## Loop 301 Production Operations Hardening
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Production operations | `hardened_package_created` | Daily check, read-only smoke, incident handoff, and Friday demo package are created. |
+| Reusable smoke | `created` | Script accepts operator-provided public endpoint values and prints status codes only. |
+| Friday demo | `safe_read_only_and_no_external_send_demo` | No LINE real send, OpenAI API execution, DB restore, or destructive operation. |
+| DR restore route | `frozen_known_risk` | No DR retry/preflight/diagnosis without a new strategy. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `friday_demo_rehearsal_and_final_smoke` | Single next Loop candidate is Loop 302. |
+
+```txt
+loop_301_status=complete
+production_operations_hardening_package_created=true
+production_readonly_smoke_checklist_created=true
+production_readonly_smoke_script_created=true
+production_readonly_smoke_script_validation_status=pass
+operator_daily_check_template_created=true
+incident_response_handoff_created=true
+friday_demo_readiness_package_created=true
+friday_demo_runbook_created=true
+safe_demo_scope_defined=true
+friday_demo_scope=safe_read_only_and_no_external_send_demo
+line_real_send_in_demo=false
+openai_api_execution_in_demo=false
+production_read_only_baseline_checked=true
+api_service_active=true
+nginx_service_active=true
+public_api_health_status_code=200
+public_admin_root_status_code=200
+public_customers_no_auth_status_code=401
+disk_capacity_status=ok
+memory_capacity_status=ok
+production_baseline_check_changed_runtime=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 302: Friday demo rehearsal and final production smoke verification
+```
