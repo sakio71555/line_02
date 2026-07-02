@@ -2178,6 +2178,34 @@ typecheck=not_run_result_intake_and_docs_only
 test=not_run_result_intake_and_docs_only
 ```
 
+## Loop 299 Verification Note
+
+```txt
+loop_299_status=complete
+helper_bash_validation_status=pass
+classifier_validation_status=pass
+vps_helper_delivery_status=success
+vps_helper_bash_validation_status=pass
+vps_classifier_validation_status=pass
+restore_execution_in_loop_299=false
+helper_preflight_executed_in_loop_299=false
+helper_execute_executed_in_loop_299=false
+pg_restore_restore_executed_in_loop_299=false
+psql_executed_in_loop_299=false
+supabase_connection_attempted_in_loop_299=false
+db_change_performed_in_loop_299=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+git_diff_check=pass
+secret_artifact_value_check=pass
+lint=pass
+typecheck=not_run_shell_docs_only
+test=not_run_shell_docs_only
+```
+
 ## Loop 286 Verification Note
 
 ```txt

@@ -736,3 +736,17 @@ dr_readiness_status=not_ready_restore_failed
 ```
 
 The next Loop must improve the sanitized helper taxonomy or decision package without running restore.
+
+## Loop 299 Helper Taxonomy Update Decision
+
+```txt
+loop_299_status=complete
+helper_taxonomy_improvement_implemented=true
+helper_restore_failure_category_output_added=true
+helper_failure_classifier_categories_added=true
+helper_preflight_behavior_preserved=true
+helper_execute_one_attempt_behavior_preserved=true
+restore_execution_in_loop_299=false
+db_change_performed_in_loop_299=false
+next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
+```

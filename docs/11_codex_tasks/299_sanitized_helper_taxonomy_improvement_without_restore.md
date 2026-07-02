@@ -1,0 +1,141 @@
+# Loop 299: Sanitized Helper Taxonomy Improvement Without Restore
+
+## Purpose
+
+Improve the guarded DR restore helper so restore failures are emitted as sanitized categories instead of only `sanitized_restore_failed`.
+
+This Loop updates helper taxonomy code, local validation, script-only VPS delivery, and documentation. It does not run restore, helper preflight, helper execute, `pg_restore` restore, `psql`, Supabase connection, production DB connection, or DB changes.
+
+## Starting State
+
+```txt
+loop_298_status=complete
+fresh_dr_restore_failure_diagnosis_status=limited
+likely_failure_domain=helper_taxonomy_insufficient_category
+diagnosis_confidence=medium
+next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore
+fresh_target_restore_attempt_already_consumed=true
+restore_attempt_count_fresh_target=1
+restore_success_fresh_target=false
+retry_allowed=false
+second_restore_attempt_allowed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+dr_readiness_status=not_ready_restore_failed
+```
+
+## Helper Implementation
+
+```txt
+loop_299_status=complete
+helper_taxonomy_improvement_needed=true
+helper_taxonomy_improvement_implemented=true
+helper_restore_failure_category_output_added=true
+helper_failure_classifier_categories_added=true
+helper_current_taxonomy=sanitized_restore_failed_only
+helper_new_taxonomy=sanitized_restore_failure_category_output
+helper_raw_failure_output_printed=false
+helper_raw_failure_output_recorded=false
+helper_raw_failure_output_retained=false
+helper_transient_capture_cleanup_enforced=true
+helper_preflight_behavior_preserved=true
+helper_execute_one_attempt_behavior_preserved=true
+helper_runtime_behavior_changed=true
+```
+
+## Classifier Validation
+
+```txt
+classifier_validation_status=pass
+local_helper_bash_validation_status=pass
+local_classifier_test_bash_validation_status=pass
+helper_taxonomy_tests_or_validation_status=pass
+classifier_required_categories_covered=true
+restore_execution_in_classifier_validation=false
+db_connection_in_classifier_validation=false
+```
+
+## VPS Script-Only Delivery
+
+```txt
+vps_helper_delivery_attempted=true
+vps_helper_delivery_status=success
+vps_previous_helper_backup_status=fixed_name_updated
+vps_helper_bash_validation_status=pass
+vps_classifier_test_bash_validation_status=pass
+vps_classifier_validation_status=pass
+vps_restore_execution_performed=false
+vps_db_connection_performed=false
+```
+
+## Safety Boundary
+
+```txt
+restore_execution_in_loop_299=false
+helper_preflight_executed_in_loop_299=false
+helper_execute_executed_in_loop_299=false
+pg_restore_restore_executed_in_loop_299=false
+psql_executed_in_loop_299=false
+supabase_connection_attempted_in_loop_299=false
+db_change_performed_in_loop_299=false
+second_restore_attempt_executed=false
+raw_log_recorded=false
+secret_recorded=false
+db_url_recorded=false
+password_recorded=false
+artifact_path_recorded=false
+artifact_filename_recorded=false
+artifact_content_recorded=false
+artifact_hash_recorded=false
+artifact_exact_size_recorded=false
+sql_recorded=false
+db_object_recorded=false
+role_recorded=false
+schema_name_recorded=false
+table_name_recorded=false
+relation_name_recorded=false
+package_name_recorded=false
+extension_name_recorded=false
+host_or_url_recorded=false
+project_ref_recorded=false
+sqlstate_recorded=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+## Anti-Proliferation Check
+
+```txt
+anti_proliferation_check=pass
+is_this_loop_proliferation_risk=false
+proliferation_reason=none
+forward_progress_type=helper_taxonomy_code_update_local_validation_and_script_only_vps_delivery
+next_loop_requires_new_operator_input=true
+```
+
+## Next Loop
+
+```txt
+next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
+loop_300_auto_progression_allowed=false
+```
+
+## Verification
+
+```txt
+git_diff_check=pass
+helper_bash_validation_status=pass
+classifier_validation_status=pass
+vps_helper_delivery_status=success
+docs_link_check=pass
+secret_artifact_value_check=pass
+validation_passed=true
+lint=pass
+typecheck=not_run_shell_docs_only
+test=not_run_shell_docs_only
+commit_created=true
+push_executed=true
+```

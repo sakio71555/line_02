@@ -218,3 +218,46 @@ supabase_connection_attempted=false
 db_change_performed=false
 dr_readiness_status=not_ready_restore_failed
 ```
+
+## Loop 299 Sanitized Failure Taxonomy
+
+Loop 299 upgrades the guarded helper output contract so failed restore attempts can produce a sanitized category without printing or retaining raw command output.
+
+```txt
+helper_taxonomy_improvement_needed=true
+helper_taxonomy_improvement_implemented=true
+helper_restore_failure_category_output_added=true
+helper_failure_classifier_categories_added=true
+helper_raw_failure_output_printed=false
+helper_raw_failure_output_recorded=false
+helper_raw_failure_output_retained=false
+helper_transient_capture_cleanup_enforced=true
+helper_preflight_behavior_preserved=true
+helper_execute_one_attempt_behavior_preserved=true
+helper_runtime_behavior_changed=true
+```
+
+New helper output keys:
+
+```txt
+restore_failure_category=none_or_allowed_category
+restore_failure_category_confidence=not_applicable_or_high_or_medium_or_low
+restore_failure_category_source=not_applicable_or_helper_sanitized_stderr_classifier
+restore_failure_classifier_used=true_or_false
+raw_failure_output_printed=false
+raw_failure_output_recorded=false
+raw_failure_output_retained=false
+transient_failure_capture_used=true_or_false
+transient_failure_capture_cleanup_status=removed_or_not_used_or_failed_sanitized
+```
+
+Validation:
+
+```txt
+classifier_validation_status=pass
+local_helper_bash_validation_status=pass
+vps_helper_bash_validation_status=pass
+vps_classifier_validation_status=pass
+restore_execution_in_loop_299=false
+db_change_performed_in_loop_299=false
+```

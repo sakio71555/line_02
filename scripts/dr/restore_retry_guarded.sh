@@ -10,6 +10,9 @@ case "${1:-}" in
   "--execute")
     mode="execute"
     ;;
+  "--self-test-classifier")
+    mode="self_test_classifier"
+    ;;
   *)
     mode="invalid"
     ;;
@@ -19,14 +22,140 @@ emit() {
   printf '%s=%s\n' "$1" "$2"
 }
 
-safe_exit() {
-  local code="$1"
-  shift
-  for pair in "$@"; do
-    printf '%s\n' "$pair"
-  done
-  exit "$code"
+restore_failure_category="none"
+restore_failure_category_confidence="not_applicable"
+restore_failure_category_source="not_applicable"
+restore_failure_classifier_used="false"
+raw_failure_output_printed="false"
+raw_failure_output_recorded="false"
+raw_failure_output_retained="false"
+transient_failure_capture_used="false"
+transient_failure_capture_cleanup_status="not_used"
+transient_failure_capture_file=""
+
+cleanup_transient_failure_capture() {
+  if [ -n "$transient_failure_capture_file" ] && [ -e "$transient_failure_capture_file" ]; then
+    if rm -f "$transient_failure_capture_file" >/dev/null 2>&1; then
+      transient_failure_capture_cleanup_status="removed"
+    else
+      transient_failure_capture_cleanup_status="failed_sanitized"
+      raw_failure_output_retained="true"
+    fi
+  elif [ "$transient_failure_capture_used" = "true" ]; then
+    transient_failure_capture_cleanup_status="removed"
+  else
+    transient_failure_capture_cleanup_status="not_used"
+  fi
 }
+
+trap 'cleanup_transient_failure_capture >/dev/null 2>&1 || true' EXIT
+
+classify_restore_failure() {
+  local raw="$1"
+  local normalized
+  normalized="$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]')"
+
+  restore_failure_category="unknown_restore_target_compatibility_category"
+  restore_failure_category_confidence="low"
+  restore_failure_category_source="helper_sanitized_stderr_classifier"
+  restore_failure_classifier_used="true"
+
+  case "$normalized" in
+    *"authentication"*|*"password"*|*"connection refused"*|*"could not connect"*|*"ssl"*|*"no route to host"*|*"timeout expired"*)
+      restore_failure_category="connection_or_auth_to_dr_target_category"
+      restore_failure_category_confidence="high"
+      ;;
+    *"unsupported version"*|*"unsupported archive"*|*"server version mismatch"*|*"input file appears to be a text format dump"*)
+      restore_failure_category="incompatible_dump_or_target_version_category"
+      restore_failure_category_confidence="high"
+      ;;
+    *"extension"*|*"control file"*|*"could not open extension"*)
+      restore_failure_category="missing_or_unavailable_extension_category"
+      restore_failure_category_confidence="high"
+      ;;
+    *"must be owner"*|*"permission denied"*|*"role"*|*"owner"*|*"acl"*)
+      restore_failure_category="role_or_ownership_permission_category"
+      restore_failure_category_confidence="high"
+      ;;
+    *"platform managed"*|*"managed schema"*|*"supabase managed"*)
+      restore_failure_category="dump_contains_platform_managed_schema_category"
+      restore_failure_category_confidence="medium"
+      ;;
+    *"already exists"*|*"duplicate"*|*"schema conflict"*|*"relation conflict"*)
+      restore_failure_category="schema_or_object_conflict_category"
+      restore_failure_category_confidence="high"
+      ;;
+    *"grant"*|*"revoke"*|*"policy"*|*"row-level security"*|*"rls"*|*"privilege"*)
+      restore_failure_category="unsupported_privilege_or_policy_category"
+      restore_failure_category_confidence="medium"
+      ;;
+    *"dependency"*|*"depends on"*|*"referenced object"*|*"does not exist"*)
+      restore_failure_category="dump_restore_order_or_dependency_category"
+      restore_failure_category_confidence="medium"
+      ;;
+    *"timeout"*|*"timed out"*|*"out of memory"*|*"no space left"*|*"resource"*|*"canceling statement"*)
+      restore_failure_category="timeout_or_resource_limit_category"
+      restore_failure_category_confidence="medium"
+      ;;
+  esac
+}
+
+reset_classifier_result() {
+  restore_failure_category="none"
+  restore_failure_category_confidence="not_applicable"
+  restore_failure_category_source="not_applicable"
+  restore_failure_classifier_used="false"
+  raw_failure_output_printed="false"
+  raw_failure_output_recorded="false"
+  raw_failure_output_retained="false"
+  transient_failure_capture_used="false"
+  transient_failure_capture_cleanup_status="not_used"
+}
+
+emit_classifier_result() {
+  emit "restore_failure_category" "$restore_failure_category"
+  emit "restore_failure_category_confidence" "$restore_failure_category_confidence"
+  emit "restore_failure_category_source" "$restore_failure_category_source"
+  emit "restore_failure_classifier_used" "$restore_failure_classifier_used"
+  emit "raw_failure_output_printed" "$raw_failure_output_printed"
+  emit "raw_failure_output_recorded" "$raw_failure_output_recorded"
+  emit "raw_failure_output_retained" "$raw_failure_output_retained"
+  emit "transient_failure_capture_used" "$transient_failure_capture_used"
+  emit "transient_failure_capture_cleanup_status" "$transient_failure_capture_cleanup_status"
+}
+
+self_test_case() {
+  local name="$1"
+  local fixture="$2"
+  local expected="$3"
+  classify_restore_failure "$fixture"
+  if [ "$restore_failure_category" = "$expected" ]; then
+    emit "classifier_test_${name}" "pass"
+    return 0
+  fi
+  emit "classifier_test_${name}" "failed"
+  return 1
+}
+
+if [ "$mode" = "self_test_classifier" ]; then
+  self_test_status="pass"
+  self_test_case "connection_or_auth_to_dr_target_category" "connection refused while connecting to target" "connection_or_auth_to_dr_target_category" || self_test_status="failed"
+  self_test_case "missing_or_unavailable_extension_category" "extension control file unavailable" "missing_or_unavailable_extension_category" || self_test_status="failed"
+  self_test_case "role_or_ownership_permission_category" "must be owner permission denied" "role_or_ownership_permission_category" || self_test_status="failed"
+  self_test_case "schema_or_object_conflict_category" "duplicate object already exists" "schema_or_object_conflict_category" || self_test_status="failed"
+  self_test_case "timeout_or_resource_limit_category" "statement timeout due to resource limit" "timeout_or_resource_limit_category" || self_test_status="failed"
+  self_test_case "unknown_restore_target_compatibility_category" "unclassified restore failure" "unknown_restore_target_compatibility_category" || self_test_status="failed"
+  emit "self_test_status" "$self_test_status"
+  emit "restore_execution_in_self_test" "false"
+  emit "db_connection_in_self_test" "false"
+  emit "raw_failure_output_printed" "false"
+  emit "raw_failure_output_recorded" "false"
+  emit "raw_failure_output_retained" "false"
+  if [ "$self_test_status" = "pass" ]; then
+    exit 0
+  fi
+  exit 1
+fi
 
 target_scope="${DR_RESTORE_TARGET_SCOPE:-}"
 confirm="${DR_RESTORE_CONFIRM:-}"
@@ -162,6 +291,7 @@ emit_safety() {
 }
 
 if [ "$mode" = "preflight" ]; then
+  reset_classifier_result
   emit_common
   emit "restore_retry_attempted" "false"
   emit "restore_retry_success" "not_attempted"
@@ -170,6 +300,7 @@ if [ "$mode" = "preflight" ]; then
   emit "psql_executed" "false"
   emit "supabase_connection_attempted" "false"
   emit "db_change_performed" "false"
+  emit_classifier_result
   emit_safety
   if [ "$helper_preflight_status" = "pass" ]; then
     exit 0
@@ -178,6 +309,7 @@ if [ "$mode" = "preflight" ]; then
 fi
 
 if [ "$helper_preflight_status" != "pass" ]; then
+  reset_classifier_result
   emit_common
   emit "restore_retry_attempted" "false"
   emit "restore_retry_success" "not_attempted"
@@ -186,11 +318,13 @@ if [ "$helper_preflight_status" != "pass" ]; then
   emit "psql_executed" "false"
   emit "supabase_connection_attempted" "false"
   emit "db_change_performed" "false"
+  emit_classifier_result
   emit_safety
   exit 1
 fi
 
 if [ ! -d "$lock_root" ] || [ ! -w "$lock_root" ]; then
+  reset_classifier_result
   emit_common
   emit "restore_retry_attempted" "false"
   emit "restore_retry_success" "not_attempted"
@@ -199,12 +333,14 @@ if [ ! -d "$lock_root" ] || [ ! -w "$lock_root" ]; then
   emit "psql_executed" "false"
   emit "supabase_connection_attempted" "false"
   emit "db_change_performed" "false"
+  emit_classifier_result
   emit_safety
   exit 1
 fi
 
 attempt_lock="${lock_root%/}/amami-line-crm-dr-restore-retry.lock"
 if ! mkdir "$attempt_lock" 2>/dev/null; then
+  reset_classifier_result
   emit_common
   emit "restore_retry_attempted" "false"
   emit "restore_retry_success" "not_attempted"
@@ -213,6 +349,7 @@ if ! mkdir "$attempt_lock" 2>/dev/null; then
   emit "psql_executed" "false"
   emit "supabase_connection_attempted" "false"
   emit "db_change_performed" "false"
+  emit_classifier_result
   emit_safety
   exit 1
 fi
@@ -220,18 +357,26 @@ fi
 restore_success="false"
 pg_restore_executed="false"
 psql_executed="false"
+failure_output=""
+transient_failure_capture_used="true"
+transient_failure_capture_file="$attempt_lock/restore-failure.capture"
 
 if [ "$restore_tool_selected" = "pg_restore" ]; then
   pg_restore_executed="true"
-  if "$tool_command" --no-owner --no-privileges --dbname "$db_url" "$artifact_path" >/dev/null 2>&1; then
+  if "$tool_command" --no-owner --no-privileges --dbname "$db_url" "$artifact_path" >"$transient_failure_capture_file" 2>&1; then
     restore_success="true"
   fi
 elif [ "$restore_tool_selected" = "psql" ]; then
   psql_executed="true"
-  if "$tool_command" "$db_url" -f "$artifact_path" >/dev/null 2>&1; then
+  if "$tool_command" "$db_url" -f "$artifact_path" >"$transient_failure_capture_file" 2>&1; then
     restore_success="true"
   fi
 fi
+
+if [ -f "$transient_failure_capture_file" ]; then
+  failure_output="$(cat "$transient_failure_capture_file" 2>/dev/null || true)"
+fi
+cleanup_transient_failure_capture
 
 emit_common
 emit "restore_retry_attempted" "true"
@@ -241,13 +386,20 @@ emit "supabase_connection_attempted" "true"
 emit "db_change_performed" "true"
 
 if [ "$restore_success" = "true" ]; then
+  restore_failure_category="none"
+  restore_failure_category_confidence="not_applicable"
+  restore_failure_category_source="not_applicable"
+  restore_failure_classifier_used="false"
   emit "restore_retry_success" "true"
   emit "failure_reason" "none"
+  emit_classifier_result
   emit_safety
   exit 0
 fi
 
+classify_restore_failure "$failure_output"
 emit "restore_retry_success" "false"
 emit "failure_reason" "sanitized_restore_failed"
+emit_classifier_result
 emit_safety
 exit 1

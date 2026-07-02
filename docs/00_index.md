@@ -134,6 +134,7 @@
 - Loop 296 fresh DR validation target one-time restore execution: `11_codex_tasks/296_fresh_dr_validation_target_one_time_restore_execution.md`
 - Loop 297 operator-side fresh DR restore execution result intake: `11_codex_tasks/297_operator_side_fresh_dr_restore_execution_result_intake.md`
 - Loop 298 fresh DR restore failure diagnosis with scoped diagnostics: `11_codex_tasks/298_fresh_dr_restore_failure_diagnosis_with_scoped_diagnostics.md`
+- Loop 299 sanitized helper taxonomy improvement without restore: `11_codex_tasks/299_sanitized_helper_taxonomy_improvement_without_restore.md`
 
 ## Prompts and Templates
 

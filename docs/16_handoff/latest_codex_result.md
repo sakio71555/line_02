@@ -3,7 +3,7 @@
 ## Loop
 
 ```txt
-loop=Loop 298 fresh DR restore failure diagnosis with scoped diagnostics
+loop=Loop 299 sanitized helper taxonomy improvement without restore
 status=complete
 ```
 
@@ -11,60 +11,41 @@ status=complete
 
 ```txt
 loop_298_status=complete
-fresh_dr_restore_failure_diagnosis_status=limited
-diagnosis_scope=vps_and_fresh_dr_target_scoped_diagnostics
-loop_297_status=complete
-restore_attempt_count_fresh_target=1
-restore_success_fresh_target=false
-retry_allowed=false
-second_restore_attempt_executed=false
-ssh_access_available=true
-vps_working_directory_available=true
-vps_helper_available=true
-vps_helper_bash_validation_status=pass
-pg_restore_available=true
-pg_restore_version_checked=true
-psql_available=true
-psql_version_checked=true
-pg_restore_running=false
-psql_running=false
-attempt_lock_exists=true
-attempt_lock_state=exists
-artifact_candidate_available=true
-artifact_exists=true
-artifact_nonempty=true
-archive_list_status=pass
-archive_list_internally_reviewed=true
-raw_log_available=true
-raw_log_internally_reviewed=true
-raw_log_signal_classification=mixed_or_not_fresh_specific
-psql_diagnostic_executed=false
-psql_diagnostic_scope=not_used
-psql_connection_status=not_attempted_runtime_input_missing
-likely_failure_domain=helper_taxonomy_insufficient_category
-diagnosis_confidence=medium
-next_remediation_direction=sanitized_helper_taxonomy_improvement_without_restore
+loop_299_status=complete
 helper_taxonomy_improvement_needed=true
-helper_taxonomy_improvement_plan_created=true
-helper_runtime_behavior_changed=false
-helper_script_changed=false
+helper_taxonomy_improvement_implemented=true
+helper_restore_failure_category_output_added=true
+helper_failure_classifier_categories_added=true
+helper_current_taxonomy=sanitized_restore_failed_only
+helper_new_taxonomy=sanitized_restore_failure_category_output
+helper_raw_failure_output_printed=false
+helper_raw_failure_output_recorded=false
+helper_raw_failure_output_retained=false
+helper_transient_capture_cleanup_enforced=true
+helper_preflight_behavior_preserved=true
+helper_execute_one_attempt_behavior_preserved=true
+classifier_validation_status=pass
+local_helper_bash_validation_status=pass
+vps_helper_delivery_attempted=true
+vps_helper_delivery_status=success
+vps_helper_bash_validation_status=pass
+vps_classifier_validation_status=pass
 production_go=true
 production_go_scope=line_api_admin_current_runtime
-production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
 ```
 
 ## Safety
 
 ```txt
-restore_executed_in_loop_298=false
-pg_restore_restore_executed_in_loop_298=false
-helper_preflight_executed_in_loop_298=false
-helper_execute_executed_in_loop_298=false
-psql_diagnostic_executed=false
-supabase_connection_attempted_in_loop_298=false
-db_change_performed_in_loop_298=false
-second_restore_attempt_executed=false
+restore_execution_in_loop_299=false
+helper_preflight_executed_in_loop_299=false
+helper_execute_executed_in_loop_299=false
+pg_restore_restore_executed_in_loop_299=false
+psql_executed_in_loop_299=false
+supabase_connection_attempted_in_loop_299=false
+db_change_performed_in_loop_299=false
 raw_log_recorded=false
 secret_recorded=false
 db_url_recorded=false
@@ -73,20 +54,15 @@ artifact_filename_recorded=false
 sql_recorded=false
 db_object_recorded=false
 role_recorded=false
-schema_name_recorded=false
-table_name_recorded=false
-relation_name_recorded=false
 package_name_recorded=false
 extension_name_recorded=false
 host_or_url_recorded=false
 project_ref_recorded=false
-sqlstate_recorded=false
-restricted_actions_remain_no_go=true
 ```
 
 ## Next Action
 
 ```txt
-next_loop_candidate=Loop 299 sanitized helper taxonomy improvement without restore
-loop_299_auto_progression_allowed=false
+next_loop_candidate=Loop 300 fresh DR restore preflight with improved helper taxonomy
+loop_300_auto_progression_allowed=false
 ```
