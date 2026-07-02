@@ -157,6 +157,44 @@ Friday handoff:
 - Explain DR restore as frozen known risk and a next-phase alternative strategy item.
 - If live smoke becomes limited or blocked, switch to docs/static walkthrough and preserve production safety.
 
+## Loop 303 Current Status Override
+
+Loop 303 activates production change freeze and finalizes the demo delivery handoff.
+
+```txt
+loop_303_current_status_override=true
+loop_303_status=complete
+final_demo_delivery_decision=approved
+production_change_freeze_decision=approved
+production_change_freeze_status=active
+production_change_freeze_scope=runtime_code_config_db_infra_external_send_and_paid_api
+production_change_freeze_allowed_actions=docs_handoff_readonly_smoke_only
+production_change_freeze_emergency_override_requires_operator=true
+final_demo_delivery_handoff_created=true
+demo_day_start_checklist_created=true
+demo_sequence_finalized=true
+demo_no_go_boundary_finalized=true
+demo_fallback_talk_track_created=true
+post_demo_feedback_intake_template_created=true
+final_read_only_smoke_status=pass
+final_demo_go_status=go
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+selected_next_minimal_action=Loop 304 post-demo feedback intake and production follow-up plan
+```
+
+Demo-day operator handoff:
+
+- Keep production change freeze active before and during the demo.
+- Run only read-only status checks and use the final demo sequence.
+- Do not perform real LINE send, OpenAI API execution, restore, `pg_restore`, `psql`, production DB connection, DB change, service restart, Nginx reload, DNS/HTTPS/certbot, runtime code change, or runtime config change.
+- If any check becomes limited or blocked, switch to static/docs walkthrough and record only sanitized status.
+- After the demo, use the post-demo feedback intake template before scheduling any follow-up Loop.
+
 ## Loop 273 Current Status Override
 
 Loop 273 creates the DR backup artifact validation preflight and the sanitized operator metadata schema. No sufficient sanitized operator artifact metadata is present yet, so validation cannot pass in this Loop.

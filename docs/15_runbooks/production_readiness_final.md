@@ -142,6 +142,41 @@ Current readiness reading:
 | DR readiness | `not_ready_restore_failed` | Frozen known risk; not part of Friday demo proof. |
 | restricted actions | `no_go` | Additional LINE send, OpenAI call, restore, DB/infra/package changes remain No-Go. |
 
+## Loop 303 Current Status Override
+
+Loop 303 activates the production change freeze and confirms final demo Go for the safe demo scope.
+
+```txt
+loop_303_current_status_override=true
+loop_303_status=complete
+final_demo_delivery_decision=approved
+production_change_freeze_decision=approved
+production_change_freeze_status=active
+production_change_freeze_scope=runtime_code_config_db_infra_external_send_and_paid_api
+production_change_freeze_allowed_actions=docs_handoff_readonly_smoke_only
+production_change_freeze_emergency_override_requires_operator=true
+final_read_only_smoke_status=pass
+final_demo_go_status=go
+friday_demo_scope=admin_health_line_api_current_runtime_readonly
+production_go=true
+production_no_go=false
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+Current demo/freeze reading:
+
+| bucket | current_status | decision |
+| --- | --- | --- |
+| current runtime | `go` | Production Go remains scoped to `line_api_admin_current_runtime`. |
+| production change freeze | `active` | Runtime code/config, DB, infra, external send, and paid API execution changes are blocked. |
+| final demo | `go` | Required read-only smoke checks passed. |
+| safe demo boundary | `confirmed` | Demo remains no-send, no-charge, no-DB-change, no-restore. |
+| DR readiness | `not_ready_restore_failed` | Frozen known risk; not part of demo Go. |
+
 ## Loop 272 Current Status Override
 
 Loop 272 reviews the DR strategy after production Go and selects the backup artifact validation preflight as the next minimal DR action. It does not execute restore, `pg_restore`, `psql`, Supabase connection, DB changes, package operations, LINE sends, OpenAI calls, or infra changes.
