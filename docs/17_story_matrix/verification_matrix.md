@@ -2215,6 +2215,44 @@ typecheck=not_run_docs_only
 test=not_run_docs_only
 ```
 
+## Loop 296 Verification Note
+
+```txt
+loop_296_status=blocked
+loop_296_result_recorded=true
+local_working_directory_confirmed=true
+local_git_status_initial=clean
+local_helper_exists=true
+local_helper_bash_validation_status=pass
+loop_295_record_found=true
+fresh_target_approval_package_recorded=true
+loop_296_boundary_recorded=true
+current_failed_target_reuse_disallowed_recorded=true
+ssh_access_available=true
+vps_working_directory_available=true
+vps_helper_available=true
+vps_helper_executable=true
+vps_helper_bash_validation_status=pass
+pg_restore_available=true
+pg_restore_running=false
+psql_running=false
+attempt_lock_exists=true
+attempt_lock_state=removed_stale_empty
+attempt_lock_removed=true
+runtime_inputs_available_to_execution_context=false
+helper_preflight_status=not_run
+restore_attempt_count_fresh_target=0
+second_restore_attempt_executed=false
+restricted_actions_remain_no_go=true
+git_diff_check=pass
+docs_link_check=pass
+secret_artifact_value_check=pass
+validation_passed=true
+lint=pass
+typecheck=not_run_result_intake_only
+test=not_run_result_intake_only
+```
+
 ## Loop 291 Verification Note
 
 ```txt

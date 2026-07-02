@@ -655,3 +655,27 @@ dr_readiness_status=not_ready_restore_failed
 ```
 
 Loop 296 must stop if any fresh target confirmation is false, missing, unknown, or would require protected values to be shown. Loop 296 must not automatically proceed to another Loop.
+
+## Loop 296 Runtime Input Blocked Result
+
+```txt
+loop_296_status=blocked
+fresh_target_operator_confirmation_complete=true
+runtime_inputs_available_to_execution_context=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+helper_preflight_status=not_run
+operator_side_restore_execution_status=not_attempted
+restore_attempt_count_fresh_target=0
+restore_success_fresh_target=not_attempted
+failure_reason=runtime_inputs_not_provided_to_execution_context
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+```
+
+The next Loop must not retry automatically. It may only intake operator-side execution results or refreshed runtime input confirmation.

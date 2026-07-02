@@ -1493,3 +1493,37 @@ production_go_scope_expanded=false
 dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 ```
+
+## Loop 296 Fresh DR Validation Target Execution Blocked
+
+```txt
+loop_296_status=blocked
+fresh_target_operator_confirmation_complete=true
+fresh_project_deleted_and_recreated=true
+fresh_project_name_category=dr_validation_target
+fresh_project_status=Healthy
+fresh_project_is_production=false
+fresh_project_is_clean=true
+fresh_project_can_be_overwritten=true
+connection_string_obtained=true
+connection_string_belongs_to_fresh_dr_target=not_checked
+connection_string_not_production=not_checked
+runtime_inputs_available_to_execution_context=false
+runtime_input_handoff_status=not_provided
+runtime_input_injection_method=blocked
+helper_preflight_status=not_run
+operator_side_restore_execution_status=not_attempted
+restore_attempt_count_fresh_target=0
+restore_success_fresh_target=not_attempted
+failure_reason=runtime_inputs_not_provided_to_execution_context
+pg_restore_executed=false
+psql_executed=false
+supabase_connection_attempted=false
+db_change_performed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 297: operator-side fresh DR restore execution result intake
+```

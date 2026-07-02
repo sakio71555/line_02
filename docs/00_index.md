@@ -131,6 +131,7 @@
 - Loop 293 sanitized failure category intake and remediation direction: `11_codex_tasks/293_sanitized_failure_category_intake_and_remediation_direction.md`
 - Loop 294 schema conflict remediation execution package without DB change: `11_codex_tasks/294_schema_conflict_remediation_execution_package_without_db_change.md`
 - Loop 295 fresh DR validation target restore preflight approval package: `11_codex_tasks/295_fresh_dr_validation_target_restore_preflight_approval_package.md`
+- Loop 296 fresh DR validation target one-time restore execution: `11_codex_tasks/296_fresh_dr_validation_target_one_time_restore_execution.md`
 
 ## Prompts and Templates
 
