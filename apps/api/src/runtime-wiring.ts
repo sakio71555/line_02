@@ -109,14 +109,22 @@ export function createRuntimeAiProvider(input: RuntimeAiProviderFactoryInput): A
 export function createRuntimeLineClient(
   input: RuntimeLineClientFactoryInput
 ): RuntimeLineClientBundle {
-  if (!input.config.line.messagingEnabled && !input.config.line.realPushEnabled) {
+  const env = input.env ?? process.env;
+  const accessTokenConfigured =
+    input.config.line.accessTokenConfigured ||
+    Boolean(readNonEmptyEnv(env, "LINE_CHANNEL_ACCESS_TOKEN"));
+
+  if (
+    !input.config.line.messagingEnabled &&
+    !input.config.line.realPushEnabled &&
+    !accessTokenConfigured
+  ) {
     return {
       lineClient: new MockLineClient(),
       lineClientMode: "mock"
     };
   }
 
-  const env = input.env ?? process.env;
   const missing = readMissingEnv(env, ["LINE_CHANNEL_ACCESS_TOKEN"]);
 
   if (missing.length > 0) {

@@ -145,9 +145,29 @@ describe("Loop 151 production runtime wiring remediation", () => {
     expect(openAiFetch).not.toHaveBeenCalled();
   });
 
-  it("keeps LINE push on mock client when disabled even if a token is configured", () => {
+  it("keeps LINE runtime on mock client when disabled and no token is configured", () => {
+    const config = loadAppConfig({
+      LINE_MESSAGING_ENABLED: "false",
+      LINE_REAL_PUSH_ENABLED: "false"
+    });
+
+    const bundle = createRuntimeLineClient({
+      config,
+      env: {
+        LINE_MESSAGING_ENABLED: "false",
+        LINE_REAL_PUSH_ENABLED: "false"
+      }
+    });
+
+    expect(bundle.lineClientMode).toBe("mock");
+    expect(bundle.lineClient).toBeInstanceOf(MockLineClient);
+  });
+
+  it("uses the real LINE client for profile reads when only a token is configured", () => {
+    const lineFetch = vi.fn();
     const config = loadAppConfig({
       LINE_CHANNEL_ACCESS_TOKEN: "fake-line-token",
+      LINE_MESSAGING_ENABLED: "false",
       LINE_REAL_PUSH_ENABLED: "false"
     });
 
@@ -155,12 +175,15 @@ describe("Loop 151 production runtime wiring remediation", () => {
       config,
       env: {
         LINE_CHANNEL_ACCESS_TOKEN: "fake-line-token",
+        LINE_MESSAGING_ENABLED: "false",
         LINE_REAL_PUSH_ENABLED: "false"
-      }
+      },
+      lineFetch
     });
 
-    expect(bundle.lineClientMode).toBe("mock");
-    expect(bundle.lineClient).toBeInstanceOf(MockLineClient);
+    expect(bundle.lineClientMode).toBe("real");
+    expect(bundle.lineClient).toBeInstanceOf(RealLineClient);
+    expect(lineFetch).not.toHaveBeenCalled();
   });
 
   it("uses the real LINE client for Messaging API profile reads even when real push is disabled", () => {
