@@ -2997,3 +2997,18 @@ message_body_recorded=false
 raw_response_body_recorded=false
 secret_recorded=false
 ```
+
+Loop 312 production staff reply real-send UI gate implementationでは、Admin UIがdemo-saveのみでcanary windowを開いても本番LINE送信操作に進めないblockerを解消しました。通常時はdemo-save/timeline保存だけを維持し、runtime capabilityがopenの時だけ危険操作として「本番LINEへ1通送信」セクションを表示します。API/server action側も explicit delivery mode、確認、idempotency、runtime flag を要求します。copy-based active deployは完了し、post-deploy smokeはpass、`line_real_send_currently_enabled_after_loop=false` です。LINE送信、retry/bulk/multicast/broadcast、OpenAI API、DB/Supabase/restore、runtime config変更、Nginx/DNS/HTTPS/certbotは行っていません。詳細は [Loop 312 task doc](../11_codex_tasks/312_production_staff_reply_real_send_ui_gate.md) を参照してください。
+
+Future Loop 313 candidate:
+
+```txt
+next_loop_candidate=Loop 313: operator-controlled LINE canary window execution with gated Admin UI
+loop_313_auto_progression_allowed=false
+operator_window_open_required=true
+operator_manual_send_path=gated_admin_ui_staff_reply
+operator_send_limit=1
+operator_retry_allowed=false
+operator_bulk_multicast_broadcast_allowed=false
+operator_post_window_disable_required=true
+```

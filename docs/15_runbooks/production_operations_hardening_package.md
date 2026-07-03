@@ -255,6 +255,45 @@ dr_restore_route_status=frozen_known_risk
 dr_readiness_status=not_ready_restore_failed
 ```
 
+## Loop 312 Staff Reply Real-Send UI Gate
+
+Loop 312 adds the missing Admin UI/API gate required before an operator-controlled LINE canary can be sent through the staff reply workflow.
+
+```txt
+loop_312_status=complete
+staff_reply_real_send_ui_gate_implemented=true
+admin_ui_demo_save_default_preserved=true
+admin_ui_real_send_gate_source=runtime_capability_boolean
+admin_ui_real_send_visible_when_flag_false=false
+admin_ui_real_send_visible_when_flag_true=tested_with_mock
+api_real_send_requires_explicit_delivery_mode=true
+api_real_send_requires_explicit_confirmation=true
+api_real_send_blocks_when_flag_false=true
+api_demo_save_succeeds_when_flag_false=true
+controlled_deploy_executed=true
+vps_runtime_post_deploy_commit=da99b8c
+post_deploy_smoke_status=pass
+line_real_send_currently_enabled_after_loop=false
+line_real_send_executed_in_loop_312=false
+line_canary_send_attempted_in_loop_312=false
+openai_api_executed=false
+production_db_change_performed=false
+runtime_config_changed_in_loop_312=false
+nginx_reload_executed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+```
+
+Operational boundary:
+
+- The dangerous real-send UI is visible only when the sanitized runtime capability reports the real-send window as open.
+- The normal state remains demo-save/timeline-save only.
+- The next canary remains operator-controlled and one-send only.
+- Do not retry, bulk, multicast, broadcast, call OpenAI, change runtime config, or expand production Go scope from this runbook.
+
 ### Demo-Day Start Checklist
 
 ```txt

@@ -4096,3 +4096,42 @@ dr_readiness_status=not_ready_restore_failed
 dr_risk_acceptance_status=accepted_with_known_risk
 restricted_actions_remain_no_go=true
 ```
+
+## Loop 312 Staff Reply Real-Send UI Gate
+
+```txt
+loop_312_status=complete
+staff_reply_real_send_ui_gate_implemented=true
+admin_ui_real_send_action_missing_before_loop=true
+admin_ui_demo_save_default_preserved=true
+admin_ui_real_send_visible_when_flag_false=false
+admin_ui_real_send_visible_when_flag_true=tested_with_mock
+api_real_send_requires_explicit_delivery_mode=true
+api_real_send_requires_explicit_confirmation=true
+api_real_send_blocks_when_flag_false=true
+api_demo_save_succeeds_when_flag_false=true
+targeted_real_send_gate_tests_status=pass
+local_validation_status=pass
+controlled_deploy_executed=true
+vps_runtime_post_deploy_commit=da99b8c
+post_deploy_smoke_status=pass
+line_real_send_currently_enabled_after_loop=false
+line_real_send_executed_in_loop_312=false
+line_canary_send_attempted_in_loop_312=false
+openai_api_executed=false
+production_db_direct_connection_executed=false
+production_db_manual_change_performed=false
+runtime_config_changed_in_loop_312=false
+nginx_reload_executed=false
+package_lock_changed=false
+rollback_executed=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 313: operator-controlled LINE canary window execution with gated Admin UI
+```
+
+Production remains scope-limited Go for the current LINE/API/Admin runtime. Loop 312 enables the Admin UI/API gate needed for a future one-message canary, but it does not execute a LINE send and does not change the real-send runtime flag.

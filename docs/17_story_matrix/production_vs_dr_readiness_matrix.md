@@ -2036,3 +2036,48 @@ dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 next_loop_candidate=Loop 312: operator-controlled LINE canary window execution result intake
 ```
+
+## Loop 312 Staff Reply Real-Send UI Gate
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Previous blocker | `resolved` | Admin UI no longer remains demo-save-only when runtime capability is open. |
+| Demo-save path | `preserved` | Demo-save remains default timeline-save-only behavior. |
+| Real-send UI | `gated` | Dangerous action appears only from sanitized runtime capability. |
+| API guard | `hardened` | Explicit delivery mode and confirmation are required. |
+| Production runtime | `deployed` | Active runtime marker matches the Loop 312 implementation commit. |
+| Post-deploy smoke | `pass` | Health, admin root, and unauthenticated API guard status codes are in baseline range. |
+| LINE send attempt | `not_attempted` | No canary send, retry, bulk, multicast, or broadcast in Loop 312. |
+| Runtime config | `unchanged` | LINE real send remains disabled after deploy. |
+| Production Go | `go` | Scope remains `line_api_admin_current_runtime`; scope was not expanded. |
+| DR restore route | `frozen_known_risk` | Not part of this Loop. |
+| DR readiness | `not_ready_restore_failed` | Restore has not succeeded. |
+| Next focus | `operator_controlled_canary_with_gated_admin_ui` | Single next Loop candidate is Loop 313. |
+
+```txt
+loop_312_status=complete
+staff_reply_real_send_ui_gate_implemented=true
+admin_ui_demo_save_default_preserved=true
+admin_ui_real_send_visible_when_flag_false=false
+admin_ui_real_send_visible_when_flag_true=tested_with_mock
+api_real_send_requires_explicit_delivery_mode=true
+api_real_send_requires_explicit_confirmation=true
+api_real_send_blocks_when_flag_false=true
+api_demo_save_succeeds_when_flag_false=true
+controlled_deploy_executed=true
+vps_runtime_post_deploy_commit=da99b8c
+post_deploy_smoke_status=pass
+line_real_send_currently_enabled_after_loop=false
+line_real_send_executed_in_loop_312=false
+line_canary_send_attempted_in_loop_312=false
+openai_api_executed=false
+production_db_change_performed=false
+runtime_config_changed_in_loop_312=false
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
+restricted_actions_remain_no_go=true
+next_loop_candidate=Loop 313: operator-controlled LINE canary window execution with gated Admin UI
+```

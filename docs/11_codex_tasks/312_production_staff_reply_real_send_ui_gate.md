@@ -1,25 +1,27 @@
-# Latest Codex Result
+# Loop 312: production staff reply real-send UI gate implementation
 
-## Result
+## Summary
 
 ```txt
-loop=Loop 312 production staff reply real-send UI gate implementation
-status=complete
+loop_312_status=complete
 anti_proliferation_check=pass
 is_this_loop_proliferation_risk=false
 proliferation_reason=implemented_runtime_ui_api_gate_instead_of_more_input_collection
 forward_progress_type=staff_reply_real_send_ui_api_gate_implemented_tested_deployed
 next_loop_requires_new_operator_input=true
-loop_311_status=complete
-loop_312_status=complete
 previous_blocker=admin_ui_demo_save_only_no_real_send_action_exposed
 admin_ui_real_send_action_missing_before_loop=true
 staff_reply_real_send_ui_gate_implemented=true
 local_head_short=da99b8c
 local_contains_ed3c5a2=true
+production_go=true
+production_go_scope=line_api_admin_current_runtime
+production_go_scope_expanded=false
+dr_restore_route_status=frozen_known_risk
+dr_readiness_status=not_ready_restore_failed
 ```
 
-## Implementation
+## Code Review Result
 
 ```txt
 current_admin_ui_demo_save_only=true
@@ -30,18 +32,35 @@ demo_save_bypass_limited_to_demo_save=true
 real_send_guard_still_present=true
 line_send_code_path_identified=true
 admin_reply_code_path_identified=true
+ui_gate_implementation_needed=true
+```
+
+## Implementation
+
+The Admin customer detail staff reply flow now keeps demo-save as the default and exposes a dangerous real-send action only through a sanitized runtime capability gate.
+
+```txt
 admin_ui_demo_save_default_preserved=true
 admin_ui_real_send_gate_source=runtime_capability_boolean
 admin_ui_real_send_visible_when_flag_false=false
 admin_ui_real_send_visible_when_flag_true=tested_with_mock
 api_real_send_requires_explicit_delivery_mode=true
 api_real_send_requires_explicit_confirmation=true
+api_real_send_requires_idempotency_key=true
 api_real_send_blocks_when_flag_false=true
 api_demo_save_succeeds_when_flag_false=true
 real_send_retry_bulk_broadcast_available=false
+openai_api_involved_in_staff_reply_gate=false
 ```
 
-## Tests And Validation
+Behavior:
+
+- `demo_save` remains timeline-save only and does not call LINE push.
+- Missing or unknown `delivery_mode` is treated as `demo_save`.
+- Real LINE send requires explicit real delivery mode, explicit confirmation, single-send checkbox, idempotency key, authenticated staff context, selected tenant, customer LINE linkage, and enabled runtime flags.
+- The runtime capability route returns booleans/status categories only and does not expose env values.
+
+## Tests
 
 ```txt
 demo_save_disabled_flag_test_status=pass
@@ -52,15 +71,23 @@ real_send_enabled_mock_path_test_status=pass
 admin_api_client_delivery_mode_test_status=pass
 admin_ui_gate_test_status=pass
 targeted_real_send_gate_tests_status=pass
+```
+
+Targeted tests covered the API gate, the Admin API client, the Admin UI component gate, and real-send behavior with mocked runtime flags only. No external LINE send was performed.
+
+## Validation
+
+```txt
 local_diff_check_status=pass
 local_lint_status=pass
 local_typecheck_status=pass
 local_test_status=pass
 local_integration_test_status=pass
 local_build_status=pass
+validation_passed=true
 ```
 
-## Deploy
+## Controlled Deploy
 
 ```txt
 ssh_access_available=true
@@ -81,11 +108,15 @@ admin_app_service_restart_status=pass
 nginx_reload_executed=false
 runtime_config_changed_in_loop_312=false
 package_lock_changed=false
+frozen_install_executed_by_existing_runbook=true
+apt_package_operation_executed=false
 vps_runtime_post_deploy_commit=da99b8c
 rollback_executed=false
 ```
 
-## Post-Deploy
+The first release archive stopped during staging validation before active update because AppleDouble metadata files were present. The active runtime was not changed by that failed staging attempt. The archive was rebuilt with AppleDouble files excluded, then staging validation passed and active deploy proceeded through the existing copy-based runbook.
+
+## Post-Deploy Verification
 
 ```txt
 api_service_active_post=true
@@ -115,7 +146,6 @@ supabase_connection_attempted=false
 restore_executed=false
 pg_restore_executed=false
 psql_executed=false
-runtime_config_changed_in_loop_312=false
 nginx_reload_executed=false
 nginx_restart_executed=false
 dns_https_certbot_executed=false
@@ -129,20 +159,15 @@ message_body_recorded=false
 raw_response_body_recorded=false
 host_or_url_recorded=false
 public_endpoint_url_recorded=false
-production_go=true
-production_go_scope=line_api_admin_current_runtime
-production_go_scope_expanded=false
-dr_restore_route_status=frozen_known_risk
-dr_readiness_status=not_ready_restore_failed
 restricted_actions_remain_no_go=true
 ```
 
 ## Files
 
 ```txt
-task_doc=docs/11_codex_tasks/312_production_staff_reply_real_send_ui_gate.md
-dev_log=docs/14_dev_logs/2026-07-02.md
-runbooks_updated=true
+code_updated=true
+tests_updated=true
+docs_updated=true
 handoff_updated=true
 matrices_updated=true
 readme_index_updated=true
