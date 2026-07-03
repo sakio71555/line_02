@@ -13,7 +13,13 @@ import {
   type StaffNotificationPayload,
   type StaffNotifier
 } from "@amami-line-crm/domain";
-import { MockLineClient, type LineClient, type LineReplyMessage, type LineUserProfile } from "@amami-line-crm/line";
+import {
+  LineMessagingApiError,
+  MockLineClient,
+  type LineClient,
+  type LineReplyMessage,
+  type LineUserProfile
+} from "@amami-line-crm/line";
 
 const channelSecret = "test_line_channel_secret";
 const knownWebhookSecret = "wh_dev_amamihome";
@@ -1247,6 +1253,64 @@ describe("staff LINE notification webhook foundation", () => {
     expect(serialized).not.toContain("U_TEST_STAFF_TARGET_CAPTURE");
     expect(serialized).not.toContain("通知テスト");
     expect(serialized).not.toContain("test-staff-line-target-capture-message");
+  });
+
+  it("falls back to a sanitized push confirmation when the staff setup reply fails", async () => {
+    class ReplyFailingStaffLineClient extends MockLineClient {
+      override async replyMessage(): Promise<void> {
+        throw new LineMessagingApiError("reply failed in test", 400);
+      }
+    }
+
+    const staffLineClient = new ReplyFailingStaffLineClient();
+    const { app } = createStaffLineWebhookTestApp({
+      staffLineClient,
+      env: {
+        APP_ENV: "production",
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const body = lineTextMessageBody({
+      userId: "U_TEST_STAFF_TARGET_REPLY_FALLBACK",
+      eventId: "01TESTSTAFFTARGETREPLYFALLBACK",
+      messageId: "test-staff-line-target-reply-fallback-message",
+      replyToken: "reply_token_staff_line_target_reply_fallback",
+      text: "通知テスト",
+      timestamp: 1710000010250
+    });
+    const response = await app.fetch(
+      signedStaffLineRequest(`/api/staff-line/webhook/${knownStaffLineWebhookSecret}`, body)
+    );
+    const parsed = await response.json();
+    const serialized = JSON.stringify(parsed);
+
+    expect(response.status).toBe(200);
+    expect(parsed).toMatchObject({
+      notification_target_capture: {
+        captured: true,
+        target_id_value_output: false,
+        raw_event_content_recorded: false
+      },
+      setup_reply: {
+        attempted: true,
+        sent: 1,
+        failed: 0,
+        fallback_push_attempted: true,
+        fallback_push_sent: 1,
+        fallback_push_failed: 0,
+        failure_category: null,
+        failed_status_code: null,
+        target_id_value_output: false
+      }
+    });
+    expect(staffLineClient.replies).toHaveLength(0);
+    expect(staffLineClient.pushes).toHaveLength(1);
+    expect(staffLineClient.pushes[0]?.messages[0]?.text).toContain(
+      "通知テストを受け付けました"
+    );
+    expect(serialized).not.toContain("U_TEST_STAFF_TARGET_REPLY_FALLBACK");
+    expect(serialized).not.toContain("通知テスト");
+    expect(serialized).not.toContain("test-staff-line-target-reply-fallback-message");
   });
 
   it("captures a staff notification target when staff-line runtime is configured in a development-labeled VPS process", async () => {

@@ -1015,6 +1015,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       const notificationTargetCapture = captureStaffLineNotificationTarget(payload.events, env);
       const setupReply = await replyToStaffLineTargetSetupEvents({
         events: payload.events,
+        env,
         lineClient: staffLineClient,
         notificationTargetCapture
       });
@@ -1379,6 +1380,7 @@ function findStaffLineNotificationTarget(
 
 async function replyToStaffLineTargetSetupEvents(input: {
   events: NormalizedLineWebhookEvent[];
+  env: NodeJS.ProcessEnv;
   lineClient: LineClient | null;
   notificationTargetCapture: StaffLineNotificationTargetCaptureResult;
 }): Promise<{
@@ -1386,6 +1388,9 @@ async function replyToStaffLineTargetSetupEvents(input: {
   sent: number;
   failed: number;
   skipped: number;
+  fallback_push_attempted: boolean;
+  fallback_push_sent: number;
+  fallback_push_failed: number;
   failure_category: string | null;
   failed_status_code: number | null;
   line_api_response_body_recorded: false;
@@ -1395,6 +1400,8 @@ async function replyToStaffLineTargetSetupEvents(input: {
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  let fallbackPushSent = 0;
+  let fallbackPushFailed = 0;
   let failureCategory: string | null = null;
   let failedStatusCode: number | null = null;
 
@@ -1415,20 +1422,36 @@ async function replyToStaffLineTargetSetupEvents(input: {
       continue;
     }
 
+    const confirmationMessage = buildStaffLineSetupConfirmationMessage(
+      input.notificationTargetCapture.runtime_target_present_after
+    );
+
     try {
       await input.lineClient.replyMessage(event.reply_token, [
         {
           type: "text",
-          text: input.notificationTargetCapture.runtime_target_present_after
-            ? "通知テストを受け付けました。CRMからの相談通知をこのトークへ送れる状態です。"
-            : "通知テストを受け付けました。CRM通知先の確認はまだ完了していません。"
+          text: confirmationMessage
         }
       ]);
       sent += 1;
     } catch (error) {
-      failed += 1;
-      failureCategory = classifyLineMessagingFailure(error);
-      failedStatusCode = readLineMessagingStatusCode(error);
+      const fallbackResult = await pushStaffLineSetupConfirmationFallback({
+        env: input.env,
+        lineClient: input.lineClient,
+        message: confirmationMessage
+      });
+
+      if (fallbackResult.sent) {
+        sent += 1;
+        fallbackPushSent += 1;
+      } else {
+        failed += 1;
+        fallbackPushFailed += 1;
+        failureCategory =
+          fallbackResult.failure_category ?? classifyLineMessagingFailure(error);
+        failedStatusCode =
+          fallbackResult.failed_status_code ?? readLineMessagingStatusCode(error);
+      }
     }
   }
 
@@ -1437,12 +1460,62 @@ async function replyToStaffLineTargetSetupEvents(input: {
     sent,
     failed,
     skipped,
+    fallback_push_attempted: fallbackPushSent + fallbackPushFailed > 0,
+    fallback_push_sent: fallbackPushSent,
+    fallback_push_failed: fallbackPushFailed,
     failure_category: failureCategory,
     failed_status_code: failedStatusCode,
     line_api_response_body_recorded: false,
     trigger_text_recorded: false,
     target_id_value_output: false
   };
+}
+
+function buildStaffLineSetupConfirmationMessage(runtimeTargetPresent: boolean): string {
+  return runtimeTargetPresent
+    ? "通知テストを受け付けました。CRMからの相談通知をこのトークへ送れる状態です。"
+    : "通知テストを受け付けました。CRM通知先の確認はまだ完了していません。";
+}
+
+async function pushStaffLineSetupConfirmationFallback(input: {
+  env: NodeJS.ProcessEnv;
+  lineClient: LineClient;
+  message: string;
+}): Promise<{
+  sent: boolean;
+  failure_category: string | null;
+  failed_status_code: number | null;
+}> {
+  const targetId = resolveStaffLineNotificationTargetId(input.env);
+
+  if (!targetId) {
+    return {
+      sent: false,
+      failure_category: "notification_target_not_configured",
+      failed_status_code: null
+    };
+  }
+
+  try {
+    await input.lineClient.pushMessage(targetId, [
+      {
+        type: "text",
+        text: input.message
+      }
+    ]);
+
+    return {
+      sent: true,
+      failure_category: null,
+      failed_status_code: null
+    };
+  } catch (error) {
+    return {
+      sent: false,
+      failure_category: classifyLineMessagingFailure(error),
+      failed_status_code: readLineMessagingStatusCode(error)
+    };
+  }
 }
 
 function classifyLineMessagingFailure(error: unknown): string {
@@ -1498,6 +1571,9 @@ function logStaffLineWebhookProcessingResult(input: {
       setup_reply_attempted: input.setupReply.attempted,
       setup_reply_sent: input.setupReply.sent,
       setup_reply_failed: input.setupReply.failed,
+      setup_reply_fallback_push_attempted: input.setupReply.fallback_push_attempted,
+      setup_reply_fallback_push_sent: input.setupReply.fallback_push_sent,
+      setup_reply_fallback_push_failed: input.setupReply.fallback_push_failed,
       setup_reply_failure_category: input.setupReply.failure_category,
       setup_reply_failed_status_code: input.setupReply.failed_status_code,
       target_id_value_output: false,
