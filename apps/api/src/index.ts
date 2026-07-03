@@ -1,5 +1,7 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname } from "node:path";
 
 import {
   type AiConversationTurn,
@@ -38,6 +40,7 @@ import {
   FetchLineMessagingTransport,
   FetchLineIdTokenVerifier,
   LineIdTokenVerificationError,
+  LineMessagingApiError,
   MockLineClient,
   parseLineWebhookPayload,
   RealLineClient,
@@ -1015,6 +1018,13 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         lineClient: staffLineClient,
         notificationTargetCapture
       });
+      logStaffLineWebhookProcessingResult({
+        env,
+        eventCount: payload.events.length,
+        sanitizedSummary,
+        notificationTargetCapture,
+        setupReply
+      });
 
       return c.json({
         ok: true,
@@ -1177,20 +1187,35 @@ function summarizeStaffLineWebhookEvents(events: NormalizedLineWebhookEvent[]): 
 
 type StaffLineNotificationTargetSourceType = "user" | "group" | "room";
 
-function captureStaffLineNotificationTarget(
-  events: NormalizedLineWebhookEvent[],
-  env: NodeJS.ProcessEnv
-): {
+const DEFAULT_STAFF_LINE_TARGET_RUNTIME_FILE = "/etc/amami-line-crm/staff-line-target.env";
+
+type StaffLineTargetRuntimeFileWriteResult = {
+  attempted: boolean;
+  written: boolean;
+  skipped_reason: string | null;
+  error_category: string | null;
+  target_id_value_output: false;
+  target_file_path_output: false;
+  raw_event_content_recorded: false;
+};
+
+type StaffLineNotificationTargetCaptureResult = {
   attempted: boolean;
   captured: boolean;
   skipped_reason: string | null;
   source_type: StaffLineNotificationTargetSourceType | null;
   runtime_target_present_before: boolean;
   runtime_target_present_after: boolean;
+  runtime_file_persistence: StaffLineTargetRuntimeFileWriteResult;
   target_id_value_output: false;
   target_id_committed: false;
   raw_event_content_recorded: false;
-} {
+};
+
+function captureStaffLineNotificationTarget(
+  events: NormalizedLineWebhookEvent[],
+  env: NodeJS.ProcessEnv
+): StaffLineNotificationTargetCaptureResult {
   const targetPresentBefore = Boolean(readNonEmptyEnvValue(env.STAFF_LINE_GROUP_ID));
 
   if (!isProductionRuntime(env)) {
@@ -1201,6 +1226,7 @@ function captureStaffLineNotificationTarget(
       source_type: null,
       runtime_target_present_before: targetPresentBefore,
       runtime_target_present_after: targetPresentBefore,
+      runtime_file_persistence: skippedStaffLineTargetRuntimeFileWrite("non_production_runtime"),
       target_id_value_output: false,
       target_id_committed: false,
       raw_event_content_recorded: false
@@ -1215,6 +1241,9 @@ function captureStaffLineNotificationTarget(
       source_type: null,
       runtime_target_present_before: true,
       runtime_target_present_after: true,
+      runtime_file_persistence: skippedStaffLineTargetRuntimeFileWrite(
+        "runtime_target_already_present"
+      ),
       target_id_value_output: false,
       target_id_committed: false,
       raw_event_content_recorded: false
@@ -1231,6 +1260,7 @@ function captureStaffLineNotificationTarget(
       source_type: null,
       runtime_target_present_before: false,
       runtime_target_present_after: false,
+      runtime_file_persistence: skippedStaffLineTargetRuntimeFileWrite("source_target_not_found"),
       target_id_value_output: false,
       target_id_committed: false,
       raw_event_content_recorded: false
@@ -1238,6 +1268,7 @@ function captureStaffLineNotificationTarget(
   }
 
   env.STAFF_LINE_GROUP_ID = target.id;
+  const runtimeFilePersistence = writeStaffLineTargetRuntimeFile(target.id, env);
 
   return {
     attempted: true,
@@ -1246,10 +1277,82 @@ function captureStaffLineNotificationTarget(
     source_type: target.type,
     runtime_target_present_before: false,
     runtime_target_present_after: true,
+    runtime_file_persistence: runtimeFilePersistence,
     target_id_value_output: false,
     target_id_committed: false,
     raw_event_content_recorded: false
   };
+}
+
+function skippedStaffLineTargetRuntimeFileWrite(
+  skippedReason: string
+): StaffLineTargetRuntimeFileWriteResult {
+  return {
+    attempted: false,
+    written: false,
+    skipped_reason: skippedReason,
+    error_category: null,
+    target_id_value_output: false,
+    target_file_path_output: false,
+    raw_event_content_recorded: false
+  };
+}
+
+function writeStaffLineTargetRuntimeFile(
+  targetId: string,
+  env: NodeJS.ProcessEnv
+): StaffLineTargetRuntimeFileWriteResult {
+  const runtimeFilePath = resolveStaffLineTargetRuntimeFile(env);
+
+  if (!runtimeFilePath) {
+    return skippedStaffLineTargetRuntimeFileWrite("runtime_file_not_configured");
+  }
+
+  try {
+    mkdirSync(dirname(runtimeFilePath), { recursive: true, mode: 0o700 });
+    writeFileSync(runtimeFilePath, `STAFF_LINE_GROUP_ID=${quoteEnvValue(targetId)}\n`, {
+      mode: 0o600
+    });
+    chmodSync(runtimeFilePath, 0o600);
+
+    return {
+      attempted: true,
+      written: true,
+      skipped_reason: null,
+      error_category: null,
+      target_id_value_output: false,
+      target_file_path_output: false,
+      raw_event_content_recorded: false
+    };
+  } catch {
+    return {
+      attempted: true,
+      written: false,
+      skipped_reason: null,
+      error_category: "runtime_file_write_failed",
+      target_id_value_output: false,
+      target_file_path_output: false,
+      raw_event_content_recorded: false
+    };
+  }
+}
+
+function resolveStaffLineTargetRuntimeFile(env: NodeJS.ProcessEnv): string | null {
+  const configuredPath = readNonEmptyEnvValue(env.STAFF_LINE_TARGET_RUNTIME_FILE);
+
+  if (configuredPath) {
+    return configuredPath;
+  }
+
+  if (env.NODE_ENV === "test" || process.env.NODE_ENV === "test") {
+    return null;
+  }
+
+  return DEFAULT_STAFF_LINE_TARGET_RUNTIME_FILE;
+}
+
+function quoteEnvValue(value: string): string {
+  return `'${value.replace(/'/gu, "'\"'\"'")}'`;
 }
 
 function findStaffLineNotificationTarget(
@@ -1275,18 +1378,23 @@ function findStaffLineNotificationTarget(
 async function replyToStaffLineTargetSetupEvents(input: {
   events: NormalizedLineWebhookEvent[];
   lineClient: LineClient | null;
-  notificationTargetCapture: ReturnType<typeof captureStaffLineNotificationTarget>;
+  notificationTargetCapture: StaffLineNotificationTargetCaptureResult;
 }): Promise<{
   attempted: boolean;
   sent: number;
   failed: number;
   skipped: number;
+  failure_category: string | null;
+  failed_status_code: number | null;
+  line_api_response_body_recorded: false;
   trigger_text_recorded: false;
   target_id_value_output: false;
 }> {
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  let failureCategory: string | null = null;
+  let failedStatusCode: number | null = null;
 
   for (const event of input.events) {
     const isSetupTrigger =
@@ -1301,6 +1409,7 @@ async function replyToStaffLineTargetSetupEvents(input: {
 
     if (!input.lineClient || !event.reply_token) {
       failed += 1;
+      failureCategory = !input.lineClient ? "line_client_not_configured" : "reply_token_missing";
       continue;
     }
 
@@ -1314,8 +1423,10 @@ async function replyToStaffLineTargetSetupEvents(input: {
         }
       ]);
       sent += 1;
-    } catch {
+    } catch (error) {
       failed += 1;
+      failureCategory = classifyLineMessagingFailure(error);
+      failedStatusCode = readLineMessagingStatusCode(error);
     }
   }
 
@@ -1324,9 +1435,76 @@ async function replyToStaffLineTargetSetupEvents(input: {
     sent,
     failed,
     skipped,
+    failure_category: failureCategory,
+    failed_status_code: failedStatusCode,
+    line_api_response_body_recorded: false,
     trigger_text_recorded: false,
     target_id_value_output: false
   };
+}
+
+function classifyLineMessagingFailure(error: unknown): string {
+  if (error instanceof LineMessagingApiError) {
+    return "line_messaging_api_error";
+  }
+
+  return "line_messaging_unknown_error";
+}
+
+function readLineMessagingStatusCode(error: unknown): number | null {
+  if (error instanceof LineMessagingApiError) {
+    return error.statusCode ?? null;
+  }
+
+  return null;
+}
+
+function logStaffLineWebhookProcessingResult(input: {
+  env: NodeJS.ProcessEnv;
+  eventCount: number;
+  sanitizedSummary: ReturnType<typeof summarizeStaffLineWebhookEvents>;
+  notificationTargetCapture: StaffLineNotificationTargetCaptureResult;
+  setupReply: Awaited<ReturnType<typeof replyToStaffLineTargetSetupEvents>>;
+}): void {
+  if (
+    !isProductionRuntime(input.env) ||
+    input.env.NODE_ENV === "test" ||
+    process.env.NODE_ENV === "test"
+  ) {
+    return;
+  }
+
+  console.info(
+    JSON.stringify({
+      event: "staff_line_webhook_processed",
+      event_count: input.eventCount,
+      message_events: input.sanitizedSummary.message_events,
+      text_message_events: input.sanitizedSummary.text_message_events,
+      source_user_events: input.sanitizedSummary.source_user_events,
+      source_group_events: input.sanitizedSummary.source_group_events,
+      source_room_events: input.sanitizedSummary.source_room_events,
+      notification_target_capture_attempted: input.notificationTargetCapture.attempted,
+      notification_target_captured: input.notificationTargetCapture.captured,
+      notification_target_source_type: input.notificationTargetCapture.source_type,
+      notification_target_runtime_present_after:
+        input.notificationTargetCapture.runtime_target_present_after,
+      notification_target_persist_attempted:
+        input.notificationTargetCapture.runtime_file_persistence.attempted,
+      notification_target_persisted: input.notificationTargetCapture.runtime_file_persistence.written,
+      notification_target_persist_error_category:
+        input.notificationTargetCapture.runtime_file_persistence.error_category,
+      setup_reply_attempted: input.setupReply.attempted,
+      setup_reply_sent: input.setupReply.sent,
+      setup_reply_failed: input.setupReply.failed,
+      setup_reply_failure_category: input.setupReply.failure_category,
+      setup_reply_failed_status_code: input.setupReply.failed_status_code,
+      target_id_value_output: false,
+      target_file_path_output: false,
+      trigger_text_recorded: false,
+      raw_event_content_recorded: false,
+      line_api_response_body_recorded: false
+    })
+  );
 }
 
 function combineLineReplyCounts(

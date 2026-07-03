@@ -1,5 +1,6 @@
 import { createHmac } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -1214,6 +1215,76 @@ describe("staff LINE notification webhook foundation", () => {
     expect(serialized).not.toContain("U_TEST_STAFF_TARGET_CAPTURE");
     expect(serialized).not.toContain("通知テスト");
     expect(serialized).not.toContain("test-staff-line-target-capture-message");
+  });
+
+  it("persists a production staff notification target to a configured runtime file safely", async () => {
+    const runtimeDir = join(
+      process.cwd(),
+      "tmp",
+      "tests",
+      `staff-line-target-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
+    const runtimeFile = join(runtimeDir, "staff-line-target.env");
+    mkdirSync(runtimeDir, { recursive: true });
+
+    try {
+      const staffLineClient = new MockLineClient();
+      const { app } = createStaffLineWebhookTestApp({
+        staffLineClient,
+        env: {
+          APP_ENV: "production",
+          STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token",
+          STAFF_LINE_TARGET_RUNTIME_FILE: runtimeFile
+        }
+      });
+      const body = lineTextMessageBody({
+        userId: "U_TEST_STAFF_TARGET_PERSIST",
+        eventId: "01TESTSTAFFTARGETPERSIST",
+        messageId: "test-staff-line-target-persist-message",
+        replyToken: "reply_token_staff_line_target_persist",
+        text: "通知テスト",
+        timestamp: 1710000011000
+      });
+      const response = await app.fetch(
+        signedStaffLineRequest(`/api/staff-line/webhook/${knownStaffLineWebhookSecret}`, body)
+      );
+      const parsed = await response.json();
+      const serialized = JSON.stringify(parsed);
+      const runtimeFileContent = readFileSync(runtimeFile, "utf8");
+
+      expect(response.status).toBe(200);
+      expect(parsed).toMatchObject({
+        notification_target_capture: {
+          captured: true,
+          runtime_file_persistence: {
+            attempted: true,
+            written: true,
+            skipped_reason: null,
+            error_category: null,
+            target_id_value_output: false,
+            target_file_path_output: false,
+            raw_event_content_recorded: false
+          },
+          target_id_value_output: false,
+          target_id_committed: false
+        },
+        setup_reply: {
+          attempted: true,
+          sent: 1,
+          failed: 0,
+          failure_category: null,
+          line_api_response_body_recorded: false
+        }
+      });
+      expect(runtimeFileContent).toContain("STAFF_LINE_GROUP_ID=");
+      expect(runtimeFileContent).toContain("U_TEST_STAFF_TARGET_PERSIST");
+      expect(serialized).not.toContain("U_TEST_STAFF_TARGET_PERSIST");
+      expect(serialized).not.toContain(runtimeFile);
+      expect(serialized).not.toContain("通知テスト");
+      expect(serialized).not.toContain("test-staff-line-target-persist-message");
+    } finally {
+      rmSync(runtimeDir, { recursive: true, force: true });
+    }
   });
 
   it("rejects staff-line webhook requests with an invalid signature", async () => {

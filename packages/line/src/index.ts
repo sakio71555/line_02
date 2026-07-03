@@ -216,9 +216,12 @@ export interface RealLineClientConfig {
 }
 
 export class LineMessagingApiError extends Error {
-  constructor(message = "LINE Messaging API request failed.") {
+  readonly statusCode: number | null;
+
+  constructor(message = "LINE Messaging API request failed.", statusCode: number | null = null) {
     super(message);
     this.name = "LineMessagingApiError";
+    this.statusCode = statusCode;
   }
 }
 
@@ -295,7 +298,7 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
     });
 
     if (!response.ok) {
-      throw new LineMessagingApiError();
+      throw new LineMessagingApiError("LINE Messaging API request failed.", readStatus(response));
     }
 
     return parseLineUserProfileResponse(await response.text());
@@ -316,9 +319,15 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
     });
 
     if (!response.ok) {
-      throw new LineMessagingApiError();
+      throw new LineMessagingApiError("LINE Messaging API request failed.", readStatus(response));
     }
   }
+}
+
+function readStatus(response: LineMessagingFetchResponse): number | null {
+  const status = (response as LineMessagingFetchResponse & { status?: unknown }).status;
+
+  return typeof status === "number" && Number.isFinite(status) ? status : null;
 }
 
 export class RealLineClient implements LineClient {
@@ -355,7 +364,11 @@ export class RealLineClient implements LineClient {
         replyToken,
         messages
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof LineMessagingApiError) {
+        throw error;
+      }
+
       throw new LineMessagingApiError();
     }
   }
@@ -368,7 +381,11 @@ export class RealLineClient implements LineClient {
         to,
         messages
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof LineMessagingApiError) {
+        throw error;
+      }
+
       throw new LineMessagingApiError();
     }
   }
@@ -390,7 +407,11 @@ export class RealLineClient implements LineClient {
         endpoint: `${this.profileEndpointBase}/${encodeURIComponent(normalizedUserId)}`,
         userId: normalizedUserId
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof LineMessagingApiError) {
+        throw error;
+      }
+
       throw new LineMessagingApiError();
     }
   }
