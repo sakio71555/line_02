@@ -279,6 +279,137 @@ describe("LINE webhook foundation", () => {
     });
   });
 
+  it("captures a temporary staff notification target from the customer LINE channel without logging it as a customer message", async () => {
+    const runtimeDir = join(process.cwd(), "tmp", "tests", "customer-line-staff-target");
+    const runtimeFile = join(runtimeDir, "staff-line-target.env");
+    const lineClient = new MockLineClient();
+    mkdirSync(runtimeDir, { recursive: true });
+
+    try {
+      const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+        lineClient,
+        env: {
+          LINE_CHANNEL_ACCESS_TOKEN: "test_customer_line_access_token",
+          STAFF_LINE_USE_CUSTOMER_CHANNEL_FOR_NOTIFICATIONS: "true",
+          STAFF_LINE_TARGET_RUNTIME_FILE: runtimeFile
+        }
+      });
+
+      const response = await app.fetch(
+        signedRequest(
+          `/api/line/webhook/${knownWebhookSecret}`,
+          lineTextMessageBody({
+            userId: "U_TEST_CUSTOMER_CHANNEL_STAFF_TARGET",
+            eventId: "01TESTCUSTOMERCHANNELSTAFFTARGET",
+            messageId: "test-customer-channel-staff-target",
+            replyToken: "reply_token_customer_channel_staff_target",
+            text: "通知テスト",
+            timestamp: 1710000010000
+          })
+        )
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body).toMatchObject({
+        ok: true,
+        customer_line_staff_notification_setup: {
+          enabled: true,
+          attempted: true,
+          setup_trigger_events: 1,
+          customer_event_logging_skipped: true,
+          notification_target_capture: {
+            attempted: true,
+            captured: true,
+            source_type: "user",
+            runtime_file_persistence: {
+              attempted: true,
+              written: true
+            },
+            target_id_value_output: false,
+            raw_event_content_recorded: false
+          },
+          setup_reply: {
+            attempted: true,
+            sent: 1,
+            failed: 0,
+            target_id_value_output: false
+          }
+        },
+        logging: {
+          customers_upserted: 0,
+          messages_inserted: 0,
+          alerts_created: 0,
+          unsupported_events: 0
+        }
+      });
+      expect(lineClient.replies).toHaveLength(1);
+      expect(lineClient.replies[0]).toMatchObject({
+        replyToken: "reply_token_customer_channel_staff_target",
+        messages: [
+          {
+            type: "text",
+            text: "通知テストを受け付けました。CRMからの相談通知をこのトークへ送れる状態です。"
+          }
+        ]
+      });
+      expect(customerRepository.list()).toHaveLength(0);
+      expect(messageRepository.list()).toHaveLength(0);
+      expect(alertRepository.list()).toHaveLength(0);
+      expect(readFileSync(runtimeFile, "utf8")).toContain("STAFF_LINE_GROUP_ID=");
+    } finally {
+      rmSync(runtimeDir, { recursive: true, force: true });
+    }
+  });
+
+  it("does not refresh staff notification targets from the separate staff LINE webhook while customer-channel fallback is enabled", async () => {
+    const runtimeDir = join(process.cwd(), "tmp", "tests", "staff-line-fallback-skip-target");
+    const runtimeFile = join(runtimeDir, "staff-line-target.env");
+    const { app } = createStaffLineWebhookTestApp({
+      staffLineClient: new MockLineClient(),
+      env: {
+        LINE_CHANNEL_ACCESS_TOKEN: "test_customer_line_access_token",
+        STAFF_LINE_USE_CUSTOMER_CHANNEL_FOR_NOTIFICATIONS: "true",
+        STAFF_LINE_TARGET_RUNTIME_FILE: runtimeFile
+      }
+    });
+    mkdirSync(runtimeDir, { recursive: true });
+
+    try {
+      const response = await app.fetch(
+        signedStaffLineRequest(
+          `/api/staff-line/webhook/${knownStaffLineWebhookSecret}`,
+          lineTextMessageBody({
+            userId: "U_TEST_SEPARATE_STAFF_LINE_TARGET",
+            eventId: "01TESTSEPARATESTAFFLINEFALLBACKSKIP",
+            messageId: "test-separate-staff-line-fallback-skip",
+            replyToken: "reply_token_separate_staff_line_fallback_skip",
+            text: "通知テスト",
+            timestamp: 1710000011000
+          })
+        )
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(body.notification_target_capture).toMatchObject({
+        attempted: false,
+        captured: false,
+        skipped_reason: "customer_channel_fallback_enabled",
+        target_id_value_output: false,
+        raw_event_content_recorded: false
+      });
+      expect(body.setup_reply).toMatchObject({
+        attempted: false,
+        failure_category: "customer_channel_fallback_enabled",
+        target_id_value_output: false
+      });
+      expect(() => readFileSync(runtimeFile, "utf8")).toThrow();
+    } finally {
+      rmSync(runtimeDir, { recursive: true, force: true });
+    }
+  });
+
   it("replies with the model house reservation guide and records page guidance without an alert", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({

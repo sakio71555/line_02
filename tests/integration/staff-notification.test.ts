@@ -318,4 +318,85 @@ describe("admin open alert staff notification API", () => {
       rmSync(runtimeDir, { recursive: true, force: true });
     }
   });
+
+  it("can send runtime staff notifications through the customer LINE channel during temporary fallback operation", async () => {
+    const originalFetch = globalThis.fetch;
+    const runtimeDir = join(
+      process.cwd(),
+      "tmp",
+      "tests",
+      "staff-notification-customer-channel-fallback"
+    );
+    const runtimeFile = join(runtimeDir, "staff-line-target.env");
+    const linePushRequests: Array<{
+      input: string;
+      authorization: string | undefined;
+      body: unknown;
+    }> = [];
+    const alertRepository = new InMemoryAlertRepository();
+
+    mkdirSync(runtimeDir, { recursive: true });
+    writeFileSync(runtimeFile, "STAFF_LINE_GROUP_ID='U_TEST_CUSTOMER_CHANNEL_STAFF_TARGET'\n");
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      linePushRequests.push({
+        input: String(input),
+        authorization:
+          init?.headers instanceof Headers
+            ? init.headers.get("authorization") ?? undefined
+            : (init?.headers as Record<string, string> | undefined)?.authorization,
+        body: init?.body ? JSON.parse(String(init.body)) : null
+      });
+
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+
+    try {
+      const app = createTestApp({
+        tenantId: "tenant_amamihome",
+        tenantSlug: "amamihome",
+        alertRepository,
+        env: {
+          LINE_CHANNEL_ACCESS_TOKEN: "test_customer_line_access_token",
+          STAFF_LINE_USE_CUSTOMER_CHANNEL_FOR_NOTIFICATIONS: "true",
+          STAFF_LINE_TARGET_RUNTIME_FILE: runtimeFile
+        }
+      });
+
+      await alertRepository.create(
+        makeAlert({
+          id: "alert_open_customer_channel_fallback",
+          customerId: "customer_amami",
+          severity: "high",
+          message: "仮運用通知本文には含めない相談内容です"
+        })
+      );
+
+      const response = await notifyOpen(app, "tenant_amamihome");
+      const body = await response.json();
+      const pushBody = linePushRequests[0]?.body as {
+        to?: string;
+        messages?: Array<{ type?: string; text?: string }>;
+      };
+
+      expect(response.status).toBe(200);
+      expect(body).toMatchObject({
+        ok: true,
+        tenant_id: "tenant_amamihome",
+        notified: 1,
+        failed: 0,
+        skipped: 0
+      });
+      expect(linePushRequests).toHaveLength(1);
+      expect(linePushRequests[0]?.input).toBe("https://api.line.me/v2/bot/message/push");
+      expect(linePushRequests[0]?.authorization).toBe("Bearer test_customer_line_access_token");
+      expect(pushBody.to).toBe("U_TEST_CUSTOMER_CHANNEL_STAFF_TARGET");
+      expect(pushBody.messages?.[0]?.text).toContain("新しい相談が届きました。");
+      expect(pushBody.messages?.[0]?.text).not.toContain(
+        "仮運用通知本文には含めない相談内容です"
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+      rmSync(runtimeDir, { recursive: true, force: true });
+    }
+  });
 });

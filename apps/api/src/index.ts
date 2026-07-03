@@ -947,16 +947,25 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     try {
       const payload = parseLineWebhookPayload(rawBody);
+      const customerLineStaffNotificationSetup =
+        await setupStaffLineNotificationTargetFromCustomerLine({
+          events: payload.events,
+          env,
+          lineClient
+        });
+      const customerLoggingEvents = customerLineStaffNotificationSetup.enabled
+        ? payload.events.filter((event) => !isStaffLineSetupTriggerEvent(event))
+        : payload.events;
       const logging = await logLineWebhookEvents({
         tenant_id: tenant.tenantId,
-        events: payload.events,
+        events: customerLoggingEvents,
         customerRepository,
         messageRepository,
         alertRepository,
         getLineDisplayName: (lineUserId) => getLineDisplayNameFromLineProfile(lineClient, lineUserId)
       });
       const { line_reply_instructions: lineReplyInstructions, ...publicLogging } = logging;
-      const guideReplies = await replyToCustomerRichMenuGuideEvents(payload.events, lineClient);
+      const guideReplies = await replyToCustomerRichMenuGuideEvents(customerLoggingEvents, lineClient);
       const flowReplies = await replyToLineReplyInstructions(lineReplyInstructions, lineClient);
       const lineMenuReplies = combineLineReplyCounts(guideReplies, flowReplies);
       const staffNotifications = await notifyNewAlertsForProduction({
@@ -977,6 +986,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         event_count: payload.events.length,
         events: payload.events,
         line_menu_replies: lineMenuReplies,
+        customer_line_staff_notification_setup: customerLineStaffNotificationSetup,
         staff_notifications: staffNotifications,
         logging: publicLogging
       });
@@ -1012,13 +1022,19 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     try {
       const payload = parseLineWebhookPayload(rawBody);
       const sanitizedSummary = summarizeStaffLineWebhookEvents(payload.events);
-      const notificationTargetCapture = captureStaffLineNotificationTarget(payload.events, env);
-      const setupReply = await replyToStaffLineTargetSetupEvents({
-        events: payload.events,
-        env,
-        lineClient: staffLineClient,
-        notificationTargetCapture
-      });
+      const customerChannelFallbackEnabled =
+        isStaffLineCustomerChannelNotificationFallbackEnabled(env);
+      const notificationTargetCapture = customerChannelFallbackEnabled
+        ? skippedStaffLineNotificationTargetCapture(env, "customer_channel_fallback_enabled")
+        : captureStaffLineNotificationTarget(payload.events, env);
+      const setupReply = customerChannelFallbackEnabled
+        ? skippedStaffLineSetupReply("customer_channel_fallback_enabled")
+        : await replyToStaffLineTargetSetupEvents({
+            events: payload.events,
+            env,
+            lineClient: staffLineClient,
+            notificationTargetCapture
+          });
       logStaffLineWebhookProcessingResult({
         env,
         eventCount: payload.events.length,
@@ -1213,6 +1229,59 @@ type StaffLineNotificationTargetCaptureResult = {
   raw_event_content_recorded: false;
 };
 
+async function setupStaffLineNotificationTargetFromCustomerLine(input: {
+  events: NormalizedLineWebhookEvent[];
+  env: NodeJS.ProcessEnv;
+  lineClient: LineClient;
+}): Promise<{
+  enabled: boolean;
+  attempted: boolean;
+  setup_trigger_events: number;
+  notification_target_capture: StaffLineNotificationTargetCaptureResult | null;
+  setup_reply: Awaited<ReturnType<typeof replyToStaffLineTargetSetupEvents>> | null;
+  customer_event_logging_skipped: boolean;
+  target_id_value_output: false;
+  raw_event_content_recorded: false;
+}> {
+  const enabled = isStaffLineCustomerChannelNotificationFallbackEnabled(input.env);
+  const setupTriggerEvents = input.events.filter(isStaffLineSetupTriggerEvent);
+
+  if (!enabled || setupTriggerEvents.length === 0) {
+    return {
+      enabled,
+      attempted: false,
+      setup_trigger_events: setupTriggerEvents.length,
+      notification_target_capture: null,
+      setup_reply: null,
+      customer_event_logging_skipped: false,
+      target_id_value_output: false,
+      raw_event_content_recorded: false
+    };
+  }
+
+  const notificationTargetCapture = captureStaffLineNotificationTarget(
+    setupTriggerEvents,
+    input.env
+  );
+  const setupReply = await replyToStaffLineTargetSetupEvents({
+    events: setupTriggerEvents,
+    env: input.env,
+    lineClient: input.lineClient,
+    notificationTargetCapture
+  });
+
+  return {
+    enabled,
+    attempted: true,
+    setup_trigger_events: setupTriggerEvents.length,
+    notification_target_capture: notificationTargetCapture,
+    setup_reply: setupReply,
+    customer_event_logging_skipped: true,
+    target_id_value_output: false,
+    raw_event_content_recorded: false
+  };
+}
+
 function captureStaffLineNotificationTarget(
   events: NormalizedLineWebhookEvent[],
   env: NodeJS.ProcessEnv
@@ -1282,6 +1351,26 @@ function captureStaffLineNotificationTarget(
     runtime_target_present_before: targetPresentBefore,
     runtime_target_present_after: true,
     runtime_file_persistence: runtimeFilePersistence,
+    target_id_value_output: false,
+    target_id_committed: false,
+    raw_event_content_recorded: false
+  };
+}
+
+function skippedStaffLineNotificationTargetCapture(
+  env: NodeJS.ProcessEnv,
+  skippedReason: string
+): StaffLineNotificationTargetCaptureResult {
+  const runtimeTargetPresent = Boolean(resolveStaffLineNotificationTargetId(env));
+
+  return {
+    attempted: false,
+    captured: false,
+    skipped_reason: skippedReason,
+    source_type: null,
+    runtime_target_present_before: runtimeTargetPresent,
+    runtime_target_present_after: runtimeTargetPresent,
+    runtime_file_persistence: skippedStaffLineTargetRuntimeFileWrite(skippedReason),
     target_id_value_output: false,
     target_id_committed: false,
     raw_event_content_recorded: false
@@ -1461,6 +1550,25 @@ async function replyToStaffLineTargetSetupEvents(input: {
     fallback_push_failed: fallbackPushFailed,
     failure_category: failureCategory,
     failed_status_code: failedStatusCode,
+    line_api_response_body_recorded: false,
+    trigger_text_recorded: false,
+    target_id_value_output: false
+  };
+}
+
+function skippedStaffLineSetupReply(
+  skippedReason: string
+): Awaited<ReturnType<typeof replyToStaffLineTargetSetupEvents>> {
+  return {
+    attempted: false,
+    sent: 0,
+    failed: 0,
+    skipped: 0,
+    fallback_push_attempted: false,
+    fallback_push_sent: 0,
+    fallback_push_failed: 0,
+    failure_category: skippedReason,
+    failed_status_code: null,
     line_api_response_body_recorded: false,
     trigger_text_recorded: false,
     target_id_value_output: false
@@ -1694,7 +1802,7 @@ function normalizeRuntimeEnvValue(value: string): string | undefined {
 }
 
 function createRuntimeStaffLineClient(env: NodeJS.ProcessEnv): LineClient | null {
-  const channelAccessToken = readNonEmptyEnvValue(env.STAFF_LINE_CHANNEL_ACCESS_TOKEN);
+  const channelAccessToken = resolveStaffLineNotificationChannelAccessToken(env);
 
   if (!channelAccessToken) {
     return null;
@@ -2092,7 +2200,21 @@ function isProductionRuntime(env: NodeJS.ProcessEnv): boolean {
 }
 
 function isStaffLineRuntimeConfigured(env: NodeJS.ProcessEnv): boolean {
-  return Boolean(readNonEmptyEnvValue(env.STAFF_LINE_CHANNEL_ACCESS_TOKEN));
+  return Boolean(resolveStaffLineNotificationChannelAccessToken(env));
+}
+
+function resolveStaffLineNotificationChannelAccessToken(
+  env: NodeJS.ProcessEnv
+): string | undefined {
+  if (isStaffLineCustomerChannelNotificationFallbackEnabled(env)) {
+    return readNonEmptyEnvValue(env.LINE_CHANNEL_ACCESS_TOKEN);
+  }
+
+  return readNonEmptyEnvValue(env.STAFF_LINE_CHANNEL_ACCESS_TOKEN);
+}
+
+function isStaffLineCustomerChannelNotificationFallbackEnabled(env: NodeJS.ProcessEnv): boolean {
+  return isEnabledRuntimeFlag(env.STAFF_LINE_USE_CUSTOMER_CHANNEL_FOR_NOTIFICATIONS);
 }
 
 export function readStaffReplyStaffUserId(input: {
