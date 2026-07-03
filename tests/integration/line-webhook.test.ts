@@ -1217,6 +1217,87 @@ describe("staff LINE notification webhook foundation", () => {
     expect(serialized).not.toContain("test-staff-line-target-capture-message");
   });
 
+  it("captures a staff notification target when staff-line runtime is configured in a development-labeled VPS process", async () => {
+    const runtimeDir = join(
+      process.cwd(),
+      "tmp",
+      "tests",
+      `staff-line-target-dev-runtime-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    );
+    const runtimeFile = join(runtimeDir, "staff-line-target.env");
+    mkdirSync(runtimeDir, { recursive: true });
+
+    try {
+      const staffLineClient = new MockLineClient();
+      const { app } = createStaffLineWebhookTestApp({
+        staffLineClient,
+        env: {
+          APP_ENV: "development",
+          NODE_ENV: "development",
+          STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token",
+          STAFF_LINE_TARGET_RUNTIME_FILE: runtimeFile
+        }
+      });
+      const body = lineTextMessageBody({
+        userId: "U_TEST_STAFF_TARGET_DEV_RUNTIME",
+        eventId: "01TESTSTAFFTARGETDEVRUNTIME",
+        messageId: "test-staff-line-target-dev-runtime-message",
+        replyToken: "reply_token_staff_line_target_dev_runtime",
+        text: "通知テスト",
+        timestamp: 1710000010500
+      });
+      const response = await app.fetch(
+        signedStaffLineRequest(`/api/staff-line/webhook/${knownStaffLineWebhookSecret}`, body)
+      );
+      const parsed = await response.json();
+      const serialized = JSON.stringify(parsed);
+      const runtimeFileContent = readFileSync(runtimeFile, "utf8");
+
+      expect(response.status).toBe(200);
+      expect(parsed).toMatchObject({
+        notification_target_capture: {
+          attempted: true,
+          captured: true,
+          skipped_reason: null,
+          source_type: "user",
+          runtime_target_present_before: false,
+          runtime_target_present_after: true,
+          runtime_file_persistence: {
+            attempted: true,
+            written: true,
+            skipped_reason: null,
+            error_category: null,
+            target_id_value_output: false,
+            target_file_path_output: false,
+            raw_event_content_recorded: false
+          },
+          target_id_value_output: false,
+          target_id_committed: false,
+          raw_event_content_recorded: false
+        },
+        setup_reply: {
+          attempted: true,
+          sent: 1,
+          failed: 0,
+          failure_category: null,
+          line_api_response_body_recorded: false
+        }
+      });
+      expect(runtimeFileContent).toContain("STAFF_LINE_GROUP_ID=");
+      expect(runtimeFileContent).toContain("U_TEST_STAFF_TARGET_DEV_RUNTIME");
+      expect(staffLineClient.replies).toHaveLength(1);
+      expect(staffLineClient.replies[0]?.messages[0]?.text).toContain(
+        "通知テストを受け付けました"
+      );
+      expect(serialized).not.toContain("U_TEST_STAFF_TARGET_DEV_RUNTIME");
+      expect(serialized).not.toContain(runtimeFile);
+      expect(serialized).not.toContain("通知テスト");
+      expect(serialized).not.toContain("test-staff-line-target-dev-runtime-message");
+    } finally {
+      rmSync(runtimeDir, { recursive: true, force: true });
+    }
+  });
+
   it("persists a production staff notification target to a configured runtime file safely", async () => {
     const runtimeDir = join(
       process.cwd(),

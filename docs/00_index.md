@@ -157,6 +157,8 @@
 - Loop 319 catalog request rich menu guidance: `11_codex_tasks/319_catalog_request_rich_menu_guidance.md`
 - Loop 320 contact staff rich menu flow: `11_codex_tasks/320_contact_staff_rich_menu_flow.md`
 - Loop 321 staff LINE webhook foundation: `11_codex_tasks/321_staff_line_webhook_foundation.md`
+- Loop 322 staff LINE target persistence and diagnostics: `11_codex_tasks/322_staff_line_target_persistence_and_diagnostics.md`
+- Loop 323 staff LINE runtime config enablement: `11_codex_tasks/323_staff_line_runtime_config_enablement.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 - LINE canary operator window helper: `../scripts/ops/line_canary_window_operator.sh`

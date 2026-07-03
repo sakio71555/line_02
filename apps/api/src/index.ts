@@ -1218,15 +1218,17 @@ function captureStaffLineNotificationTarget(
 ): StaffLineNotificationTargetCaptureResult {
   const targetPresentBefore = Boolean(readNonEmptyEnvValue(env.STAFF_LINE_GROUP_ID));
 
-  if (!isProductionRuntime(env)) {
+  if (!isStaffLineRuntimeConfigured(env)) {
     return {
       attempted: false,
       captured: false,
-      skipped_reason: "non_production_runtime",
+      skipped_reason: "staff_line_runtime_not_configured",
       source_type: null,
       runtime_target_present_before: targetPresentBefore,
       runtime_target_present_after: targetPresentBefore,
-      runtime_file_persistence: skippedStaffLineTargetRuntimeFileWrite("non_production_runtime"),
+      runtime_file_persistence: skippedStaffLineTargetRuntimeFileWrite(
+        "staff_line_runtime_not_configured"
+      ),
       target_id_value_output: false,
       target_id_committed: false,
       raw_event_content_recorded: false
@@ -1467,7 +1469,7 @@ function logStaffLineWebhookProcessingResult(input: {
   setupReply: Awaited<ReturnType<typeof replyToStaffLineTargetSetupEvents>>;
 }): void {
   if (
-    !isProductionRuntime(input.env) ||
+    !isStaffLineRuntimeConfigured(input.env) ||
     input.env.NODE_ENV === "test" ||
     process.env.NODE_ENV === "test"
   ) {
@@ -1567,10 +1569,6 @@ class RuntimeStaffLineNotifier implements StaffNotifier {
 }
 
 function createRuntimeStaffLineClient(env: NodeJS.ProcessEnv): LineClient | null {
-  if (!isProductionRuntime(env)) {
-    return null;
-  }
-
   const channelAccessToken = readNonEmptyEnvValue(env.STAFF_LINE_CHANNEL_ACCESS_TOKEN);
 
   if (!channelAccessToken) {
@@ -1593,15 +1591,15 @@ function createRuntimeStaffNotifier(
   env: NodeJS.ProcessEnv,
   staffLineClient: LineClient | null
 ): StaffNotifier {
-  if (!isProductionRuntime(env)) {
-    return defaultStaffNotifier;
+  if (staffLineClient) {
+    return new RuntimeStaffLineNotifier(staffLineClient, env);
   }
 
-  if (!staffLineClient) {
+  if (isProductionRuntime(env)) {
     return new UnconfiguredProductionStaffNotifier();
   }
 
-  return new RuntimeStaffLineNotifier(staffLineClient, env);
+  return defaultStaffNotifier;
 }
 
 async function notifyNewAlertsForProduction(input: {
@@ -1962,6 +1960,10 @@ function createDemoMessages(tenantId: string): Message[] {
 
 function isProductionRuntime(env: NodeJS.ProcessEnv): boolean {
   return env.APP_ENV === "production" || env.NODE_ENV === "production";
+}
+
+function isStaffLineRuntimeConfigured(env: NodeJS.ProcessEnv): boolean {
+  return Boolean(readNonEmptyEnvValue(env.STAFF_LINE_CHANNEL_ACCESS_TOKEN));
 }
 
 export function readStaffReplyStaffUserId(input: {
