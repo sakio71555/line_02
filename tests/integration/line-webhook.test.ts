@@ -1313,6 +1313,57 @@ describe("staff LINE notification webhook foundation", () => {
     expect(serialized).not.toContain("test-staff-line-target-reply-fallback-message");
   });
 
+  it("refreshes an existing staff notification target when the setup trigger is sent again", async () => {
+    const staffLineClient = new MockLineClient();
+    const { app, env } = createStaffLineWebhookTestApp({
+      staffLineClient,
+      env: {
+        APP_ENV: "production",
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token",
+        STAFF_LINE_GROUP_ID: "U_TEST_STALE_STAFF_TARGET"
+      }
+    });
+    const body = lineTextMessageBody({
+      userId: "U_TEST_REFRESHED_STAFF_TARGET",
+      eventId: "01TESTSTAFFTARGETREFRESH",
+      messageId: "test-staff-line-target-refresh-message",
+      replyToken: "reply_token_staff_line_target_refresh",
+      text: "通知テスト",
+      timestamp: 1710000010300
+    });
+    const response = await app.fetch(
+      signedStaffLineRequest(`/api/staff-line/webhook/${knownStaffLineWebhookSecret}`, body)
+    );
+    const parsed = await response.json();
+    const serialized = JSON.stringify(parsed);
+
+    expect(response.status).toBe(200);
+    expect(parsed).toMatchObject({
+      notification_target_capture: {
+        attempted: true,
+        captured: true,
+        skipped_reason: null,
+        source_type: "user",
+        runtime_target_present_before: true,
+        runtime_target_present_after: true,
+        target_id_value_output: false,
+        raw_event_content_recorded: false
+      },
+      setup_reply: {
+        attempted: true,
+        sent: 1,
+        failed: 0,
+        target_id_value_output: false
+      }
+    });
+    expect(env.STAFF_LINE_GROUP_ID).toBe("U_TEST_REFRESHED_STAFF_TARGET");
+    expect(staffLineClient.replies).toHaveLength(1);
+    expect(serialized).not.toContain("U_TEST_STALE_STAFF_TARGET");
+    expect(serialized).not.toContain("U_TEST_REFRESHED_STAFF_TARGET");
+    expect(serialized).not.toContain("通知テスト");
+    expect(serialized).not.toContain("test-staff-line-target-refresh-message");
+  });
+
   it("captures a staff notification target when staff-line runtime is configured in a development-labeled VPS process", async () => {
     const runtimeDir = join(
       process.cwd(),

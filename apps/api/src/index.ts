@@ -1218,6 +1218,7 @@ function captureStaffLineNotificationTarget(
   env: NodeJS.ProcessEnv
 ): StaffLineNotificationTargetCaptureResult {
   const targetPresentBefore = Boolean(readNonEmptyEnvValue(env.STAFF_LINE_GROUP_ID));
+  const shouldRefreshTarget = events.some(isStaffLineSetupTriggerEvent);
 
   if (!isStaffLineRuntimeConfigured(env)) {
     return {
@@ -1236,7 +1237,7 @@ function captureStaffLineNotificationTarget(
     };
   }
 
-  if (targetPresentBefore) {
+  if (targetPresentBefore && !shouldRefreshTarget) {
     return {
       attempted: false,
       captured: false,
@@ -1278,7 +1279,7 @@ function captureStaffLineNotificationTarget(
     captured: true,
     skipped_reason: null,
     source_type: target.type,
-    runtime_target_present_before: false,
+    runtime_target_present_before: targetPresentBefore,
     runtime_target_present_after: true,
     runtime_file_persistence: runtimeFilePersistence,
     target_id_value_output: false,
@@ -1406,12 +1407,7 @@ async function replyToStaffLineTargetSetupEvents(input: {
   let failedStatusCode: number | null = null;
 
   for (const event of input.events) {
-    const isSetupTrigger =
-      event.type === "message" &&
-      event.message_type === "text" &&
-      event.text?.trim() === "通知テスト";
-
-    if (!isSetupTrigger) {
+    if (!isStaffLineSetupTriggerEvent(event)) {
       skipped += 1;
       continue;
     }
@@ -1469,6 +1465,14 @@ async function replyToStaffLineTargetSetupEvents(input: {
     trigger_text_recorded: false,
     target_id_value_output: false
   };
+}
+
+function isStaffLineSetupTriggerEvent(event: NormalizedLineWebhookEvent): boolean {
+  return (
+    event.type === "message" &&
+    event.message_type === "text" &&
+    event.text?.trim() === "通知テスト"
+  );
 }
 
 function buildStaffLineSetupConfirmationMessage(runtimeTargetPresent: boolean): string {
