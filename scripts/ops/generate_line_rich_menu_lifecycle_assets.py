@@ -85,8 +85,8 @@ MENUS = [
                 "資料請求",
                 "資料を受け取る",
                 "document",
-                "uri",
-                "https://amamihome.net/download/",
+                "message",
+                "資料請求",
             ),
             MenuItem(
                 "initial.contact_staff",

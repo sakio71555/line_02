@@ -415,6 +415,95 @@ describe("LINE webhook foundation", () => {
     expect(alertRepository.list()).toHaveLength(0);
   });
 
+  it("replies with the catalog request guide and records page guidance without an alert", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const menuBody = JSON.stringify({
+      destination: "U_TEST_DESTINATION",
+      events: [
+        {
+          type: "message",
+          mode: "active",
+          timestamp: 1710000005000,
+          source: {
+            type: "user",
+            userId: "U_TEST_USER_CATALOG_MENU"
+          },
+          webhookEventId: "01TESTCATALOGMENU",
+          deliveryContext: {
+            isRedelivery: false
+          },
+          replyToken: "reply_token_catalog_request",
+          message: {
+            id: "test-line-message-menu-004",
+            type: "text",
+            text: "資料請求"
+          }
+        }
+      ]
+    });
+
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, menuBody)
+    );
+    const body = await response.json();
+    const customer = customerRepository.list()[0];
+    const messages = messageRepository.list();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      line_menu_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      logging: {
+        customers_upserted: 1,
+        messages_inserted: 1,
+        alerts_created: 0,
+        rich_menu_guides_logged: 1,
+        unsupported_events: 0
+      }
+    });
+    expect(lineClient.replies).toEqual([
+      {
+        replyToken: "reply_token_catalog_request",
+        messages: [
+          {
+            type: "text",
+            text: [
+              "資料請求はこちらからお願いいたします。",
+              "家づくり資料のご請求内容を入力して送信してください。",
+              "",
+              "https://amamihome.net/download/"
+            ].join("\n")
+          }
+        ]
+      }
+    ]);
+    expect(customer).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      line_user_id: "U_TEST_USER_CATALOG_MENU",
+      response_mode: "bot_auto",
+      last_customer_message_at: null
+    });
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer?.id,
+      role: "system",
+      message_type: "text",
+      body: "資料請求ページ案内済み",
+      line_message_id: null,
+      media_storage_path: "https://amamihome.net/download/",
+      created_at: new Date(1710000005000).toISOString()
+    });
+    expect(alertRepository.list()).toHaveLength(0);
+  });
+
   it("stores the LINE profile display name when profile lookup succeeds", async () => {
     const lineClient = new ProfileLineClient({
       U_TEST_USER_001: {

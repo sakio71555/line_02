@@ -29,8 +29,8 @@
       {
         "action_key": "initial.catalog_request",
         "label": "資料請求",
-        "line_action_type": "uri",
-        "target_category": "external_url"
+        "line_action_type": "message",
+        "target_category": "line_guided_external_url"
       },
       {
         "action_key": "initial.contact_staff",

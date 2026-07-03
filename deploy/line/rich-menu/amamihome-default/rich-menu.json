@@ -67,9 +67,9 @@
         "height": 843
       },
       "action": {
-        "type": "uri",
+        "type": "message",
         "label": "資料請求",
-        "uri": "https://amamihome.net/download/"
+        "text": "資料請求"
       }
     },
     {

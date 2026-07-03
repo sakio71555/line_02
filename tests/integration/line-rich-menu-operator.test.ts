@@ -18,14 +18,14 @@ describe("LINE rich menu operator", () => {
 
     expect(result.validationPassed).toBe(true);
     expect(result.areaCount).toBe(6);
-    expect(result.messageActionCount).toBe(4);
-    expect(result.uriActionCount).toBe(2);
+    expect(result.messageActionCount).toBe(5);
+    expect(result.uriActionCount).toBe(1);
     expect(output).toContain("line_api_called=false");
     expect(output).toContain("line_send_attempted=false");
     expect(output).toContain("secret_recorded=false");
     expect(output).toContain("rich_menu_id_recorded=false");
-    expect(output).toContain("message_action_count=4");
-    expect(output).toContain("uri_action_count=2");
+    expect(output).toContain("message_action_count=5");
+    expect(output).toContain("uri_action_count=1");
     expect(output).not.toContain("LINE_CHANNEL_ACCESS_TOKEN=");
   });
 
@@ -139,6 +139,9 @@ describe("LINE rich menu operator", () => {
     const worksAction = createBody.areas.find(
       (area) => area.action.type === "message" && area.action.label === "施工事例を見る"
     )?.action;
+    const catalogRequestAction = createBody.areas.find(
+      (area) => area.action.type === "message" && area.action.label === "資料請求"
+    )?.action;
     expect(registrationAction?.uri).toBe("https://liff.line.me/1234567890-testLiff");
     expect(modelHouseAction).toEqual({
       type: "message",
@@ -154,6 +157,11 @@ describe("LINE rich menu operator", () => {
       type: "message",
       label: "施工事例を見る",
       text: "施工事例を見る"
+    });
+    expect(catalogRequestAction).toEqual({
+      type: "message",
+      label: "資料請求",
+      text: "資料請求"
     });
     expect(JSON.stringify(createBody)).not.toContain(CUSTOMER_REGISTRATION_ENDPOINT);
   });

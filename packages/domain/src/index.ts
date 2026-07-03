@@ -556,6 +556,19 @@ export const customerRichMenuGuideActions = [
     ].join("\n"),
     target_url: "https://amamihome.net/works/",
     message_type: "text"
+  },
+  {
+    action_key: "initial.catalog_request",
+    trigger_text: "資料請求",
+    timeline_body: "資料請求ページ案内済み",
+    reply_text: [
+      "資料請求はこちらからお願いいたします。",
+      "家づくり資料のご請求内容を入力して送信してください。",
+      "",
+      "https://amamihome.net/download/"
+    ].join("\n"),
+    target_url: "https://amamihome.net/download/",
+    message_type: "text"
   }
 ] as const satisfies readonly CustomerRichMenuGuideAction[];
 
