@@ -46,9 +46,21 @@ line_real_send_status() {
   fi
 
   env_lines="$(tr '\0' '\n' < "/proc/${api_pid}/environ" 2>/dev/null || true)"
+  messaging_enabled="false"
+  real_push_enabled="false"
+  if printf '%s\n' "$env_lines" | grep -qi '^LINE_MESSAGING_ENABLED=true$'; then
+    messaging_enabled="true"
+  fi
   if printf '%s\n' "$env_lines" | grep -qi '^LINE_REAL_PUSH_ENABLED=true$'; then
+    real_push_enabled="true"
+  fi
+
+  print_kv "line_messaging_currently_enabled" "$messaging_enabled"
+  print_kv "line_real_push_currently_enabled" "$real_push_enabled"
+
+  if [ "$messaging_enabled" = "true" ] && [ "$real_push_enabled" = "true" ]; then
     print_kv "line_real_send_currently_enabled" "true"
-  elif printf '%s\n' "$env_lines" | grep -q '^LINE_REAL_PUSH_ENABLED='; then
+  elif printf '%s\n' "$env_lines" | grep -q '^LINE_MESSAGING_ENABLED=' || printf '%s\n' "$env_lines" | grep -q '^LINE_REAL_PUSH_ENABLED='; then
     print_kv "line_real_send_currently_enabled" "false"
   else
     print_kv "line_real_send_currently_enabled" "unknown_key_absent"
@@ -68,9 +80,10 @@ line_real_send_enabled_value() {
   fi
 
   env_lines="$(tr '\0' '\n' < "/proc/${api_pid}/environ" 2>/dev/null || true)"
-  if printf '%s\n' "$env_lines" | grep -qi '^LINE_REAL_PUSH_ENABLED=true$'; then
+  if printf '%s\n' "$env_lines" | grep -qi '^LINE_MESSAGING_ENABLED=true$' &&
+    printf '%s\n' "$env_lines" | grep -qi '^LINE_REAL_PUSH_ENABLED=true$'; then
     printf 'true'
-  elif printf '%s\n' "$env_lines" | grep -q '^LINE_REAL_PUSH_ENABLED='; then
+  elif printf '%s\n' "$env_lines" | grep -q '^LINE_MESSAGING_ENABLED=' || printf '%s\n' "$env_lines" | grep -q '^LINE_REAL_PUSH_ENABLED='; then
     printf 'false'
   else
     printf 'unknown'

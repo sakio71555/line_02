@@ -83,9 +83,38 @@ describe("admin customer action panel", () => {
 
     expect(html).toContain("保存前に確認する");
     expect(html).toContain("LINE送信なし");
-    expect(html).toContain("実送信ゲート停止中");
+    expect(html).toContain("LINE実送信停止中");
     expect(html).toContain("本番LINEへ1通送信");
-    expect(html).toContain("本番LINE送信ゲート停止中");
+    expect(html).toContain("LINE実送信が有効な時だけ実行できます");
+    expect(html).not.toContain("name=\"delivery_mode\" value=\"real_line_push\"");
+  });
+
+  it("keeps the real LINE send card visible when the customer is not linked to LINE", () => {
+    const noopAction = () => {};
+    const html = renderToStaticMarkup(
+      <CustomerActionPanelView
+        replyDraftPending={false}
+        replyDraftState={{ status: "idle" }}
+        ragAnswerPending={false}
+        ragAnswerState={{ status: "idle" }}
+        runRagAnswer={noopAction}
+        runReplyDraft={noopAction}
+        runStaffReply={noopAction}
+        runSummary={noopAction}
+        staffReplyLineRealSendCustomerAvailable={false}
+        staffReplyLineRealSendWindowOpen={true}
+        staffReplyRecipientLabel="山田 太郎"
+        staffReplyPending={false}
+        staffReplyState={{ status: "idle" }}
+        staffReplyTenantId="tenant_amamihome"
+        summaryPending={false}
+        summaryState={{ status: "idle" }}
+      />
+    );
+
+    expect(html).toContain("本番LINEへ1通送信");
+    expect(html).toContain("LINE連携ID未取得");
+    expect(html).toContain("LINE送信用IDがまだ紐づいていません");
     expect(html).not.toContain("name=\"delivery_mode\" value=\"real_line_push\"");
   });
 
@@ -112,7 +141,7 @@ describe("admin customer action panel", () => {
       />
     );
 
-    expect(html).toContain("危険操作");
+    expect(html).toContain("本番LINE送信有効");
     expect(html).toContain("本番LINEへ1通送信");
     expect(html).toContain("再送信禁止");
     expect(html).toContain("一斉送信なし");

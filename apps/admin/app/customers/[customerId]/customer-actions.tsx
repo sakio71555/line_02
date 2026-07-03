@@ -288,6 +288,22 @@ function StaffReplyConfirmationForm({
   const [idempotencyKey, setIdempotencyKey] = useState("");
   const replyPreview = replyText.trim();
   const isConfirming = confirmationMode !== null;
+  const canPrepareRealLinePush = lineRealSendCustomerAvailable && lineRealSendWindowOpen;
+  const realLineSendStatusLabel = !lineRealSendCustomerAvailable
+    ? "LINE連携ID未取得"
+    : lineRealSendWindowOpen
+      ? "本番LINE送信有効"
+      : "LINE実送信停止中";
+  const realLineSendDescription = !lineRealSendCustomerAvailable
+    ? "この顧客にはLINE送信用IDがまだ紐づいていません。LINEからの受信で顧客連携された後に本番LINE送信を使えます。"
+    : lineRealSendWindowOpen
+      ? "LINE実送信が有効です。OpenAI、再送信、一斉送信、broadcast、multicastは行いません。"
+      : "本番LINE送信は、LINE実送信が有効な時だけ実行できます。今はLINEへ送信せず、タイムライン保存だけ利用できます。";
+  const realLineSendButtonLabel = !lineRealSendCustomerAvailable
+    ? "LINE連携ID未取得"
+    : lineRealSendWindowOpen
+      ? "本番LINEへ1通送信する確認へ進む"
+      : "LINE実送信停止中";
 
   useEffect(() => {
     if (state.status === "success") {
@@ -349,36 +365,26 @@ function StaffReplyConfirmationForm({
           >
             保存前に確認する
           </button>
-          {lineRealSendCustomerAvailable ? (
-            <div className="real-send-gate-card" aria-label="本番LINE送信の危険操作">
-              <div className="action-card-header">
-                <p className="result-label">
-                  {lineRealSendWindowOpen ? "危険操作" : "実送信ゲート停止中"}
-                </p>
-                <h4>本番LINEへ1通送信</h4>
-              </div>
-              <div className="status-pill-list">
-                <span className="status-pill status-pill-danger">1通だけ</span>
-                <span className="status-pill status-pill-danger">再送信禁止</span>
-                <span className="status-pill status-pill-danger">一斉送信なし</span>
-              </div>
-              <p className="meta">
-                {lineRealSendWindowOpen
-                  ? "LINE実送信が有効です。OpenAI、再送信、一斉送信、broadcast、multicastは行いません。"
-                  : "本番LINE送信は、LINE実送信が有効な時だけ実行できます。今はLINEへ送信せず、タイムライン保存だけ利用できます。"}
-              </p>
-              <button
-                className="danger-action-button"
-                type="button"
-                disabled={!lineRealSendWindowOpen || !replyPreview || pending}
-                onClick={() => handlePrepareConfirmation("real_line_push")}
-              >
-                {lineRealSendWindowOpen
-                  ? "本番LINEへ1通送信する確認へ進む"
-                  : "本番LINE送信ゲート停止中"}
-              </button>
+          <div className="real-send-gate-card" aria-label="本番LINE送信">
+            <div className="action-card-header">
+              <p className="result-label">{realLineSendStatusLabel}</p>
+              <h4>本番LINEへ1通送信</h4>
             </div>
-          ) : null}
+            <div className="status-pill-list">
+              <span className="status-pill status-pill-danger">1通だけ</span>
+              <span className="status-pill status-pill-danger">再送信禁止</span>
+              <span className="status-pill status-pill-danger">一斉送信なし</span>
+            </div>
+            <p className="meta">{realLineSendDescription}</p>
+            <button
+              className="danger-action-button"
+              type="button"
+              disabled={!canPrepareRealLinePush || !replyPreview || pending}
+              onClick={() => handlePrepareConfirmation("real_line_push")}
+            >
+              {realLineSendButtonLabel}
+            </button>
+          </div>
         </>
       )}
     </form>
