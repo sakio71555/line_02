@@ -86,11 +86,11 @@ export function evaluateStaffReplyLinePushGate(
     return linePushGateFailure(409, "real_push_disabled");
   }
 
-  if (input.tenantContext.source !== "authenticated_staff") {
+  if (!isLineRealPushAdminContextAllowed(input)) {
     return linePushGateFailure(401, "authenticated_staff_required");
   }
 
-  if (!input.selectedTenantId) {
+  if (input.tenantContext.source === "authenticated_staff" && !input.selectedTenantId) {
     return linePushGateFailure(409, "real_push_selected_tenant_required");
   }
 
@@ -118,6 +118,20 @@ export function evaluateStaffReplyLinePushGate(
       idempotencyKey: input.request.idempotencyKey
     })
   };
+}
+
+export function isLineRealPushAdminContextAllowed(input: {
+  env: NodeJS.ProcessEnv;
+  tenantContext: AdminTenantContext;
+}): boolean {
+  if (input.tenantContext.source === "authenticated_staff") {
+    return true;
+  }
+
+  return (
+    input.tenantContext.source === "dev_header" &&
+    isEnabledFlag(input.env.ADMIN_REAL_LINE_PUSH_ALLOW_DEV_HEADER)
+  );
 }
 
 function isEnabledFlag(value: string | undefined): boolean {

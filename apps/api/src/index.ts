@@ -67,6 +67,7 @@ import {
   evaluateStaffReplyLinePushGate,
   inferLineClientMode,
   InMemoryLinePushIdempotencyStore,
+  isLineRealPushAdminContextAllowed,
   type LineClientMode,
   type LinePushIdempotencyStore,
   type StaffReplyLinePushRequest
@@ -359,7 +360,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.body, tenant.status);
     }
 
-    const lineRealSendWindowOpen = isLineRealSendWindowOpen({ env, lineClientMode });
+    const lineRealSendWindowOpen =
+      isLineRealSendWindowOpen({ env, lineClientMode }) &&
+      isLineRealPushAdminContextAllowed({ env, tenantContext: tenant.context });
 
     return c.json({
       ok: true,

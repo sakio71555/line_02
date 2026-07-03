@@ -141,6 +141,36 @@ describe("Loop 102 LINE real push gate", () => {
     });
   });
 
+  it("keeps dev-header capability closed unless current runtime real push is explicitly allowed", async () => {
+    const defaultSetup = createRealPushGateApp();
+    const defaultResponse = await defaultSetup.app.fetch(
+      new Request("http://localhost/api/admin/runtime/line-real-send-capability", {
+        headers: { "x-tenant-id": "tenant_amamihome" }
+      })
+    );
+    const allowedSetup = createRealPushGateApp({
+      env: { ADMIN_REAL_LINE_PUSH_ALLOW_DEV_HEADER: "true" }
+    });
+    const allowedResponse = await allowedSetup.app.fetch(
+      new Request("http://localhost/api/admin/runtime/line-real-send-capability", {
+        headers: { "x-tenant-id": "tenant_amamihome" }
+      })
+    );
+
+    expect(defaultResponse.status).toBe(200);
+    expect(await defaultResponse.json()).toMatchObject({
+      ok: true,
+      line_real_send_window_open: false,
+      real_send_action_visible: false
+    });
+    expect(allowedResponse.status).toBe(200);
+    expect(await allowedResponse.json()).toMatchObject({
+      ok: true,
+      line_real_send_window_open: true,
+      real_send_action_visible: true
+    });
+  });
+
   it("requires authenticated_staff and selectedTenantId before real push", async () => {
     const devHeaderSetup = createRealPushGateApp();
     const devHeaderResponse = await devHeaderSetup.app.fetch(
@@ -183,6 +213,42 @@ describe("Loop 102 LINE real push gate", () => {
     });
     expect(devHeaderSetup.lineClient.pushes).toHaveLength(0);
     expect(missingSelectedSetup.lineClient.pushes).toHaveLength(0);
+  });
+
+  it("allows one real push from the current dev-header Admin runtime only with an explicit runtime flag", async () => {
+    const setup = createRealPushGateApp({
+      env: { ADMIN_REAL_LINE_PUSH_ALLOW_DEV_HEADER: "true" }
+    });
+
+    const response = await setup.app.fetch(
+      staffReplyRequest({
+        customerId: "customer_amami",
+        headers: { "x-tenant-id": "tenant_amamihome" },
+        body: {
+          body: "現行Admin runtimeからの本番送信です。",
+          delivery_mode: "real_line_push",
+          real_line_push_confirmed: true,
+          line_push_confirmation: REAL_LINE_PUSH_CONFIRMATION_VALUE,
+          idempotency_key: "idem_current_runtime"
+        }
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(setup.lineClient.pushes).toEqual([
+      {
+        to: "U_TEST_LINE_TARGET",
+        messages: [{ type: "text", text: "現行Admin runtimeからの本番送信です。" }]
+      }
+    ]);
+    expect(setup.messageRepository.list()).toEqual([
+      expect.objectContaining({
+        tenant_id: "tenant_amamihome",
+        customer_id: "customer_amami",
+        role: "staff",
+        body: "現行Admin runtimeからの本番送信です。"
+      })
+    ]);
   });
 
   it("requires send_staff_reply permission before real push", async () => {
