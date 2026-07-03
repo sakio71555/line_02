@@ -1,3 +1,6 @@
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
@@ -28,6 +31,7 @@ function createTestApp(input: {
   tenantSlug: string;
   alertRepository: InMemoryAlertRepository;
   staffNotifier?: StaffNotifier;
+  env?: Record<string, string>;
 }) {
   return createApiApp({
     alertRepository: input.alertRepository,
@@ -40,7 +44,8 @@ function createTestApp(input: {
       LINE_CHANNEL_SECRET: "test_line_channel_secret",
       LINE_WEBHOOK_SECRET_PATH: "wh_dev_amamihome",
       TENANT_ID: input.tenantId,
-      TENANT_SLUG: input.tenantSlug
+      TENANT_SLUG: input.tenantSlug,
+      ...input.env
     }
   });
 }
@@ -230,5 +235,87 @@ describe("admin open alert staff notification API", () => {
       status: "open",
       notified_at: null
     });
+  });
+
+  it("uses the captured staff LINE target runtime file for runtime staff notifications", async () => {
+    const originalFetch = globalThis.fetch;
+    const runtimeDir = join(
+      process.cwd(),
+      "tmp",
+      "tests",
+      "staff-notification-runtime-target"
+    );
+    const runtimeFile = join(runtimeDir, "staff-line-target.env");
+    const linePushRequests: Array<{ input: string; body: unknown }> = [];
+    const alertRepository = new InMemoryAlertRepository();
+
+    mkdirSync(runtimeDir, { recursive: true });
+    writeFileSync(runtimeFile, "STAFF_LINE_GROUP_ID='U_TEST_STAFF_RUNTIME_TARGET'\n");
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      linePushRequests.push({
+        input: String(input),
+        body: init?.body ? JSON.parse(String(init.body)) : null
+      });
+
+      return new Response("{}", { status: 200 });
+    }) as typeof fetch;
+
+    try {
+      const app = createTestApp({
+        tenantId: "tenant_amamihome",
+        tenantSlug: "amamihome",
+        alertRepository,
+        env: {
+          STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token",
+          STAFF_LINE_TARGET_RUNTIME_FILE: runtimeFile
+        }
+      });
+
+      await alertRepository.create(
+        makeAlert({
+          id: "alert_open_runtime_target",
+          customerId: "customer_amami",
+          severity: "high",
+          message: "通知本文には含めない相談内容です"
+        })
+      );
+
+      const response = await notifyOpen(app, "tenant_amamihome");
+      const body = await response.json();
+      const pushBody = linePushRequests[0]?.body as {
+        to?: string;
+        messages?: Array<{ type?: string; text?: string }>;
+      };
+      const updatedOpenAlert = await alertRepository.findActiveByCustomerAndType(
+        "tenant_amamihome",
+        "customer_amami",
+        "unreplied_customer_message"
+      );
+
+      expect(response.status).toBe(200);
+      expect(body).toMatchObject({
+        ok: true,
+        tenant_id: "tenant_amamihome",
+        notified: 1,
+        failed: 0,
+        skipped: 0
+      });
+      expect(linePushRequests).toHaveLength(1);
+      expect(linePushRequests[0]?.input).toBe("https://api.line.me/v2/bot/message/push");
+      expect(pushBody.to).toBe("U_TEST_STAFF_RUNTIME_TARGET");
+      expect(pushBody.messages?.[0]).toMatchObject({
+        type: "text"
+      });
+      expect(pushBody.messages?.[0]?.text).toContain("新しい相談が届きました。");
+      expect(pushBody.messages?.[0]?.text).toContain("管理画面で確認してください。");
+      expect(pushBody.messages?.[0]?.text).not.toContain("通知本文には含めない相談内容です");
+      expect(updatedOpenAlert).toMatchObject({
+        status: "notified",
+        notified_at: now
+      });
+    } finally {
+      globalThis.fetch = originalFetch;
+      rmSync(runtimeDir, { recursive: true, force: true });
+    }
   });
 });

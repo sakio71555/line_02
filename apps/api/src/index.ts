@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 
 import {
@@ -1551,7 +1551,7 @@ class RuntimeStaffLineNotifier implements StaffNotifier {
   ) {}
 
   async notify(payload: StaffNotificationPayload): Promise<void> {
-    const notificationTargetId = readNonEmptyEnvValue(this.env.STAFF_LINE_GROUP_ID);
+    const notificationTargetId = resolveStaffLineNotificationTargetId(this.env);
 
     if (!notificationTargetId) {
       throw new Error("production_staff_line_notification_target_not_configured");
@@ -1564,6 +1564,53 @@ class RuntimeStaffLineNotifier implements StaffNotifier {
       }
     ]);
   }
+}
+
+function resolveStaffLineNotificationTargetId(env: NodeJS.ProcessEnv): string | undefined {
+  return readNonEmptyEnvValue(env.STAFF_LINE_GROUP_ID) ?? readStaffLineTargetRuntimeFile(env);
+}
+
+function readStaffLineTargetRuntimeFile(env: NodeJS.ProcessEnv): string | undefined {
+  const runtimeFilePath = resolveStaffLineTargetRuntimeFile(env);
+
+  if (!runtimeFilePath) {
+    return undefined;
+  }
+
+  try {
+    return readStaffLineGroupIdFromRuntimeFile(readFileSync(runtimeFilePath, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+function readStaffLineGroupIdFromRuntimeFile(content: string): string | undefined {
+  for (const line of content.split(/\r?\n/u)) {
+    const match = /^STAFF_LINE_GROUP_ID=(.*)$/u.exec(line.trim());
+
+    if (!match) {
+      continue;
+    }
+
+    return normalizeRuntimeEnvValue(match[1] ?? "");
+  }
+
+  return undefined;
+}
+
+function normalizeRuntimeEnvValue(value: string): string | undefined {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const unquoted =
+    trimmed.startsWith("'") && trimmed.endsWith("'") && trimmed.length >= 2
+      ? trimmed.slice(1, -1).replace(/'"'"'/gu, "'")
+      : trimmed;
+
+  return readNonEmptyEnvValue(unquoted);
 }
 
 function createRuntimeStaffLineClient(env: NodeJS.ProcessEnv): LineClient | null {
