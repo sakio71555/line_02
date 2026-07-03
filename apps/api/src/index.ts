@@ -1520,8 +1520,6 @@ function combineLineReplyCounts(
   };
 }
 
-export const app = createApiApp();
-
 export interface ApiServerListenOptions {
   port: number;
   hostname?: string;
@@ -2500,6 +2498,8 @@ function resolveStaffLineWebhook(
     channelSecret: env.STAFF_LINE_CHANNEL_SECRET
   };
 }
+
+export const app = createApiApp();
 
 if (process.env.NODE_ENV !== "test") {
   const listenOptions = resolveApiServerListenOptions(process.env);
