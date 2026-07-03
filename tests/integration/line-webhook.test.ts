@@ -8,7 +8,9 @@ import {
   type Customer,
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
-  InMemoryMessageRepository
+  InMemoryMessageRepository,
+  type StaffNotificationPayload,
+  type StaffNotifier
 } from "@amami-line-crm/domain";
 import { MockLineClient, type LineClient, type LineReplyMessage, type LineUserProfile } from "@amami-line-crm/line";
 
@@ -61,6 +63,9 @@ function createTestContext(
     tenantSlug?: string;
     webhookSecret?: string;
     lineClient?: LineClient;
+    staffLineClient?: LineClient;
+    staffNotifier?: StaffNotifier;
+    env?: NodeJS.ProcessEnv;
   } = {}
 ) {
   const customerRepository = new InMemoryCustomerRepository();
@@ -71,11 +76,14 @@ function createTestContext(
     customerRepository,
     messageRepository,
     ...(input.lineClient ? { lineClient: input.lineClient } : {}),
+    ...(input.staffLineClient ? { staffLineClient: input.staffLineClient } : {}),
+    ...(input.staffNotifier ? { staffNotifier: input.staffNotifier } : {}),
     env: {
       LINE_CHANNEL_SECRET: channelSecret,
       LINE_WEBHOOK_SECRET_PATH: input.webhookSecret ?? knownWebhookSecret,
       TENANT_ID: input.tenantId ?? "tenant_amamihome",
-      TENANT_SLUG: input.tenantSlug ?? "amamihome"
+      TENANT_SLUG: input.tenantSlug ?? "amamihome",
+      ...input.env
     }
   });
 
@@ -87,15 +95,32 @@ function createTestContext(
   };
 }
 
-function createStaffLineWebhookTestApp() {
-  return createApiApp({
-    env: {
-      STAFF_LINE_CHANNEL_SECRET: staffLineChannelSecret,
-      STAFF_LINE_WEBHOOK_SECRET_PATH: knownStaffLineWebhookSecret,
-      TENANT_ID: "tenant_amamihome",
-      TENANT_SLUG: "amamihome"
-    }
-  });
+class RecordingStaffNotifier implements StaffNotifier {
+  readonly notifications: StaffNotificationPayload[] = [];
+
+  async notify(payload: StaffNotificationPayload): Promise<void> {
+    this.notifications.push(payload);
+  }
+}
+
+function createStaffLineWebhookTestApp(input: {
+  env?: NodeJS.ProcessEnv;
+  staffLineClient?: LineClient;
+} = {}) {
+  const env = {
+    STAFF_LINE_CHANNEL_SECRET: staffLineChannelSecret,
+    STAFF_LINE_WEBHOOK_SECRET_PATH: knownStaffLineWebhookSecret,
+    TENANT_ID: "tenant_amamihome",
+    TENANT_SLUG: "amamihome",
+    ...input.env
+  };
+  return {
+    app: createApiApp({
+      ...(input.staffLineClient ? { staffLineClient: input.staffLineClient } : {}),
+      env
+    }),
+    env
+  };
 }
 
 function lineTextMessageBody(input: {
@@ -715,6 +740,175 @@ describe("LINE webhook foundation", () => {
     expect(alertRepository.list()[0]?.message).not.toContain("住宅ローンと予算");
   });
 
+  it("restarts stale contact-staff category selection when the trigger is tapped again", async () => {
+    const lineClient = new MockLineClient();
+    const { app, messageRepository } = createTestContext({
+      lineClient
+    });
+    const userId = "U_TEST_USER_CONTACT_STAFF_RESTART";
+
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTRESTARTTRIGGER1",
+          messageId: "test-contact-staff-restart-trigger-1",
+          replyToken: "reply_token_contact_staff_restart_trigger_1",
+          text: "担当者に相談",
+          timestamp: 1710000020000
+        })
+      )
+    );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTRESTARTCATEGORY1",
+          messageId: "test-contact-staff-restart-category-1",
+          replyToken: "reply_token_contact_staff_restart_category_1",
+          text: "その他",
+          timestamp: 1710000021000
+        })
+      )
+    );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTRESTARTTRIGGER2",
+          messageId: "test-contact-staff-restart-trigger-2",
+          replyToken: "reply_token_contact_staff_restart_trigger_2",
+          text: "担当者に相談",
+          timestamp: 1710000022000
+        })
+      )
+    );
+    const categoryResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTRESTARTCATEGORY2",
+          messageId: "test-contact-staff-restart-category-2",
+          replyToken: "reply_token_contact_staff_restart_category_2",
+          text: "モデルハウス見学について",
+          timestamp: 1710000023000
+        })
+      )
+    );
+    const categoryBody = await categoryResponse.json();
+
+    expect(categoryResponse.status).toBe(200);
+    expect(categoryBody.logging).toMatchObject({
+      messages_inserted: 2,
+      contact_staff_flows_logged: 1
+    });
+    expect(lineClient.replies[3]?.messages[0]?.text).toContain(
+      "カテゴリ「モデルハウス見学について」で受け付けます。"
+    );
+    expect(lineClient.replies[3]?.messages[0]?.text).not.toContain("カテゴリ「その他」");
+    expect(messageRepository.list().map((message) => message.body)).toEqual([
+      "担当者相談カテゴリ選択案内済み",
+      "担当者相談カテゴリ: その他",
+      "担当者相談連絡先確認案内済み",
+      "担当者相談カテゴリ選択案内済み",
+      "担当者相談カテゴリ: モデルハウス見学について",
+      "担当者相談連絡先確認案内済み"
+    ]);
+  });
+
+  it("notifies staff notification boundary for newly created production contact-staff alerts", async () => {
+    const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository } = createTestContext({
+      lineClient,
+      staffNotifier,
+      env: {
+        APP_ENV: "production"
+      }
+    });
+    const userId = "U_TEST_USER_CONTACT_STAFF_NOTIFY";
+
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFNOTIFYTRIGGER",
+          messageId: "test-contact-staff-notify-trigger",
+          replyToken: "reply_token_contact_staff_notify_trigger",
+          text: "担当者に相談",
+          timestamp: 1710000030000
+        })
+      )
+    );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFNOTIFYCATEGORY",
+          messageId: "test-contact-staff-notify-category",
+          replyToken: "reply_token_contact_staff_notify_category",
+          text: "モデルハウス見学について",
+          timestamp: 1710000031000
+        })
+      )
+    );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFNOTIFYCONTACT",
+          messageId: "test-contact-staff-notify-contact",
+          replyToken: "reply_token_contact_staff_notify_contact",
+          text: "田中太郎 / 090-1111-2222",
+          timestamp: 1710000032000
+        })
+      )
+    );
+    const bodyResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFNOTIFYBODY",
+          messageId: "test-contact-staff-notify-body",
+          replyToken: "reply_token_contact_staff_notify_body",
+          text: "モデルハウス見学の日程について相談したいです。",
+          timestamp: 1710000033000
+        })
+      )
+    );
+    const body = await bodyResponse.json();
+
+    expect(bodyResponse.status).toBe(200);
+    expect(body).toMatchObject({
+      staff_notifications: {
+        attempted: true,
+        notified: 1,
+        failed: 0
+      },
+      logging: {
+        alerts_created: 1,
+        contact_staff_alerts_created: 1
+      }
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
+    expect(staffNotifier.notifications[0]?.message).toContain("管理画面で確認してください。");
+    expect(staffNotifier.notifications[0]?.message).not.toContain(
+      "モデルハウス見学の日程について相談したいです。"
+    );
+    expect(alertRepository.list()[0]).toMatchObject({
+      status: "notified"
+    });
+  });
+
   it("skips contact info collection for information-registered contact-staff customers", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
@@ -928,7 +1122,7 @@ describe("LINE webhook foundation", () => {
 
 describe("staff LINE notification webhook foundation", () => {
   it("accepts a signed staff-line webhook without recording raw event content", async () => {
-    const app = createStaffLineWebhookTestApp();
+    const { app } = createStaffLineWebhookTestApp();
     const body = lineTextMessageBody({
       userId: "U_TEST_STAFF_USER",
       eventId: "01TESTSTAFFLINEEVENT",
@@ -970,8 +1164,60 @@ describe("staff LINE notification webhook foundation", () => {
     expect(serialized).not.toContain("test-staff-line-message-001");
   });
 
+  it("captures a production staff notification target without outputting the target id", async () => {
+    const staffLineClient = new MockLineClient();
+    const { app, env } = createStaffLineWebhookTestApp({
+      staffLineClient,
+      env: {
+        APP_ENV: "production",
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const body = lineTextMessageBody({
+      userId: "U_TEST_STAFF_TARGET_CAPTURE",
+      eventId: "01TESTSTAFFTARGETCAPTURE",
+      messageId: "test-staff-line-target-capture-message",
+      replyToken: "reply_token_staff_line_target_capture",
+      text: "通知テスト",
+      timestamp: 1710000010000
+    });
+    const response = await app.fetch(
+      signedStaffLineRequest(`/api/staff-line/webhook/${knownStaffLineWebhookSecret}`, body)
+    );
+    const parsed = await response.json();
+    const serialized = JSON.stringify(parsed);
+
+    expect(response.status).toBe(200);
+    expect(parsed).toMatchObject({
+      notification_target_capture: {
+        attempted: true,
+        captured: true,
+        skipped_reason: null,
+        source_type: "user",
+        runtime_target_present_before: false,
+        runtime_target_present_after: true,
+        target_id_value_output: false,
+        target_id_committed: false,
+        raw_event_content_recorded: false
+      },
+      setup_reply: {
+        attempted: true,
+        sent: 1,
+        failed: 0,
+        trigger_text_recorded: false,
+        target_id_value_output: false
+      }
+    });
+    expect(env.STAFF_LINE_GROUP_ID).toBe("U_TEST_STAFF_TARGET_CAPTURE");
+    expect(staffLineClient.replies).toHaveLength(1);
+    expect(staffLineClient.replies[0]?.messages[0]?.text).toContain("通知テストを受け付けました");
+    expect(serialized).not.toContain("U_TEST_STAFF_TARGET_CAPTURE");
+    expect(serialized).not.toContain("通知テスト");
+    expect(serialized).not.toContain("test-staff-line-target-capture-message");
+  });
+
   it("rejects staff-line webhook requests with an invalid signature", async () => {
-    const app = createStaffLineWebhookTestApp();
+    const { app } = createStaffLineWebhookTestApp();
     const response = await app.fetch(
       signedStaffLineRequest(
         `/api/staff-line/webhook/${knownStaffLineWebhookSecret}`,
@@ -986,7 +1232,7 @@ describe("staff LINE notification webhook foundation", () => {
   });
 
   it("returns 404 for an unknown staff-line webhook path before trusting the body", async () => {
-    const app = createStaffLineWebhookTestApp();
+    const { app } = createStaffLineWebhookTestApp();
     const response = await app.fetch(
       signedStaffLineRequest("/api/staff-line/webhook/unknown", fixtureBody)
     );

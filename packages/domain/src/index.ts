@@ -1399,15 +1399,17 @@ function resolveContactStaffFlowState(messages: Message[]): {
     (message) => message.role === "system" && message.body === contactStaffAcceptedTimelineBody
   );
   const activeMessages = messages.slice(lastAcceptedIndex + 1);
-  const hasCategoryPrompt = activeMessages.some(
+  const categoryPromptIndex = findLastMessageIndex(
+    activeMessages,
     (message) => message.role === "system" && message.body === contactStaffCategoryPromptTimelineBody
   );
 
-  if (!hasCategoryPrompt) {
+  if (categoryPromptIndex < 0) {
     return { stage: "none", category: null };
   }
 
-  const categoryMessage = findLastMessage(activeMessages, (message) =>
+  const flowMessages = activeMessages.slice(categoryPromptIndex);
+  const categoryMessage = findLastMessage(flowMessages, (message) =>
     Boolean(
       message.role === "system" && message.body?.startsWith(contactStaffCategoryTimelinePrefix)
     )
@@ -1420,16 +1422,16 @@ function resolveContactStaffFlowState(messages: Message[]): {
   }
 
   const contactPromptIndex = findLastMessageIndex(
-    activeMessages,
+    flowMessages,
     (message) => message.role === "system" && message.body === contactStaffContactPromptTimelineBody
   );
   const contactConfirmedIndex = findLastMessageIndex(
-    activeMessages,
+    flowMessages,
     (message) =>
       message.role === "system" && message.body === contactStaffContactConfirmedTimelineBody
   );
   const contentPromptIndex = findLastMessageIndex(
-    activeMessages,
+    flowMessages,
     (message) => message.role === "system" && message.body === contactStaffContentPromptTimelineBody
   );
 

@@ -31,13 +31,16 @@ import {
   type Message,
   type MessageRepository,
   type StaffAuthLookup,
+  type StaffNotificationPayload,
   type StaffNotifier
 } from "@amami-line-crm/domain";
 import {
+  FetchLineMessagingTransport,
   FetchLineIdTokenVerifier,
   LineIdTokenVerificationError,
   MockLineClient,
   parseLineWebhookPayload,
+  RealLineClient,
   verifyLineSignature,
   type NormalizedLineWebhookEvent,
   type LineClient,
@@ -100,6 +103,7 @@ export interface ApiAppDependencies {
   customerRepository?: CustomerRepository;
   messageRepository?: MessageRepository;
   lineClient?: LineClient;
+  staffLineClient?: LineClient;
   staffNotifier?: StaffNotifier;
   aiProvider?: AiProvider;
   knowledgePageRepository?: KnowledgePageRepository;
@@ -175,7 +179,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     runtimeRepositories?.messageRepository ??
     defaultMessageRepository;
   const lineClient = dependencies.lineClient ?? runtimeLineClient?.lineClient ?? defaultLineClient;
-  const staffNotifier = dependencies.staffNotifier ?? defaultStaffNotifier;
+  const staffLineClient = dependencies.staffLineClient ?? createRuntimeStaffLineClient(env);
+  const staffNotifier =
+    dependencies.staffNotifier ?? createRuntimeStaffNotifier(env, staffLineClient);
   const aiProvider =
     dependencies.aiProvider ??
     createRuntimeAiProvider({
@@ -284,6 +290,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       alertRepository,
       now: () => nowIso
     });
+    const staffNotifications = await notifyNewAlertsForProduction({
+      env,
+      tenantId: config.tenant.id,
+      alertCount: alertResult.created ? 1 : 0,
+      alertRepository,
+      staffNotifier,
+      adminBaseUrl: config.urls.appBaseUrl,
+      ...(now ? { now } : {})
+    });
 
     return c.json({
       ok: true,
@@ -307,6 +322,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         created_at: message.created_at
       },
       alert_created: alertResult.created,
+      staff_notifications: staffNotifications,
       verified_line_identity: true,
       line_user_id_recorded: false
     });
@@ -940,6 +956,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       const guideReplies = await replyToCustomerRichMenuGuideEvents(payload.events, lineClient);
       const flowReplies = await replyToLineReplyInstructions(lineReplyInstructions, lineClient);
       const lineMenuReplies = combineLineReplyCounts(guideReplies, flowReplies);
+      const staffNotifications = await notifyNewAlertsForProduction({
+        env,
+        tenantId: tenant.tenantId,
+        alertCount: logging.alerts_created,
+        alertRepository,
+        staffNotifier,
+        adminBaseUrl: config.urls.appBaseUrl,
+        ...(now ? { now } : {})
+      });
 
       return c.json({
         ok: true,
@@ -949,6 +974,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         event_count: payload.events.length,
         events: payload.events,
         line_menu_replies: lineMenuReplies,
+        staff_notifications: staffNotifications,
         logging: publicLogging
       });
     } catch {
@@ -983,6 +1009,12 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     try {
       const payload = parseLineWebhookPayload(rawBody);
       const sanitizedSummary = summarizeStaffLineWebhookEvents(payload.events);
+      const notificationTargetCapture = captureStaffLineNotificationTarget(payload.events, env);
+      const setupReply = await replyToStaffLineTargetSetupEvents({
+        events: payload.events,
+        lineClient: staffLineClient,
+        notificationTargetCapture
+      });
 
       return c.json({
         ok: true,
@@ -991,6 +1023,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         destination_present: Boolean(payload.destination),
         event_count: payload.events.length,
         staff_line_logging: sanitizedSummary,
+        notification_target_capture: notificationTargetCapture,
+        setup_reply: setupReply,
         staff_linking_executed: false,
         staff_notification_send_executed: false
       });
@@ -1141,6 +1175,160 @@ function summarizeStaffLineWebhookEvents(events: NormalizedLineWebhookEvent[]): 
   };
 }
 
+type StaffLineNotificationTargetSourceType = "user" | "group" | "room";
+
+function captureStaffLineNotificationTarget(
+  events: NormalizedLineWebhookEvent[],
+  env: NodeJS.ProcessEnv
+): {
+  attempted: boolean;
+  captured: boolean;
+  skipped_reason: string | null;
+  source_type: StaffLineNotificationTargetSourceType | null;
+  runtime_target_present_before: boolean;
+  runtime_target_present_after: boolean;
+  target_id_value_output: false;
+  target_id_committed: false;
+  raw_event_content_recorded: false;
+} {
+  const targetPresentBefore = Boolean(readNonEmptyEnvValue(env.STAFF_LINE_GROUP_ID));
+
+  if (!isProductionRuntime(env)) {
+    return {
+      attempted: false,
+      captured: false,
+      skipped_reason: "non_production_runtime",
+      source_type: null,
+      runtime_target_present_before: targetPresentBefore,
+      runtime_target_present_after: targetPresentBefore,
+      target_id_value_output: false,
+      target_id_committed: false,
+      raw_event_content_recorded: false
+    };
+  }
+
+  if (targetPresentBefore) {
+    return {
+      attempted: false,
+      captured: false,
+      skipped_reason: "runtime_target_already_present",
+      source_type: null,
+      runtime_target_present_before: true,
+      runtime_target_present_after: true,
+      target_id_value_output: false,
+      target_id_committed: false,
+      raw_event_content_recorded: false
+    };
+  }
+
+  const target = findStaffLineNotificationTarget(events);
+
+  if (!target) {
+    return {
+      attempted: true,
+      captured: false,
+      skipped_reason: "source_target_not_found",
+      source_type: null,
+      runtime_target_present_before: false,
+      runtime_target_present_after: false,
+      target_id_value_output: false,
+      target_id_committed: false,
+      raw_event_content_recorded: false
+    };
+  }
+
+  env.STAFF_LINE_GROUP_ID = target.id;
+
+  return {
+    attempted: true,
+    captured: true,
+    skipped_reason: null,
+    source_type: target.type,
+    runtime_target_present_before: false,
+    runtime_target_present_after: true,
+    target_id_value_output: false,
+    target_id_committed: false,
+    raw_event_content_recorded: false
+  };
+}
+
+function findStaffLineNotificationTarget(
+  events: NormalizedLineWebhookEvent[]
+): { id: string; type: StaffLineNotificationTargetSourceType } | null {
+  for (const event of [...events].reverse()) {
+    if (event.source_type === "group" && event.source_group_id) {
+      return { id: event.source_group_id, type: "group" };
+    }
+
+    if (event.source_type === "room" && event.source_room_id) {
+      return { id: event.source_room_id, type: "room" };
+    }
+
+    if (event.source_type === "user" && event.source_user_id) {
+      return { id: event.source_user_id, type: "user" };
+    }
+  }
+
+  return null;
+}
+
+async function replyToStaffLineTargetSetupEvents(input: {
+  events: NormalizedLineWebhookEvent[];
+  lineClient: LineClient | null;
+  notificationTargetCapture: ReturnType<typeof captureStaffLineNotificationTarget>;
+}): Promise<{
+  attempted: boolean;
+  sent: number;
+  failed: number;
+  skipped: number;
+  trigger_text_recorded: false;
+  target_id_value_output: false;
+}> {
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const event of input.events) {
+    const isSetupTrigger =
+      event.type === "message" &&
+      event.message_type === "text" &&
+      event.text?.trim() === "通知テスト";
+
+    if (!isSetupTrigger) {
+      skipped += 1;
+      continue;
+    }
+
+    if (!input.lineClient || !event.reply_token) {
+      failed += 1;
+      continue;
+    }
+
+    try {
+      await input.lineClient.replyMessage(event.reply_token, [
+        {
+          type: "text",
+          text: input.notificationTargetCapture.runtime_target_present_after
+            ? "通知テストを受け付けました。CRMからの相談通知をこのトークへ送れる状態です。"
+            : "通知テストを受け付けました。CRM通知先の確認はまだ完了していません。"
+        }
+      ]);
+      sent += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return {
+    attempted: sent + failed > 0,
+    sent,
+    failed,
+    skipped,
+    trigger_text_recorded: false,
+    target_id_value_output: false
+  };
+}
+
 function combineLineReplyCounts(
   first: { sent: number; failed: number; skipped: number },
   second: { sent: number; failed: number; skipped: number }
@@ -1176,6 +1364,105 @@ export function resolveApiServerListenOptions(
     (production ? DEFAULT_API_PRODUCTION_PORT : DEFAULT_API_DEVELOPMENT_PORT);
 
   return hostname ? { hostname, port } : { port };
+}
+
+class RuntimeStaffLineNotifier implements StaffNotifier {
+  constructor(
+    private readonly lineClient: LineClient,
+    private readonly env: NodeJS.ProcessEnv
+  ) {}
+
+  async notify(payload: StaffNotificationPayload): Promise<void> {
+    const notificationTargetId = readNonEmptyEnvValue(this.env.STAFF_LINE_GROUP_ID);
+
+    if (!notificationTargetId) {
+      throw new Error("production_staff_line_notification_target_not_configured");
+    }
+
+    await this.lineClient.pushMessage(notificationTargetId, [
+      {
+        type: "text",
+        text: payload.message
+      }
+    ]);
+  }
+}
+
+function createRuntimeStaffLineClient(env: NodeJS.ProcessEnv): LineClient | null {
+  if (!isProductionRuntime(env)) {
+    return null;
+  }
+
+  const channelAccessToken = readNonEmptyEnvValue(env.STAFF_LINE_CHANNEL_ACCESS_TOKEN);
+
+  if (!channelAccessToken) {
+    return null;
+  }
+
+  return new RealLineClient({
+    channelAccessToken,
+    transport: new FetchLineMessagingTransport()
+  });
+}
+
+class UnconfiguredProductionStaffNotifier implements StaffNotifier {
+  async notify(): Promise<void> {
+    throw new Error("production_staff_line_notifier_not_configured");
+  }
+}
+
+function createRuntimeStaffNotifier(
+  env: NodeJS.ProcessEnv,
+  staffLineClient: LineClient | null
+): StaffNotifier {
+  if (!isProductionRuntime(env)) {
+    return defaultStaffNotifier;
+  }
+
+  if (!staffLineClient) {
+    return new UnconfiguredProductionStaffNotifier();
+  }
+
+  return new RuntimeStaffLineNotifier(staffLineClient, env);
+}
+
+async function notifyNewAlertsForProduction(input: {
+  env: NodeJS.ProcessEnv;
+  tenantId: string;
+  alertCount: number;
+  alertRepository: AlertRepository;
+  staffNotifier: StaffNotifier;
+  adminBaseUrl?: string | undefined;
+  now?: (() => string) | undefined;
+}): Promise<{
+  attempted: boolean;
+  notified: number;
+  failed: number;
+  skipped: number;
+}> {
+  if (!isProductionRuntime(input.env) || input.alertCount <= 0) {
+    return {
+      attempted: false,
+      notified: 0,
+      failed: 0,
+      skipped: 0
+    };
+  }
+
+  const result = await notifyOpenAlerts({
+    tenant_id: input.tenantId,
+    alertRepository: input.alertRepository,
+    staffNotifier: input.staffNotifier,
+    ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {}),
+    ...(input.now ? { now: input.now } : {})
+  });
+
+  return {
+    attempted: true,
+    notified: result.notified,
+    failed: result.failed,
+    skipped: result.skipped
+  };
 }
 
 function hasAuthorizationHeader(authorizationHeader: string | undefined): authorizationHeader is string {
