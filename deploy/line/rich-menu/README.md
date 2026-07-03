@@ -1,7 +1,7 @@
 # LINE rich menu assets
 
-This directory contains the customer-facing rich menu package for an Amami Home LINE Official Account.
-Do not keep this menu as the default on the internal staff notification account.
+This directory contains the customer-facing rich menu package for the Amami Home customer LINE Official Account.
+Keep this menu on the customer-facing account. Do not apply it to the separate internal staff notification account.
 
 ## Current menu
 
@@ -50,7 +50,8 @@ The apply command reads `LINE_CHANNEL_ACCESS_TOKEN` from the runtime environment
 
 ## Remove the default rich menu
 
-Use this when the LINE Official Account is operated as the internal staff notification account.
+Use this only when the LINE Official Account is the separate internal staff notification account.
+Do not use it on the customer-facing account during normal operation.
 The command cancels the default rich menu without sending LINE messages:
 
 ```sh

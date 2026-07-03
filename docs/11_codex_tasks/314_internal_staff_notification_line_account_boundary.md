@@ -1,15 +1,25 @@
-# Loop 314: internal staff notification LINE account boundary
+# Loop 314: customer account and staff notification account boundary
 
 ## Goal
 
-Treat the current LINE Official Account as the internal staff notification account, not a customer-facing rich menu account.
+Keep the existing LINE Official Account customer-facing as before, and reserve the newly created LINE Official Account for internal staff notifications only.
+
+## Correction
+
+The first Loop 314 interpretation incorrectly treated the existing customer-facing account as the internal staff notification account. That was corrected immediately after operator clarification:
+
+- Existing customer-facing LINE account: keep operating as before, including the customer rich menu.
+- New internal LINE account: use only for staff notification when customer LINE updates or inquiries arrive.
+- Staff notification account: no customer rich menu, no customer LIFF entry, no customer-facing menu operation.
+- Customer-facing account: customer rich menu restored after the accidental default removal.
 
 ## Scope
 
 - Keep customer inquiry details in the CRM/Admin UI.
 - Format staff notification payloads as brief summaries only.
 - Use the public Admin base URL for staff notification links.
-- Add a safe operator command to remove the default rich menu from the LINE Official Account.
+- Keep the existing customer rich menu on the customer-facing LINE Official Account.
+- Add a safe operator command that can remove a default rich menu only from the separate internal staff notification account.
 - Do not send LINE messages in this Loop.
 
 ## Result
@@ -20,13 +30,14 @@ Treat the current LINE Official Account as the internal staff notification accou
   - unresolved status
   - Admin detail URL
 - Raw alert message text is not copied into the staff notification body.
-- `line_rich_menu_operator.ts --remove-default` cancels the default rich menu with explicit approval.
-- The remove command records only sanitized result booleans/status.
+- `line_rich_menu_operator.ts --remove-default` exists only for a separate internal staff notification account and requires explicit approval.
+- The customer-facing account rich menu was restored after the boundary correction.
 
 ## Safety
 
 - LINE message send was not executed during implementation.
-- LINE rich menu default removal requires explicit operator approval.
+- Customer-facing rich menu removal is not part of the steady-state operation.
+- LINE rich menu default removal requires explicit operator approval and is intended only for the separate staff notification account.
 - LINE token, rich menu ID, LIFF ID, LINE user IDs, raw logs, and customer details are not recorded.
 - Supabase direct connection, DB migration, OpenAI API execution, Nginx/DNS/HTTPS/certbot changes, and production DB direct access were not performed.
 
@@ -44,4 +55,4 @@ Treat the current LINE Official Account as the internal staff notification accou
 ## Next
 
 - Add staff LINE linking codes and persist `staff_users.line_user_id`.
-- Implement real staff notification delivery only after staff recipients are registered.
+- Implement real staff notification delivery from the new internal notification account only after staff recipients are registered.
