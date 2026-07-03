@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { createApiApp } from "../../apps/api/src/index";
+import { createApiApp, readStaffReplyStaffUserId } from "../../apps/api/src/index";
 import { REAL_LINE_PUSH_CONFIRMATION_VALUE } from "../../apps/api/src/admin/line-real-push-gate";
 import {
   InMemoryCustomerRepository,
@@ -63,6 +63,7 @@ function createTestApp(input: {
   customerRepository: InMemoryCustomerRepository;
   messageRepository: InMemoryMessageRepository;
   lineClient?: LineClient;
+  env?: Partial<NodeJS.ProcessEnv>;
 }) {
   return createApiApp({
     customerRepository: input.customerRepository,
@@ -72,7 +73,8 @@ function createTestApp(input: {
       LINE_CHANNEL_SECRET: channelSecret,
       LINE_WEBHOOK_SECRET_PATH: input.webhookSecret,
       TENANT_ID: input.tenantId,
-      TENANT_SLUG: input.tenantSlug
+      TENANT_SLUG: input.tenantSlug,
+      ...input.env
     }
   });
 }
@@ -352,6 +354,92 @@ describe("admin staff reply API", () => {
       message_type: "text",
       body: "ご見学について担当者からご案内します"
     });
+  });
+
+  it("saves demo staff replies without a staff foreign key when no staff id is provided", async () => {
+    const customerRepository = new InMemoryCustomerRepository();
+    const messageRepository = new InMemoryMessageRepository();
+    const lineClient = new MockLineClient();
+    const app = createTestApp({
+      tenantId: "tenant_amamihome",
+      tenantSlug: "amamihome",
+      webhookSecret: "wh_dev_amamihome",
+      customerRepository,
+      messageRepository,
+      lineClient
+    });
+    await customerRepository.save(
+      makeCustomer({
+        id: "customer_demo_save",
+        tenantId: "tenant_amamihome",
+        lineUserId: "U_TEST_USER_001"
+      })
+    );
+
+    const response = await app.fetch(
+      new Request("http://localhost/api/admin/customers/customer_demo_save/reply", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-tenant-id": "tenant_amamihome"
+        },
+        body: JSON.stringify({
+          body: "タイムラインに保存します。",
+          delivery_mode: "demo_save"
+        })
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      customer_id: "customer_demo_save",
+      message: {
+        tenant_id: "tenant_amamihome",
+        customer_id: "customer_demo_save",
+        role: "staff",
+        message_type: "text",
+        body: "タイムラインに保存します。"
+      }
+    });
+    expect(lineClient.pushes).toHaveLength(0);
+    expect(messageRepository.list()).toEqual([
+      expect.objectContaining({
+        customer_id: "customer_demo_save",
+        role: "staff",
+        staff_user_id: null,
+        body: "タイムラインに保存します。"
+      })
+    ]);
+  });
+
+  it("ignores the development staff id in production staff reply metadata", () => {
+    expect(
+      readStaffReplyStaffUserId({
+        env: {
+          APP_ENV: "production"
+        },
+        staffUserIdHeader: "dev_staff"
+      })
+    ).toBeNull();
+    expect(
+      readStaffReplyStaffUserId({
+        env: {
+          APP_ENV: "local"
+        },
+        staffUserIdHeader: "dev_staff"
+      })
+    ).toBe("dev_staff");
+    expect(
+      readStaffReplyStaffUserId({
+        env: {
+          APP_ENV: "production"
+        },
+        staffUserIdHeader: "staff_001"
+      })
+    ).toBe("staff_001");
   });
 
   it("does not save a staff message when mock LINE push fails", async () => {

@@ -667,7 +667,10 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: tenant.tenantId,
       customer,
       body: replyRequest.body,
-      staff_user_id: readOptionalHeader(c.req.header("x-staff-id")),
+      staff_user_id: readStaffReplyStaffUserId({
+        env,
+        staffUserIdHeader: c.req.header("x-staff-id")
+      }),
       customerRepository,
       messageRepository
     });
@@ -1187,6 +1190,19 @@ function createDemoMessages(tenantId: string): Message[] {
 
 function isProductionRuntime(env: NodeJS.ProcessEnv): boolean {
   return env.APP_ENV === "production" || env.NODE_ENV === "production";
+}
+
+export function readStaffReplyStaffUserId(input: {
+  env: NodeJS.ProcessEnv;
+  staffUserIdHeader: string | undefined;
+}): string | null {
+  const staffUserId = readOptionalHeader(input.staffUserIdHeader);
+
+  if (isProductionRuntime(input.env) && staffUserId === "dev_staff") {
+    return null;
+  }
+
+  return staffUserId;
 }
 
 async function getLineDisplayNameFromLineProfile(

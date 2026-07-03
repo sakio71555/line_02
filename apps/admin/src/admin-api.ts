@@ -174,12 +174,21 @@ export interface AdminApiRequestOptions {
 type AdminApiFetch = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 export function getAdminApiConfig(env: NodeJS.ProcessEnv = process.env): AdminApiConfig {
-  return {
+  const explicitStaffId = env.STAFF_ID?.trim();
+  const isProduction = env.APP_ENV === "production" || env.NODE_ENV === "production";
+  const config: AdminApiConfig = {
     apiBaseUrl: env.API_BASE_URL ?? DEFAULT_API_BASE_URL,
     tenantId: env.TENANT_ID ?? DEFAULT_TENANT_ID,
-    staffId: env.STAFF_ID ?? DEFAULT_STAFF_ID,
     includeDevTenantHeader: shouldIncludeDevTenantHeader(env)
   };
+
+  if (explicitStaffId) {
+    config.staffId = explicitStaffId;
+  } else if (!isProduction) {
+    config.staffId = DEFAULT_STAFF_ID;
+  }
+
+  return config;
 }
 
 export function createAdminApiUrl(path: string, config: AdminApiConfig = getAdminApiConfig()): string {
@@ -430,6 +439,10 @@ export async function sendStaffReply(
   options: AdminApiRequestOptions = {}
 ): Promise<AdminStaffReplyResponse> {
   const config = options.config ?? getAdminApiConfig();
+  const headers: Record<string, string> = {
+    "content-type": "application/json"
+  };
+  const staffId = config.staffId?.trim();
   const requestBody: {
     body: string;
     delivery_mode?: "demo_save" | "real_line_push";
@@ -456,14 +469,15 @@ export async function sendStaffReply(
     requestBody.idempotency_key = input.idempotencyKey;
   }
 
+  if (staffId) {
+    headers["x-staff-id"] = staffId;
+  }
+
   return adminApiFetch<AdminStaffReplyResponse>(
     adminCustomerReplyPath(input.customerId),
     {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-staff-id": config.staffId ?? DEFAULT_STAFF_ID
-      },
+      headers,
       body: JSON.stringify(requestBody)
     },
     {

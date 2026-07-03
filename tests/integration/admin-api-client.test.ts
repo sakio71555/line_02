@@ -56,6 +56,24 @@ describe("admin read-only API client", () => {
     ).toBe(false);
   });
 
+  it("does not default to the development staff id in production admin config", () => {
+    expect(
+      getAdminApiConfig({
+        APP_ENV: "production",
+        API_BASE_URL: "https://admin-api.example.invalid",
+        TENANT_ID: "tenant_amamihome"
+      }).staffId
+    ).toBeUndefined();
+    expect(
+      getAdminApiConfig({
+        APP_ENV: "production",
+        API_BASE_URL: "https://admin-api.example.invalid",
+        TENANT_ID: "tenant_amamihome",
+        STAFF_ID: "staff_admin_001"
+      }).staffId
+    ).toBe("staff_admin_001");
+  });
+
   it("builds admin API URLs from the configured base URL", () => {
     expect(
       createAdminApiUrl("/api/admin/customers", {
@@ -571,7 +589,7 @@ describe("admin read-only API client", () => {
     );
   });
 
-  it("uses the default staff id for staff replies when config omits staffId", async () => {
+  it("omits x-staff-id for staff replies when config omits staffId", async () => {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
 
     await sendStaffReply(
@@ -590,7 +608,7 @@ describe("admin read-only API client", () => {
 
     const headers = new Headers(calls[0]?.init?.headers);
 
-    expect(headers.get("x-staff-id")).toBe(DEFAULT_STAFF_ID);
+    expect(headers.get("x-staff-id")).toBeNull();
   });
 
   it("treats staff reply API errors as thrown errors", async () => {
