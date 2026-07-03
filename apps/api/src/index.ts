@@ -21,6 +21,7 @@ import {
   notifyOpenAlerts,
   recordAiSummaryMessage,
   recordStaffTextReply,
+  resolveCustomerRichMenuGuideAction,
   type AdminAction,
   type Alert,
   type AlertRepository,
@@ -37,6 +38,7 @@ import {
   MockLineClient,
   parseLineWebhookPayload,
   verifyLineSignature,
+  type NormalizedLineWebhookEvent,
   type LineClient,
   type LineIdTokenIdentity,
   type LineIdTokenVerifier
@@ -933,6 +935,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         alertRepository,
         getLineDisplayName: (lineUserId) => getLineDisplayNameFromLineProfile(lineClient, lineUserId)
       });
+      const lineMenuReplies = await replyToCustomerRichMenuGuideEvents(payload.events, lineClient);
 
       return c.json({
         ok: true,
@@ -941,6 +944,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         destination: payload.destination,
         event_count: payload.events.length,
         events: payload.events,
+        line_menu_replies: lineMenuReplies,
         logging
       });
     } catch {
@@ -949,6 +953,42 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
   });
 
   return api;
+}
+
+async function replyToCustomerRichMenuGuideEvents(
+  events: NormalizedLineWebhookEvent[],
+  lineClient: LineClient
+): Promise<{ sent: number; failed: number; skipped: number }> {
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const event of events) {
+    const guideAction = resolveCustomerRichMenuGuideAction(event.text);
+
+    if (!guideAction) {
+      continue;
+    }
+
+    if (!event.reply_token) {
+      skipped += 1;
+      continue;
+    }
+
+    try {
+      await lineClient.replyMessage(event.reply_token, [
+        {
+          type: "text",
+          text: guideAction.reply_text
+        }
+      ]);
+      sent += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return { sent, failed, skipped };
 }
 
 export const app = createApiApp();

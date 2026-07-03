@@ -28,9 +28,9 @@
         "height": 843
       },
       "action": {
-        "type": "uri",
+        "type": "message",
         "label": "モデルハウス見学予約",
-        "uri": "https://amamihome.net/reservation/"
+        "text": "モデルハウス見学予約"
       }
     },
     {

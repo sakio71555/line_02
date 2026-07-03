@@ -504,7 +504,47 @@ export interface LogLineWebhookEventsResult {
   customers_upserted: number;
   messages_inserted: number;
   alerts_created: number;
+  rich_menu_guides_logged: number;
   unsupported_events: number;
+}
+
+export interface CustomerRichMenuGuideAction {
+  action_key: string;
+  trigger_text: string;
+  timeline_body: string;
+  reply_text: string;
+  target_url: string;
+  message_type: MessageType;
+}
+
+export const customerRichMenuGuideActions = [
+  {
+    action_key: "initial.model_house_reservation",
+    trigger_text: "モデルハウス見学予約",
+    timeline_body: "モデルハウス見学予約ページ案内済み",
+    reply_text: [
+      "モデルハウス見学のご予約はこちらからお願いいたします。",
+      "ご希望日時を入力して送信してください。",
+      "",
+      "https://amamihome.net/reservation/"
+    ].join("\n"),
+    target_url: "https://amamihome.net/reservation/",
+    message_type: "reservation"
+  }
+] as const satisfies readonly CustomerRichMenuGuideAction[];
+
+export function resolveCustomerRichMenuGuideAction(
+  text: string | null
+): CustomerRichMenuGuideAction | null {
+  const normalized = text?.trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  return (
+    customerRichMenuGuideActions.find((action) => action.trigger_text === normalized) ?? null
+  );
 }
 
 export async function upsertLineCustomer(
@@ -618,6 +658,44 @@ export async function insertLineTextMessage(
     body: parsed.body ?? null,
     media_storage_path: null,
     staff_user_id: null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: null,
+    created_at: input.created_at
+  };
+
+  return repository.insert(message);
+}
+
+export async function insertRichMenuGuideTimelineMessage(
+  repository: MessageRepository,
+  input: {
+    tenant_id: string;
+    customer_id: string;
+    action: CustomerRichMenuGuideAction;
+    created_at: string;
+  },
+  options: { createId?: () => string } = {}
+): Promise<Message> {
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer_id,
+    line_message_id: null,
+    role: "system",
+    message_type: input.action.message_type,
+    body: input.action.timeline_body,
+    media_storage_path: input.action.target_url
+  });
+  const message: Message = {
+    id: options.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: parsed.consultation_id ?? null,
+    line_message_id: parsed.line_message_id ?? null,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: parsed.media_storage_path ?? null,
+    staff_user_id: parsed.staff_user_id ?? null,
     ai_generated: parsed.ai_generated,
     sent_to_line_at: null,
     created_at: input.created_at
@@ -797,6 +875,7 @@ export async function logLineWebhookEvents(
   let customersUpserted = 0;
   let messagesInserted = 0;
   let alertsCreated = 0;
+  let richMenuGuidesLogged = 0;
   let unsupportedEvents = 0;
   const serviceOptions = createMessageLoggingServiceOptions(input);
   const lineDisplayNameCache = new Map<string, string | null>();
@@ -835,6 +914,34 @@ export async function logLineWebhookEvents(
         event.source_user_id,
         lineDisplayNameCache
       );
+      const guideAction = resolveCustomerRichMenuGuideAction(event.text);
+
+      if (guideAction) {
+        const customer = await upsertLineCustomer(
+          input.customerRepository,
+          {
+            tenant_id: input.tenant_id,
+            line_user_id: event.source_user_id,
+            display_name: displayName
+          },
+          serviceOptions
+        );
+        await insertRichMenuGuideTimelineMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: customer.id,
+            action: guideAction,
+            created_at: eventTime
+          },
+          serviceOptions
+        );
+        customersUpserted += 1;
+        messagesInserted += 1;
+        richMenuGuidesLogged += 1;
+        continue;
+      }
+
       const customer = await upsertLineCustomer(
         input.customerRepository,
         {
@@ -882,6 +989,7 @@ export async function logLineWebhookEvents(
     customers_upserted: customersUpserted,
     messages_inserted: messagesInserted,
     alerts_created: alertsCreated,
+    rich_menu_guides_logged: richMenuGuidesLogged,
     unsupported_events: unsupportedEvents
   };
 }

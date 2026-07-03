@@ -9,7 +9,7 @@ import {
   InMemoryCustomerRepository,
   InMemoryMessageRepository
 } from "@amami-line-crm/domain";
-import type { LineClient, LineReplyMessage, LineUserProfile } from "@amami-line-crm/line";
+import { MockLineClient, type LineClient, type LineReplyMessage, type LineUserProfile } from "@amami-line-crm/line";
 
 const channelSecret = "test_line_channel_secret";
 const knownWebhookSecret = "wh_dev_amamihome";
@@ -146,6 +146,95 @@ describe("LINE webhook foundation", () => {
       severity: "high"
     });
     expect(alertRepository.list()[0]?.message).not.toContain("モデルホームを見学したいです");
+  });
+
+  it("replies with the model house reservation guide and records page guidance without an alert", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const menuBody = JSON.stringify({
+      destination: "U_TEST_DESTINATION",
+      events: [
+        {
+          type: "message",
+          mode: "active",
+          timestamp: 1710000002000,
+          source: {
+            type: "user",
+            userId: "U_TEST_USER_MENU"
+          },
+          webhookEventId: "01TESTMODELHOUSEMENU",
+          deliveryContext: {
+            isRedelivery: false
+          },
+          replyToken: "reply_token_model_house",
+          message: {
+            id: "test-line-message-menu-001",
+            type: "text",
+            text: "モデルハウス見学予約"
+          }
+        }
+      ]
+    });
+
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, menuBody)
+    );
+    const body = await response.json();
+    const customer = customerRepository.list()[0];
+    const messages = messageRepository.list();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      line_menu_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      logging: {
+        customers_upserted: 1,
+        messages_inserted: 1,
+        alerts_created: 0,
+        rich_menu_guides_logged: 1,
+        unsupported_events: 0
+      }
+    });
+    expect(lineClient.replies).toEqual([
+      {
+        replyToken: "reply_token_model_house",
+        messages: [
+          {
+            type: "text",
+            text: [
+              "モデルハウス見学のご予約はこちらからお願いいたします。",
+              "ご希望日時を入力して送信してください。",
+              "",
+              "https://amamihome.net/reservation/"
+            ].join("\n")
+          }
+        ]
+      }
+    ]);
+    expect(customer).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      line_user_id: "U_TEST_USER_MENU",
+      response_mode: "bot_auto",
+      last_customer_message_at: null
+    });
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer?.id,
+      role: "system",
+      message_type: "reservation",
+      body: "モデルハウス見学予約ページ案内済み",
+      line_message_id: null,
+      media_storage_path: "https://amamihome.net/reservation/",
+      created_at: new Date(1710000002000).toISOString()
+    });
+    expect(alertRepository.list()).toHaveLength(0);
   });
 
   it("stores the LINE profile display name when profile lookup succeeds", async () => {

@@ -11,8 +11,8 @@
       {
         "action_key": "initial.model_house_reservation",
         "label": "モデルハウス見学予約",
-        "line_action_type": "uri",
-        "target_category": "external_url"
+        "line_action_type": "message",
+        "target_category": "line_guided_external_url"
       },
       {
         "action_key": "initial.home_building_consultation",

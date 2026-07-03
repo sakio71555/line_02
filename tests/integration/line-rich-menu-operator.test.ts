@@ -18,14 +18,14 @@ describe("LINE rich menu operator", () => {
 
     expect(result.validationPassed).toBe(true);
     expect(result.areaCount).toBe(6);
-    expect(result.messageActionCount).toBe(1);
-    expect(result.uriActionCount).toBe(5);
+    expect(result.messageActionCount).toBe(2);
+    expect(result.uriActionCount).toBe(4);
     expect(output).toContain("line_api_called=false");
     expect(output).toContain("line_send_attempted=false");
     expect(output).toContain("secret_recorded=false");
     expect(output).toContain("rich_menu_id_recorded=false");
-    expect(output).toContain("message_action_count=1");
-    expect(output).toContain("uri_action_count=5");
+    expect(output).toContain("message_action_count=2");
+    expect(output).toContain("uri_action_count=4");
     expect(output).not.toContain("LINE_CHANNEL_ACCESS_TOKEN=");
   });
 
@@ -125,12 +125,20 @@ describe("LINE rich menu operator", () => {
     expect(JSON.stringify(result)).not.toContain("1234567890-testLiff");
 
     const createBody = JSON.parse(String(calls[0]?.init.body ?? "{}")) as {
-      areas: Array<{ action: { type: string; label: string; uri?: string } }>;
+      areas: Array<{ action: { type: string; label: string; uri?: string; text?: string } }>;
     };
     const registrationAction = createBody.areas.find(
       (area) => area.action.type === "uri" && area.action.label === "お客様情報登録"
     )?.action;
+    const modelHouseAction = createBody.areas.find(
+      (area) => area.action.type === "message" && area.action.label === "モデルハウス見学予約"
+    )?.action;
     expect(registrationAction?.uri).toBe("https://liff.line.me/1234567890-testLiff");
+    expect(modelHouseAction).toEqual({
+      type: "message",
+      label: "モデルハウス見学予約",
+      text: "モデルハウス見学予約"
+    });
     expect(JSON.stringify(createBody)).not.toContain(CUSTOMER_REGISTRATION_ENDPOINT);
   });
 

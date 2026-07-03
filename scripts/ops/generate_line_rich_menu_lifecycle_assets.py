@@ -61,8 +61,8 @@ MENUS = [
                 "モデルハウス\n見学予約",
                 "予約ページへ",
                 "model_house",
-                "uri",
-                "https://amamihome.net/reservation/",
+                "message",
+                "モデルハウス見学予約",
             ),
             MenuItem(
                 "initial.home_building_consultation",
