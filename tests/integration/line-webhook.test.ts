@@ -326,6 +326,95 @@ describe("LINE webhook foundation", () => {
     expect(alertRepository.list()).toHaveLength(0);
   });
 
+  it("replies with the works guide and records page guidance without an alert", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const menuBody = JSON.stringify({
+      destination: "U_TEST_DESTINATION",
+      events: [
+        {
+          type: "message",
+          mode: "active",
+          timestamp: 1710000004000,
+          source: {
+            type: "user",
+            userId: "U_TEST_USER_WORKS_MENU"
+          },
+          webhookEventId: "01TESTWORKSMENU",
+          deliveryContext: {
+            isRedelivery: false
+          },
+          replyToken: "reply_token_works",
+          message: {
+            id: "test-line-message-menu-003",
+            type: "text",
+            text: "施工事例を見る"
+          }
+        }
+      ]
+    });
+
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, menuBody)
+    );
+    const body = await response.json();
+    const customer = customerRepository.list()[0];
+    const messages = messageRepository.list();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      line_menu_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      logging: {
+        customers_upserted: 1,
+        messages_inserted: 1,
+        alerts_created: 0,
+        rich_menu_guides_logged: 1,
+        unsupported_events: 0
+      }
+    });
+    expect(lineClient.replies).toEqual([
+      {
+        replyToken: "reply_token_works",
+        messages: [
+          {
+            type: "text",
+            text: [
+              "施工事例はこちらからご覧いただけます。",
+              "気になる施工事例があれば、そのままLINEでお知らせください。",
+              "",
+              "https://amamihome.net/works/"
+            ].join("\n")
+          }
+        ]
+      }
+    ]);
+    expect(customer).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      line_user_id: "U_TEST_USER_WORKS_MENU",
+      response_mode: "bot_auto",
+      last_customer_message_at: null
+    });
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer?.id,
+      role: "system",
+      message_type: "text",
+      body: "施工事例ページ案内済み",
+      line_message_id: null,
+      media_storage_path: "https://amamihome.net/works/",
+      created_at: new Date(1710000004000).toISOString()
+    });
+    expect(alertRepository.list()).toHaveLength(0);
+  });
+
   it("stores the LINE profile display name when profile lookup succeeds", async () => {
     const lineClient = new ProfileLineClient({
       U_TEST_USER_001: {

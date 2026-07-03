@@ -23,8 +23,8 @@
       {
         "action_key": "initial.works",
         "label": "施工事例を見る",
-        "line_action_type": "uri",
-        "target_category": "external_url"
+        "line_action_type": "message",
+        "target_category": "line_guided_external_url"
       },
       {
         "action_key": "initial.catalog_request",

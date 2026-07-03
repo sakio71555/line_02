@@ -543,6 +543,19 @@ export const customerRichMenuGuideActions = [
     ].join("\n"),
     target_url: "https://amamihome.net/consultation/",
     message_type: "text"
+  },
+  {
+    action_key: "initial.works",
+    trigger_text: "施工事例を見る",
+    timeline_body: "施工事例ページ案内済み",
+    reply_text: [
+      "施工事例はこちらからご覧いただけます。",
+      "気になる施工事例があれば、そのままLINEでお知らせください。",
+      "",
+      "https://amamihome.net/works/"
+    ].join("\n"),
+    target_url: "https://amamihome.net/works/",
+    message_type: "text"
   }
 ] as const satisfies readonly CustomerRichMenuGuideAction[];
 

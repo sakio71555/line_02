@@ -77,8 +77,8 @@ MENUS = [
                 "施工事例\nを見る",
                 "建築実例を見る",
                 "hammer",
-                "uri",
-                "https://amamihome.net/works/",
+                "message",
+                "施工事例を見る",
             ),
             MenuItem(
                 "initial.catalog_request",
