@@ -115,9 +115,18 @@ export interface LineReplyMessage {
   text: string;
 }
 
+export interface LineUserProfile {
+  userId: string;
+  displayName: string;
+  pictureUrl: string | null;
+  statusMessage: string | null;
+  language: string | null;
+}
+
 export interface LineClient {
   replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void>;
   pushMessage(to: string, messages: LineReplyMessage[]): Promise<void>;
+  getProfile?(userId: string): Promise<LineUserProfile | null>;
 }
 
 export interface LineMessagingPushRequest {
@@ -134,9 +143,16 @@ export interface LineMessagingReplyRequest {
   messages: LineReplyMessage[];
 }
 
+export interface LineMessagingProfileRequest {
+  channelAccessToken: string;
+  endpoint: string;
+  userId: string;
+}
+
 export interface LineMessagingTransport {
   pushMessage(request: LineMessagingPushRequest): Promise<void>;
   replyMessage?(request: LineMessagingReplyRequest): Promise<void>;
+  getProfile?(request: LineMessagingProfileRequest): Promise<LineUserProfile>;
 }
 
 export interface LineMessagingFetchResponse {
@@ -154,6 +170,7 @@ export interface RealLineClientConfig {
   transport: LineMessagingTransport;
   pushEndpoint?: string;
   replyEndpoint?: string;
+  profileEndpointBase?: string;
 }
 
 export class LineMessagingApiError extends Error {
@@ -184,6 +201,21 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
     });
   }
 
+  async getProfile(request: LineMessagingProfileRequest): Promise<LineUserProfile> {
+    const response = await this.fetchImplementation(request.endpoint, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${request.channelAccessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new LineMessagingApiError();
+    }
+
+    return parseLineUserProfileResponse(await response.text());
+  }
+
   private async postJson(
     endpoint: string,
     channelAccessToken: string,
@@ -208,6 +240,7 @@ export class RealLineClient implements LineClient {
   private readonly channelAccessToken: string;
   private readonly pushEndpoint: string;
   private readonly replyEndpoint: string;
+  private readonly profileEndpointBase: string;
   private readonly transport: LineMessagingTransport;
 
   constructor(config: RealLineClientConfig) {
@@ -221,6 +254,8 @@ export class RealLineClient implements LineClient {
     this.transport = config.transport;
     this.pushEndpoint = config.pushEndpoint ?? "https://api.line.me/v2/bot/message/push";
     this.replyEndpoint = config.replyEndpoint ?? "https://api.line.me/v2/bot/message/reply";
+    this.profileEndpointBase =
+      config.profileEndpointBase?.replace(/\/+$/u, "") ?? "https://api.line.me/v2/bot/profile";
   }
 
   async replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void> {
@@ -252,11 +287,34 @@ export class RealLineClient implements LineClient {
       throw new LineMessagingApiError();
     }
   }
+
+  async getProfile(userId: string): Promise<LineUserProfile | null> {
+    const normalizedUserId = userId.trim();
+
+    if (!normalizedUserId) {
+      return null;
+    }
+
+    if (!this.transport.getProfile) {
+      throw new LineMessagingApiError("LINE profile transport is not configured.");
+    }
+
+    try {
+      return await this.transport.getProfile({
+        channelAccessToken: this.channelAccessToken,
+        endpoint: `${this.profileEndpointBase}/${encodeURIComponent(normalizedUserId)}`,
+        userId: normalizedUserId
+      });
+    } catch {
+      throw new LineMessagingApiError();
+    }
+  }
 }
 
 export class MockLineClient implements LineClient {
   readonly replies: Array<{ replyToken: string; messages: LineReplyMessage[] }> = [];
   readonly pushes: Array<{ to: string; messages: LineReplyMessage[] }> = [];
+  readonly profiles = new Map<string, LineUserProfile>();
 
   async replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void> {
     this.replies.push({ replyToken, messages });
@@ -265,4 +323,37 @@ export class MockLineClient implements LineClient {
   async pushMessage(to: string, messages: LineReplyMessage[]): Promise<void> {
     this.pushes.push({ to, messages });
   }
+
+  async getProfile(userId: string): Promise<LineUserProfile | null> {
+    return this.profiles.get(userId) ?? null;
+  }
+}
+
+function parseLineUserProfileResponse(body: string): LineUserProfile {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    throw new LineMessagingApiError();
+  }
+
+  if (!isRecord(parsed)) {
+    throw new LineMessagingApiError();
+  }
+
+  const userId = readString(parsed.userId);
+  const displayName = readString(parsed.displayName);
+
+  if (!userId || !displayName) {
+    throw new LineMessagingApiError();
+  }
+
+  return {
+    userId,
+    displayName,
+    pictureUrl: readString(parsed.pictureUrl),
+    statusMessage: readString(parsed.statusMessage),
+    language: readString(parsed.language)
+  };
 }

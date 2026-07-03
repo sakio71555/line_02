@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
 import { InMemoryCustomerRepository, InMemoryMessageRepository } from "@amami-line-crm/domain";
+import type { LineClient, LineReplyMessage, LineUserProfile } from "@amami-line-crm/line";
 
 const channelSecret = "test_line_channel_secret";
 const knownWebhookSecret = "wh_dev_amamihome";
@@ -28,12 +29,20 @@ function signBody(body: string): string {
   return createHmac("sha256", channelSecret).update(body).digest("base64");
 }
 
-function createTestContext(input: { tenantId?: string; tenantSlug?: string; webhookSecret?: string } = {}) {
+function createTestContext(
+  input: {
+    tenantId?: string;
+    tenantSlug?: string;
+    webhookSecret?: string;
+    lineClient?: LineClient;
+  } = {}
+) {
   const customerRepository = new InMemoryCustomerRepository();
   const messageRepository = new InMemoryMessageRepository();
   const app = createApiApp({
     customerRepository,
     messageRepository,
+    ...(input.lineClient ? { lineClient: input.lineClient } : {}),
     env: {
       LINE_CHANNEL_SECRET: channelSecret,
       LINE_WEBHOOK_SECRET_PATH: input.webhookSecret ?? knownWebhookSecret,
@@ -102,6 +111,44 @@ describe("LINE webhook foundation", () => {
       message_type: "text",
       body: "モデルホームを見学したいです"
     });
+  });
+
+  it("stores the LINE profile display name when profile lookup succeeds", async () => {
+    const lineClient = new ProfileLineClient({
+      U_TEST_USER_001: {
+        userId: "U_TEST_USER_001",
+        displayName: "実機 太郎",
+        pictureUrl: null,
+        statusMessage: null,
+        language: null
+      }
+    });
+    const { app, customerRepository } = createTestContext({ lineClient });
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
+    );
+
+    expect(response.status).toBe(200);
+    expect(lineClient.profileRequests).toEqual(["U_TEST_USER_001"]);
+    expect(customerRepository.list()[0]).toMatchObject({
+      line_user_id: "U_TEST_USER_001",
+      display_name: "実機 太郎"
+    });
+  });
+
+  it("continues webhook logging when LINE profile lookup fails", async () => {
+    const lineClient = new ProfileLineClient({}, { failProfileLookup: true });
+    const { app, customerRepository, messageRepository } = createTestContext({ lineClient });
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
+    );
+
+    expect(response.status).toBe(200);
+    expect(customerRepository.list()[0]).toMatchObject({
+      line_user_id: "U_TEST_USER_001",
+      display_name: null
+    });
+    expect(messageRepository.list()).toHaveLength(1);
   });
 
   it("returns 401 when the raw-body signature is invalid", async () => {
@@ -181,3 +228,30 @@ describe("LINE webhook foundation", () => {
     ]);
   });
 });
+
+class ProfileLineClient implements LineClient {
+  readonly profileRequests: string[] = [];
+
+  constructor(
+    private readonly profiles: Record<string, LineUserProfile>,
+    private readonly options: { failProfileLookup?: boolean } = {}
+  ) {}
+
+  async replyMessage(): Promise<void> {
+    throw new Error("replyMessage is not used by webhook receive tests.");
+  }
+
+  async pushMessage(_to: string, _messages: LineReplyMessage[]): Promise<void> {
+    throw new Error("pushMessage is not used by webhook receive tests.");
+  }
+
+  async getProfile(userId: string): Promise<LineUserProfile | null> {
+    this.profileRequests.push(userId);
+
+    if (this.options.failProfileLookup) {
+      throw new Error("profile lookup failed");
+    }
+
+    return this.profiles[userId] ?? null;
+  }
+}

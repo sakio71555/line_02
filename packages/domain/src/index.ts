@@ -477,6 +477,7 @@ export interface LogLineWebhookEventsInput {
   events: MessageLoggingLineEvent[];
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
+  getLineDisplayName?: (lineUserId: string) => Promise<string | null>;
   createId?: () => string;
   now?: () => string;
 }
@@ -743,16 +744,24 @@ export async function logLineWebhookEvents(
   let messagesInserted = 0;
   let unsupportedEvents = 0;
   const serviceOptions = createMessageLoggingServiceOptions(input);
+  const lineDisplayNameCache = new Map<string, string | null>();
 
   for (const event of input.events) {
     const eventTime = lineEventTimestampToIsoString(event.timestamp, input.now);
 
     if (event.type === "follow" && event.source_user_id) {
+      const displayName = await resolveLineDisplayName(
+        input,
+        event.source_user_id,
+        lineDisplayNameCache
+      );
+
       await upsertLineCustomer(
         input.customerRepository,
         {
           tenant_id: input.tenant_id,
-          line_user_id: event.source_user_id
+          line_user_id: event.source_user_id,
+          display_name: displayName
         },
         serviceOptions
       );
@@ -766,11 +775,17 @@ export async function logLineWebhookEvents(
       event.source_user_id &&
       event.message_id
     ) {
+      const displayName = await resolveLineDisplayName(
+        input,
+        event.source_user_id,
+        lineDisplayNameCache
+      );
       const customer = await upsertLineCustomer(
         input.customerRepository,
         {
           tenant_id: input.tenant_id,
           line_user_id: event.source_user_id,
+          display_name: displayName,
           last_customer_message_at: eventTime
         },
         serviceOptions
@@ -799,6 +814,31 @@ export async function logLineWebhookEvents(
     messages_inserted: messagesInserted,
     unsupported_events: unsupportedEvents
   };
+}
+
+async function resolveLineDisplayName(
+  input: LogLineWebhookEventsInput,
+  lineUserId: string,
+  cache: Map<string, string | null>
+): Promise<string | null> {
+  if (cache.has(lineUserId)) {
+    return cache.get(lineUserId) ?? null;
+  }
+
+  if (!input.getLineDisplayName) {
+    cache.set(lineUserId, null);
+    return null;
+  }
+
+  try {
+    const displayName = await input.getLineDisplayName(lineUserId);
+    const normalized = displayName?.trim() ? displayName.trim() : null;
+    cache.set(lineUserId, normalized);
+    return normalized;
+  } catch {
+    cache.set(lineUserId, null);
+    return null;
+  }
 }
 
 export async function listCustomerListItems(input: {

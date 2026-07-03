@@ -821,7 +821,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         tenant_id: tenant.tenantId,
         events: payload.events,
         customerRepository,
-        messageRepository
+        messageRepository,
+        getLineDisplayName: (lineUserId) => getLineDisplayNameFromLineProfile(lineClient, lineUserId)
       });
 
       return c.json({
@@ -1186,6 +1187,22 @@ function createDemoMessages(tenantId: string): Message[] {
 
 function isProductionRuntime(env: NodeJS.ProcessEnv): boolean {
   return env.APP_ENV === "production" || env.NODE_ENV === "production";
+}
+
+async function getLineDisplayNameFromLineProfile(
+  lineClient: LineClient,
+  lineUserId: string
+): Promise<string | null> {
+  if (!lineClient.getProfile) {
+    return null;
+  }
+
+  try {
+    const profile = await lineClient.getProfile(lineUserId);
+    return profile?.displayName.trim() ? profile.displayName.trim() : null;
+  } catch {
+    return null;
+  }
 }
 
 async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushRequest | null> {

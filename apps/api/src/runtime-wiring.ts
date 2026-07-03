@@ -109,7 +109,7 @@ export function createRuntimeAiProvider(input: RuntimeAiProviderFactoryInput): A
 export function createRuntimeLineClient(
   input: RuntimeLineClientFactoryInput
 ): RuntimeLineClientBundle {
-  if (!input.config.line.realPushEnabled) {
+  if (!input.config.line.messagingEnabled && !input.config.line.realPushEnabled) {
     return {
       lineClient: new MockLineClient(),
       lineClientMode: "mock"

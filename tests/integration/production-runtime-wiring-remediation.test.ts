@@ -163,8 +163,30 @@ describe("Loop 151 production runtime wiring remediation", () => {
     expect(bundle.lineClient).toBeInstanceOf(MockLineClient);
   });
 
-  it("fails fast when LINE real push is enabled without access token", () => {
-    const config = loadAppConfig({ LINE_REAL_PUSH_ENABLED: "true" });
+  it("uses the real LINE client for Messaging API profile reads even when real push is disabled", () => {
+    const lineFetch = vi.fn();
+    const config = loadAppConfig({
+      LINE_MESSAGING_ENABLED: "true",
+      LINE_REAL_PUSH_ENABLED: "false"
+    });
+
+    const bundle = createRuntimeLineClient({
+      config,
+      env: {
+        LINE_CHANNEL_ACCESS_TOKEN: "fake-line-token",
+        LINE_MESSAGING_ENABLED: "true",
+        LINE_REAL_PUSH_ENABLED: "false"
+      },
+      lineFetch
+    });
+
+    expect(bundle.lineClientMode).toBe("real");
+    expect(bundle.lineClient).toBeInstanceOf(RealLineClient);
+    expect(lineFetch).not.toHaveBeenCalled();
+  });
+
+  it("fails fast when LINE Messaging API is enabled without access token", () => {
+    const config = loadAppConfig({ LINE_MESSAGING_ENABLED: "true" });
 
     expect(() => createRuntimeLineClient({ config, env: {} })).toThrow(RuntimeWiringConfigError);
 
