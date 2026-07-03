@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyDefaultRichMenu,
+  buildRichMenuDefinitionForApply,
+  CUSTOMER_REGISTRATION_ENDPOINT,
   formatLineRichMenuDryRunResult,
   runLineRichMenuDryRun,
   validateRichMenuDefinition
@@ -86,6 +88,7 @@ describe("LINE rich menu operator", () => {
     const calls: Array<{ input: string; init: RequestInit }> = [];
     const result = await applyDefaultRichMenu({
       channelAccessToken: "test-channel-access-token",
+      liffId: "1234567890-testLiff",
       async fetchImplementation(input, init) {
         calls.push({ input: String(input), init });
 
@@ -104,6 +107,8 @@ describe("LINE rich menu operator", () => {
       createRichMenuStatus: "success",
       uploadImageStatus: "success",
       setDefaultStatus: "success",
+      liffUrlApplied: true,
+      liffIdRecorded: false,
       richMenuIdRecorded: false,
       lineSendAttempted: false,
       secretRecorded: false
@@ -115,5 +120,56 @@ describe("LINE rich menu operator", () => {
     ]);
     expect(JSON.stringify(result)).not.toContain("richmenu-test-id");
     expect(JSON.stringify(result)).not.toContain("test-channel-access-token");
+    expect(JSON.stringify(result)).not.toContain("1234567890-testLiff");
+
+    const createBody = JSON.parse(String(calls[0]?.init.body ?? "{}")) as {
+      areas: Array<{ action: { type: string; label: string; uri?: string } }>;
+    };
+    const registrationAction = createBody.areas.find(
+      (area) => area.action.type === "uri" && area.action.label === "お客様情報登録"
+    )?.action;
+    expect(registrationAction?.uri).toBe("https://liff.line.me/1234567890-testLiff");
+    expect(JSON.stringify(createBody)).not.toContain(CUSTOMER_REGISTRATION_ENDPOINT);
+  });
+
+  it("builds apply definitions with LIFF URLs while keeping source definitions unchanged", async () => {
+    const source = await runLineRichMenuDryRun();
+    expect(source.validationPassed).toBe(true);
+
+    const definition = buildRichMenuDefinitionForApply(
+      {
+        size: { width: 2500, height: 1686 },
+        selected: true,
+        name: "test",
+        chatBarText: "メニュー",
+        areas: Array.from({ length: 6 }, (_, index) => ({
+          bounds: {
+            x: index % 3 === 0 ? 0 : index % 3 === 1 ? 833 : 1666,
+            y: index < 3 ? 0 : 843,
+            width: index % 3 === 2 ? 834 : 833,
+            height: 843
+          },
+          action:
+            index === 0
+              ? {
+                  type: "uri" as const,
+                  label: "お客様情報登録",
+                  uri: CUSTOMER_REGISTRATION_ENDPOINT
+                }
+              : {
+                  type: "message" as const,
+                  label: "担当者に相談",
+                  text: "担当者に相談"
+                }
+        }))
+      },
+      "1234567890-testLiff"
+    );
+
+    expect(definition.areas[0]?.action).toEqual({
+      type: "uri",
+      label: "お客様情報登録",
+      uri: "https://liff.line.me/1234567890-testLiff"
+    });
   });
 });

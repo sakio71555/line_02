@@ -12,6 +12,10 @@ export const RICH_MENU_ASSET_DIR = path.join(
 export const RICH_MENU_DEFINITION_PATH = path.join(RICH_MENU_ASSET_DIR, "rich-menu.json");
 export const RICH_MENU_IMAGE_PATH = path.join(RICH_MENU_ASSET_DIR, "rich-menu.png");
 export const LINE_RICH_MENU_APPLY_APPROVAL = "YES";
+export const CUSTOMER_REGISTRATION_ENDPOINT =
+  "https://admin.taiyolabel.site/line/customer-registration";
+export const CONTACT_CHANGE_ENDPOINT =
+  "https://admin.taiyolabel.site/line/customer-registration?mode=contact-change";
 
 export interface LineRichMenuDefinition {
   size: {
@@ -64,6 +68,8 @@ export interface LineRichMenuApplyResult {
   createRichMenuStatus: "success";
   uploadImageStatus: "success";
   setDefaultStatus: "success";
+  liffUrlApplied: boolean;
+  liffIdRecorded: false;
   richMenuIdRecorded: false;
   lineSendAttempted: false;
   secretRecorded: false;
@@ -197,16 +203,21 @@ export function formatLineRichMenuDryRunResult(result: LineRichMenuDryRunResult)
 export async function applyDefaultRichMenu(input: {
   repoRoot?: string;
   channelAccessToken: string;
+  liffId?: string;
   fetchImplementation?: typeof globalThis.fetch;
 }): Promise<LineRichMenuApplyResult> {
   const repoRoot = input.repoRoot ?? process.cwd();
   const token = input.channelAccessToken.trim();
+  const liffId = input.liffId?.trim() ?? "";
 
   if (!token) {
     throw new LineRichMenuOperatorError("line_channel_access_token_missing");
   }
 
-  const definition = await loadAmamiHomeRichMenuDefinition(repoRoot);
+  const sourceDefinition = await loadAmamiHomeRichMenuDefinition(repoRoot);
+  const definition = liffId
+    ? buildRichMenuDefinitionForApply(sourceDefinition, liffId)
+    : sourceDefinition;
   const validationErrors = validateRichMenuDefinition(definition);
 
   if (validationErrors.length > 0) {
@@ -266,6 +277,8 @@ export async function applyDefaultRichMenu(input: {
     createRichMenuStatus: "success",
     uploadImageStatus: "success",
     setDefaultStatus: "success",
+    liffUrlApplied: Boolean(liffId),
+    liffIdRecorded: false,
     richMenuIdRecorded: false,
     lineSendAttempted: false,
     secretRecorded: false
@@ -278,10 +291,58 @@ export function formatLineRichMenuApplyResult(result: LineRichMenuApplyResult): 
     `create_rich_menu_status=${result.createRichMenuStatus}`,
     `upload_rich_menu_image_status=${result.uploadImageStatus}`,
     `set_default_rich_menu_status=${result.setDefaultStatus}`,
+    `liff_url_applied=${result.liffUrlApplied}`,
+    `liff_id_recorded=${result.liffIdRecorded}`,
     `rich_menu_id_recorded=${result.richMenuIdRecorded}`,
     `line_send_attempted=${result.lineSendAttempted}`,
     `secret_recorded=${result.secretRecorded}`
   ].join("\n");
+}
+
+export function buildRichMenuDefinitionForApply(
+  definition: LineRichMenuDefinition,
+  liffId: string
+): LineRichMenuDefinition {
+  const trimmedLiffId = liffId.trim();
+
+  if (!trimmedLiffId) {
+    throw new LineRichMenuOperatorError("line_liff_id_missing");
+  }
+
+  return {
+    ...definition,
+    areas: definition.areas.map((area) => {
+      if (area.action.type !== "uri") {
+        return area;
+      }
+
+      if (area.action.uri === CUSTOMER_REGISTRATION_ENDPOINT) {
+        return {
+          ...area,
+          action: {
+            ...area.action,
+            uri: buildLiffUrl(trimmedLiffId)
+          }
+        };
+      }
+
+      if (area.action.uri === CONTACT_CHANGE_ENDPOINT) {
+        return {
+          ...area,
+          action: {
+            ...area.action,
+            uri: buildLiffUrl(trimmedLiffId, "?mode=contact-change")
+          }
+        };
+      }
+
+      return area;
+    })
+  };
+}
+
+function buildLiffUrl(liffId: string, suffix = ""): string {
+  return `https://liff.line.me/${encodeURIComponent(liffId)}${suffix}`;
 }
 
 function isLineRichMenuDefinition(value: unknown): value is LineRichMenuDefinition {
@@ -348,7 +409,8 @@ async function main(): Promise<void> {
     }
 
     const result = await applyDefaultRichMenu({
-      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? ""
+      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "",
+      liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID
     });
     console.log(formatLineRichMenuApplyResult(result));
     return;
