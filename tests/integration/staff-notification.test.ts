@@ -36,6 +36,7 @@ function createTestApp(input: {
     ...(input.staffNotifier ? { staffNotifier: input.staffNotifier } : {}),
     now: () => now,
     env: {
+      APP_BASE_URL: "http://localhost:3000",
       LINE_CHANNEL_SECRET: "test_line_channel_secret",
       LINE_WEBHOOK_SECRET_PATH: "wh_dev_amamihome",
       TENANT_ID: input.tenantId,
@@ -162,13 +163,18 @@ describe("admin open alert staff notification API", () => {
       customer_id: "customer_amami",
       alert_type: "unreplied_customer_message",
       severity: "critical",
-      admin_url: "https://admin.example.local/customers/customer_amami"
+      admin_url: "http://localhost:3000/customers/customer_amami"
     });
-    expect(staffNotifier.notifications[0]?.message).toContain("Severity: critical");
-    expect(staffNotifier.notifications[0]?.message).toContain("Customer: customer_amami");
-    expect(staffNotifier.notifications[0]?.message).toContain("未返信の緊急相談があります");
-    expect(staffNotifier.notifications[0]?.message).toContain("Alert type: unreplied_customer_message");
-    expect(staffNotifier.notifications[0]?.message).toContain("Admin URL:");
+    expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
+    expect(staffNotifier.notifications[0]?.message).toContain("種別：未返信の相談");
+    expect(staffNotifier.notifications[0]?.message).toContain("緊急度：緊急");
+    expect(staffNotifier.notifications[0]?.message).toContain("対応状況：未対応");
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "http://localhost:3000/customers/customer_amami"
+    );
+    expect(staffNotifier.notifications[0]?.message).not.toContain("未返信の緊急相談があります");
+    expect(staffNotifier.notifications[0]?.message).not.toContain("Alert type:");
+    expect(staffNotifier.notifications[0]?.message).not.toContain("Customer:");
     expect(updatedOpenAlert).toMatchObject({
       tenant_id: "tenant_amamihome",
       customer_id: "customer_amami",

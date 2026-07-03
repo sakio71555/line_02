@@ -12,6 +12,7 @@ export const RICH_MENU_ASSET_DIR = path.join(
 export const RICH_MENU_DEFINITION_PATH = path.join(RICH_MENU_ASSET_DIR, "rich-menu.json");
 export const RICH_MENU_IMAGE_PATH = path.join(RICH_MENU_ASSET_DIR, "rich-menu.png");
 export const LINE_RICH_MENU_APPLY_APPROVAL = "YES";
+export const LINE_RICH_MENU_REMOVE_APPROVAL = "YES";
 export const CUSTOMER_REGISTRATION_ENDPOINT =
   "https://admin.taiyolabel.site/line/customer-registration";
 export const CONTACT_CHANGE_ENDPOINT =
@@ -70,6 +71,13 @@ export interface LineRichMenuApplyResult {
   setDefaultStatus: "success";
   liffUrlApplied: boolean;
   liffIdRecorded: false;
+  richMenuIdRecorded: false;
+  lineSendAttempted: false;
+  secretRecorded: false;
+}
+
+export interface LineRichMenuRemoveDefaultResult {
+  removeDefaultRichMenuStatus: "success";
   richMenuIdRecorded: false;
   lineSendAttempted: false;
   secretRecorded: false;
@@ -299,6 +307,48 @@ export function formatLineRichMenuApplyResult(result: LineRichMenuApplyResult): 
   ].join("\n");
 }
 
+export async function removeDefaultRichMenu(input: {
+  channelAccessToken: string;
+  fetchImplementation?: typeof globalThis.fetch;
+}): Promise<LineRichMenuRemoveDefaultResult> {
+  const token = input.channelAccessToken.trim();
+
+  if (!token) {
+    throw new LineRichMenuOperatorError("line_channel_access_token_missing");
+  }
+
+  const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
+  const response = await fetchImplementation("https://api.line.me/v2/bot/user/all/richmenu", {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new LineRichMenuOperatorError("rich_menu_remove_default_failed");
+  }
+
+  return {
+    removeDefaultRichMenuStatus: "success",
+    richMenuIdRecorded: false,
+    lineSendAttempted: false,
+    secretRecorded: false
+  };
+}
+
+export function formatLineRichMenuRemoveDefaultResult(
+  result: LineRichMenuRemoveDefaultResult
+): string {
+  return [
+    "line_rich_menu_operator_mode=remove_default",
+    `remove_default_rich_menu_status=${result.removeDefaultRichMenuStatus}`,
+    `rich_menu_id_recorded=${result.richMenuIdRecorded}`,
+    `line_send_attempted=${result.lineSendAttempted}`,
+    `secret_recorded=${result.secretRecorded}`
+  ].join("\n");
+}
+
 export function buildRichMenuDefinitionForApply(
   definition: LineRichMenuDefinition,
   liffId: string
@@ -413,6 +463,18 @@ async function main(): Promise<void> {
       liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID
     });
     console.log(formatLineRichMenuApplyResult(result));
+    return;
+  }
+
+  if (args.has("--remove-default")) {
+    if (process.env.LINE_RICH_MENU_REMOVE_APPROVED !== LINE_RICH_MENU_REMOVE_APPROVAL) {
+      throw new LineRichMenuOperatorError("line_rich_menu_remove_not_approved");
+    }
+
+    const result = await removeDefaultRichMenu({
+      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? ""
+    });
+    console.log(formatLineRichMenuRemoveDefaultResult(result));
     return;
   }
 

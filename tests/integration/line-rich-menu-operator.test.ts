@@ -5,6 +5,8 @@ import {
   buildRichMenuDefinitionForApply,
   CUSTOMER_REGISTRATION_ENDPOINT,
   formatLineRichMenuDryRunResult,
+  formatLineRichMenuRemoveDefaultResult,
+  removeDefaultRichMenu,
   runLineRichMenuDryRun,
   validateRichMenuDefinition
 } from "../../scripts/ops/line_rich_menu_operator";
@@ -171,5 +173,32 @@ describe("LINE rich menu operator", () => {
       label: "お客様情報登録",
       uri: "https://liff.line.me/1234567890-testLiff"
     });
+  });
+
+  it("removes the default rich menu without exposing token or rich menu ID", async () => {
+    const calls: Array<{ input: string; init: RequestInit }> = [];
+    const result = await removeDefaultRichMenu({
+      channelAccessToken: "test-channel-access-token",
+      async fetchImplementation(input, init) {
+        calls.push({ input: String(input), init });
+        return new Response("{}", { status: 200 });
+      }
+    });
+    const output = formatLineRichMenuRemoveDefaultResult(result);
+
+    expect(result).toEqual({
+      removeDefaultRichMenuStatus: "success",
+      richMenuIdRecorded: false,
+      lineSendAttempted: false,
+      secretRecorded: false
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.input).toBe("https://api.line.me/v2/bot/user/all/richmenu");
+    expect(calls[0]?.init.method).toBe("DELETE");
+    expect(output).toContain("line_rich_menu_operator_mode=remove_default");
+    expect(output).toContain("remove_default_rich_menu_status=success");
+    expect(output).toContain("line_send_attempted=false");
+    expect(output).toContain("secret_recorded=false");
+    expect(output).not.toContain("test-channel-access-token");
   });
 });

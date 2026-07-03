@@ -876,6 +876,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: tenant.tenantId,
       alertRepository,
       staffNotifier,
+      adminBaseUrl: config.urls.appBaseUrl,
       ...(now ? { now } : {})
     });
 

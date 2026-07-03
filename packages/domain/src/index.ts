@@ -453,6 +453,7 @@ export interface NotifyOpenAlertsInput {
   tenant_id: string;
   alertRepository: AlertRepository;
   staffNotifier: StaffNotifier;
+  adminBaseUrl?: string;
   now?: () => string;
 }
 
@@ -707,7 +708,9 @@ export async function notifyOpenAlerts(
   const failedAlerts: Alert[] = [];
 
   for (const alert of openAlerts) {
-    const payload = buildStaffNotificationPayload(alert);
+    const payload = buildStaffNotificationPayload(alert, {
+      ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {})
+    });
 
     try {
       await input.staffNotifier.notify(payload);
@@ -1008,7 +1011,13 @@ function createUnrepliedAlert(input: {
   };
 }
 
-export function buildStaffNotificationPayload(alert: Alert): StaffNotificationPayload {
+export function buildStaffNotificationPayload(
+  alert: Alert,
+  options: { adminBaseUrl?: string } = {}
+): StaffNotificationPayload {
+  const adminBaseUrl = normalizeAdminBaseUrl(options.adminBaseUrl);
+  const adminUrl = `${adminBaseUrl}/customers/${encodeURIComponent(alert.customer_id)}`;
+
   return {
     tenant_id: alert.tenant_id,
     alert_id: alert.id,
@@ -1016,14 +1025,49 @@ export function buildStaffNotificationPayload(alert: Alert): StaffNotificationPa
     alert_type: alert.alert_type,
     severity: alert.severity,
     message: [
-      `Alert type: ${alert.alert_type}`,
-      `Severity: ${alert.severity}`,
-      `Customer: ${alert.customer_id}`,
-      `Message: ${alert.message}`,
-      `Admin URL: https://admin.example.local/customers/${alert.customer_id}`
+      "新しい相談が届きました。",
+      "",
+      `種別：${formatAlertTypeForStaffNotification(alert.alert_type)}`,
+      `緊急度：${formatAlertSeverityForStaffNotification(alert.severity)}`,
+      "対応状況：未対応",
+      "",
+      "管理画面で確認してください。",
+      adminUrl
     ].join("\n"),
-    admin_url: `https://admin.example.local/customers/${alert.customer_id}`
+    admin_url: adminUrl
   };
+}
+
+function normalizeAdminBaseUrl(adminBaseUrl: string | undefined): string {
+  const normalized = adminBaseUrl?.trim().replace(/\/+$/u, "");
+  return normalized || "https://admin.example.local";
+}
+
+function formatAlertTypeForStaffNotification(alertType: AlertType): string {
+  switch (alertType) {
+    case "unreplied":
+    case "unreplied_customer_message":
+      return "未返信の相談";
+    case "stale":
+      return "対応停滞";
+    case "emergency":
+      return "緊急相談";
+    case "ai_risk":
+      return "AI確認要";
+  }
+}
+
+function formatAlertSeverityForStaffNotification(severity: AlertSeverity): string {
+  switch (severity) {
+    case "critical":
+      return "緊急";
+    case "high":
+      return "高";
+    case "medium":
+      return "通常";
+    case "low":
+      return "低";
+  }
 }
 
 export class MockStaffNotifier implements StaffNotifier {

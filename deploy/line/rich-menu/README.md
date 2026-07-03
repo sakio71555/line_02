@@ -1,6 +1,7 @@
 # LINE rich menu assets
 
-This directory contains the production rich menu package for the Amami Home LINE Official Account.
+This directory contains the customer-facing rich menu package for an Amami Home LINE Official Account.
+Do not keep this menu as the default on the internal staff notification account.
 
 ## Current menu
 
@@ -46,3 +47,14 @@ LINE_RICH_MENU_APPLY_APPROVED=YES npx pnpm@10.12.1 exec tsx scripts/ops/line_ric
 ```
 
 The apply command reads `LINE_CHANNEL_ACCESS_TOKEN` from the runtime environment. It does not print the token or the rich menu ID.
+
+## Remove the default rich menu
+
+Use this when the LINE Official Account is operated as the internal staff notification account.
+The command cancels the default rich menu without sending LINE messages:
+
+```sh
+LINE_RICH_MENU_REMOVE_APPROVED=YES npx pnpm@10.12.1 exec tsx scripts/ops/line_rich_menu_operator.ts --remove-default
+```
+
+The remove command reads `LINE_CHANNEL_ACCESS_TOKEN` from the runtime environment. It does not print the token or the rich menu ID.
