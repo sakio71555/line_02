@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
 import {
+  type Customer,
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository
@@ -63,6 +64,40 @@ function createTestContext(
     customerRepository,
     messageRepository
   };
+}
+
+function lineTextMessageBody(input: {
+  userId: string;
+  eventId: string;
+  messageId: string;
+  replyToken: string;
+  text: string;
+  timestamp: number;
+}): string {
+  return JSON.stringify({
+    destination: "U_TEST_DESTINATION",
+    events: [
+      {
+        type: "message",
+        mode: "active",
+        timestamp: input.timestamp,
+        source: {
+          type: "user",
+          userId: input.userId
+        },
+        webhookEventId: input.eventId,
+        deliveryContext: {
+          isRedelivery: false
+        },
+        replyToken: input.replyToken,
+        message: {
+          id: input.messageId,
+          type: "text",
+          text: input.text
+        }
+      }
+    ]
+  });
 }
 
 describe("LINE webhook foundation", () => {
@@ -502,6 +537,245 @@ describe("LINE webhook foundation", () => {
       created_at: new Date(1710000005000).toISOString()
     });
     expect(alertRepository.list()).toHaveLength(0);
+  });
+
+  it("guides an unregistered customer through contact-staff category, contact info, and alert creation", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const userId = "U_TEST_USER_CONTACT_STAFF";
+
+    const triggerResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFTRIGGER",
+          messageId: "test-contact-staff-trigger",
+          replyToken: "reply_token_contact_staff_trigger",
+          text: "担当者に相談",
+          timestamp: 1710000006000
+        })
+      )
+    );
+    const categoryResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFCATEGORY",
+          messageId: "test-contact-staff-category",
+          replyToken: "reply_token_contact_staff_category",
+          text: "費用・ローンについて",
+          timestamp: 1710000007000
+        })
+      )
+    );
+    const contactResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFCONTACT",
+          messageId: "test-contact-staff-contact",
+          replyToken: "reply_token_contact_staff_contact",
+          text: "佐藤花子 / 090-1111-2222",
+          timestamp: 1710000008000
+        })
+      )
+    );
+    const bodyResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTCONTACTSTAFFBODY",
+          messageId: "test-contact-staff-body",
+          replyToken: "reply_token_contact_staff_body",
+          text: "住宅ローンと予算について相談したいです。",
+          timestamp: 1710000009000
+        })
+      )
+    );
+    const body = await bodyResponse.json();
+    const customer = customerRepository.list()[0];
+    const messages = messageRepository.list();
+
+    expect(triggerResponse.status).toBe(200);
+    expect(categoryResponse.status).toBe(200);
+    expect(contactResponse.status).toBe(200);
+    expect(bodyResponse.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      line_menu_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      logging: {
+        customers_upserted: 1,
+        messages_inserted: 2,
+        alerts_created: 1,
+        contact_staff_flows_logged: 1,
+        contact_staff_alerts_created: 1,
+        unsupported_events: 0
+      }
+    });
+    expect(lineClient.replies).toHaveLength(4);
+    expect(lineClient.replies[0]).toMatchObject({
+      replyToken: "reply_token_contact_staff_trigger",
+      messages: [
+        {
+          type: "text",
+          text: expect.stringContaining("相談カテゴリを次から選んで"),
+          quickReply: {
+            items: expect.arrayContaining([
+              {
+                type: "action",
+                action: {
+                  type: "message",
+                  label: "費用・ローンについて",
+                  text: "費用・ローンについて"
+                }
+              }
+            ])
+          }
+        }
+      ]
+    });
+    expect(lineClient.replies[1]?.messages[0]?.text).toContain("お名前と電話番号");
+    expect(lineClient.replies[2]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
+    expect(lineClient.replies[3]?.messages[0]?.text).toContain("相談内容を受け付けました");
+    expect(customer).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      line_user_id: userId,
+      display_name: "佐藤花子",
+      phone: "090-1111-2222",
+      response_mode: "human_required",
+      last_customer_message_at: new Date(1710000009000).toISOString()
+    });
+    expect(customer?.interest_tags).toContain("担当者相談連絡先確認済み");
+    expect(messages.map((message) => message.body)).toEqual([
+      "担当者相談カテゴリ選択案内済み",
+      "担当者相談カテゴリ: 費用・ローンについて",
+      "担当者相談連絡先確認案内済み",
+      "担当者相談連絡先確認済み",
+      "担当者相談内容入力案内済み",
+      "住宅ローンと予算について相談したいです。",
+      "担当者相談受付済み"
+    ]);
+    expect(messages[5]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer?.id,
+      line_message_id: "test-contact-staff-body",
+      role: "customer",
+      message_type: "text"
+    });
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer?.id,
+      alert_type: "unreplied_customer_message",
+      status: "open",
+      severity: "high"
+    });
+    expect(alertRepository.list()[0]?.message).not.toContain("住宅ローンと予算");
+  });
+
+  it("skips contact info collection for information-registered contact-staff customers", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const userId = "U_TEST_USER_REGISTERED_CONTACT_STAFF";
+    const existingCustomer: Customer = {
+      id: "customer_registered_contact_staff",
+      tenant_id: "tenant_amamihome",
+      line_user_id: userId,
+      display_name: "登録済み 太郎",
+      picture_url: null,
+      phone: "090-2222-3333",
+      email: null,
+      postal_code: null,
+      address: null,
+      interest_tags: ["情報登録済み"],
+      response_mode: "bot_auto",
+      status: "active",
+      last_message_at: null,
+      last_customer_message_at: null,
+      last_staff_reply_at: null,
+      created_at: "2026-07-03T00:00:00.000Z",
+      updated_at: "2026-07-03T00:00:00.000Z"
+    };
+
+    await customerRepository.save(existingCustomer);
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREGISTEREDCONTACTSTAFFTRIGGER",
+          messageId: "test-registered-contact-staff-trigger",
+          replyToken: "reply_token_registered_contact_staff_trigger",
+          text: "担当者に相談",
+          timestamp: 1710000010000
+        })
+      )
+    );
+    const categoryResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREGISTEREDCONTACTSTAFFCATEGORY",
+          messageId: "test-registered-contact-staff-category",
+          replyToken: "reply_token_registered_contact_staff_category",
+          text: "家づくりについて",
+          timestamp: 1710000011000
+        })
+      )
+    );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREGISTEREDCONTACTSTAFFBODY",
+          messageId: "test-registered-contact-staff-body",
+          replyToken: "reply_token_registered_contact_staff_body",
+          text: "平屋の進め方を担当者に相談したいです。",
+          timestamp: 1710000012000
+        })
+      )
+    );
+    const categoryBody = await categoryResponse.json();
+    const messages = messageRepository.list();
+    const customer = customerRepository.list()[0];
+
+    expect(categoryBody).toMatchObject({
+      logging: {
+        messages_inserted: 2,
+        alerts_created: 0,
+        contact_staff_flows_logged: 1,
+        contact_staff_alerts_created: 0
+      }
+    });
+    expect(lineClient.replies[1]?.messages[0]?.text).not.toContain("お名前と電話番号");
+    expect(lineClient.replies[1]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
+    expect(messages.map((message) => message.body)).toEqual([
+      "担当者相談カテゴリ選択案内済み",
+      "担当者相談カテゴリ: 家づくりについて",
+      "担当者相談内容入力案内済み",
+      "平屋の進め方を担当者に相談したいです。",
+      "担当者相談受付済み"
+    ]);
+    expect(customer).toMatchObject({
+      display_name: "登録済み 太郎",
+      phone: "090-2222-3333",
+      response_mode: "human_required"
+    });
+    expect(alertRepository.list()).toHaveLength(1);
   });
 
   it("stores the LINE profile display name when profile lookup succeeds", async () => {

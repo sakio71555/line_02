@@ -148,6 +148,14 @@
 - Loop 309 unexpected LINE real send disable and safety reset: `11_codex_tasks/309_unexpected_line_real_send_disable_and_safety_reset.md`
 - Loop 311 LINE canary blocker remediation by operator-controlled window: `11_codex_tasks/311_line_canary_blocker_remediation_by_operator_window.md`
 - Loop 312 production staff reply real-send UI gate implementation: `11_codex_tasks/312_production_staff_reply_real_send_ui_gate.md`
+- Loop 313 LIFF customer registration and contact change: `11_codex_tasks/313_liff_customer_registration_and_contact_change.md`
+- Loop 314 internal staff notification LINE account boundary: `11_codex_tasks/314_internal_staff_notification_line_account_boundary.md`
+- Loop 315 customer LINE update staff alert entrypoints: `11_codex_tasks/315_customer_line_update_staff_alert_entrypoints.md`
+- Loop 316 model house reservation rich menu guidance: `11_codex_tasks/316_model_house_reservation_rich_menu_guidance.md`
+- Loop 317 home building consultation rich menu guidance: `11_codex_tasks/317_home_building_consultation_rich_menu_guidance.md`
+- Loop 318 works rich menu guidance: `11_codex_tasks/318_works_rich_menu_guidance.md`
+- Loop 319 catalog request rich menu guidance: `11_codex_tasks/319_catalog_request_rich_menu_guidance.md`
+- Loop 320 contact staff rich menu flow: `11_codex_tasks/320_contact_staff_rich_menu_flow.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 - LINE canary operator window helper: `../scripts/ops/line_canary_window_operator.sh`

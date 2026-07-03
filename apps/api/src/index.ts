@@ -27,6 +27,7 @@ import {
   type AlertRepository,
   type Customer,
   type CustomerRepository,
+  type LineReplyInstruction,
   type Message,
   type MessageRepository,
   type StaffAuthLookup,
@@ -935,7 +936,10 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         alertRepository,
         getLineDisplayName: (lineUserId) => getLineDisplayNameFromLineProfile(lineClient, lineUserId)
       });
-      const lineMenuReplies = await replyToCustomerRichMenuGuideEvents(payload.events, lineClient);
+      const { line_reply_instructions: lineReplyInstructions, ...publicLogging } = logging;
+      const guideReplies = await replyToCustomerRichMenuGuideEvents(payload.events, lineClient);
+      const flowReplies = await replyToLineReplyInstructions(lineReplyInstructions, lineClient);
+      const lineMenuReplies = combineLineReplyCounts(guideReplies, flowReplies);
 
       return c.json({
         ok: true,
@@ -945,7 +949,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         event_count: payload.events.length,
         events: payload.events,
         line_menu_replies: lineMenuReplies,
-        logging
+        logging: publicLogging
       });
     } catch {
       return c.json({ ok: false, error: "malformed_line_webhook_body" }, 400);
@@ -989,6 +993,61 @@ async function replyToCustomerRichMenuGuideEvents(
   }
 
   return { sent, failed, skipped };
+}
+
+async function replyToLineReplyInstructions(
+  instructions: LineReplyInstruction[],
+  lineClient: LineClient
+): Promise<{ sent: number; failed: number; skipped: number }> {
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const instruction of instructions) {
+    if (!instruction.reply_token) {
+      skipped += 1;
+      continue;
+    }
+
+    try {
+      await lineClient.replyMessage(instruction.reply_token, [
+        {
+          type: "text",
+          text: instruction.text,
+          ...(instruction.quick_reply_texts && instruction.quick_reply_texts.length > 0
+            ? {
+                quickReply: {
+                  items: instruction.quick_reply_texts.map((text) => ({
+                    type: "action" as const,
+                    action: {
+                      type: "message" as const,
+                      label: text,
+                      text
+                    }
+                  }))
+                }
+              }
+            : {})
+        }
+      ]);
+      sent += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return { sent, failed, skipped };
+}
+
+function combineLineReplyCounts(
+  first: { sent: number; failed: number; skipped: number },
+  second: { sent: number; failed: number; skipped: number }
+): { sent: number; failed: number; skipped: number } {
+  return {
+    sent: first.sent + second.sent,
+    failed: first.failed + second.failed,
+    skipped: first.skipped + second.skipped
+  };
 }
 
 export const app = createApiApp();

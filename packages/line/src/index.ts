@@ -110,9 +110,25 @@ function readNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+export interface LineQuickReplyMessageAction {
+  type: "message";
+  label: string;
+  text: string;
+}
+
+export interface LineQuickReplyItem {
+  type: "action";
+  action: LineQuickReplyMessageAction;
+}
+
+export interface LineQuickReply {
+  items: LineQuickReplyItem[];
+}
+
 export interface LineReplyMessage {
   type: "text";
   text: string;
+  quickReply?: LineQuickReply;
 }
 
 export interface LineUserProfile {

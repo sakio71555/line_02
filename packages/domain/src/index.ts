@@ -483,6 +483,7 @@ export interface NotifyOpenAlertsResult {
 export interface MessageLoggingLineEvent {
   type: string;
   timestamp: number | null;
+  reply_token?: string | null;
   source_user_id: string | null;
   message_id: string | null;
   message_type: string | null;
@@ -505,7 +506,16 @@ export interface LogLineWebhookEventsResult {
   messages_inserted: number;
   alerts_created: number;
   rich_menu_guides_logged: number;
+  contact_staff_flows_logged: number;
+  contact_staff_alerts_created: number;
   unsupported_events: number;
+  line_reply_instructions: LineReplyInstruction[];
+}
+
+export interface LineReplyInstruction {
+  reply_token: string | null;
+  text: string;
+  quick_reply_texts?: string[];
 }
 
 export interface CustomerRichMenuGuideAction {
@@ -584,6 +594,32 @@ export function resolveCustomerRichMenuGuideAction(
   return (
     customerRichMenuGuideActions.find((action) => action.trigger_text === normalized) ?? null
   );
+}
+
+export const customerContactStaffTriggerText = "担当者に相談";
+export const customerContactStaffCategories = [
+  "家づくりについて",
+  "モデルハウス見学について",
+  "資料請求について",
+  "費用・ローンについて",
+  "その他"
+] as const;
+
+const contactStaffCategoryPromptTimelineBody = "担当者相談カテゴリ選択案内済み";
+const contactStaffCategoryTimelinePrefix = "担当者相談カテゴリ: ";
+const contactStaffContactPromptTimelineBody = "担当者相談連絡先確認案内済み";
+const contactStaffContactConfirmedTimelineBody = "担当者相談連絡先確認済み";
+const contactStaffContentPromptTimelineBody = "担当者相談内容入力案内済み";
+const contactStaffAcceptedTimelineBody = "担当者相談受付済み";
+
+export function resolveCustomerContactStaffCategory(text: string | null): string | null {
+  const normalized = text?.trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  return customerContactStaffCategories.find((category) => category === normalized) ?? null;
 }
 
 export async function upsertLineCustomer(
@@ -734,6 +770,43 @@ export async function insertRichMenuGuideTimelineMessage(
     message_type: parsed.message_type,
     body: parsed.body ?? null,
     media_storage_path: parsed.media_storage_path ?? null,
+    staff_user_id: parsed.staff_user_id ?? null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: null,
+    created_at: input.created_at
+  };
+
+  return repository.insert(message);
+}
+
+async function insertSystemTextTimelineMessage(
+  repository: MessageRepository,
+  input: {
+    tenant_id: string;
+    customer_id: string;
+    body: string;
+    created_at: string;
+  },
+  options: { createId?: () => string } = {}
+): Promise<Message> {
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer_id,
+    line_message_id: null,
+    role: "system",
+    message_type: "text",
+    body: input.body
+  });
+  const message: Message = {
+    id: options.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: parsed.consultation_id ?? null,
+    line_message_id: parsed.line_message_id ?? null,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: null,
     staff_user_id: parsed.staff_user_id ?? null,
     ai_generated: parsed.ai_generated,
     sent_to_line_at: null,
@@ -915,7 +988,10 @@ export async function logLineWebhookEvents(
   let messagesInserted = 0;
   let alertsCreated = 0;
   let richMenuGuidesLogged = 0;
+  let contactStaffFlowsLogged = 0;
+  let contactStaffAlertsCreated = 0;
   let unsupportedEvents = 0;
+  const lineReplyInstructions: LineReplyInstruction[] = [];
   const serviceOptions = createMessageLoggingServiceOptions(input);
   const lineDisplayNameCache = new Map<string, string | null>();
 
@@ -981,7 +1057,73 @@ export async function logLineWebhookEvents(
         continue;
       }
 
+      if (event.text?.trim() === customerContactStaffTriggerText) {
+        const customer = await upsertLineCustomer(
+          input.customerRepository,
+          {
+            tenant_id: input.tenant_id,
+            line_user_id: event.source_user_id,
+            display_name: displayName
+          },
+          serviceOptions
+        );
+        await insertSystemTextTimelineMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: customer.id,
+            body: contactStaffCategoryPromptTimelineBody,
+            created_at: eventTime
+          },
+          serviceOptions
+        );
+        lineReplyInstructions.push({
+          reply_token: event.reply_token ?? null,
+          text: buildContactStaffCategoryPromptReply(),
+          quick_reply_texts: [...customerContactStaffCategories]
+        });
+        customersUpserted += 1;
+        messagesInserted += 1;
+        contactStaffFlowsLogged += 1;
+        continue;
+      }
+
       const customer = await upsertLineCustomer(
+        input.customerRepository,
+        {
+          tenant_id: input.tenant_id,
+          line_user_id: event.source_user_id,
+          display_name: displayName
+        },
+        serviceOptions
+      );
+      const contactStaffFlow = await handleContactStaffFlowMessage({
+        tenant_id: input.tenant_id,
+        customer,
+        text: event.text,
+        line_message_id: event.message_id,
+        event_time: eventTime,
+        reply_token: event.reply_token ?? null,
+        customerRepository: input.customerRepository,
+        messageRepository: input.messageRepository,
+        alertRepository: input.alertRepository,
+        createId: input.createId,
+        serviceOptions
+      });
+
+      if (contactStaffFlow.handled) {
+        customersUpserted += 1;
+        messagesInserted += contactStaffFlow.messages_inserted;
+        alertsCreated += contactStaffFlow.alert_created ? 1 : 0;
+        contactStaffAlertsCreated += contactStaffFlow.alert_created ? 1 : 0;
+        contactStaffFlowsLogged += 1;
+        if (contactStaffFlow.reply) {
+          lineReplyInstructions.push(contactStaffFlow.reply);
+        }
+        continue;
+      }
+
+      const updatedCustomer = await upsertLineCustomer(
         input.customerRepository,
         {
           tenant_id: input.tenant_id,
@@ -996,7 +1138,7 @@ export async function logLineWebhookEvents(
         input.messageRepository,
         {
           tenant_id: input.tenant_id,
-          customer_id: customer.id,
+          customer_id: updatedCustomer.id,
           line_message_id: event.message_id,
           body: event.text,
           created_at: eventTime
@@ -1006,7 +1148,7 @@ export async function logLineWebhookEvents(
       if (input.alertRepository) {
         const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
           tenant_id: input.tenant_id,
-          customer,
+          customer: updatedCustomer,
           alertRepository: input.alertRepository,
           ...(input.createId ? { createId: input.createId } : {}),
           now: () => eventTime
@@ -1029,8 +1171,391 @@ export async function logLineWebhookEvents(
     messages_inserted: messagesInserted,
     alerts_created: alertsCreated,
     rich_menu_guides_logged: richMenuGuidesLogged,
-    unsupported_events: unsupportedEvents
+    contact_staff_flows_logged: contactStaffFlowsLogged,
+    contact_staff_alerts_created: contactStaffAlertsCreated,
+    unsupported_events: unsupportedEvents,
+    line_reply_instructions: lineReplyInstructions
   };
+}
+
+async function handleContactStaffFlowMessage(input: {
+  tenant_id: string;
+  customer: Customer;
+  text: string | null;
+  line_message_id: string | null;
+  event_time: string;
+  reply_token: string | null;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+  alertRepository: AlertRepository | undefined;
+  createId: (() => string) | undefined;
+  serviceOptions: { createId?: () => string; now?: () => string };
+}): Promise<{
+  handled: boolean;
+  messages_inserted: number;
+  alert_created: boolean;
+  reply: LineReplyInstruction | null;
+}> {
+  const category = resolveCustomerContactStaffCategory(input.text);
+  const timeline = await input.messageRepository.listByCustomer(input.tenant_id, input.customer.id);
+  const flowState = resolveContactStaffFlowState(timeline);
+
+  if (category && flowState.stage === "awaiting_category") {
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: `${contactStaffCategoryTimelinePrefix}${category}`,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+
+    if (isCustomerInformationRegistered(input.customer)) {
+      await insertSystemTextTimelineMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: input.customer.id,
+          body: contactStaffContentPromptTimelineBody,
+          created_at: input.event_time
+        },
+        input.serviceOptions
+      );
+
+      return {
+        handled: true,
+        messages_inserted: 2,
+        alert_created: false,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffContentPromptReply(category)
+        }
+      };
+    }
+
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: contactStaffContactPromptTimelineBody,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+
+    return {
+      handled: true,
+      messages_inserted: 2,
+      alert_created: false,
+      reply: {
+        reply_token: input.reply_token,
+        text: buildContactStaffContactPromptReply(category)
+      }
+    };
+  }
+
+  if (flowState.stage === "awaiting_contact_info") {
+    const contactInfo = parseContactStaffContactInfo(input.text);
+
+    if (!contactInfo) {
+      return {
+        handled: true,
+        messages_inserted: 0,
+        alert_created: false,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffContactInfoRetryReply(flowState.category)
+        }
+      };
+    }
+
+    const updatedCustomer = await input.customerRepository.save({
+      ...input.customer,
+      display_name: contactInfo.name,
+      phone: contactInfo.phone,
+      interest_tags: mergeContactStaffInterestTag(input.customer.interest_tags),
+      updated_at: input.event_time
+    });
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        body: contactStaffContactConfirmedTimelineBody,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        body: contactStaffContentPromptTimelineBody,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+
+    return {
+      handled: true,
+      messages_inserted: 2,
+      alert_created: false,
+      reply: {
+        reply_token: input.reply_token,
+        text: buildContactStaffContentPromptReply(flowState.category)
+      }
+    };
+  }
+
+  if (flowState.stage === "awaiting_consultation_body") {
+    const body = input.text?.trim();
+
+    if (!body) {
+      return {
+        handled: true,
+        messages_inserted: 0,
+        alert_created: false,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffContentRetryReply(flowState.category)
+        }
+      };
+    }
+
+    const updatedCustomer = await upsertLineCustomer(
+      input.customerRepository,
+      {
+        tenant_id: input.tenant_id,
+        line_user_id: input.customer.line_user_id ?? "",
+        display_name: input.customer.display_name,
+        response_mode: "human_required",
+        last_customer_message_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    await insertLineTextMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        line_message_id: input.line_message_id ?? createDefaultId(),
+        body,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        body: contactStaffAcceptedTimelineBody,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+
+    let alertCreated = false;
+    if (input.alertRepository) {
+      const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
+        tenant_id: input.tenant_id,
+        customer: updatedCustomer,
+        alertRepository: input.alertRepository,
+        ...(input.createId ? { createId: input.createId } : {}),
+        now: () => input.event_time
+      });
+      alertCreated = alertResult.created;
+    }
+
+    return {
+      handled: true,
+      messages_inserted: 2,
+      alert_created: alertCreated,
+      reply: {
+        reply_token: input.reply_token,
+        text: buildContactStaffAcceptedReply()
+      }
+    };
+  }
+
+  return {
+    handled: false,
+    messages_inserted: 0,
+    alert_created: false,
+    reply: null
+  };
+}
+
+function resolveContactStaffFlowState(messages: Message[]): {
+  stage: "none" | "awaiting_category" | "awaiting_contact_info" | "awaiting_consultation_body";
+  category: string | null;
+} {
+  const lastAcceptedIndex = findLastMessageIndex(
+    messages,
+    (message) => message.role === "system" && message.body === contactStaffAcceptedTimelineBody
+  );
+  const activeMessages = messages.slice(lastAcceptedIndex + 1);
+  const hasCategoryPrompt = activeMessages.some(
+    (message) => message.role === "system" && message.body === contactStaffCategoryPromptTimelineBody
+  );
+
+  if (!hasCategoryPrompt) {
+    return { stage: "none", category: null };
+  }
+
+  const categoryMessage = findLastMessage(activeMessages, (message) =>
+    Boolean(
+      message.role === "system" && message.body?.startsWith(contactStaffCategoryTimelinePrefix)
+    )
+  );
+  const category =
+    categoryMessage?.body?.slice(contactStaffCategoryTimelinePrefix.length).trim() ?? null;
+
+  if (!category) {
+    return { stage: "awaiting_category", category: null };
+  }
+
+  const contactPromptIndex = findLastMessageIndex(
+    activeMessages,
+    (message) => message.role === "system" && message.body === contactStaffContactPromptTimelineBody
+  );
+  const contactConfirmedIndex = findLastMessageIndex(
+    activeMessages,
+    (message) =>
+      message.role === "system" && message.body === contactStaffContactConfirmedTimelineBody
+  );
+  const contentPromptIndex = findLastMessageIndex(
+    activeMessages,
+    (message) => message.role === "system" && message.body === contactStaffContentPromptTimelineBody
+  );
+
+  if (contactPromptIndex >= 0 && contactConfirmedIndex < contactPromptIndex) {
+    return { stage: "awaiting_contact_info", category };
+  }
+
+  if (contentPromptIndex >= 0) {
+    return { stage: "awaiting_consultation_body", category };
+  }
+
+  return { stage: "none", category: null };
+}
+
+function findLastMessage(
+  messages: Message[],
+  predicate: (message: Message) => boolean
+): Message | null {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+
+    if (message && predicate(message)) {
+      return message;
+    }
+  }
+
+  return null;
+}
+
+function findLastMessageIndex(
+  messages: Message[],
+  predicate: (message: Message) => boolean
+): number {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+
+    if (message && predicate(message)) {
+      return index;
+    }
+  }
+
+  return -1;
+}
+
+function isCustomerInformationRegistered(customer: Customer): boolean {
+  return customer.interest_tags.includes("情報登録済み");
+}
+
+function mergeContactStaffInterestTag(existingTags: string[]): string[] {
+  return Array.from(new Set([...existingTags, "担当者相談連絡先確認済み"])).slice(0, 20);
+}
+
+function parseContactStaffContactInfo(
+  text: string | null
+): { name: string; phone: string } | null {
+  const normalized = text?.trim().replace(/\s+/gu, " ");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const phoneMatch = normalized.match(/(?:\+?81[-\s]?)?0\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4}/u);
+  const phone = phoneMatch?.[0]?.trim() ?? "";
+  const name = normalized
+    .replace(phone, "")
+    .replace(/[／/,，、:：-]+/gu, " ")
+    .trim();
+
+  if (!name || !phone) {
+    return null;
+  }
+
+  return {
+    name: name.slice(0, 100),
+    phone: phone.slice(0, 50)
+  };
+}
+
+function buildContactStaffCategoryPromptReply(): string {
+  return [
+    "担当者に相談ですね。",
+    "相談カテゴリを次から選んで、そのままLINEで送ってください。",
+    "",
+    ...customerContactStaffCategories.map((category) => `・${category}`)
+  ].join("\n");
+}
+
+function buildContactStaffContactPromptReply(category: string | null): string {
+  return [
+    category ? `カテゴリ「${category}」で受け付けます。` : "カテゴリを受け付けました。",
+    "ご本人確認のため、お名前と電話番号を次の形式で送ってください。",
+    "",
+    "例：山田太郎 / 090-0000-0000"
+  ].join("\n");
+}
+
+function buildContactStaffContactInfoRetryReply(category: string | null): string {
+  return [
+    category ? `カテゴリ「${category}」で受け付けています。` : "担当者相談を受け付けています。",
+    "お名前と電話番号を確認できませんでした。",
+    "次の形式で送ってください。",
+    "",
+    "例：山田太郎 / 090-0000-0000"
+  ].join("\n");
+}
+
+function buildContactStaffContentPromptReply(category: string | null): string {
+  return [
+    category ? `カテゴリ「${category}」で受け付けます。` : "担当者相談を受け付けます。",
+    "相談内容をこのままLINEで送ってください。",
+    "担当者がAdmin画面で確認して返信します。"
+  ].join("\n");
+}
+
+function buildContactStaffContentRetryReply(category: string | null): string {
+  return [
+    category ? `カテゴリ「${category}」で受け付けています。` : "担当者相談を受け付けています。",
+    "相談内容を入力して送ってください。"
+  ].join("\n");
+}
+
+function buildContactStaffAcceptedReply(): string {
+  return [
+    "相談内容を受け付けました。",
+    "担当者が確認して、管理画面から返信します。"
+  ].join("\n");
 }
 
 function resolveNextCustomerResponseMode(
