@@ -51,6 +51,7 @@ a {
 a,
 button,
 input,
+select,
 textarea,
 summary {
   -webkit-tap-highlight-color: transparent;
@@ -59,6 +60,7 @@ summary {
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
+select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible {
   outline: 3px solid var(--admin-focus);
@@ -150,6 +152,7 @@ label {
 }
 
 input,
+select,
 textarea {
   border: 1px solid var(--admin-border-strong);
   border-radius: var(--admin-radius-sm);
@@ -161,7 +164,8 @@ textarea {
   width: 100%;
 }
 
-input:disabled {
+input:disabled,
+select:disabled {
   background: #edf1f5;
   color: #607080;
 }
@@ -443,6 +447,55 @@ dl.detail-grid {
   background: #fff;
   border-color: #b9c7d6;
   color: #1f2933;
+}
+
+.liff-form-page {
+  display: flex;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 18px 14px;
+}
+
+.liff-form-panel {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  box-shadow: var(--admin-shadow-sm);
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+  padding: 18px;
+  width: 100%;
+}
+
+.liff-form,
+.liff-confirmation {
+  display: grid;
+  gap: 14px;
+}
+
+.liff-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.liff-form button,
+.liff-confirmation .confirmation-actions button {
+  width: 100%;
+}
+
+.liff-confirmation .confirmation-actions button:last-child {
+  background: var(--admin-accent);
+  border-color: var(--admin-accent-strong);
+  color: #fff;
+}
+
+.liff-success-panel h2 {
+  margin-bottom: 6px;
+}
+
+.liff-success-panel p {
+  margin: 0;
 }
 
 .home-hero {

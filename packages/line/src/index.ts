@@ -123,6 +123,32 @@ export interface LineUserProfile {
   language: string | null;
 }
 
+export interface LineIdTokenIdentity {
+  userId: string;
+  displayName: string | null;
+  pictureUrl: string | null;
+  email: string | null;
+}
+
+export interface VerifyLineIdTokenInput {
+  idToken: string;
+  channelId: string;
+}
+
+export interface LineIdTokenVerifier {
+  verify(input: VerifyLineIdTokenInput): Promise<LineIdTokenIdentity>;
+}
+
+export interface LineIdTokenVerifyFetchResponse {
+  ok: boolean;
+  text(): Promise<string>;
+}
+
+export type LineIdTokenVerifyFetch = (
+  input: string,
+  init: RequestInit
+) => Promise<LineIdTokenVerifyFetchResponse>;
+
 export interface LineClient {
   replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void>;
   pushMessage(to: string, messages: LineReplyMessage[]): Promise<void>;
@@ -177,6 +203,49 @@ export class LineMessagingApiError extends Error {
   constructor(message = "LINE Messaging API request failed.") {
     super(message);
     this.name = "LineMessagingApiError";
+  }
+}
+
+export class LineIdTokenVerificationError extends Error {
+  constructor(message = "LINE ID token verification failed.") {
+    super(message);
+    this.name = "LineIdTokenVerificationError";
+  }
+}
+
+export class FetchLineIdTokenVerifier implements LineIdTokenVerifier {
+  private readonly endpoint: string;
+  private readonly fetchImplementation: LineIdTokenVerifyFetch;
+
+  constructor(input: { endpoint?: string; fetch?: LineIdTokenVerifyFetch } = {}) {
+    this.endpoint = input.endpoint ?? "https://api.line.me/oauth2/v2.1/verify";
+    this.fetchImplementation = input.fetch ?? (fetch.bind(globalThis) as LineIdTokenVerifyFetch);
+  }
+
+  async verify(input: VerifyLineIdTokenInput): Promise<LineIdTokenIdentity> {
+    const idToken = input.idToken.trim();
+    const channelId = input.channelId.trim();
+
+    if (!idToken || !channelId) {
+      throw new LineIdTokenVerificationError();
+    }
+
+    const response = await this.fetchImplementation(this.endpoint, {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        id_token: idToken,
+        client_id: channelId
+      }).toString()
+    });
+
+    if (!response.ok) {
+      throw new LineIdTokenVerificationError();
+    }
+
+    return parseLineIdTokenVerificationResponse(await response.text(), channelId);
   }
 }
 
@@ -355,5 +424,36 @@ function parseLineUserProfileResponse(body: string): LineUserProfile {
     pictureUrl: readString(parsed.pictureUrl),
     statusMessage: readString(parsed.statusMessage),
     language: readString(parsed.language)
+  };
+}
+
+function parseLineIdTokenVerificationResponse(
+  body: string,
+  expectedChannelId: string
+): LineIdTokenIdentity {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    throw new LineIdTokenVerificationError();
+  }
+
+  if (!isRecord(parsed)) {
+    throw new LineIdTokenVerificationError();
+  }
+
+  const userId = readString(parsed.sub);
+  const audience = readString(parsed.aud);
+
+  if (!userId || (audience && audience !== expectedChannelId)) {
+    throw new LineIdTokenVerificationError();
+  }
+
+  return {
+    userId,
+    displayName: readString(parsed.name),
+    pictureUrl: readString(parsed.picture),
+    email: readString(parsed.email)
   };
 }

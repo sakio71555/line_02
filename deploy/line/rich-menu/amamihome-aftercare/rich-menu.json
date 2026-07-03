@@ -67,9 +67,9 @@
         "height": 843
       },
       "action": {
-        "type": "message",
+        "type": "uri",
         "label": "連絡先変更",
-        "text": "連絡先変更"
+        "uri": "https://admin.taiyolabel.site/line/customer-registration?mode=contact-change"
       }
     },
     {

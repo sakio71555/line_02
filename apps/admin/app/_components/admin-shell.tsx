@@ -9,7 +9,7 @@ const navItems = [
   { href: "/select-tenant", label: "利用先" }
 ] as const;
 
-const hideChromePaths = new Set(["/login", "/logout"]);
+const hideChromePaths = new Set(["/login", "/logout", "/line/customer-registration"]);
 
 export function AdminShell({ children }: { children: ReactNode }) {
   return <AdminShellView pathname={usePathname() ?? "/"}>{children}</AdminShellView>;

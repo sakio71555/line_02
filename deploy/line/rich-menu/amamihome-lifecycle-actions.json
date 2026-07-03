@@ -5,8 +5,8 @@
       {
         "action_key": "initial.customer_info_register",
         "label": "お客様情報登録",
-        "line_action_type": "message",
-        "target_category": "line_in_chat"
+        "line_action_type": "uri",
+        "target_category": "external_url"
       },
       {
         "action_key": "initial.model_house_reservation",
@@ -105,8 +105,8 @@
       {
         "action_key": "aftercare.contact_change",
         "label": "連絡先変更",
-        "line_action_type": "message",
-        "target_category": "line_in_chat"
+        "line_action_type": "uri",
+        "target_category": "external_url"
       },
       {
         "action_key": "aftercare.contact_staff",

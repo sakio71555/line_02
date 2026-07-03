@@ -15,9 +15,9 @@
         "height": 843
       },
       "action": {
-        "type": "message",
+        "type": "uri",
         "label": "お客様情報登録",
-        "text": "お客様情報登録"
+        "uri": "https://admin.taiyolabel.site/line/customer-registration"
       }
     },
     {

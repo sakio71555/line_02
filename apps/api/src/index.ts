@@ -31,10 +31,14 @@ import {
   type StaffNotifier
 } from "@amami-line-crm/domain";
 import {
+  FetchLineIdTokenVerifier,
+  LineIdTokenVerificationError,
   MockLineClient,
   parseLineWebhookPayload,
   verifyLineSignature,
-  type LineClient
+  type LineClient,
+  type LineIdTokenIdentity,
+  type LineIdTokenVerifier
 } from "@amami-line-crm/line";
 import {
   AMAMI_HOME_TENANT_ID,
@@ -103,6 +107,7 @@ export interface ApiAppDependencies {
   authenticatedSelectedTenantId?: string | null;
   lineClientMode?: LineClientMode;
   linePushIdempotencyStore?: LinePushIdempotencyStore;
+  lineIdTokenVerifier?: LineIdTokenVerifier;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
 }
@@ -123,6 +128,7 @@ const defaultMessageRepository = new InMemoryMessageRepository();
 const defaultLineClient = new MockLineClient();
 const defaultStaffNotifier = new MockStaffNotifier();
 const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository([]);
+const defaultLineIdTokenVerifier = new FetchLineIdTokenVerifier();
 
 function shouldCreateRuntimeRepositories(dependencies: ApiAppDependencies): boolean {
   return (
@@ -182,6 +188,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     dependencies.lineClientMode ?? runtimeLineClient?.lineClientMode ?? inferLineClientMode(env);
   const linePushIdempotencyStore =
     dependencies.linePushIdempotencyStore ?? new InMemoryLinePushIdempotencyStore();
+  const lineIdTokenVerifier = dependencies.lineIdTokenVerifier ?? defaultLineIdTokenVerifier;
   const adminAuthRuntime =
     dependencies.adminAuthRuntime ??
     (isProductionRuntime(env)
@@ -205,6 +212,92 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         line_real_push_enabled: config.line.realPushEnabled
       },
       external_connections: "disabled"
+    });
+  });
+
+  api.get("/api/liff/runtime-config", (c) => {
+    const liffId = resolveLiffId(env);
+
+    return c.json({
+      ok: true,
+      liff_id: liffId,
+      liff_id_configured: Boolean(liffId)
+    });
+  });
+
+  api.post("/api/liff/customer-profile", async (c) => {
+    const requestBody = await readLiffCustomerProfileBody(c.req.raw);
+
+    if (!requestBody) {
+      return c.json({ ok: false, error: "invalid_liff_customer_profile_body" }, 400);
+    }
+
+    const lineIdTokenChannelId = resolveLineIdTokenChannelId(env, config.line.channelId);
+
+    if (!lineIdTokenChannelId) {
+      return c.json({ ok: false, error: "line_liff_channel_id_not_configured" }, 500);
+    }
+
+    let identity: LineIdTokenIdentity;
+
+    try {
+      identity = await lineIdTokenVerifier.verify({
+        idToken: requestBody.idToken,
+        channelId: lineIdTokenChannelId
+      });
+    } catch (error) {
+      if (error instanceof LineIdTokenVerificationError) {
+        return c.json({ ok: false, error: "invalid_line_id_token" }, 401);
+      }
+
+      return c.json({ ok: false, error: "line_id_token_verification_failed" }, 502);
+    }
+
+    const nowIso = now?.() ?? new Date().toISOString();
+    const existing = await customerRepository.findByTenantAndLineUserId(
+      config.tenant.id,
+      identity.userId
+    );
+    const savedCustomer = await customerRepository.save(
+      buildLiffCustomerProfileUpsert({
+        existing,
+        identity,
+        input: requestBody,
+        tenantId: config.tenant.id,
+        now: nowIso
+      })
+    );
+    const message = await messageRepository.insert(
+      buildLiffCustomerProfileTimelineMessage({
+        customer: savedCustomer,
+        input: requestBody,
+        now: nowIso
+      })
+    );
+
+    return c.json({
+      ok: true,
+      tenant_id: config.tenant.id,
+      customer_id: savedCustomer.id,
+      customer: {
+        id: savedCustomer.id,
+        tenant_id: savedCustomer.tenant_id,
+        line_display_name: savedCustomer.display_name,
+        phone: savedCustomer.phone,
+        email: savedCustomer.email,
+        postal_code: savedCustomer.postal_code,
+        address: savedCustomer.address,
+        tags: savedCustomer.interest_tags,
+        updated_at: savedCustomer.updated_at
+      },
+      timeline_message: {
+        id: message.id,
+        role: message.role,
+        message_type: message.message_type,
+        created_at: message.created_at
+      },
+      verified_line_identity: true,
+      line_user_id_recorded: false
     });
   });
 
@@ -1222,6 +1315,261 @@ async function getLineDisplayNameFromLineProfile(
   } catch {
     return null;
   }
+}
+
+interface LiffCustomerProfileRequest {
+  idToken: string;
+  mode: "customer_registration" | "contact_change";
+  displayName: string | null;
+  phone: string | null;
+  email: string | null;
+  postalCode: string | null;
+  address: string | null;
+  consultationType: string | null;
+  consultationBody: string | null;
+  preferredContactMethod: string | null;
+  preferredContactTime: string | null;
+  notes: string | null;
+  interestTags: string[];
+}
+
+async function readLiffCustomerProfileBody(
+  request: Request
+): Promise<LiffCustomerProfileRequest | null> {
+  let parsed: unknown;
+
+  try {
+    parsed = await request.json();
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  const idToken = readJsonString(parsed.id_token) ?? readJsonString(parsed.idToken);
+
+  if (!idToken) {
+    return null;
+  }
+
+  const email = normalizeOptionalText(parsed.email);
+
+  if (email && !isValidEmail(email)) {
+    return null;
+  }
+
+  const mode =
+    readJsonString(parsed.mode) === "contact_change" ? "contact_change" : "customer_registration";
+  const displayName = normalizeOptionalText(parsed.display_name ?? parsed.displayName);
+  const phone = normalizeOptionalText(parsed.phone);
+  const address = normalizeOptionalText(parsed.address);
+  const consultationType = normalizeOptionalText(
+    parsed.consultation_type ?? parsed.consultationType
+  );
+  const consultationBody = normalizeOptionalText(
+    parsed.consultation_body ?? parsed.consultationBody
+  );
+  const preferredContactMethod = normalizeOptionalText(
+    parsed.preferred_contact_method ?? parsed.preferredContactMethod
+  );
+  const preferredContactTime = normalizeOptionalText(
+    parsed.preferred_contact_time ?? parsed.preferredContactTime
+  );
+  const notes = normalizeOptionalText(parsed.notes);
+
+  if (!displayName || !phone || !address) {
+    return null;
+  }
+
+  if (
+    mode === "customer_registration" &&
+    (!consultationType || !consultationBody || !preferredContactMethod)
+  ) {
+    return null;
+  }
+
+  return {
+    idToken,
+    mode,
+    displayName,
+    phone,
+    email,
+    postalCode: normalizeOptionalText(parsed.postal_code ?? parsed.postalCode),
+    address,
+    consultationType,
+    consultationBody,
+    preferredContactMethod,
+    preferredContactTime,
+    notes,
+    interestTags: normalizeInterestTags(parsed.interest_tags ?? parsed.interestTags)
+  };
+}
+
+function buildLiffCustomerProfileUpsert(input: {
+  existing: Customer | null;
+  identity: LineIdTokenIdentity;
+  input: LiffCustomerProfileRequest;
+  tenantId: string;
+  now: string;
+}): Customer {
+  const existing = input.existing;
+  const displayName =
+    input.input.displayName ?? input.identity.displayName ?? existing?.display_name ?? null;
+  const email = input.input.email ?? input.identity.email ?? existing?.email ?? null;
+  const interestTags = mergeCustomerInterestTags(existing?.interest_tags ?? [], input.input);
+
+  return {
+    id: existing?.id ?? globalThis.crypto.randomUUID(),
+    tenant_id: input.tenantId,
+    line_user_id: input.identity.userId,
+    display_name: displayName,
+    picture_url: input.identity.pictureUrl ?? existing?.picture_url ?? null,
+    phone: input.input.phone ?? existing?.phone ?? null,
+    email,
+    postal_code: input.input.postalCode ?? existing?.postal_code ?? null,
+    address: input.input.address ?? existing?.address ?? null,
+    interest_tags: interestTags,
+    response_mode:
+      existing?.response_mode === "human_active" || existing?.response_mode === "emergency"
+        ? existing.response_mode
+        : "human_required",
+    status:
+      existing?.status === "archived" || existing?.status === "new"
+        ? "active"
+        : (existing?.status ?? "active"),
+    last_message_at: input.now,
+    last_customer_message_at: input.now,
+    last_staff_reply_at: existing?.last_staff_reply_at ?? null,
+    created_at: existing?.created_at ?? input.now,
+    updated_at: input.now
+  };
+}
+
+function buildLiffCustomerProfileTimelineMessage(input: {
+  customer: Customer;
+  input: LiffCustomerProfileRequest;
+  now: string;
+}): Message {
+  return {
+    id: globalThis.crypto.randomUUID(),
+    tenant_id: input.customer.tenant_id,
+    customer_id: input.customer.id,
+    consultation_id: null,
+    line_message_id: null,
+    role: "customer",
+    message_type: "form",
+    body: formatLiffCustomerProfileTimelineBody(input.input),
+    media_storage_path: null,
+    staff_user_id: null,
+    ai_generated: false,
+    sent_to_line_at: null,
+    created_at: input.now
+  };
+}
+
+function formatLiffCustomerProfileTimelineBody(input: LiffCustomerProfileRequest): string {
+  const lines =
+    input.mode === "contact_change"
+      ? [
+          "連絡先変更",
+          `お名前: ${input.displayName}`,
+          `電話番号: ${input.phone}`,
+          `住所/エリア: ${input.address}`,
+          `メール: ${input.email ?? "-"}`,
+          `希望連絡方法: ${input.preferredContactMethod ?? "-"}`,
+          `連絡希望時間: ${input.preferredContactTime ?? "-"}`,
+          `備考: ${input.notes ?? "-"}`
+        ]
+      : [
+          "お客様情報登録",
+          `お名前: ${input.displayName}`,
+          `電話番号: ${input.phone}`,
+          `住所/エリア: ${input.address}`,
+          `相談種別: ${input.consultationType}`,
+          `相談内容: ${input.consultationBody}`,
+          `希望連絡方法: ${input.preferredContactMethod}`,
+          `連絡希望時間: ${input.preferredContactTime ?? "-"}`
+        ];
+
+  return lines.join("\n");
+}
+
+function mergeCustomerInterestTags(
+  existingTags: string[],
+  input: LiffCustomerProfileRequest
+): string[] {
+  const nextTags = [
+    ...existingTags,
+    "情報登録済み",
+    ...(input.mode === "contact_change" ? ["連絡先変更済み"] : []),
+    ...(input.consultationType ? [`相談種別:${input.consultationType}`] : []),
+    ...(input.preferredContactMethod ? [`希望連絡:${input.preferredContactMethod}`] : []),
+    ...input.interestTags
+  ];
+
+  return Array.from(new Set(nextTags.map((tag) => tag.trim()).filter(Boolean))).slice(0, 20);
+}
+
+function resolveLineIdTokenChannelId(
+  env: NodeJS.ProcessEnv,
+  defaultChannelId: string
+): string | null {
+  return (
+    normalizeEnvString(env.LINE_LIFF_CHANNEL_ID) ??
+    normalizeEnvString(env.LINE_LOGIN_CHANNEL_ID) ??
+    normalizeEnvString(env.NEXT_PUBLIC_LIFF_CHANNEL_ID) ??
+    normalizeEnvString(defaultChannelId)
+  );
+}
+
+function resolveLiffId(env: NodeJS.ProcessEnv): string | null {
+  return (
+    normalizeEnvString(env.LINE_LIFF_ID) ??
+    normalizeEnvString(env.NEXT_PUBLIC_LIFF_ID) ??
+    normalizeEnvString(env.LIFF_ID)
+  );
+}
+
+function normalizeInterestTags(value: unknown): string[] {
+  const rawValues = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.split(/[,\n]/u)
+      : [];
+
+  return Array.from(
+    new Set(
+      rawValues
+        .map((item) => normalizeOptionalText(item))
+        .filter((item): item is string => Boolean(item))
+    )
+  ).slice(0, 12);
+}
+
+function normalizeOptionalText(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().replace(/\s+/gu, " ");
+
+  return normalized ? normalized.slice(0, 500) : null;
+}
+
+function readJsonString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function normalizeEnvString(value: string | undefined): string | null {
+  const normalized = value?.trim();
+
+  return normalized ? normalized : null;
+}
+
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
 }
 
 async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushRequest | null> {

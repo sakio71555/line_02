@@ -362,9 +362,11 @@ export interface CustomerDetail {
   tenant_id: string;
   line_user_id: string | null;
   line_display_name: string | null;
+  information_registered: boolean;
   name: string | null;
   phone: string | null;
   email: string | null;
+  postal_code: string | null;
   status: CustomerStatus;
   response_mode: ResponseMode;
   assigned_staff_id: string | null;
@@ -909,9 +911,11 @@ function toCustomerDetail(customer: Customer): CustomerDetail {
     tenant_id: customer.tenant_id,
     line_user_id: customer.line_user_id,
     line_display_name: customer.display_name,
+    information_registered: customer.interest_tags.includes("情報登録済み"),
     name: null,
     phone: customer.phone,
     email: customer.email,
+    postal_code: customer.postal_code,
     status: customer.status,
     response_mode: customer.response_mode,
     assigned_staff_id: null,

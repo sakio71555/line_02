@@ -218,11 +218,13 @@ function customerDetailEntries(customer: AdminCustomerDetail) {
   return [
     ["お客様ID", customer.id],
     ["利用先ID", customer.tenant_id],
+    ["情報登録", customer.information_registered ? "登録済み" : "未登録"],
     ["LINE連携ID", customer.line_user_id],
     ["LINE表示名", customer.line_display_name],
     ["お名前", customer.name],
     ["電話番号", customer.phone],
     ["メール", customer.email],
+    ["郵便番号", customer.postal_code],
     ["顧客状態", formatCustomerStatus(customer.status)],
     ["対応モード", formatResponseMode(customer.response_mode)],
     ["担当者ID", customer.assigned_staff_id],
