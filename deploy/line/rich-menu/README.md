@@ -10,6 +10,12 @@ This directory contains the production rich menu package for the Amami Home LINE
 - Actions: message actions only
 - LINE message send: not performed by dry-run
 
+## Design variants
+
+- Variant assets: `deploy/line/rich-menu/amamihome-variants`
+- Generate variants: `python3 scripts/ops/generate_line_rich_menu_variants.py`
+- The default image currently uses `rich-menu-01-navy-minimal.png`.
+
 ## Validate without applying
 
 ```sh
