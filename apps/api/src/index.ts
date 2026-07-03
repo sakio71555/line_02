@@ -1661,7 +1661,7 @@ async function notifyNewAlertsForProduction(input: {
   failed: number;
   skipped: number;
 }> {
-  if (!isProductionRuntime(input.env) || input.alertCount <= 0) {
+  if (!shouldAttemptStaffLineAlertNotification(input.env) || input.alertCount <= 0) {
     return {
       attempted: false,
       notified: 0,
@@ -1684,6 +1684,10 @@ async function notifyNewAlertsForProduction(input: {
     failed: result.failed,
     skipped: result.skipped
   };
+}
+
+function shouldAttemptStaffLineAlertNotification(env: NodeJS.ProcessEnv): boolean {
+  return isProductionRuntime(env) || isStaffLineRuntimeConfigured(env);
 }
 
 function hasAuthorizationHeader(authorizationHeader: string | undefined): authorizationHeader is string {

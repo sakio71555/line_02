@@ -241,6 +241,38 @@ describe("LINE webhook foundation", () => {
     expect(alertRepository.list()[0]?.message).not.toContain("モデルホームを見学したいです");
   });
 
+  it("attempts staff notifications when staff LINE runtime is configured in a development-labeled process", async () => {
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository } = createTestContext({
+      staffNotifier,
+      env: {
+        APP_ENV: "development",
+        NODE_ENV: "development",
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.logging.alerts_created).toBe(1);
+    expect(body.staff_notifications).toEqual({
+      attempted: true,
+      notified: 1,
+      failed: 0,
+      skipped: 0
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
+    expect(staffNotifier.notifications[0]?.message).not.toContain("モデルホームを見学したいです");
+    expect(alertRepository.list()[0]).toMatchObject({
+      status: "notified"
+    });
+  });
+
   it("replies with the model house reservation guide and records page guidance without an alert", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
