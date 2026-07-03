@@ -145,7 +145,7 @@ function readStaffReplyDeliveryMode(formData: FormData): "demo_save" | "real_lin
 
 function isRealLinePushConfirmed(formData: FormData): boolean {
   return (
-    readTrimmedFormValue(formData, "confirm_single_canary_send") === "on" &&
+    readTrimmedFormValue(formData, "confirm_single_line_send") === "on" &&
     readTrimmedFormValue(formData, "line_push_confirmation") ===
       ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE &&
     Boolean(readTrimmedFormValue(formData, "idempotency_key"))

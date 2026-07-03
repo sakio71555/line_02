@@ -244,7 +244,7 @@ export function CustomerActionPanelView({
         </div>
         <p className="meta">
           入力した内容をスタッフ返信としてタイムラインに保存します。
-          LINE実送信は、実送信ゲートが開いている場合だけ別の確認操作として表示されます。
+          LINE実送信が有効な場合だけ、別の確認操作として本番LINE送信を実行できます。
         </p>
         {staffReplyForm ?? (
           <StaffReplyConfirmationForm
@@ -364,8 +364,8 @@ function StaffReplyConfirmationForm({
               </div>
               <p className="meta">
                 {lineRealSendWindowOpen
-                  ? "canary windowが開いています。送信後はwindowを閉じてください。OpenAI、再送信、一斉送信、broadcast、multicastは行いません。"
-                  : "本番LINE送信は、canary windowが開いている時だけ実行できます。今はLINEへ送信せず、タイムライン保存だけ利用できます。"}
+                  ? "LINE実送信が有効です。OpenAI、再送信、一斉送信、broadcast、multicastは行いません。"
+                  : "本番LINE送信は、LINE実送信が有効な時だけ実行できます。今はLINEへ送信せず、タイムライン保存だけ利用できます。"}
               </p>
               <button
                 className="danger-action-button"
@@ -464,21 +464,21 @@ export function StaffReplyConfirmationCard({
         <dt>注意</dt>
         <dd>
           {isRealLinePush
-            ? "送信後はoperator canary windowを閉じてください。"
+            ? "本番LINEへ送信されます。再送信や一斉送信は行いません。"
             : "この内容はタイムラインにスタッフ返信として保存されます。"}
         </dd>
       </dl>
       <label className="confirmation-check">
         <input
           checked={isConfirmed}
-          name={isRealLinePush ? "confirm_single_canary_send" : undefined}
+          name={isRealLinePush ? "confirm_single_line_send" : undefined}
           onChange={(event) => onConfirmChange(event.currentTarget.checked)}
           required
           type="checkbox"
         />
         <span>
           {isRealLinePush
-            ? "本番LINEへ1通だけ送信すること、再送信や一斉送信をしないこと、送信後にwindowを閉じることを確認しました。"
+            ? "本番LINEへ1通だけ送信すること、再送信や一斉送信をしないことを確認しました。"
             : "この内容を確認しました。LINEには送信されず、タイムラインに保存されることを理解しました。"}
         </span>
       </label>
@@ -524,7 +524,7 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
       <p className="result-label">送信結果</p>
       <p>
         {state.deliveryMode === "real_line_push"
-          ? "担当者返信を本番LINEへ1通送信し、タイムラインへ保存しました。windowを閉じてください。"
+          ? "担当者返信を本番LINEへ1通送信し、タイムラインへ保存しました。"
           : "担当者返信をタイムラインへ保存しました。"}
       </p>
       <ResultField label="保存したメッセージID" value={result.message.id} />

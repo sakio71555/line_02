@@ -168,10 +168,11 @@ describe("admin customer action panel", () => {
     expect(html).toContain("本番LINE送信");
     expect(html).toContain("1通だけ");
     expect(html).toContain("再送信禁止");
+    expect(html).toContain("再送信や一斉送信をしないことを確認しました");
     expect(html).toContain("name=\"delivery_mode\" value=\"real_line_push\"");
     expect(html).toContain("name=\"line_push_confirmation\"");
     expect(html).toContain("name=\"idempotency_key\" value=\"idem_test_card\"");
-    expect(html).toContain("name=\"confirm_single_canary_send\"");
+    expect(html).toContain("name=\"confirm_single_line_send\"");
     expect(html).toContain("本番LINEへ1通送信する");
   });
 });
