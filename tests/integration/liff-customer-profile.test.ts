@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
 import {
+  InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
   type Customer
@@ -28,11 +29,13 @@ class FakeLineIdTokenVerifier implements LineIdTokenVerifier {
 }
 
 function createTestApp(input: {
+  alertRepository?: InMemoryAlertRepository;
   customerRepository?: InMemoryCustomerRepository;
   messageRepository?: InMemoryMessageRepository;
   lineIdTokenVerifier?: LineIdTokenVerifier;
 }) {
   return createApiApp({
+    alertRepository: input.alertRepository ?? new InMemoryAlertRepository(),
     customerRepository: input.customerRepository ?? new InMemoryCustomerRepository(),
     messageRepository: input.messageRepository ?? new InMemoryMessageRepository(),
     lineIdTokenVerifier:
@@ -128,9 +131,10 @@ describe("LIFF customer profile API", () => {
   });
 
   it("records customer registration with LINE identity verification and sanitized response", async () => {
+    const alertRepository = new InMemoryAlertRepository();
     const customerRepository = new InMemoryCustomerRepository();
     const messageRepository = new InMemoryMessageRepository();
-    const app = createTestApp({ customerRepository, messageRepository });
+    const app = createTestApp({ alertRepository, customerRepository, messageRepository });
 
     const response = await app.fetch(
       postCustomerProfile({
@@ -161,6 +165,7 @@ describe("LIFF customer profile API", () => {
         postal_code: "894-0000",
         address: "奄美市"
       },
+      alert_created: true,
       verified_line_identity: true,
       line_user_id_recorded: false
     });
@@ -186,13 +191,22 @@ describe("LIFF customer profile API", () => {
     });
     expect(savedMessage.body).toContain("お客様情報登録");
     expect(savedMessage.body).toContain("平屋の相談をしたいです。");
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      tenant_id: tenantId,
+      customer_id: savedCustomer.id,
+      alert_type: "unreplied_customer_message",
+      status: "open",
+      severity: "high"
+    });
   });
 
   it("updates an existing customer through contact change mode", async () => {
+    const alertRepository = new InMemoryAlertRepository();
     const customerRepository = new InMemoryCustomerRepository();
     const messageRepository = new InMemoryMessageRepository();
     await customerRepository.save(createExistingCustomer());
-    const app = createTestApp({ customerRepository, messageRepository });
+    const app = createTestApp({ alertRepository, customerRepository, messageRepository });
 
     const response = await app.fetch(
       postCustomerProfile({
@@ -226,6 +240,13 @@ describe("LIFF customer profile API", () => {
     );
     expect(savedMessage.body).toContain("連絡先変更");
     expect(savedMessage.body).toContain("電話番号を変更しました。");
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      tenant_id: tenantId,
+      customer_id: "customer_existing",
+      alert_type: "unreplied_customer_message",
+      status: "open"
+    });
   });
 
   it("returns invalid id token without writing customer data", async () => {

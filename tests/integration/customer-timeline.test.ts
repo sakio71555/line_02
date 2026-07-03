@@ -189,7 +189,7 @@ describe("admin customer detail and timeline API", () => {
         phone: null,
         email: null,
         status: "new",
-        response_mode: "bot_auto",
+        response_mode: "human_required",
         assigned_staff_id: null,
         address_area: null,
         planned_area: null,

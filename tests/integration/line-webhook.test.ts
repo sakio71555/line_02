@@ -4,7 +4,11 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
-import { InMemoryCustomerRepository, InMemoryMessageRepository } from "@amami-line-crm/domain";
+import {
+  InMemoryAlertRepository,
+  InMemoryCustomerRepository,
+  InMemoryMessageRepository
+} from "@amami-line-crm/domain";
 import type { LineClient, LineReplyMessage, LineUserProfile } from "@amami-line-crm/line";
 
 const channelSecret = "test_line_channel_secret";
@@ -39,7 +43,9 @@ function createTestContext(
 ) {
   const customerRepository = new InMemoryCustomerRepository();
   const messageRepository = new InMemoryMessageRepository();
+  const alertRepository = new InMemoryAlertRepository();
   const app = createApiApp({
+    alertRepository,
     customerRepository,
     messageRepository,
     ...(input.lineClient ? { lineClient: input.lineClient } : {}),
@@ -53,6 +59,7 @@ function createTestContext(
 
   return {
     app,
+    alertRepository,
     customerRepository,
     messageRepository
   };
@@ -76,6 +83,7 @@ describe("LINE webhook foundation", () => {
       logging: {
         customers_upserted: 2,
         messages_inserted: 1,
+        alerts_created: 1,
         unsupported_events: 0
       }
     });
@@ -97,7 +105,7 @@ describe("LINE webhook foundation", () => {
     expect(customers[0]).toMatchObject({
       tenant_id: "tenant_amamihome",
       line_user_id: "U_TEST_USER_001",
-      response_mode: "bot_auto",
+      response_mode: "human_required",
       last_customer_message_at: new Date(1710000001000).toISOString()
     });
 
@@ -111,6 +119,33 @@ describe("LINE webhook foundation", () => {
       message_type: "text",
       body: "モデルホームを見学したいです"
     });
+  });
+
+  it("creates one open staff follow-up alert for a customer LINE update", async () => {
+    const { app, alertRepository, customerRepository } = createTestContext();
+    const firstResponse = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
+    );
+    const secondResponse = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
+    );
+    const firstBody = await firstResponse.json();
+    const secondBody = await secondResponse.json();
+    const customer = customerRepository.list()[0];
+
+    expect(firstResponse.status).toBe(200);
+    expect(secondResponse.status).toBe(200);
+    expect(firstBody.logging.alerts_created).toBe(1);
+    expect(secondBody.logging.alerts_created).toBe(0);
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer?.id,
+      alert_type: "unreplied_customer_message",
+      status: "open",
+      severity: "high"
+    });
+    expect(alertRepository.list()[0]?.message).not.toContain("モデルホームを見学したいです");
   });
 
   it("stores the LINE profile display name when profile lookup succeeds", async () => {

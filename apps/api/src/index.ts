@@ -13,6 +13,7 @@ import {
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  ensureOpenUnrepliedCustomerMessageAlert,
   listCustomerListItems,
   listCustomerTimeline,
   logLineWebhookEvents,
@@ -274,6 +275,12 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         now: nowIso
       })
     );
+    const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
+      tenant_id: config.tenant.id,
+      customer: savedCustomer,
+      alertRepository,
+      now: () => nowIso
+    });
 
     return c.json({
       ok: true,
@@ -296,6 +303,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         message_type: message.message_type,
         created_at: message.created_at
       },
+      alert_created: alertResult.created,
       verified_line_identity: true,
       line_user_id_recorded: false
     });
@@ -922,6 +930,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         events: payload.events,
         customerRepository,
         messageRepository,
+        alertRepository,
         getLineDisplayName: (lineUserId) => getLineDisplayNameFromLineProfile(lineClient, lineUserId)
       });
 

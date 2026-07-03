@@ -399,6 +399,7 @@ export interface UpsertLineCustomerInput {
   line_user_id: string;
   display_name?: string | null;
   last_customer_message_at?: string | null;
+  response_mode?: ResponseMode;
 }
 
 export interface InsertLineTextMessageInput {
@@ -449,6 +450,19 @@ export interface CheckUnrepliedAlertsResult {
   alerts: Alert[];
 }
 
+export interface EnsureOpenUnrepliedCustomerMessageAlertInput {
+  tenant_id: string;
+  customer: Customer;
+  alertRepository: AlertRepository;
+  createId?: () => string;
+  now?: () => string;
+}
+
+export interface EnsureOpenUnrepliedCustomerMessageAlertResult {
+  alert: Alert | null;
+  created: boolean;
+}
+
 export interface NotifyOpenAlertsInput {
   tenant_id: string;
   alertRepository: AlertRepository;
@@ -480,6 +494,7 @@ export interface LogLineWebhookEventsInput {
   events: MessageLoggingLineEvent[];
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
+  alertRepository?: AlertRepository;
   getLineDisplayName?: (lineUserId: string) => Promise<string | null>;
   createId?: () => string;
   now?: () => string;
@@ -488,6 +503,7 @@ export interface LogLineWebhookEventsInput {
 export interface LogLineWebhookEventsResult {
   customers_upserted: number;
   messages_inserted: number;
+  alerts_created: number;
   unsupported_events: number;
 }
 
@@ -513,6 +529,7 @@ export async function upsertLineCustomer(
     const updated: Customer = {
       ...existing,
       display_name: parsed.display_name ?? existing.display_name,
+      response_mode: resolveNextCustomerResponseMode(existing, input.response_mode),
       last_message_at: input.last_customer_message_at ?? existing.last_message_at,
       last_customer_message_at:
         input.last_customer_message_at ?? existing.last_customer_message_at,
@@ -533,7 +550,7 @@ export async function upsertLineCustomer(
     postal_code: null,
     address: null,
     interest_tags: parsed.interest_tags,
-    response_mode: parsed.response_mode,
+    response_mode: input.response_mode ?? parsed.response_mode,
     status: parsed.status,
     last_message_at: input.last_customer_message_at ?? null,
     last_customer_message_at: input.last_customer_message_at ?? null,
@@ -543,6 +560,38 @@ export async function upsertLineCustomer(
   };
 
   return repository.save(customer);
+}
+
+export async function ensureOpenUnrepliedCustomerMessageAlert(
+  input: EnsureOpenUnrepliedCustomerMessageAlertInput
+): Promise<EnsureOpenUnrepliedCustomerMessageAlertResult> {
+  assertTenantScoped(input.customer, input.tenant_id);
+
+  const existingAlert = await input.alertRepository.findActiveByCustomerAndType(
+    input.tenant_id,
+    input.customer.id,
+    "unreplied_customer_message"
+  );
+
+  if (existingAlert) {
+    return {
+      alert: existingAlert,
+      created: false
+    };
+  }
+
+  const now = input.now?.() ?? new Date().toISOString();
+  const alert = createUnrepliedAlert({
+    tenant_id: input.tenant_id,
+    customer: input.customer,
+    now,
+    ...(input.createId ? { createId: input.createId } : {})
+  });
+
+  return {
+    alert: await input.alertRepository.create(alert),
+    created: true
+  };
 }
 
 export async function insertLineTextMessage(
@@ -747,6 +796,7 @@ export async function logLineWebhookEvents(
 ): Promise<LogLineWebhookEventsResult> {
   let customersUpserted = 0;
   let messagesInserted = 0;
+  let alertsCreated = 0;
   let unsupportedEvents = 0;
   const serviceOptions = createMessageLoggingServiceOptions(input);
   const lineDisplayNameCache = new Map<string, string | null>();
@@ -791,6 +841,7 @@ export async function logLineWebhookEvents(
           tenant_id: input.tenant_id,
           line_user_id: event.source_user_id,
           display_name: displayName,
+          response_mode: "human_required",
           last_customer_message_at: eventTime
         },
         serviceOptions
@@ -806,6 +857,19 @@ export async function logLineWebhookEvents(
         },
         serviceOptions
       );
+      if (input.alertRepository) {
+        const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
+          tenant_id: input.tenant_id,
+          customer,
+          alertRepository: input.alertRepository,
+          ...(input.createId ? { createId: input.createId } : {}),
+          now: () => eventTime
+        });
+
+        if (alertResult.created) {
+          alertsCreated += 1;
+        }
+      }
       customersUpserted += 1;
       messagesInserted += 1;
       continue;
@@ -817,8 +881,24 @@ export async function logLineWebhookEvents(
   return {
     customers_upserted: customersUpserted,
     messages_inserted: messagesInserted,
+    alerts_created: alertsCreated,
     unsupported_events: unsupportedEvents
   };
+}
+
+function resolveNextCustomerResponseMode(
+  existing: Customer,
+  requested: ResponseMode | undefined
+): ResponseMode {
+  if (!requested) {
+    return existing.response_mode;
+  }
+
+  if (existing.response_mode === "emergency" || existing.response_mode === "human_active") {
+    return existing.response_mode;
+  }
+
+  return requested;
 }
 
 async function resolveLineDisplayName(
