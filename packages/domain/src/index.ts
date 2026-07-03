@@ -530,6 +530,19 @@ export const customerRichMenuGuideActions = [
     ].join("\n"),
     target_url: "https://amamihome.net/reservation/",
     message_type: "reservation"
+  },
+  {
+    action_key: "initial.home_building_consultation",
+    trigger_text: "家づくり相談",
+    timeline_body: "家づくり相談ページ案内済み",
+    reply_text: [
+      "家づくり相談はこちらからお願いいたします。",
+      "ご相談内容を入力して送信してください。",
+      "",
+      "https://amamihome.net/consultation/"
+    ].join("\n"),
+    target_url: "https://amamihome.net/consultation/",
+    message_type: "text"
   }
 ] as const satisfies readonly CustomerRichMenuGuideAction[];
 

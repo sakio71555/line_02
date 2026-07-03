@@ -237,6 +237,95 @@ describe("LINE webhook foundation", () => {
     expect(alertRepository.list()).toHaveLength(0);
   });
 
+  it("replies with the home building consultation guide and records page guidance without an alert", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const menuBody = JSON.stringify({
+      destination: "U_TEST_DESTINATION",
+      events: [
+        {
+          type: "message",
+          mode: "active",
+          timestamp: 1710000003000,
+          source: {
+            type: "user",
+            userId: "U_TEST_USER_CONSULTATION_MENU"
+          },
+          webhookEventId: "01TESTCONSULTATIONMENU",
+          deliveryContext: {
+            isRedelivery: false
+          },
+          replyToken: "reply_token_home_building_consultation",
+          message: {
+            id: "test-line-message-menu-002",
+            type: "text",
+            text: "家づくり相談"
+          }
+        }
+      ]
+    });
+
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, menuBody)
+    );
+    const body = await response.json();
+    const customer = customerRepository.list()[0];
+    const messages = messageRepository.list();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      line_menu_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      logging: {
+        customers_upserted: 1,
+        messages_inserted: 1,
+        alerts_created: 0,
+        rich_menu_guides_logged: 1,
+        unsupported_events: 0
+      }
+    });
+    expect(lineClient.replies).toEqual([
+      {
+        replyToken: "reply_token_home_building_consultation",
+        messages: [
+          {
+            type: "text",
+            text: [
+              "家づくり相談はこちらからお願いいたします。",
+              "ご相談内容を入力して送信してください。",
+              "",
+              "https://amamihome.net/consultation/"
+            ].join("\n")
+          }
+        ]
+      }
+    ]);
+    expect(customer).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      line_user_id: "U_TEST_USER_CONSULTATION_MENU",
+      response_mode: "bot_auto",
+      last_customer_message_at: null
+    });
+    expect(messages).toHaveLength(1);
+    expect(messages[0]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer?.id,
+      role: "system",
+      message_type: "text",
+      body: "家づくり相談ページ案内済み",
+      line_message_id: null,
+      media_storage_path: "https://amamihome.net/consultation/",
+      created_at: new Date(1710000003000).toISOString()
+    });
+    expect(alertRepository.list()).toHaveLength(0);
+  });
+
   it("stores the LINE profile display name when profile lookup succeeds", async () => {
     const lineClient = new ProfileLineClient({
       U_TEST_USER_001: {

@@ -41,9 +41,9 @@
         "height": 843
       },
       "action": {
-        "type": "uri",
+        "type": "message",
         "label": "家づくり相談",
-        "uri": "https://amamihome.net/consultation/"
+        "text": "家づくり相談"
       }
     },
     {

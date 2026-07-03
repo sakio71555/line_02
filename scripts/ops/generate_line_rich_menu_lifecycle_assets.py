@@ -69,8 +69,8 @@ MENUS = [
                 "家づくり\n相談",
                 "相談ページへ",
                 "home",
-                "uri",
-                "https://amamihome.net/consultation/",
+                "message",
+                "家づくり相談",
             ),
             MenuItem(
                 "initial.works",
