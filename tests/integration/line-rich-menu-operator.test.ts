@@ -8,17 +8,20 @@ import {
 } from "../../scripts/ops/line_rich_menu_operator";
 
 describe("LINE rich menu operator", () => {
-  it("keeps the default rich menu asset valid and message-only", async () => {
+  it("keeps the default rich menu asset valid with production message and uri actions", async () => {
     const result = await runLineRichMenuDryRun();
     const output = formatLineRichMenuDryRunResult(result);
 
     expect(result.validationPassed).toBe(true);
     expect(result.areaCount).toBe(6);
-    expect(result.messageActionCount).toBe(6);
+    expect(result.messageActionCount).toBe(2);
+    expect(result.uriActionCount).toBe(4);
     expect(output).toContain("line_api_called=false");
     expect(output).toContain("line_send_attempted=false");
     expect(output).toContain("secret_recorded=false");
     expect(output).toContain("rich_menu_id_recorded=false");
+    expect(output).toContain("message_action_count=2");
+    expect(output).toContain("uri_action_count=4");
     expect(output).not.toContain("LINE_CHANNEL_ACCESS_TOKEN=");
   });
 
@@ -50,6 +53,33 @@ describe("LINE rich menu operator", () => {
 
     expect(errors).toContain("area_count_must_be_6");
     expect(errors).toContain("area_bounds_x_out_of_range");
+  });
+
+  it("rejects non-https uri actions before LINE API calls", () => {
+    const errors = validateRichMenuDefinition({
+      size: {
+        width: 2500,
+        height: 1686
+      },
+      selected: true,
+      name: "invalid uri test",
+      chatBarText: "メニュー",
+      areas: Array.from({ length: 6 }, (_, index) => ({
+        bounds: {
+          x: index % 3 === 0 ? 0 : index % 3 === 1 ? 833 : 1666,
+          y: index < 3 ? 0 : 843,
+          width: index % 3 === 2 ? 834 : 833,
+          height: 843
+        },
+        action: {
+          type: "uri",
+          label: "invalid",
+          uri: "http://example.test"
+        }
+      }))
+    });
+
+    expect(errors).toContain("area_action_uri_must_be_https");
   });
 
   it("applies through rich menu endpoints without exposing token or rich menu ID", async () => {

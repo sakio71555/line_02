@@ -4,8 +4,8 @@
     "height": 1686
   },
   "selected": true,
-  "name": "Amami Home Initial Menu",
-  "chatBarText": "メニュー",
+  "name": "Amami Home Aftercare Menu",
+  "chatBarText": "アフター",
   "areas": [
     {
       "bounds": {
@@ -16,8 +16,8 @@
       },
       "action": {
         "type": "message",
-        "label": "お客様情報登録",
-        "text": "お客様情報登録"
+        "label": "修理・点検依頼",
+        "text": "修理・点検依頼"
       }
     },
     {
@@ -28,9 +28,9 @@
         "height": 843
       },
       "action": {
-        "type": "uri",
-        "label": "モデルハウス見学予約",
-        "uri": "https://amamihome.net/reservation/"
+        "type": "message",
+        "label": "定期点検予約",
+        "text": "定期点検予約"
       }
     },
     {
@@ -41,9 +41,9 @@
         "height": 843
       },
       "action": {
-        "type": "uri",
-        "label": "家づくり相談",
-        "uri": "https://amamihome.net/consultation/"
+        "type": "message",
+        "label": "不具合を相談",
+        "text": "不具合を相談"
       }
     },
     {
@@ -54,9 +54,9 @@
         "height": 843
       },
       "action": {
-        "type": "uri",
-        "label": "施工事例を見る",
-        "uri": "https://amamihome.net/works/"
+        "type": "message",
+        "label": "保証・メンテナンス",
+        "text": "保証・メンテナンス"
       }
     },
     {
@@ -67,9 +67,9 @@
         "height": 843
       },
       "action": {
-        "type": "uri",
-        "label": "資料請求",
-        "uri": "https://amamihome.net/download/"
+        "type": "message",
+        "label": "連絡先変更",
+        "text": "連絡先変更"
       }
     },
     {

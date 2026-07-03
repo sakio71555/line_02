@@ -1,0 +1,124 @@
+{
+  "tenant_slug": "amamihome",
+  "menus": {
+    "initial": [
+      {
+        "action_key": "initial.customer_info_register",
+        "label": "お客様情報登録",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "initial.model_house_reservation",
+        "label": "モデルハウス見学予約",
+        "line_action_type": "uri",
+        "target_category": "external_url"
+      },
+      {
+        "action_key": "initial.home_building_consultation",
+        "label": "家づくり相談",
+        "line_action_type": "uri",
+        "target_category": "external_url"
+      },
+      {
+        "action_key": "initial.works",
+        "label": "施工事例を見る",
+        "line_action_type": "uri",
+        "target_category": "external_url"
+      },
+      {
+        "action_key": "initial.catalog_request",
+        "label": "資料請求",
+        "line_action_type": "uri",
+        "target_category": "external_url"
+      },
+      {
+        "action_key": "initial.contact_staff",
+        "label": "担当者に相談",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      }
+    ],
+    "negotiation": [
+      {
+        "action_key": "negotiation.meeting_schedule",
+        "label": "打合せ予約・変更",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "negotiation.plan_consultation",
+        "label": "プラン・間取り相談",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "negotiation.estimate_budget",
+        "label": "見積・資金計画",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "negotiation.land_site",
+        "label": "土地・敷地の相談",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "negotiation.required_documents",
+        "label": "必要書類・確認事項",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "negotiation.contact_staff",
+        "label": "担当者に相談",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      }
+    ],
+    "aftercare": [
+      {
+        "action_key": "aftercare.repair_inspection",
+        "label": "修理・点検依頼",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "aftercare.periodic_inspection",
+        "label": "定期点検予約",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "aftercare.trouble_consultation",
+        "label": "不具合を相談",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "aftercare.warranty_maintenance",
+        "label": "保証・メンテナンス",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "aftercare.contact_change",
+        "label": "連絡先変更",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      },
+      {
+        "action_key": "aftercare.contact_staff",
+        "label": "担当者に相談",
+        "line_action_type": "message",
+        "target_category": "line_in_chat"
+      }
+    ]
+  },
+  "notes": [
+    "LINE rich menu definitions can only store LINE action payloads.",
+    "The action_key values are kept repo-side for routing and future LIFF/form wiring.",
+    "Customer registration and contact change require LIFF identity verification before CRM writes."
+  ]
+}

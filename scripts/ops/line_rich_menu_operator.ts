@@ -31,12 +31,20 @@ export interface LineRichMenuArea {
     width: number;
     height: number;
   };
-  action: {
-    type: "message";
-    label: string;
-    text: string;
-  };
+  action: LineRichMenuAction;
 }
+
+export type LineRichMenuAction =
+  | {
+      type: "message";
+      label: string;
+      text: string;
+    }
+  | {
+      type: "uri";
+      label: string;
+      uri: string;
+    };
 
 export interface LineRichMenuDryRunResult {
   definitionAvailable: boolean;
@@ -45,6 +53,7 @@ export interface LineRichMenuDryRunResult {
   validationPassed: boolean;
   areaCount: number;
   messageActionCount: number;
+  uriActionCount: number;
   lineApiCalled: false;
   lineSendAttempted: false;
   secretRecorded: false;
@@ -115,12 +124,22 @@ export function validateRichMenuDefinition(definition: LineRichMenuDefinition): 
       errors.push("area_bounds_y_out_of_range");
     }
 
-    if (area.action.type !== "message") {
-      errors.push("area_action_must_be_message");
+    if (area.action.type !== "message" && area.action.type !== "uri") {
+      errors.push("area_action_type_unsupported");
     }
 
-    if (!area.action.label.trim() || !area.action.text.trim()) {
+    if (area.action.type === "message" && (!area.action.label.trim() || !area.action.text.trim())) {
       errors.push("area_action_label_or_text_empty");
+    }
+
+    if (area.action.type === "uri") {
+      if (!area.action.label.trim() || !area.action.uri.trim()) {
+        errors.push("area_action_label_or_uri_empty");
+      }
+
+      if (!area.action.uri.startsWith("https://")) {
+        errors.push("area_action_uri_must_be_https");
+      }
     }
   }
 
@@ -149,6 +168,7 @@ export async function runLineRichMenuDryRun(repoRoot = process.cwd()): Promise<L
     validationPassed: validationErrors.length === 0 && imageAvailable && imageBytes !== null && imageBytes <= 1_000_000,
     areaCount: definition.areas.length,
     messageActionCount: definition.areas.filter((area) => area.action.type === "message").length,
+    uriActionCount: definition.areas.filter((area) => area.action.type === "uri").length,
     lineApiCalled: false,
     lineSendAttempted: false,
     secretRecorded: false,
@@ -165,6 +185,7 @@ export function formatLineRichMenuDryRunResult(result: LineRichMenuDryRunResult)
     `validation_passed=${result.validationPassed}`,
     `rich_menu_area_count=${result.areaCount}`,
     `message_action_count=${result.messageActionCount}`,
+    `uri_action_count=${result.uriActionCount}`,
     `line_api_called=${result.lineApiCalled}`,
     `line_send_attempted=${result.lineSendAttempted}`,
     `secret_recorded=${result.secretRecorded}`,
@@ -283,15 +304,27 @@ function isLineRichMenuArea(value: unknown): value is LineRichMenuArea {
     return false;
   }
 
-  return (
+  const baseValid =
     typeof value.bounds.x === "number" &&
     typeof value.bounds.y === "number" &&
     typeof value.bounds.width === "number" &&
     typeof value.bounds.height === "number" &&
-    value.action.type === "message" &&
-    typeof value.action.label === "string" &&
-    typeof value.action.text === "string"
-  );
+    typeof value.action.type === "string" &&
+    typeof value.action.label === "string";
+
+  if (!baseValid) {
+    return false;
+  }
+
+  if (value.action.type === "message") {
+    return typeof value.action.text === "string";
+  }
+
+  if (value.action.type === "uri") {
+    return typeof value.action.uri === "string";
+  }
+
+  return false;
 }
 
 function readRichMenuId(value: unknown): string {

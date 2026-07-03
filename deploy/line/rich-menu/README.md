@@ -7,14 +7,27 @@ This directory contains the production rich menu package for the Amami Home LINE
 - Asset directory: `deploy/line/rich-menu/amamihome-default`
 - Definition: `rich-menu.json`
 - Image: `rich-menu.png`
-- Actions: message actions only
+- Current default lifecycle: `amamihome-initial`
+- Actions: message and HTTPS URI actions
 - LINE message send: not performed by dry-run
+
+## Lifecycle menus
+
+- Initial: `deploy/line/rich-menu/amamihome-initial`
+- Negotiation: `deploy/line/rich-menu/amamihome-negotiation`
+- Aftercare: `deploy/line/rich-menu/amamihome-aftercare`
+- Action key manifest: `deploy/line/rich-menu/amamihome-lifecycle-actions.json`
+- Generate lifecycle assets: `python3 scripts/ops/generate_line_rich_menu_lifecycle_assets.py`
+
+The initial menu is the default rich menu. Negotiation and aftercare menus are prepared for a later
+per-customer rich menu switch. Customer registration and contact change should be wired through LIFF
+identity verification before CRM writes are enabled.
 
 ## Design variants
 
 - Variant assets: `deploy/line/rich-menu/amamihome-variants`
 - Generate variants: `python3 scripts/ops/generate_line_rich_menu_variants.py`
-- The default image currently uses `rich-menu-01-navy-minimal.png`.
+- These are design drafts and are not the active lifecycle default.
 
 ## Validate without applying
 
