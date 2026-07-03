@@ -27,6 +27,12 @@ export interface AppConfig {
     realPushEnabled: boolean;
     messagingEnabled: boolean;
   };
+  staffLine: {
+    channelId: string;
+    channelSecretConfigured: boolean;
+    accessTokenConfigured: boolean;
+    webhookSecretPath: string;
+  };
   urls: {
     appBaseUrl: string;
     apiBaseUrl: string;
@@ -70,6 +76,12 @@ export function loadAppConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       webhookSecretPath: env.LINE_WEBHOOK_SECRET_PATH ?? "wh_dev_amamihome",
       realPushEnabled: parseBooleanFlag(env.LINE_REAL_PUSH_ENABLED),
       messagingEnabled: parseBooleanFlag(env.LINE_MESSAGING_ENABLED)
+    },
+    staffLine: {
+      channelId: env.STAFF_LINE_CHANNEL_ID ?? "",
+      channelSecretConfigured: Boolean(env.STAFF_LINE_CHANNEL_SECRET),
+      accessTokenConfigured: Boolean(env.STAFF_LINE_CHANNEL_ACCESS_TOKEN),
+      webhookSecretPath: env.STAFF_LINE_WEBHOOK_SECRET_PATH ?? "staff_wh_dev_amamihome"
     },
     urls: {
       appBaseUrl: env.APP_BASE_URL ?? "http://localhost:3000",

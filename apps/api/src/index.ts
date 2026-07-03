@@ -956,6 +956,49 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     }
   });
 
+  api.post("/api/staff-line/webhook/:webhookSecret", async (c) => {
+    const webhookSecret = c.req.param("webhookSecret");
+    const staffLineWebhook = resolveStaffLineWebhook(webhookSecret, env);
+
+    if (!staffLineWebhook) {
+      return c.json({ ok: false, error: "unknown_staff_line_webhook_path" }, 404);
+    }
+
+    if (!staffLineWebhook.channelSecret) {
+      return c.json({ ok: false, error: "staff_line_channel_secret_not_configured" }, 500);
+    }
+
+    const rawBody = await c.req.text();
+    const signature = c.req.header("x-line-signature") ?? "";
+    const signatureValid = verifyLineSignature({
+      channelSecret: staffLineWebhook.channelSecret,
+      body: rawBody,
+      signature
+    });
+
+    if (!signatureValid) {
+      return c.json({ ok: false, error: "invalid_staff_line_signature" }, 401);
+    }
+
+    try {
+      const payload = parseLineWebhookPayload(rawBody);
+      const sanitizedSummary = summarizeStaffLineWebhookEvents(payload.events);
+
+      return c.json({
+        ok: true,
+        tenant_id: staffLineWebhook.tenantId,
+        tenant_slug: staffLineWebhook.tenantSlug,
+        destination_present: Boolean(payload.destination),
+        event_count: payload.events.length,
+        staff_line_logging: sanitizedSummary,
+        staff_linking_executed: false,
+        staff_notification_send_executed: false
+      });
+    } catch {
+      return c.json({ ok: false, error: "malformed_staff_line_webhook_body" }, 400);
+    }
+  });
+
   return api;
 }
 
@@ -1037,6 +1080,65 @@ async function replyToLineReplyInstructions(
   }
 
   return { sent, failed, skipped };
+}
+
+function summarizeStaffLineWebhookEvents(events: NormalizedLineWebhookEvent[]): {
+  message_events: number;
+  text_message_events: number;
+  follow_events: number;
+  unfollow_events: number;
+  source_user_events: number;
+  source_group_events: number;
+  source_room_events: number;
+  unsupported_events: number;
+  staff_linking_code_processing_executed: false;
+  raw_event_content_recorded: false;
+} {
+  let messageEvents = 0;
+  let textMessageEvents = 0;
+  let followEvents = 0;
+  let unfollowEvents = 0;
+  let sourceUserEvents = 0;
+  let sourceGroupEvents = 0;
+  let sourceRoomEvents = 0;
+  let unsupportedEvents = 0;
+
+  for (const event of events) {
+    if (event.type === "message") {
+      messageEvents += 1;
+
+      if (event.message_type === "text") {
+        textMessageEvents += 1;
+      }
+    } else if (event.type === "follow") {
+      followEvents += 1;
+    } else if (event.type === "unfollow") {
+      unfollowEvents += 1;
+    } else {
+      unsupportedEvents += 1;
+    }
+
+    if (event.source_type === "user") {
+      sourceUserEvents += 1;
+    } else if (event.source_type === "group") {
+      sourceGroupEvents += 1;
+    } else if (event.source_type === "room") {
+      sourceRoomEvents += 1;
+    }
+  }
+
+  return {
+    message_events: messageEvents,
+    text_message_events: textMessageEvents,
+    follow_events: followEvents,
+    unfollow_events: unfollowEvents,
+    source_user_events: sourceUserEvents,
+    source_group_events: sourceGroupEvents,
+    source_room_events: sourceRoomEvents,
+    unsupported_events: unsupportedEvents,
+    staff_linking_code_processing_executed: false,
+    raw_event_content_recorded: false
+  };
 }
 
 function combineLineReplyCounts(
@@ -1912,6 +2014,23 @@ function resolveWebhookTenant(
     tenantId: config.tenant.id,
     tenantSlug: config.tenant.slug,
     channelSecret: env.LINE_CHANNEL_SECRET
+  };
+}
+
+function resolveStaffLineWebhook(
+  webhookSecret: string,
+  env: NodeJS.ProcessEnv
+): ResolvedWebhookTenant | null {
+  const config = loadAppConfig(env);
+
+  if (webhookSecret !== config.staffLine.webhookSecretPath) {
+    return null;
+  }
+
+  return {
+    tenantId: config.tenant.id,
+    tenantSlug: config.tenant.slug,
+    channelSecret: env.STAFF_LINE_CHANNEL_SECRET
   };
 }
 

@@ -14,6 +14,8 @@ import { MockLineClient, type LineClient, type LineReplyMessage, type LineUserPr
 
 const channelSecret = "test_line_channel_secret";
 const knownWebhookSecret = "wh_dev_amamihome";
+const staffLineChannelSecret = "test_staff_line_channel_secret";
+const knownStaffLineWebhookSecret = "staff_wh_dev_amamihome";
 const fixtureBody = readFileSync(
   new URL("../fixtures/line-webhook-follow-and-message.json", import.meta.url),
   "utf8"
@@ -32,6 +34,25 @@ function signedRequest(path: string, body: string, signature = signBody(body)): 
 
 function signBody(body: string): string {
   return createHmac("sha256", channelSecret).update(body).digest("base64");
+}
+
+function signedStaffLineRequest(
+  path: string,
+  body: string,
+  signature = signStaffLineBody(body)
+): Request {
+  return new Request(`http://localhost${path}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-line-signature": signature
+    },
+    body
+  });
+}
+
+function signStaffLineBody(body: string): string {
+  return createHmac("sha256", staffLineChannelSecret).update(body).digest("base64");
 }
 
 function createTestContext(
@@ -64,6 +85,17 @@ function createTestContext(
     customerRepository,
     messageRepository
   };
+}
+
+function createStaffLineWebhookTestApp() {
+  return createApiApp({
+    env: {
+      STAFF_LINE_CHANNEL_SECRET: staffLineChannelSecret,
+      STAFF_LINE_WEBHOOK_SECRET_PATH: knownStaffLineWebhookSecret,
+      TENANT_ID: "tenant_amamihome",
+      TENANT_SLUG: "amamihome"
+    }
+  });
 }
 
 function lineTextMessageBody(input: {
@@ -891,6 +923,94 @@ describe("LINE webhook foundation", () => {
       "tenant_amamihome",
       "tenant_other"
     ]);
+  });
+});
+
+describe("staff LINE notification webhook foundation", () => {
+  it("accepts a signed staff-line webhook without recording raw event content", async () => {
+    const app = createStaffLineWebhookTestApp();
+    const body = lineTextMessageBody({
+      userId: "U_TEST_STAFF_USER",
+      eventId: "01TESTSTAFFLINEEVENT",
+      messageId: "test-staff-line-message-001",
+      replyToken: "reply_token_staff_line",
+      text: "link-code-example",
+      timestamp: 1710000009000
+    });
+    const response = await app.fetch(
+      signedStaffLineRequest(`/api/staff-line/webhook/${knownStaffLineWebhookSecret}`, body)
+    );
+    const parsed = await response.json();
+    const serialized = JSON.stringify(parsed);
+
+    expect(response.status).toBe(200);
+    expect(parsed).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      tenant_slug: "amamihome",
+      destination_present: true,
+      event_count: 1,
+      staff_line_logging: {
+        message_events: 1,
+        text_message_events: 1,
+        follow_events: 0,
+        unfollow_events: 0,
+        source_user_events: 1,
+        source_group_events: 0,
+        source_room_events: 0,
+        unsupported_events: 0,
+        staff_linking_code_processing_executed: false,
+        raw_event_content_recorded: false
+      },
+      staff_linking_executed: false,
+      staff_notification_send_executed: false
+    });
+    expect(serialized).not.toContain("U_TEST_STAFF_USER");
+    expect(serialized).not.toContain("link-code-example");
+    expect(serialized).not.toContain("test-staff-line-message-001");
+  });
+
+  it("rejects staff-line webhook requests with an invalid signature", async () => {
+    const app = createStaffLineWebhookTestApp();
+    const response = await app.fetch(
+      signedStaffLineRequest(
+        `/api/staff-line/webhook/${knownStaffLineWebhookSecret}`,
+        fixtureBody,
+        "invalid-signature"
+      )
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(body).toEqual({ ok: false, error: "invalid_staff_line_signature" });
+  });
+
+  it("returns 404 for an unknown staff-line webhook path before trusting the body", async () => {
+    const app = createStaffLineWebhookTestApp();
+    const response = await app.fetch(
+      signedStaffLineRequest("/api/staff-line/webhook/unknown", fixtureBody)
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(404);
+    expect(body).toEqual({ ok: false, error: "unknown_staff_line_webhook_path" });
+  });
+
+  it("returns 500 when staff-line channel secret is not configured", async () => {
+    const app = createApiApp({
+      env: {
+        STAFF_LINE_WEBHOOK_SECRET_PATH: knownStaffLineWebhookSecret,
+        TENANT_ID: "tenant_amamihome",
+        TENANT_SLUG: "amamihome"
+      }
+    });
+    const response = await app.fetch(
+      signedStaffLineRequest(`/api/staff-line/webhook/${knownStaffLineWebhookSecret}`, fixtureBody)
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ ok: false, error: "staff_line_channel_secret_not_configured" });
   });
 });
 
