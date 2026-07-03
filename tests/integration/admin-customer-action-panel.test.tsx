@@ -20,7 +20,8 @@ describe("admin customer action panel", () => {
         runReplyDraft={noopAction}
         runStaffReply={noopAction}
         runSummary={noopAction}
-        staffReplyLineRealSendActionVisible={false}
+        staffReplyLineRealSendCustomerAvailable={false}
+        staffReplyLineRealSendWindowOpen={false}
         staffReplyForm={
           <form className="action-form">
             <label htmlFor="staff-reply-body">返信文</label>
@@ -57,7 +58,7 @@ describe("admin customer action panel", () => {
     expect(html).toContain("name=\"query\"");
   });
 
-  it("hides the real LINE send action while the runtime capability is closed", () => {
+  it("renders a disabled real LINE send action while the runtime capability is closed", () => {
     const noopAction = () => {};
     const html = renderToStaticMarkup(
       <CustomerActionPanelView
@@ -69,7 +70,8 @@ describe("admin customer action panel", () => {
         runReplyDraft={noopAction}
         runStaffReply={noopAction}
         runSummary={noopAction}
-        staffReplyLineRealSendActionVisible={false}
+        staffReplyLineRealSendCustomerAvailable={true}
+        staffReplyLineRealSendWindowOpen={false}
         staffReplyRecipientLabel="山田 太郎"
         staffReplyPending={false}
         staffReplyState={{ status: "idle" }}
@@ -81,7 +83,9 @@ describe("admin customer action panel", () => {
 
     expect(html).toContain("保存前に確認する");
     expect(html).toContain("LINE送信なし");
-    expect(html).not.toContain("本番LINEへ1通送信");
+    expect(html).toContain("実送信ゲート停止中");
+    expect(html).toContain("本番LINEへ1通送信");
+    expect(html).toContain("本番LINE送信ゲート停止中");
     expect(html).not.toContain("name=\"delivery_mode\" value=\"real_line_push\"");
   });
 
@@ -97,7 +101,8 @@ describe("admin customer action panel", () => {
         runReplyDraft={noopAction}
         runStaffReply={noopAction}
         runSummary={noopAction}
-        staffReplyLineRealSendActionVisible={true}
+        staffReplyLineRealSendCustomerAvailable={true}
+        staffReplyLineRealSendWindowOpen={true}
         staffReplyRecipientLabel="山田 太郎"
         staffReplyPending={false}
         staffReplyState={{ status: "idle" }}

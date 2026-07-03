@@ -158,9 +158,8 @@ export default async function CustomerDetailPage({
       {detail.status === "error" ? null : (
         <CustomerActionPanel
           customerId={customerId}
-          lineRealSendActionVisible={
-            lineRealSendCapability.realSendActionVisible && Boolean(detail.customer.line_user_id)
-          }
+          lineRealSendCustomerAvailable={Boolean(detail.customer.line_user_id)}
+          lineRealSendWindowOpen={lineRealSendCapability.lineRealSendWindowOpen}
           recipientLabel={getCustomerRecipientLabel(detail.customer)}
           tenantId={config.selectedTenantId ?? config.tenantId}
         />
@@ -175,12 +174,12 @@ async function loadLineRealSendCapability(options: AdminApiRequestOptions) {
 
     return {
       status: "ok" as const,
-      realSendActionVisible: capability.real_send_action_visible === true
+      lineRealSendWindowOpen: capability.line_real_send_window_open === true
     };
   } catch {
     return {
       status: "error" as const,
-      realSendActionVisible: false
+      lineRealSendWindowOpen: false
     };
   }
 }

@@ -40,12 +40,14 @@ type FormAction = (formData: FormData) => void;
 
 export function CustomerActionPanel({
   customerId,
-  lineRealSendActionVisible,
+  lineRealSendCustomerAvailable,
+  lineRealSendWindowOpen,
   recipientLabel,
   tenantId
 }: {
   customerId: string;
-  lineRealSendActionVisible: boolean;
+  lineRealSendCustomerAvailable: boolean;
+  lineRealSendWindowOpen: boolean;
   recipientLabel: string;
   tenantId: string;
 }) {
@@ -89,7 +91,8 @@ export function CustomerActionPanel({
       runReplyDraft={runReplyDraft}
       runStaffReply={runStaffReply}
       runSummary={runSummary}
-      staffReplyLineRealSendActionVisible={lineRealSendActionVisible}
+      staffReplyLineRealSendCustomerAvailable={lineRealSendCustomerAvailable}
+      staffReplyLineRealSendWindowOpen={lineRealSendWindowOpen}
       staffReplyRecipientLabel={recipientLabel}
       staffReplyPending={staffReplyPending}
       staffReplyState={staffReplyState}
@@ -110,7 +113,8 @@ export function CustomerActionPanelView({
   runStaffReply,
   runSummary,
   staffReplyForm,
-  staffReplyLineRealSendActionVisible,
+  staffReplyLineRealSendCustomerAvailable,
+  staffReplyLineRealSendWindowOpen,
   staffReplyRecipientLabel,
   staffReplyPending,
   staffReplyState,
@@ -127,7 +131,8 @@ export function CustomerActionPanelView({
   runStaffReply: FormAction;
   runSummary: FormAction;
   staffReplyForm?: React.ReactNode;
-  staffReplyLineRealSendActionVisible: boolean;
+  staffReplyLineRealSendCustomerAvailable: boolean;
+  staffReplyLineRealSendWindowOpen: boolean;
   staffReplyRecipientLabel: string;
   staffReplyPending: boolean;
   staffReplyState: StaffReplyActionState;
@@ -243,7 +248,8 @@ export function CustomerActionPanelView({
         </p>
         {staffReplyForm ?? (
           <StaffReplyConfirmationForm
-            lineRealSendActionVisible={staffReplyLineRealSendActionVisible}
+            lineRealSendCustomerAvailable={staffReplyLineRealSendCustomerAvailable}
+            lineRealSendWindowOpen={staffReplyLineRealSendWindowOpen}
             pending={staffReplyPending}
             recipientLabel={staffReplyRecipientLabel}
             runStaffReply={runStaffReply}
@@ -258,14 +264,16 @@ export function CustomerActionPanelView({
 }
 
 function StaffReplyConfirmationForm({
-  lineRealSendActionVisible,
+  lineRealSendCustomerAvailable,
+  lineRealSendWindowOpen,
   pending,
   recipientLabel,
   runStaffReply,
   state,
   tenantId
 }: {
-  lineRealSendActionVisible: boolean;
+  lineRealSendCustomerAvailable: boolean;
+  lineRealSendWindowOpen: boolean;
   pending: boolean;
   recipientLabel: string;
   runStaffReply: FormAction;
@@ -341,10 +349,12 @@ function StaffReplyConfirmationForm({
           >
             保存前に確認する
           </button>
-          {lineRealSendActionVisible ? (
+          {lineRealSendCustomerAvailable ? (
             <div className="real-send-gate-card" aria-label="本番LINE送信の危険操作">
               <div className="action-card-header">
-                <p className="result-label">危険操作</p>
+                <p className="result-label">
+                  {lineRealSendWindowOpen ? "危険操作" : "実送信ゲート停止中"}
+                </p>
                 <h4>本番LINEへ1通送信</h4>
               </div>
               <div className="status-pill-list">
@@ -353,16 +363,19 @@ function StaffReplyConfirmationForm({
                 <span className="status-pill status-pill-danger">一斉送信なし</span>
               </div>
               <p className="meta">
-                canary windowが開いている時だけ使う操作です。送信後はwindowを閉じてください。
-                OpenAI、再送信、一斉送信、broadcast、multicastは行いません。
+                {lineRealSendWindowOpen
+                  ? "canary windowが開いています。送信後はwindowを閉じてください。OpenAI、再送信、一斉送信、broadcast、multicastは行いません。"
+                  : "本番LINE送信は、canary windowが開いている時だけ実行できます。今はLINEへ送信せず、タイムライン保存だけ利用できます。"}
               </p>
               <button
                 className="danger-action-button"
                 type="button"
-                disabled={!replyPreview || pending}
+                disabled={!lineRealSendWindowOpen || !replyPreview || pending}
                 onClick={() => handlePrepareConfirmation("real_line_push")}
               >
-                本番LINEへ1通送信する確認へ進む
+                {lineRealSendWindowOpen
+                  ? "本番LINEへ1通送信する確認へ進む"
+                  : "本番LINE送信ゲート停止中"}
               </button>
             </div>
           ) : null}
