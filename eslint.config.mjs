@@ -9,6 +9,7 @@ export default [
       "**/dist/**",
       "**/next-env.d.ts",
       "**/node_modules/**",
+      "**/tmp/**",
       "pnpm-lock.yaml"
     ]
   },
