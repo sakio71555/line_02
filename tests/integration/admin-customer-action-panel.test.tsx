@@ -8,7 +8,7 @@ import {
 } from "../../apps/admin/app/customers/[customerId]/customer-actions";
 
 describe("admin customer action panel", () => {
-  it("renders beginner-friendly action cards without changing action wiring", () => {
+  it("renders production action cards without changing action wiring", () => {
     const noopAction = () => {};
     const html = renderToStaticMarkup(
       <CustomerActionPanelView
@@ -41,18 +41,18 @@ describe("admin customer action panel", () => {
     expect(html).toContain("AI補助を開く");
     expect(html).toContain("AI下書きと回答案は自動送信されません");
     expect(html).toContain("相談内容をまとめる");
-    expect(html).toContain("デモ用AI");
+    expect(html).toContain("AI要約");
     expect(html).toContain("返信文の下書きを作る");
-    expect(html).toContain("LINEに送信されません");
+    expect(html).toContain("自動送信なし");
     expect(html).toContain("ホームページ情報から回答案を作る");
-    expect(html).toContain("事前登録した情報だけを参考");
+    expect(html).toContain("登録済み情報だけを参考");
     expect(html).toContain("オンライン相談 / メンテナンス / 新築 / リフォーム");
     expect(html).toContain("担当者として返信する");
-    expect(html).toContain("これはデモ保存です");
-    expect(html).toContain("本物のLINEには送信されません");
+    expect(html).toContain("タイムライン保存");
+    expect(html).toContain("LINE送信なし");
     expect(html).toContain("送信前に確認する");
-    expect(html).toContain("権限ごとの表示制御は準備中です");
-    expect(html).toContain("今はデモ確認のため、操作ボタンは従来通り使えます");
+    expect(html).toContain("担当者操作の確認範囲");
+    expect(html).toContain("AI補助は担当者確認前提で使い");
     expect(html).toContain("name=\"body\"");
     expect(html).toContain("name=\"query\"");
   });
@@ -79,8 +79,8 @@ describe("admin customer action panel", () => {
       />
     );
 
-    expect(html).toContain("デモ保存前に確認する");
-    expect(html).toContain("本物のLINEには送信されません");
+    expect(html).toContain("保存前に確認する");
+    expect(html).toContain("LINE送信なし");
     expect(html).not.toContain("本番LINEへ1通送信");
     expect(html).not.toContain("name=\"delivery_mode\" value=\"real_line_push\"");
   });
@@ -114,7 +114,7 @@ describe("admin customer action panel", () => {
     expect(html).toContain("本番LINEへ1通送信する確認へ進む");
   });
 
-  it("renders the staff reply confirmation card with demo-save safety wording", () => {
+  it("renders the staff reply confirmation card with timeline-save safety wording", () => {
     const html = renderToStaticMarkup(
       <StaffReplyConfirmationCard
         bodyPreview="モデルホーム見学について担当者より確認いたします。"
@@ -128,19 +128,19 @@ describe("admin customer action panel", () => {
     );
 
     expect(html).toContain("送信前の確認");
-    expect(html).toContain("この内容でデモ保存しますか？");
+    expect(html).toContain("この内容を保存しますか？");
     expect(html).toContain("宛先");
     expect(html).toContain("山田 太郎");
     expect(html).toContain("利用先");
     expect(html).toContain("tenant_amamihome");
     expect(html).toContain("送信内容");
     expect(html).toContain("モデルホーム見学について担当者より確認いたします。");
-    expect(html).toContain("デモ用");
-    expect(html).toContain("これはデモ保存です");
-    expect(html).toContain("本物のLINEには送信されません");
+    expect(html).toContain("タイムライン保存");
+    expect(html).toContain("担当者返信");
+    expect(html).toContain("LINE送信なし");
     expect(html).toContain("タイムラインにスタッフ返信として保存されます");
     expect(html).toContain("この内容を確認しました");
-    expect(html).toContain("この内容でデモ保存する");
+    expect(html).toContain("この内容を保存する");
     expect(html).toContain("disabled=\"\"");
   });
 

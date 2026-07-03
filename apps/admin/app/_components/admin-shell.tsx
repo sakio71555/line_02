@@ -42,7 +42,7 @@ function DesktopNavigation({ pathname }: { pathname: string }) {
         </span>
         <span>
           <strong>Amami LINE CRM</strong>
-          <small>一時保存のデモ管理画面</small>
+          <small>本番運用の管理画面</small>
         </span>
       </a>
       <nav className="admin-desktop-nav" aria-label="主要メニュー">

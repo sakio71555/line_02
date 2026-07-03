@@ -139,7 +139,7 @@ export function CustomerActionPanelView({
     <section className="section">
       <h2>AI補助と担当者返信</h2>
       <p className="meta">
-        AI下書きと回答案は確認用です。お客様へ自動送信せず、最後は担当者が内容を見て返信します。
+        AI下書きと回答案は担当者確認前提です。お客様へ自動送信せず、最後は担当者が内容を見て返信します。
       </p>
       <RoleVisibilityNote variant="customer-actions" />
 
@@ -156,11 +156,11 @@ export function CustomerActionPanelView({
                 <h3>相談内容をまとめる</h3>
               </div>
               <div className="status-pill-list">
-                <span className="status-pill">デモ用AI</span>
+                <span className="status-pill">AI要約</span>
                 <span className="status-pill">タイムラインに保存</span>
               </div>
               <p className="meta">
-                デモ用AIが、これまでの相談内容を短くまとめます。結果はタイムラインに
+                AIが、これまでの相談内容を短くまとめます。結果はタイムラインに
                 AI要約として保存されます。
               </p>
               <form action={runSummary} className="action-form">
@@ -178,11 +178,11 @@ export function CustomerActionPanelView({
               </div>
               <div className="status-pill-list">
                 <span className="status-pill">下書き確認用</span>
-                <span className="status-pill">LINEには送信されません</span>
+                <span className="status-pill">自動送信なし</span>
               </div>
               <p className="meta">
-                お客様への返信文をデモ用AIで作ります。この下書きはまだLINEに送信されません。
-                内容を確認してから担当者が返信する想定です。
+                お客様への返信文をAIで作ります。この下書きはLINEに自動送信されません。
+                内容を確認してから担当者が返信します。
               </p>
               <form action={runReplyDraft} className="action-form">
                 <button type="submit" disabled={replyDraftPending}>
@@ -199,12 +199,12 @@ export function CustomerActionPanelView({
               </div>
               <div className="status-pill-list">
                 <span className="status-pill">参考情報つき回答案</span>
-                <span className="status-pill">デモ用AI</span>
-                <span className="status-pill">事前登録情報</span>
+                <span className="status-pill">AI補助</span>
+                <span className="status-pill">登録済み情報</span>
               </div>
               <p className="meta">
-                デモ用に登録したアマミホームの参考情報から、回答案を作ります。
-                事前登録した情報だけを参考にし、お客様へ自動送信しません。
+                登録済みのアマミホーム参考情報から、回答案を作ります。
+                登録済み情報だけを参考にし、お客様へ自動送信しません。
               </p>
               <p className="meta">
                 試しやすいキーワード: {ragExampleKeywords.join(" / ")}
@@ -233,13 +233,13 @@ export function CustomerActionPanelView({
           <h3>担当者として返信する</h3>
         </div>
         <div className="status-pill-list">
-          <span className="status-pill">これはデモ保存です</span>
-          <span className="status-pill">本物のLINEには送信されません</span>
+          <span className="status-pill">タイムライン保存</span>
+          <span className="status-pill">LINE送信なし</span>
           <span className="status-pill">タイムラインに保存</span>
         </div>
         <p className="meta">
-          入力した内容をスタッフ返信としてタイムラインに保存します。今はデモ用送信なので、
-          本物のLINEには送信されません。
+          入力した内容をスタッフ返信としてタイムラインに保存します。
+          LINE実送信は、実送信ゲートが開いている場合だけ別の確認操作として表示されます。
         </p>
         {staffReplyForm ?? (
           <StaffReplyConfirmationForm
@@ -339,7 +339,7 @@ function StaffReplyConfirmationForm({
             disabled={!replyPreview || pending}
             onClick={() => handlePrepareConfirmation("demo_save")}
           >
-            デモ保存前に確認する
+            保存前に確認する
           </button>
           {lineRealSendActionVisible ? (
             <div className="real-send-gate-card" aria-label="本番LINE送信の危険操作">
@@ -407,7 +407,7 @@ export function StaffReplyConfirmationCard({
     <div className={isRealLinePush ? "confirmation-card real-send-confirmation-card" : "confirmation-card"}>
       <div className="action-card-header">
         <p className="result-label">送信前の確認</p>
-        <h4>{isRealLinePush ? "本番LINEへ1通送信しますか？" : "この内容でデモ保存しますか？"}</h4>
+        <h4>{isRealLinePush ? "本番LINEへ1通送信しますか？" : "この内容を保存しますか？"}</h4>
       </div>
       <div className="status-pill-list">
         {isRealLinePush ? (
@@ -418,9 +418,9 @@ export function StaffReplyConfirmationCard({
           </>
         ) : (
           <>
-            <span className="status-pill">これはデモ保存です</span>
-            <span className="status-pill">デモ用</span>
-            <span className="status-pill">本物のLINEには送信されません</span>
+            <span className="status-pill">タイムライン保存</span>
+            <span className="status-pill">担当者返信</span>
+            <span className="status-pill">LINE送信なし</span>
           </>
         )}
       </div>
@@ -444,7 +444,7 @@ export function StaffReplyConfirmationCard({
         <dd>
           {isRealLinePush
             ? "本番LINEへ1通だけ送信します。retry / broadcast / multicastは禁止です。"
-            : "デモ用。本物LINEには送信されません。"}
+            : "タイムラインに保存します。LINEには送信されません。"}
         </dd>
         <dt>送信内容</dt>
         <dd className="message-body">{bodyPreview}</dd>
@@ -466,7 +466,7 @@ export function StaffReplyConfirmationCard({
         <span>
           {isRealLinePush
             ? "本番LINEへ1通だけ送信すること、再送信や一斉送信をしないこと、送信後にwindowを閉じることを確認しました。"
-            : "この内容を確認しました。本物LINEには送信されず、デモ用に保存されることを理解しました。"}
+            : "この内容を確認しました。LINEには送信されず、タイムラインに保存されることを理解しました。"}
         </span>
       </label>
       <div className="confirmation-actions">
@@ -483,8 +483,8 @@ export function StaffReplyConfirmationCard({
               ? "本番LINE送信中..."
               : "本番LINEへ1通送信する"
             : pending
-              ? "デモ保存中..."
-              : "この内容でデモ保存する"}
+              ? "保存中..."
+              : "この内容を保存する"}
         </button>
       </div>
     </div>
@@ -512,7 +512,7 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
       <p>
         {state.deliveryMode === "real_line_push"
           ? "担当者返信を本番LINEへ1通送信し、タイムラインへ保存しました。windowを閉じてください。"
-          : "担当者返信をデモ用送信として確認し、タイムラインへ保存しました。"}
+          : "担当者返信をタイムラインへ保存しました。"}
       </p>
       <ResultField label="保存したメッセージID" value={result.message.id} />
       <ResultField label="対応モード" value={formatResponseMode(result.customer.response_mode)} />
@@ -683,7 +683,7 @@ function formatBoolean(value: boolean): string {
 
 function formatProvider(provider: string | undefined): string {
   if (provider === "mock") {
-    return "デモ用AI";
+    return "AI補助";
   }
 
   if (provider === "openai") {

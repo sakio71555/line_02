@@ -66,7 +66,7 @@ export function AlertActionPanelView({
       <h2>次にすること</h2>
       <p className="meta">
         1つ目のボタンで対応が必要な相談を探し、2つ目のボタンで開いているアラートを
-        デモ通知します。どちらもローカル確認用です。
+        通知記録済みにします。外部通知は送信しません。
       </p>
       <RoleVisibilityNote variant="alerts" />
       <div className="action-grid">
@@ -77,11 +77,11 @@ export function AlertActionPanelView({
           </div>
           <div className="status-pill-list">
             <span className="status-pill">手動チェック</span>
-            <span className="status-pill">デモ用</span>
-            <span className="status-pill">scheduler未接続</span>
+            <span className="status-pill">運用データ</span>
+            <span className="status-pill">手動実行</span>
           </div>
           <p className="meta">
-            お客様からの相談にまだ担当者返信がないものを確認し、デモ用の未返信アラートを作ります。
+            お客様からの相談にまだ担当者返信がないものを確認し、未返信アラートを作ります。
           </p>
           <form action={runCheck} className="action-form">
             <button type="submit" disabled={checkPending}>
@@ -94,20 +94,20 @@ export function AlertActionPanelView({
         <article className="action-panel">
           <div className="action-card-header">
             <p className="eyebrow">STEP 2</p>
-            <h3>開いているアラートをデモ通知する</h3>
+            <h3>開いているアラートを通知記録済みにする</h3>
           </div>
           <div className="status-pill-list">
-            <span className="status-pill">デモ通知</span>
-            <span className="status-pill">本物通知なし</span>
-            <span className="status-pill">デモ用通知</span>
+            <span className="status-pill">通知記録</span>
+            <span className="status-pill">外部通知なし</span>
+            <span className="status-pill">手動確認</span>
           </div>
           <p className="meta">
-            開いている未返信アラートを、デモ用の通知処理に流します。
-            本物のLINE、Slack、メールには通知されません。
+            開いている未返信アラートを通知記録済みにします。
+            LINE、Slack、メールへの外部通知は送信しません。
           </p>
           <form action={runNotify} className="action-form">
             <button type="submit" disabled={notifyPending}>
-              {notifyPending ? "デモ通知中..." : "開いているアラートをデモ通知する"}
+              {notifyPending ? "通知記録中..." : "開いているアラートを通知記録済みにする"}
             </button>
           </form>
           <NotifyResult state={notifyState} />
@@ -158,8 +158,8 @@ function NotifyResult({ state }: { state: NotifyOpenActionState }) {
 
   return (
     <div className="action-result">
-      <p className="result-label">デモ通知結果</p>
-      <ResultField label="デモ通知済み" value={String(result.notified)} />
+      <p className="result-label">通知記録結果</p>
+      <ResultField label="通知記録済み" value={String(result.notified)} />
       <ResultField label="失敗" value={String(result.failed)} />
       <ResultField label="対象外" value={String(result.skipped)} />
     </div>

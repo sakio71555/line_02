@@ -20,7 +20,7 @@ export function AlertsPageView({
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">ローカルデモ未返信アラート</p>
+          <p className="eyebrow">未返信アラート</p>
           <h1>対応が必要な相談を確認する</h1>
           <p className="meta">
             利用先: <span className="mono">{config.tenantId}</span>
@@ -37,18 +37,18 @@ export function AlertsPageView({
         <p className="eyebrow">未返信アラート</p>
         <h2>未返信のままになっている相談を見つけます</h2>
         <p className="lead-text">
-          お客様からの相談にまだ担当者返信がないものを、ローカルデモ用に確認できます。
+          お客様からの相談にまだ担当者返信がないものを、現在の運用データから確認します。
           まずは「未返信チェックを実行する」を押してください。
         </p>
         <div className="status-pill-list" aria-label="alerts page safety labels">
-          <span className="status-pill">デモ用</span>
+          <span className="status-pill">本番運用確認</span>
           <span className="status-pill">手動チェック</span>
-          <span className="status-pill">本物通知なし</span>
-          <span className="status-pill">scheduler未接続</span>
-          <span className="status-pill">デモ用通知</span>
+          <span className="status-pill">外部通知なし</span>
+          <span className="status-pill">手動実行</span>
+          <span className="status-pill">通知記録</span>
         </div>
         <p className="meta">
-          本物のLINE、Slack、メールには通知されません。Supabase永続化もまだ未接続です。
+          LINE、Slack、メールへの外部通知はこの画面から自動送信しません。通知結果は記録として扱います。
         </p>
         <p className="meta">
           選択中の利用先は、保存済みの利用先情報としてAPI側で確認されます。
@@ -63,13 +63,13 @@ export function AlertsPageView({
           <div className="home-note">
             <h2>対応待ち</h2>
             <p>
-              まだ担当者対応が必要な未返信アラートです。デモ通知の対象になります。
+              まだ担当者対応が必要な未返信アラートです。担当者確認の対象になります。
             </p>
           </div>
           <div className="home-note">
-            <h2>デモ通知済み</h2>
+            <h2>通知記録済み</h2>
             <p>
-              デモ用の通知処理を通した状態です。本物の通知は送っていません。
+              通知処理を記録した状態です。外部通知は別の承認済み運用で扱います。
             </p>
           </div>
           <div className="home-note">
@@ -90,7 +90,7 @@ export function AlertsPageView({
           </div>
         ) : alerts.alerts.length === 0 ? (
           <p className="empty">
-            まだ対応が必要な相談は表示されていません。デモ顧客を入れたあと、
+            まだ対応が必要な相談は表示されていません。問い合わせが入ったあと、
             「未返信チェックを実行する」を押してください。
           </p>
         ) : (
@@ -114,7 +114,7 @@ export function AlertsPageView({
                   </span>
                   <span className="status-pill status-pill-muted">作成 {alert.created_at}</span>
                   <span className="status-pill status-pill-muted">
-                    デモ通知 {formatNullable(alert.notified_at)}
+                    通知記録 {formatNullable(alert.notified_at)}
                   </span>
                 </div>
                 <a
@@ -140,7 +140,7 @@ function formatNullable(value: string | null): string {
 export function formatAlertStatus(status: AdminAlertListItem["status"]): string {
   const labels: Record<AdminAlertListItem["status"], string> = {
     open: "対応待ち",
-    notified: "デモ通知済み",
+    notified: "通知記録済み",
     resolved: "対応済み",
     dismissed: "非表示"
   };

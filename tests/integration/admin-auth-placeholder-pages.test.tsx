@@ -13,17 +13,17 @@ describe("admin auth placeholder pages", () => {
     const html = renderToStaticMarkup(<LoginPlaceholderPage />);
 
     expect(html).toContain("アマミホーム相談管理へログイン");
-    expect(html).toContain("本番ログイン接続前の確認画面");
+    expect(html).toContain("管理画面を安全に使うためのログイン導線");
     expect(html).toContain("type=\"email\"");
     expect(html).toContain("type=\"password\"");
     expect(html).toContain("<button type=\"button\" disabled=\"\"");
-    expect(html).toContain("ログイン接続待ち");
+    expect(html).toContain("ログイン");
     expect(html).toContain("セッションの扱い");
     expect(html).toContain("管理APIへの通信にだけ使い");
     expect(html).toContain("localStorageやcookieへ独自保存しません");
     expect(html).not.toContain("action=");
     expect(html).not.toContain("private-admin-session-token");
-    expect(html).toContain("ローカルデモとして動作します");
+    expect(html).toContain("顧客一覧、未返信アラート、利用先選択へ進めます");
     expect(html).toContain("顧客一覧へ進む");
     expect(html).toContain("未返信アラートへ進む");
     expect(html).toContain("ログアウト境界");
@@ -34,9 +34,9 @@ describe("admin auth placeholder pages", () => {
 
     expect(html).toContain("ログアウト");
     expect(html).toContain("ログアウト後に安全にセッションを消す");
-    expect(html).toContain("デモ用のログアウト");
+    expect(html).toContain("ログイン確認情報が残らないことを確認します");
     expect(html).toContain("localStorageやcookieへ独自保存しません");
-    expect(html).toContain("本物のログアウト処理はまだ呼びません");
+    expect(html).toContain("access tokenやsecret値は画面に表示しません");
     expect(html).toContain("ログイン境界へ戻る");
     expect(html).not.toContain("private-admin-session-token");
     expect(html).not.toContain("Authorization");
@@ -52,7 +52,7 @@ describe("admin auth placeholder pages", () => {
     expect(html).toContain("tenant_amamihome");
     expect(html).toContain("amamihome");
     expect(html).toContain("amamihome.net");
-    expect(html).toContain("開発確認用 / 選択保存対応");
+    expect(html).toContain("運用対象 / 選択保存対応");
     expect(html).toContain("操作対象の利用先を保存する");
     expect(html).toContain("この利用先を保存する");
     expect(html).toContain("選択を解除する");
@@ -62,9 +62,9 @@ describe("admin auth placeholder pages", () => {
     expect(html).not.toContain("x-tenant-id");
     expect(html).toContain("ログイン情報、APIキー、secret、session値は保存・表示しません");
     expect(html).toContain("利用先の選択は権限そのものではありません");
-    expect(html).toContain("利用先一覧API取得はまだ行いません");
-    expect(html).toContain("Supabase Auth / JWT");
-    expect(html).toContain("ログイン準備画面");
+    expect(html).toContain("顧客一覧、未返信アラート、ログイン関連画面へ進めます");
+    expect(html).toContain("認証情報やsession値は画面に表示せず");
+    expect(html).toContain("ログイン");
     expect(html).toContain("顧客一覧へ進む");
     expect(html).toContain("未返信アラートへ進む");
     expect(html).not.toContain("Authorization");
@@ -74,18 +74,18 @@ describe("admin auth placeholder pages", () => {
     const html = renderToStaticMarkup(<PermissionDeniedPlaceholderPage />);
 
     expect(html).toContain("権限がありません");
-    expect(html).toContain("権限判定は行いません");
+    expect(html).toContain("権限や利用先の所属が不足している場合");
     expect(html).toContain("Admin API側");
-    expect(html).toContain("まだ本番未接続です");
+    expect(html).toContain("権限不足のときは顧客情報へ進まず");
   });
 
   it("renders the session expired placeholder without session handling", () => {
     const html = renderToStaticMarkup(<SessionExpiredPlaceholderPage />);
 
     expect(html).toContain("ログインの有効期限が切れました");
-    expect(html).toContain("session検証");
-    expect(html).toContain("logout処理は行いません");
-    expect(html).toContain("Supabase Auth未接続");
+    expect(html).toContain("session expirationを検知した場合");
+    expect(html).toContain("logout API呼び出し");
+    expect(html).toContain("再ログインへ誘導します");
   });
 });
 

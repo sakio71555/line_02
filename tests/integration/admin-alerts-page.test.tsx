@@ -12,7 +12,7 @@ import {
 import type { AdminAlertListItem } from "../../apps/admin/src/admin-api";
 
 describe("admin alerts page", () => {
-  it("renders beginner-friendly alerts page guidance and status labels", () => {
+  it("renders production alerts page guidance and status labels", () => {
     const html = renderToStaticMarkup(
       <AlertsPageView
         alerts={{
@@ -42,20 +42,20 @@ describe("admin alerts page", () => {
     expect(html).toContain("対応が必要な相談を確認する");
     expect(html).toContain("未返信のままになっている相談を見つけます");
     expect(html).toContain("未返信チェックを実行する");
-    expect(html).toContain("デモ用");
+    expect(html).toContain("本番運用確認");
     expect(html).toContain("手動チェック");
-    expect(html).toContain("本物通知なし");
-    expect(html).toContain("scheduler未接続");
-    expect(html).toContain("デモ用通知");
+    expect(html).toContain("外部通知なし");
+    expect(html).toContain("手動実行");
+    expect(html).toContain("通知記録");
     expect(html).toContain("状態の見方");
     expect(html).toContain("対応待ち");
-    expect(html).toContain("デモ通知済み");
+    expect(html).toContain("通知記録済み");
     expect(html).toContain("未返信アラート一覧");
     expect(html).toContain("アラートカード");
     expect(html).toContain("未返信の相談");
     expect(html).toContain("href=\"/customers/customer_demo_yamada_taro\"");
     expect(html).toContain("お客様詳細を見る");
-    expect(html).toContain("本物のLINE、Slack、メールには通知されません");
+    expect(html).toContain("LINE、Slack、メールへの外部通知はこの画面から自動送信しません");
   });
 
   it("renders an empty state that points to the first action", () => {
@@ -90,17 +90,17 @@ describe("admin alerts page", () => {
     expect(html).toContain("次にすること");
     expect(html).toContain("未返信チェックを実行する");
     expect(html).toContain("お客様からの相談にまだ担当者返信がないものを確認");
-    expect(html).toContain("scheduler未接続");
-    expect(html).toContain("開いているアラートをデモ通知する");
-    expect(html).toContain("本物のLINE、Slack、メールには通知されません");
-    expect(html).toContain("デモ用通知");
-    expect(html).toContain("権限ごとの表示制御は準備中です");
-    expect(html).toContain("今はデモ確認のため、操作ボタンは従来通り使えます");
+    expect(html).toContain("手動実行");
+    expect(html).toContain("開いているアラートを通知記録済みにする");
+    expect(html).toContain("LINE、Slack、メールへの外部通知は送信しません");
+    expect(html).toContain("通知記録");
+    expect(html).toContain("アラート操作の確認範囲");
+    expect(html).toContain("外部通知や一斉送信は、この画面から自動実行しません");
   });
 
   it("formats alert status severity and type labels", () => {
     expect(formatAlertStatus("open")).toBe("対応待ち");
-    expect(formatAlertStatus("notified")).toBe("デモ通知済み");
+    expect(formatAlertStatus("notified")).toBe("通知記録済み");
     expect(formatAlertStatus("resolved")).toBe("対応済み");
     expect(formatAlertStatus("dismissed")).toBe("非表示");
     expect(formatAlertSeverity("low")).toBe("低");

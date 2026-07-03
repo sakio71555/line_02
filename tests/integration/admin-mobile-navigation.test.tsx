@@ -13,7 +13,7 @@ describe("admin mobile navigation shell", () => {
     );
 
     expect(html).toContain("Amami LINE CRM");
-    expect(html).toContain("一時保存のデモ管理画面");
+    expect(html).toContain("本番運用の管理画面");
     expect(html).toContain("スマートフォン用メニュー");
     expect(html).toContain("顧客");
     expect(html).toContain("アラート");

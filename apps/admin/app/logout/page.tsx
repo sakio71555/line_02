@@ -6,7 +6,7 @@ export default function LogoutBoundaryPage() {
       <section className="login-card" aria-labelledby="admin-logout-title">
       <div className="page-header">
         <div>
-          <p className="eyebrow">ログアウト準備中</p>
+          <p className="eyebrow">ログアウト</p>
           <h1 id="admin-logout-title">ログアウト</h1>
         </div>
         <a href="/">トップへ戻る</a>
@@ -14,7 +14,7 @@ export default function LogoutBoundaryPage() {
 
       <div className="notice">
         <p>
-          ログアウト後に安全にセッションを消すための準備画面です。本番接続は後続Loopで行います。
+          ログアウト後に安全にセッションを消すための画面です。
         </p>
         <p className="meta">
           access tokenは画面表示せず、localStorageやcookieへ独自保存しません。
@@ -24,9 +24,9 @@ export default function LogoutBoundaryPage() {
       <section className="section">
         <h2>ログアウトの扱い</h2>
         <ul>
-          <li>デモ用のログアウトでは、ログイン確認情報が残らないことを確認します。</li>
+          <li>ログアウト後に、ログイン確認情報が残らないことを確認します。</li>
           <li>利用先の選択情報はログイン情報とは別に扱います。</li>
-          <li>本物のログアウト処理はまだ呼びません。</li>
+          <li>access tokenやsecret値は画面に表示しません。</li>
         </ul>
       </section>
 

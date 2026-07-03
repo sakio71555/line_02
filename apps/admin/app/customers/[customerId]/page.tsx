@@ -33,7 +33,7 @@ export default async function CustomerDetailPage({
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">ローカルデモ顧客詳細</p>
+          <p className="eyebrow">顧客対応</p>
           <h1>顧客詳細</h1>
           <p className="meta">
             利用先: <span className="mono">{config.tenantId}</span> / お客様ID:{" "}
@@ -53,7 +53,7 @@ export default async function CustomerDetailPage({
         </p>
         <p className="meta">
           AIでまとめた内容はタイムラインへ保存されます。返信文の下書きとホームページ情報からの回答案は
-          確認用で、LINE送信も保存もしません。
+          担当者確認用で、LINE送信も保存もしません。
         </p>
         <p className="meta">
           選択中の利用先は、保存済みの利用先情報としてAPIに渡されます。
@@ -219,7 +219,7 @@ function customerDetailEntries(customer: AdminCustomerDetail) {
   return [
     ["お客様ID", customer.id],
     ["利用先ID", customer.tenant_id],
-    ["LINE連携ID（デモ）", customer.line_user_id],
+    ["LINE連携ID", customer.line_user_id],
     ["LINE表示名", customer.line_display_name],
     ["お名前", customer.name],
     ["電話番号", customer.phone],

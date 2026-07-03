@@ -36,7 +36,7 @@ describe("admin customers mobile cards", () => {
     expect(html).toContain("href=\"/customers/customer_demo_yamada_taro\"");
   });
 
-  it("renders an empty state that points to demo seed", () => {
+  it("renders an empty state that points to operational intake", () => {
     const html = renderToStaticMarkup(
       <CustomersPageView
         config={{
@@ -48,7 +48,7 @@ describe("admin customers mobile cards", () => {
     );
 
     expect(html).toContain("まだ顧客データがありません");
-    expect(html).toContain("demo seedをもう一度投入してください");
+    expect(html).toContain("LINEからの問い合わせや運用データが入ると");
   });
 });
 

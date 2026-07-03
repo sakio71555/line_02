@@ -149,14 +149,14 @@ describe("admin UI role visibility fixtures", () => {
       React.createElement(RoleVisibilityNote, { variant: "alerts" })
     );
 
-    expect(customerActionsHtml).toContain("権限ごとの表示制御は準備中です");
+    expect(customerActionsHtml).toContain("担当者操作の確認範囲");
     expect(customerActionsHtml).toContain("管理者、チーム管理者、担当者");
     expect(customerActionsHtml).toContain("相談内容のまとめ");
     expect(customerActionsHtml).toContain("返信文の下書き");
     expect(customerActionsHtml).toContain("ホームページ情報からの回答案");
-    expect(customerActionsHtml).toContain("本物の権限判定やボタン非表示はまだ行いません");
-    expect(alertsHtml).toContain("未返信チェックとデモ通知");
-    expect(alertsHtml).toContain("担当者は対応が必要な相談の確認から始められる想定");
-    expect(alertsHtml).toContain("今はデモ確認のため、操作ボタンは従来通り使えます");
+    expect(customerActionsHtml).toContain("LINE実送信はruntime gate");
+    expect(alertsHtml).toContain("未返信チェックと通知記録");
+    expect(alertsHtml).toContain("担当者は対応が必要な相談の確認から始めます");
+    expect(alertsHtml).toContain("外部通知や一斉送信は、この画面から自動実行しません");
   });
 });

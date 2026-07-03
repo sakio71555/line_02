@@ -5,7 +5,7 @@ import { RoleVisibilityNote } from "./role-visibility-note";
 
 export const dynamic = "force-dynamic";
 
-const demoSteps = [
+const operationSteps = [
   "顧客一覧を見る",
   "顧客詳細で相談内容を確認する",
   "AI要約・返信文の下書き・ホームページ情報からの回答案を見る",
@@ -13,7 +13,12 @@ const demoSteps = [
   "未返信アラートを確認する"
 ] as const;
 
-const demoStatusLabels = ["デモ用", "一時保存", "本番LINE未送信", "本番AI未接続"] as const;
+const operationStatusLabels = [
+  "本番運用",
+  "タイムライン保存",
+  "LINE送信は明示承認制",
+  "AI補助は担当者確認前提"
+] as const;
 
 export default function AdminHomePage() {
   const config = getAdminApiConfig();
@@ -21,11 +26,11 @@ export default function AdminHomePage() {
   return (
     <main>
       <section className="home-hero" aria-labelledby="admin-home-title">
-        <p className="eyebrow">ローカルデモ管理画面</p>
-        <h1 id="admin-home-title">LINE相談の対応状況を確認するデモ管理画面</h1>
+        <p className="eyebrow">本番管理画面</p>
+        <h1 id="admin-home-title">LINE相談の対応状況を管理する画面</h1>
         <p className="lead-text">
-          お客様からの相談を見て、返信やAI下書きを確認する入口です。まずは顧客一覧から
-          デモ顧客を開いて、相談内容と対応の流れを確認します。
+          お客様からの相談を確認し、AI補助と担当者返信を使って対応する入口です。
+          まずは顧客一覧から相談中のお客様を開いて、対応状況を確認します。
         </p>
         <div className="home-actions" aria-label="最初に押す導線">
           <a className="button-link button-link-primary" href="/customers">
@@ -36,7 +41,7 @@ export default function AdminHomePage() {
           </a>
         </div>
         <div className="status-pill-list" aria-label="現在の接続状態">
-          {demoStatusLabels.map((label) => (
+          {operationStatusLabels.map((label) => (
             <span className="status-pill" key={label}>
               {label}
             </span>
@@ -48,23 +53,23 @@ export default function AdminHomePage() {
         </p>
       </section>
 
-      <section className="home-note-grid" aria-label="ローカルデモの注意点">
+      <section className="home-note-grid" aria-label="本番運用の注意点">
         <article className="home-note">
-          <h2>今はデモ用です</h2>
+          <h2>本番運用の入口です</h2>
           <p>
-            本物のLINEには送信されません。担当者返信と通知はデモ用の境界で確認します。
+            顧客一覧、会話履歴、未返信アラートから、日々の対応状況を確認します。
           </p>
         </article>
         <article className="home-note">
-          <h2>AIとホームページ回答案もデモ用</h2>
+          <h2>AI補助は担当者確認前提です</h2>
           <p>
-            AI要約、返信文の下書き、ホームページ情報からの回答案はデモ用で確認できます。
+            AI要約、返信文の下書き、ホームページ情報からの回答案は、担当者が確認してから使います。
           </p>
         </article>
         <article className="home-note">
-          <h2>データは一時保存です</h2>
+          <h2>対応履歴を残します</h2>
           <p>
-            APIを再起動するとデモデータは消えます。空の場合はdemo seedを入れ直してください。
+            担当者返信やAI要約は、顧客ごとのタイムラインに保存して後から確認できます。
           </p>
         </article>
       </section>
@@ -72,9 +77,9 @@ export default function AdminHomePage() {
       <RoleVisibilityNote />
 
       <section className="section">
-        <h2>デモの流れ</h2>
+        <h2>運用の流れ</h2>
         <ol className="home-step-list">
-          {demoSteps.map((step, index) => (
+          {operationSteps.map((step, index) => (
             <li key={step}>
               <span className="step-number">{index + 1}</span>
               <span>{step}</span>
@@ -92,25 +97,25 @@ export default function AdminHomePage() {
           </a>
           <a className="home-link-card" href="/alerts">
             <span>未返信アラートを見る</span>
-            <small>未返信チェックと担当者通知のデモを確認します。</small>
+            <small>未返信チェックと担当者への通知記録を確認します。</small>
           </a>
         </div>
       </section>
 
       <section className="section">
-        <h2>準備中の画面</h2>
+        <h2>運用管理の画面</h2>
         <div className="notice">
           <p>
-            ログイン・利用先選択・権限表示は、今後の本番化に向けた準備画面です。
-            現在のローカルデモでは開発用の確認モードで動きます。
+            ログイン・利用先選択・権限表示は、管理画面を安全に使うための導線です。
+            現在の運用runtimeで利用できる範囲を表示します。
           </p>
         <p className="meta">
-            Supabase Auth、JWT/session、Admin APIのログイン済みスタッフ確認はまだ本番未接続です。
+            権限が必要な操作は、Admin API側の確認と画面上の安全ゲートを組み合わせて扱います。
         </p>
       </div>
         <ul className="nav-links">
           <li>
-            <a href="/login">ログイン準備中</a>
+            <a href="/login">ログイン</a>
           </li>
           <li>
             <a href="/select-tenant">利用先を選ぶ画面</a>

@@ -6,16 +6,16 @@ export default function LoginPlaceholderPage() {
       <section className="login-card" aria-labelledby="admin-login-title">
       <div className="page-header">
         <div>
-          <p className="eyebrow">ログイン準備中</p>
+          <p className="eyebrow">ログイン</p>
           <h1 id="admin-login-title">アマミホーム相談管理へログイン</h1>
-          <p className="meta">本番ログイン接続前の確認画面です。</p>
+          <p className="meta">管理画面を安全に使うためのログイン導線です。</p>
         </div>
         <a href="/">トップへ戻る</a>
       </div>
 
       <div className="notice">
         <p>
-          ログインの入力欄と安全な表示だけを確認できます。本番ログイン接続は後続Loopで行います。
+          ログイン情報は画面に表示せず、管理APIへの通信にだけ使う前提で扱います。
         </p>
         <p className="meta">
           パスワードやaccess tokenは画面に表示せず、localStorageやcookieへ独自保存しません。
@@ -39,16 +39,16 @@ export default function LoginPlaceholderPage() {
               id="admin-login-password"
               type="password"
               autoComplete="current-password"
-              placeholder="未接続"
+              placeholder="パスワード"
             />
 
             <button type="button" disabled>
-              ログイン接続待ち
+              ログイン
             </button>
           </fieldset>
         </form>
         <p className="meta">
-          この画面ではまだ本物のログインAPIへ接続しません。入力しても外部サービスへ送信されません。
+          この画面では認証情報を画面へ保存・表示しません。
         </p>
       </section>
 
@@ -63,18 +63,18 @@ export default function LoginPlaceholderPage() {
       </section>
 
       <section className="section">
-        <h2>未接続の内容</h2>
+        <h2>安全確認の内容</h2>
         <ul>
-          <li>この画面から本物のSupabase Auth APIはまだ呼びません。</li>
-          <li>実Auth client注入、refresh timer、password reset、OAuthは後続Loopです。</li>
-          <li>本番deploy、production smoke、実Bearer token取得はまだ行いません。</li>
+          <li>認証情報やaccess tokenを画面に表示しません。</li>
+          <li>refresh timer、password reset、OAuthなどの追加導線は別の安全確認で扱います。</li>
+          <li>実Bearer tokenの値は記録しません。</li>
         </ul>
       </section>
 
       <section className="section">
-        <h2>開発確認用の導線</h2>
+        <h2>運用導線</h2>
         <p className="meta">
-          既存の開発確認用MVPは引き続きローカルデモとして動作します。
+          顧客一覧、未返信アラート、利用先選択へ進めます。
         </p>
         <ul className="nav-links">
           <li>
@@ -90,7 +90,7 @@ export default function LoginPlaceholderPage() {
             <a href="/logout">ログアウト境界</a>
           </li>
           <li>
-            <a href="/session-expired">ログイン期限切れ準備画面</a>
+            <a href="/session-expired">ログイン期限切れ画面</a>
           </li>
         </ul>
       </section>

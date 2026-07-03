@@ -21,7 +21,7 @@ export function SelectTenantPageView({
       <div className="notice">
         <p>
           スタッフが複数の利用先に所属する場合に、操作対象の利用先を選びます。
-          今はアマミホームを選んでローカルデモを確認します。
+          アマミホームを選ぶと、顧客一覧や未返信アラートの操作対象に反映されます。
         </p>
         <p className="meta">
           保存するのは利用先の選択情報だけです。ログイン情報、APIキー、パスワードは保存しません。
@@ -34,8 +34,8 @@ export function SelectTenantPageView({
           <div className="tenant-card">
             <h3>アマミホーム</h3>
             <div className="status-pill-list">
-              <span className="status-pill">現在のデモ利用先</span>
-              <span className="status-pill status-pill-muted">一時保存</span>
+              <span className="status-pill">現在の運用利用先</span>
+              <span className="status-pill status-pill-muted">選択保存</span>
             </div>
             <dl className="compact-detail">
               <dt>利用先ID</dt>
@@ -45,10 +45,10 @@ export function SelectTenantPageView({
               <dt>公式サイト</dt>
               <dd className="mono">amamihome.net</dd>
               <dt>状態</dt>
-              <dd>開発確認用 / 選択保存対応</dd>
+              <dd>運用対象 / 選択保存対応</dd>
             </dl>
             <p className="meta">
-              開発確認ではこの利用先を選びます。将来は所属している利用先だけを一覧表示する想定です。
+              この利用先を選ぶと、管理画面の操作対象として保存されます。
             </p>
           </div>
           {selectedTenantForm}
@@ -68,19 +68,18 @@ export function SelectTenantPageView({
           <li>
             利用先の選択は権限そのものではありません。権限確認はAPI側で行う方針です。
           </li>
-          <li>Supabase Auth / JWTのproduction本接続はまだ未完了です。</li>
+          <li>認証情報やsession値は画面に表示せず、利用先選択とは分けて扱います。</li>
         </ul>
       </section>
 
       <section className="section">
-        <h2>開発確認用の導線</h2>
+        <h2>運用導線</h2>
         <p className="meta">
-          既存の開発確認用MVPは引き続きローカルデモとして動作します。本物の認証処理と
-          利用先一覧API取得はまだ行いません。
+          顧客一覧、未返信アラート、ログイン関連画面へ進めます。
         </p>
         <ul className="nav-links">
           <li>
-            <a href="/login">ログイン準備画面</a>
+            <a href="/login">ログイン画面</a>
           </li>
           <li>
             <a href="/customers">顧客一覧へ進む</a>
@@ -89,10 +88,10 @@ export function SelectTenantPageView({
             <a href="/alerts">未返信アラートへ進む</a>
           </li>
           <li>
-            <a href="/permission-denied">権限不足準備画面</a>
+            <a href="/permission-denied">権限不足画面</a>
           </li>
           <li>
-            <a href="/session-expired">ログイン期限切れ準備画面</a>
+            <a href="/session-expired">ログイン期限切れ画面</a>
           </li>
           <li>
             <a href="/">トップへ戻る</a>

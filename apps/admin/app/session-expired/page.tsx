@@ -5,17 +5,17 @@ import { AuthPlaceholderPage } from "../auth-placeholder-page";
 export default function SessionExpiredPlaceholderPage() {
   return (
     <AuthPlaceholderPage
-      eyebrow="ログイン期限切れ準備中"
+      eyebrow="ログイン期限切れ"
       title="ログインの有効期限が切れました"
-      description="将来、JWT/sessionの期限切れや無効化を検知した場合に表示する準備画面です。現時点ではsession検証やlogout処理は行いません。"
+      description="JWT/sessionの期限切れや無効化を検知した場合に表示する安全画面です。"
       notes={[
-        "Supabase Auth未接続のため、session expirationの実判定はありません。",
-        "cookie削除、logout API呼び出し、session storage削除は行いません。",
-        "将来はログイン準備画面または本物のログイン画面へ誘導します。",
-        "開発確認用では既存のtenant_amamihome導線でMVP確認を継続できます。"
+        "session expirationを検知した場合は、再ログインへ誘導します。",
+        "cookie削除、logout API呼び出し、session storage削除は安全な境界で扱います。",
+        "ログイン画面へ戻り、必要に応じて利用先を選び直します。",
+        "tenant_amamihomeの運用導線へ戻る場合も、認証情報の値は表示しません。"
       ]}
       links={[
-        { href: "/login", label: "ログイン準備画面へ" },
+        { href: "/login", label: "ログイン画面へ" },
         { href: "/customers", label: "顧客一覧へ進む" },
         { href: "/alerts", label: "未返信アラートへ進む" },
         { href: "/", label: "トップへ戻る" }

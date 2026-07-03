@@ -35,11 +35,11 @@ export function CustomersPageView({
           スマートフォンでも確認しやすいよう、対応状況と最新メッセージをカードで表示します。
         </p>
         <p className="meta">
-          顧客データは一時保存です。APIを再起動すると消えるため、空の場合はdemo seedを
-          もう一度投入してください。
+          現在のAPI runtimeに保存されている顧客情報を表示します。空の場合はLINE webhook受信や
+          運用データの投入状況を確認してください。
         </p>
         <p className="meta">
-          本物のLINE送信、OpenAI API、Supabase本番DBにはまだ接続していません。
+          LINE送信は、実送信ゲートが開いていて担当者が明示確認した場合だけ実行されます。
         </p>
         <p className="meta">選択中の利用先は、保存済みの利用先情報としてAPIに渡されます。</p>
       </div>
@@ -53,8 +53,7 @@ export function CustomersPageView({
         <div className="empty">
           <strong>まだ顧客データがありません</strong>
           <p>
-            デモデータを準備すると、ここに問い合わせが表示されます。API processを再起動した場合は
-            demo seedをもう一度投入してください。
+            LINEからの問い合わせや運用データが入ると、ここにお客様が表示されます。
           </p>
         </div>
       ) : (

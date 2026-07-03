@@ -34,13 +34,12 @@ export function AuthPlaceholderPage({
       <div className="notice">
         <p>{description}</p>
         <p className="meta">
-          現在は準備中の画面です。Supabase Auth、JWT/session、Admin APIのログイン済みスタッフ確認は
-          まだ本番未接続です。
+          認証情報やsession値を画面に表示せず、管理操作は安全な状態で案内します。
         </p>
       </div>
 
       <section className="section">
-        <h2>未接続の内容</h2>
+        <h2>安全確認の内容</h2>
         <ul>
           {notes.map((note) => (
             <li key={note}>{note}</li>
@@ -49,10 +48,9 @@ export function AuthPlaceholderPage({
       </section>
 
       <section className="section">
-        <h2>開発確認用の導線</h2>
+        <h2>運用導線</h2>
         <p className="meta">
-          既存の開発確認用MVPは引き続きローカルデモとして動作します。本物の認証処理、
-          cookie保存、session保存は行いません。
+          顧客一覧、未返信アラート、利用先選択へ戻って、現在の対応状況を確認できます。
         </p>
         <ul className="auth-page-links">
           {links.map((link) => (
