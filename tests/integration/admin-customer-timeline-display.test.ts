@@ -34,31 +34,37 @@ describe("admin customer timeline display", () => {
       {
         id: "customer-menu",
         role: "customer",
+        body: "担当者に相談",
         created_at: "2026-07-04T16:52:00.000Z"
       },
       {
         id: "system-tree",
         role: "system",
+        body: "分類ツリー: 初期メニュー -> 担当者に相談",
         created_at: "2026-07-04T16:52:01.000Z"
       },
       {
         id: "bot-prompt",
         role: "bot",
+        body: "相談カテゴリを次から選んで、そのままLINEで送ってください。",
         created_at: "2026-07-04T16:52:01.000Z"
       },
       {
         id: "customer-answer",
         role: "customer",
+        body: "モデルハウス見学について",
         created_at: "2026-07-04T16:53:00.000Z"
       },
       {
         id: "ai-summary",
         role: "ai",
+        body: "要約: モデルハウス相談",
         created_at: "2026-07-04T16:54:00.000Z"
       },
       {
         id: "staff-reply",
         role: "staff",
+        body: "担当者から返信します。",
         created_at: "2026-07-04T16:55:00.000Z"
       }
     ];
@@ -78,6 +84,12 @@ describe("admin customer timeline display", () => {
       "customer-answer",
       "ai-summary",
       "staff-reply"
+    ]);
+    expect(conversation.map((message) => message.body)).toEqual([
+      "担当者に相談",
+      "相談カテゴリを次から選んで、そのままLINEで送ってください。",
+      "モデルハウス見学について",
+      "担当者から返信します。"
     ]);
   });
 

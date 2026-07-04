@@ -951,6 +951,10 @@ dl.detail-grid {
   scrollbar-gutter: stable;
 }
 
+.timeline-list-line-log {
+  align-content: start;
+}
+
 .timeline-item {
   display: grid;
   gap: 7px;
@@ -959,6 +963,10 @@ dl.detail-grid {
 }
 
 .timeline-item-customer {
+  justify-self: start;
+}
+
+.timeline-item-bot {
   justify-self: start;
 }
 

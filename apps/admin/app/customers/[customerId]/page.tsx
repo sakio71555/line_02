@@ -6,8 +6,7 @@ import {
   getAdminCustomerTimeline,
   getAdminLineRealSendCapability,
   type AdminApiRequestOptions,
-  type AdminCustomerDetailResponse,
-  type AdminCustomerTimelineResponse
+  type AdminCustomerDetailResponse
 } from "../../../src/admin-api";
 import {
   formatAdminDateTime,
@@ -15,11 +14,11 @@ import {
 } from "../../../src/customer-timeline-display";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import { CustomerActionPanel, CustomerRichMenuSwitch } from "./customer-actions";
+import { CustomerTimelineList } from "./customer-timeline-list";
 
 export const dynamic = "force-dynamic";
 
 type AdminCustomerDetail = AdminCustomerDetailResponse["customer"];
-type AdminTimelineMessage = AdminCustomerTimelineResponse["messages"][number];
 
 export default async function CustomerDetailPage({
   params
@@ -55,7 +54,7 @@ export default async function CustomerDetailPage({
 
       <div className="notice">
         <p>
-          この画面では、お客様情報、相談の流れ、AIの下書き、担当者返信をまとめて確認します。
+          この画面では、お客様情報、LINEトーク履歴、AIの下書き、担当者返信をまとめて確認します。
         </p>
         <p className="meta">
           AIでまとめた内容はタイムラインへ保存されます。返信文の下書きとホームページ情報からの回答案は
@@ -127,7 +126,11 @@ export default async function CustomerDetailPage({
       )}
 
       <section className="section">
-        <h2>相談の流れ / タイムライン</h2>
+        <h2>LINEトーク履歴</h2>
+        <p className="meta">
+          実機のLINE画面に表示されるお客様発言・自動応答・担当者返信だけを、そのまま時系列で表示します。
+          分類ツリーや受付済みなどのCRM内部記録はこの枠には表示しません。
+        </p>
         {timeline.status === "error" ? (
           <div className="error">
             <strong>APIエラー</strong>
@@ -136,27 +139,7 @@ export default async function CustomerDetailPage({
         ) : timelineMessages.length === 0 ? (
           <p className="empty">表示できるメッセージはまだありません。</p>
         ) : (
-          <ol className="timeline-list" aria-label="相談タイムライン">
-            {timelineMessages.map((message) => (
-              <li className={`timeline-item ${getTimelineItemClass(message)}`} key={message.id}>
-                <div className="timeline-meta">
-                  <span className={getTimelineRoleBadgeClass(message.role)}>
-                    {formatMessageRole(message.role)}
-                  </span>
-                  <span className="status-pill status-pill-muted">
-                    {formatMessageType(message.message_type)}
-                  </span>
-                  <span className="meta">{formatAdminDateTime(message.created_at)}</span>
-                </div>
-                <p className="timeline-body">{formatDetailValue(message.body)}</p>
-                {message.source_url ? (
-                  <div className="timeline-meta">
-                    <a href={message.source_url}>参考URL</a>
-                  </div>
-                ) : null}
-              </li>
-            ))}
-          </ol>
+          <CustomerTimelineList messages={timelineMessages} />
         )}
       </section>
 
@@ -302,32 +285,6 @@ function formatResponseMode(mode: string): string {
   return labels[mode] ?? mode;
 }
 
-function formatMessageRole(role: string): string {
-  const labels: Record<string, string> = {
-    customer: "お客様",
-    bot: "自動応答",
-    staff: "担当者",
-    system: "システム",
-    ai: "AI要約"
-  };
-
-  return labels[role] ?? role;
-}
-
-function formatMessageType(type: string): string {
-  const labels: Record<string, string> = {
-    text: "テキスト",
-    image: "画像",
-    file: "ファイル",
-    form: "フォーム",
-    reservation: "予約",
-    alert: "アラート",
-    summary: "要約"
-  };
-
-  return labels[type] ?? type;
-}
-
 function getResponseModeBadgeClass(mode: string): string {
   if (mode === "human_required" || mode === "human_active") {
     return "status-pill status-pill-warning";
@@ -342,40 +299,4 @@ function getResponseModeBadgeClass(mode: string): string {
   }
 
   return "status-pill";
-}
-
-function getTimelineRoleBadgeClass(role: string): string {
-  if (role === "customer") {
-    return "status-pill status-pill-warning";
-  }
-
-  if (role === "staff") {
-    return "status-pill";
-  }
-
-  if (role === "ai" || role === "system") {
-    return "status-pill status-pill-muted";
-  }
-
-  return "status-pill";
-}
-
-function getTimelineItemClass(message: AdminTimelineMessage): string {
-  if (message.role === "customer") {
-    return "timeline-item-customer";
-  }
-
-  if (message.role === "staff") {
-    return "timeline-item-staff";
-  }
-
-  if (message.role === "ai") {
-    return "timeline-item-ai";
-  }
-
-  if (message.role === "system") {
-    return "timeline-item-system";
-  }
-
-  return "";
 }
