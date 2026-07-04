@@ -720,6 +720,31 @@ function isMeetingScheduleConfirmRequest(values: StructuredConsultationValues): 
   return values.sub_category === "打合せ内容を確認したい";
 }
 
+function isPlanConsultationInteriorTargetRequest(values: StructuredConsultationValues): boolean {
+  return Boolean(
+    values.sub_category &&
+      values.sub_category !== "外観デザインについて" &&
+      values.sub_category !== "その他"
+  );
+}
+
+function isPlanConsultationExteriorTargetRequest(values: StructuredConsultationValues): boolean {
+  return values.sub_category === "外観デザインについて";
+}
+
+function isLandStatusQuestionNeeded(values: StructuredConsultationValues): boolean {
+  return Boolean(
+    values.sub_category &&
+      values.sub_category !== "土地を探している" &&
+      values.sub_category !== "候補地について相談したい" &&
+      values.sub_category !== "所有地について相談したい"
+  );
+}
+
+function isDocumentStageQuestionNeeded(values: StructuredConsultationValues): boolean {
+  return values.sub_category !== "契約前の確認";
+}
+
 const structuredConsultationFlowConfigs = [
   {
     flow_key: "negotiation.meeting_schedule",
@@ -858,6 +883,7 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "プラン・間取り相談 対象場所: ",
         prompt_reply: "対象の場所を次から選んで送ってください。",
         retry_reply: "対象の場所を次から選んで送ってください。",
+        is_applicable: isPlanConsultationInteriorTargetRequest,
         options: [
           { label: "LDK", value: "ldk" },
           { label: "キッチン", value: "kitchen" },
@@ -869,6 +895,24 @@ const structuredConsultationFlowConfigs = [
           { label: "玄関", value: "entrance" },
           { label: "収納", value: "storage_area" },
           { label: "外観", value: "exterior_area" },
+          { label: "その他", value: "other" }
+        ]
+      },
+      {
+        key: "exterior_target_area",
+        kind: "choice",
+        prompt_timeline_body: "プラン・間取り相談 外観対象選択案内済み",
+        value_timeline_prefix: "プラン・間取り相談 外観対象: ",
+        prompt_reply: "外観で相談したい箇所を次から選んで送ってください。",
+        retry_reply: "外観で相談したい箇所を次から選んで送ってください。",
+        is_applicable: isPlanConsultationExteriorTargetRequest,
+        options: [
+          { label: "外観全体", value: "overall_exterior" },
+          { label: "屋根", value: "roof" },
+          { label: "外壁", value: "wall" },
+          { label: "玄関まわり", value: "entrance_exterior" },
+          { label: "窓まわり", value: "window_exterior" },
+          { label: "外構", value: "exterior_site" },
           { label: "その他", value: "other" }
         ]
       },
@@ -1004,6 +1048,7 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "土地・敷地の相談 土地状況: ",
         prompt_reply: "土地の状況を次から選んで送ってください。",
         retry_reply: "土地の状況を次から選んで送ってください。",
+        is_applicable: isLandStatusQuestionNeeded,
         options: [
           { label: "まだ土地なし", value: "no_land" },
           { label: "候補地あり", value: "candidate_land" },
@@ -1070,6 +1115,7 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "必要書類・確認事項 現在段階: ",
         prompt_reply: "現在の段階を次から選んで送ってください。",
         retry_reply: "現在の段階を次から選んで送ってください。",
+        is_applicable: isDocumentStageQuestionNeeded,
         options: [
           { label: "初回相談", value: "first_consultation" },
           { label: "プラン提案中", value: "plan_proposal" },
@@ -3367,6 +3413,12 @@ function formatStructuredConsultationDetailLines(input: {
   const body = input.fields.body_label?.trim();
   const bodyLines = body ? ["相談内容：", body.slice(0, 1000)] : [];
   const subCategoryLabel = formatStructuredConsultationChoiceLabel(input, "sub_category");
+  const planTargetLabel =
+    input.fields.target_area_label?.trim() ??
+    input.fields.exterior_target_area_label?.trim() ??
+    "指定なし";
+  const landStatusLabel = resolveLandStatusLabelForStaffNotification(input.fields);
+  const documentStageLabel = resolveDocumentStageLabelForStaffNotification(input.fields);
 
   switch (input.config.category) {
     case "meeting":
@@ -3383,7 +3435,7 @@ function formatStructuredConsultationDetailLines(input: {
       ].filter((line): line is string => line !== null);
     case "plan_design":
       return [
-        `対象：${input.fields.target_area_label ?? "未入力"}`,
+        `対象：${planTargetLabel}`,
         `内容：${subCategoryLabel ?? "未入力"}`,
         `希望優先度：${input.fields.request_priority_label ?? "未入力"}`,
         `見積影響：${input.fields.estimate_impact_possible === "true" ? "可能性あり" : "未判定"}`,
@@ -3401,7 +3453,7 @@ function formatStructuredConsultationDetailLines(input: {
       ];
     case "land_site":
       return [
-        `土地状況：${input.fields.land_status_label ?? "未入力"}`,
+        `土地状況：${landStatusLabel}`,
         `エリア：${input.fields.area_present === "true" ? "入力あり" : "未入力"}`,
         "資料添付：案内済み",
         "担当：営業",
@@ -3409,7 +3461,7 @@ function formatStructuredConsultationDetailLines(input: {
       ];
     case "documents":
       return [
-        `現在の段階：${input.fields.current_stage_label ?? "未入力"}`,
+        `現在の段階：${documentStageLabel}`,
         "書類画像：添付案内済み",
         "担当：営業事務 / 営業",
         ...bodyLines
@@ -3417,6 +3469,37 @@ function formatStructuredConsultationDetailLines(input: {
     default:
       return bodyLines;
   }
+}
+
+function resolveLandStatusLabelForStaffNotification(fields: Record<string, string>): string {
+  const explicitLabel = fields.land_status_label?.trim();
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  switch (fields.sub_category) {
+    case "land_search":
+      return "土地探し中";
+    case "candidate_land":
+      return "候補地あり";
+    case "owned_land":
+      return "所有地あり";
+    default:
+      return "未入力";
+  }
+}
+
+function resolveDocumentStageLabelForStaffNotification(fields: Record<string, string>): string {
+  const explicitLabel = fields.current_stage_label?.trim();
+  if (explicitLabel) {
+    return explicitLabel;
+  }
+
+  if (fields.sub_category === "pre_contract") {
+    return "契約前確認";
+  }
+
+  return "未入力";
 }
 
 function formatStructuredConsultationChoiceLabel(input: {

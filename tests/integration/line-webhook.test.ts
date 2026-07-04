@@ -1766,6 +1766,176 @@ describe("LINE webhook foundation", () => {
     }
   });
 
+  it("skips context-inapplicable structured consultation questions", async () => {
+    const cases = [
+      {
+        id: "plan-exterior",
+        userId: "U_TEST_USER_STRUCTURED_PLAN_EXTERIOR",
+        customerId: "customer_structured_plan_exterior",
+        texts: [
+          "プラン・間取り相談",
+          "外観デザインについて",
+          "玄関まわり",
+          "玄関まわりの雰囲気を相談したいです。",
+          "相談して決めたい"
+        ],
+        nextPromptContains: "外観で相談したい箇所",
+        nextPromptNotContains: "LDK",
+        alertSnippets: [
+          "sub_category=exterior",
+          "exterior_target_area=entrance_exterior",
+          "exterior_target_area_label=玄関まわり"
+        ],
+        alertNotSnippets: ["\ntarget_area="],
+        notificationSnippets: [
+          "プラン・間取り相談の相談が届きました。",
+          "種別：外観デザイン",
+          "対象：玄関まわり",
+          "玄関まわりの雰囲気を相談したいです。"
+        ]
+      },
+      {
+        id: "plan-other",
+        userId: "U_TEST_USER_STRUCTURED_PLAN_OTHER",
+        customerId: "customer_structured_plan_other",
+        texts: [
+          "プラン・間取り相談",
+          "その他",
+          "全体の雰囲気について相談したいです。",
+          "相談して決めたい"
+        ],
+        nextPromptContains: "具体的な相談内容",
+        nextPromptNotContains: "対象の場所",
+        alertSnippets: ["sub_category=other", "body_label=全体の雰囲気について相談したいです。"],
+        alertNotSnippets: ["\ntarget_area=", "\nexterior_target_area="],
+        notificationSnippets: [
+          "プラン・間取り相談の相談が届きました。",
+          "種別：その他",
+          "対象：指定なし",
+          "全体の雰囲気について相談したいです。"
+        ]
+      },
+      {
+        id: "land-search",
+        userId: "U_TEST_USER_STRUCTURED_LAND_SEARCH",
+        customerId: "customer_structured_land_search",
+        texts: [
+          "土地・敷地の相談",
+          "土地を探している",
+          "松山市周辺",
+          "駅に近い土地を探しています。"
+        ],
+        nextPromptContains: "住所またはエリア",
+        nextPromptNotContains: "土地の状況",
+        alertSnippets: [
+          "sub_category=land_search",
+          "area_present=true",
+          "body_label=駅に近い土地を探しています。"
+        ],
+        alertNotSnippets: ["\nland_status="],
+        notificationSnippets: [
+          "土地・敷地の相談の相談が届きました。",
+          "種別：土地探し",
+          "土地状況：土地探し中",
+          "駅に近い土地を探しています。"
+        ]
+      },
+      {
+        id: "documents-pre-contract",
+        userId: "U_TEST_USER_STRUCTURED_DOCUMENTS_PRE_CONTRACT",
+        customerId: "customer_structured_documents_pre_contract",
+        texts: [
+          "必要書類・確認事項",
+          "契約前の確認",
+          "契約前に確認すべき書類を知りたいです。"
+        ],
+        nextPromptContains: "具体的な内容",
+        nextPromptNotContains: "現在の段階",
+        alertSnippets: [
+          "sub_category=pre_contract",
+          "body_label=契約前に確認すべき書類を知りたいです。"
+        ],
+        alertNotSnippets: ["\ncurrent_stage="],
+        notificationSnippets: [
+          "必要書類・確認事項の相談が届きました。",
+          "種別：契約前確認",
+          "現在の段階：契約前確認",
+          "契約前に確認すべき書類を知りたいです。"
+        ]
+      }
+    ];
+
+    for (const testCase of cases) {
+      const lineClient = new MockLineClient();
+      const staffNotifier = new RecordingStaffNotifier();
+      const { app, alertRepository, customerRepository } = createTestContext({
+        lineClient,
+        staffNotifier,
+        env: {
+          APP_ENV: "production"
+        }
+      });
+
+      await customerRepository.save(
+        buildRegisteredCustomer({
+          id: testCase.customerId,
+          lineUserId: testCase.userId,
+          displayName: "分岐 顧客"
+        })
+      );
+
+      let finalBody: unknown = null;
+      for (const [index, text] of testCase.texts.entries()) {
+        const response = await sendLineText(app, {
+          userId: testCase.userId,
+          eventId: `01TESTSTRUCTUREDINAPPLICABLE${testCase.id}${index}`,
+          messageId: `test-structured-inapplicable-${testCase.id}-${index}`,
+          replyToken: `reply_token_structured_inapplicable_${testCase.id}_${index}`,
+          text,
+          timestamp: 1710000058000 + index * 1000
+        });
+        finalBody = await response.json();
+        expect(response.status).toBe(200);
+      }
+
+      expect(lineClient.replies[1]?.messages[0]?.text).toContain(
+        testCase.nextPromptContains
+      );
+      expect(lineClient.replies[1]?.messages[0]?.text).not.toContain(
+        testCase.nextPromptNotContains
+      );
+      expect(finalBody).toMatchObject({
+        staff_notifications: {
+          attempted: true,
+          notified: 1,
+          failed: 0
+        },
+        logging: {
+          alerts_created: 1,
+          structured_consultation_alerts_created: 1,
+          structured_consultation_alerts_notification_required: 1
+        }
+      });
+
+      const alertMessage = alertRepository.list()[0]?.message ?? "";
+      for (const snippet of testCase.alertSnippets) {
+        expect(alertMessage).toContain(snippet);
+      }
+      for (const snippet of testCase.alertNotSnippets) {
+        expect(alertMessage).not.toContain(snippet);
+      }
+
+      const notification = staffNotifier.notifications[staffNotifier.notifications.length - 1];
+      for (const snippet of testCase.notificationSnippets) {
+        expect(notification?.message).toContain(snippet);
+      }
+      expect(notification?.message).toContain(
+        `https://admin.taiyolabel.site/customers/${testCase.customerId}`
+      );
+      expect(notification?.message).not.toContain("http://localhost:3000");
+    }
+  });
+
   it("creates structured staff notifications for plan estimate land and document flows", async () => {
     const cases = [
       {
@@ -1834,27 +2004,27 @@ describe("LINE webhook foundation", () => {
         customerId: "customer_structured_land",
         texts: [
           "土地・敷地の相談",
-          "候補地について相談したい",
+          "敷地調査をお願いしたい",
           "候補地あり",
           "松山市周辺",
-          "候補地の造成費が気になります。"
+          "候補地の敷地調査について確認したいです。"
         ],
         alertSnippets: [
           "structured_consultation_flow=negotiation.land_site",
           "category=land_site",
-          "sub_category=candidate_land",
+          "sub_category=site_survey",
           "land_status=candidate_land",
           "area_present=true",
           "attachment_guidance=sent"
         ],
         notificationSnippets: [
           "土地・敷地の相談の相談が届きました。",
-          "種別：候補地あり",
+          "種別：敷地調査",
           "土地状況：候補地あり",
           "エリア：入力あり",
           "資料添付：案内済み",
           "担当：営業",
-          "候補地の造成費が気になります。"
+          "候補地の敷地調査について確認したいです。"
         ]
       },
       {
