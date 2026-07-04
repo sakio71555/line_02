@@ -270,7 +270,7 @@ describe("LINE webhook foundation", () => {
       status: "open",
       severity: "high"
     });
-    expect(alertRepository.list()[0]?.message).not.toContain("モデルホームを見学したいです");
+    expect(alertRepository.list()[0]?.message).toContain("モデルホームを見学したいです");
   });
 
   it("attempts staff notifications when staff LINE runtime is configured in a development-labeled process", async () => {
@@ -299,7 +299,7 @@ describe("LINE webhook foundation", () => {
     });
     expect(staffNotifier.notifications).toHaveLength(1);
     expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
-    expect(staffNotifier.notifications[0]?.message).not.toContain("モデルホームを見学したいです");
+    expect(staffNotifier.notifications[0]?.message).toContain("モデルホームを見学したいです");
     expect(alertRepository.list()[0]).toMatchObject({
       status: "notified"
     });
@@ -1009,7 +1009,7 @@ describe("LINE webhook foundation", () => {
       status: "open",
       severity: "high"
     });
-    expect(alertRepository.list()[0]?.message).not.toContain("住宅ローンと予算");
+    expect(alertRepository.list()[0]?.message).toContain("住宅ローンと予算");
   });
 
   it("restarts stale contact-staff category selection when the trigger is tapped again", async () => {
@@ -1170,12 +1170,22 @@ describe("LINE webhook foundation", () => {
         contact_staff_alerts_created: 1
       }
     });
-    expect(staffNotifier.notifications).toHaveLength(1);
-    expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
-    expect(staffNotifier.notifications[0]?.message).toContain("管理画面で確認してください。");
-    expect(staffNotifier.notifications[0]?.message).not.toContain(
+    expect(staffNotifier.notifications).toHaveLength(4);
+    expect(staffNotifier.notifications[0]?.message).toContain("内容：担当者相談を開始");
+    expect(staffNotifier.notifications[1]?.message).toContain(
+      "内容：担当者相談カテゴリ: モデルハウス見学について"
+    );
+    expect(staffNotifier.notifications[2]?.message).toContain("内容：担当者相談連絡先確認済み");
+    expect(staffNotifier.notifications[2]?.message).toContain("顧客：田中太郎");
+    expect(staffNotifier.notifications[2]?.message).toContain("電話：090-1111-2222");
+    expect(staffNotifier.notifications[3]?.message).toContain("新しい相談が届きました。");
+    expect(staffNotifier.notifications[3]?.message).toContain("顧客：田中太郎");
+    expect(staffNotifier.notifications[3]?.message).toContain("電話：090-1111-2222");
+    expect(staffNotifier.notifications[3]?.message).toContain("相談内容：");
+    expect(staffNotifier.notifications[3]?.message).toContain(
       "モデルハウス見学の日程について相談したいです。"
     );
+    expect(staffNotifier.notifications[3]?.message).toContain("管理画面で確認してください。");
     expect(alertRepository.list()[0]).toMatchObject({
       status: "notified"
     });
@@ -1284,17 +1294,23 @@ describe("LINE webhook foundation", () => {
         contact_staff_alerts_notification_required: 1
       }
     });
-    expect(staffNotifier.notifications).toHaveLength(1);
-    expect(staffNotifier.notifications[0]?.message).toContain("LINEの更新が届きました。");
-    expect(staffNotifier.notifications[0]?.message).toContain("顧客：登録済み 太郎");
-    expect(staffNotifier.notifications[0]?.message).toContain("日時：2024-03-09T16:00:42.000Z");
-    expect(staffNotifier.notifications[0]?.message).toContain(
+    expect(staffNotifier.notifications).toHaveLength(3);
+    expect(staffNotifier.notifications[0]?.message).toContain("内容：担当者相談を開始");
+    expect(staffNotifier.notifications[1]?.message).toContain(
+      "内容：担当者相談カテゴリ: 費用・ローンについて"
+    );
+    expect(staffNotifier.notifications[2]?.message).toContain("LINEの更新が届きました。");
+    expect(staffNotifier.notifications[2]?.message).toContain("顧客：登録済み 太郎");
+    expect(staffNotifier.notifications[2]?.message).toContain("電話：090-2222-3333");
+    expect(staffNotifier.notifications[2]?.message).toContain("日時：2024-03-09T16:00:42.000Z");
+    expect(staffNotifier.notifications[2]?.message).toContain(
       "https://admin.taiyolabel.site/customers/customer_registered_contact_staff_repeat"
     );
-    expect(staffNotifier.notifications[0]?.message).not.toContain(
+    expect(staffNotifier.notifications[2]?.message).toContain("相談内容：");
+    expect(staffNotifier.notifications[2]?.message).toContain(
       "資金計画について担当者に相談したいです。"
     );
-    expect(staffNotifier.notifications[0]?.message).not.toContain(
+    expect(staffNotifier.notifications[2]?.message).not.toContain(
       "通知本文には含めない相談内容です"
     );
     expect(alertRepository.list()).toHaveLength(1);

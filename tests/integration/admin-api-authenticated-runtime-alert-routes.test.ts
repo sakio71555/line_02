@@ -498,6 +498,7 @@ class SpyAlertRepository extends InMemoryAlertRepository implements AlertReposit
     tenant_id: string;
     alert_id: string;
     status: AlertStatus;
+    message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
     updated_at: string;
@@ -531,6 +532,7 @@ class SpyAlertRepository extends InMemoryAlertRepository implements AlertReposit
     tenant_id: string;
     alert_id: string;
     status: AlertStatus;
+    message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
     updated_at: string;

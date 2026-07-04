@@ -202,7 +202,7 @@ describe("admin open alert staff notification API", () => {
     expect(staffNotifier.notifications[0]?.message).toContain(
       "http://localhost:3000/customers/customer_amami"
     );
-    expect(staffNotifier.notifications[0]?.message).not.toContain("未返信の緊急相談があります");
+    expect(staffNotifier.notifications[0]?.message).toContain("未返信の緊急相談があります");
     expect(staffNotifier.notifications[0]?.message).not.toContain("Alert type:");
     expect(staffNotifier.notifications[0]?.message).not.toContain("Customer:");
     expect(updatedOpenAlert).toMatchObject({
@@ -333,7 +333,7 @@ describe("admin open alert staff notification API", () => {
       });
       expect(pushBody.messages?.[0]?.text).toContain("新しい相談が届きました。");
       expect(pushBody.messages?.[0]?.text).toContain("管理画面で確認してください。");
-      expect(pushBody.messages?.[0]?.text).not.toContain("通知本文には含めない相談内容です");
+      expect(pushBody.messages?.[0]?.text).toContain("通知本文には含めない相談内容です");
       expect(updatedOpenAlert).toMatchObject({
         status: "notified",
         notified_at: now
@@ -416,7 +416,7 @@ describe("admin open alert staff notification API", () => {
       expect(linePushRequests[0]?.authorization).toBe("Bearer test_customer_line_access_token");
       expect(pushBody.to).toBe("U_TEST_CUSTOMER_CHANNEL_STAFF_TARGET");
       expect(pushBody.messages?.[0]?.text).toContain("新しい相談が届きました。");
-      expect(pushBody.messages?.[0]?.text).not.toContain(
+      expect(pushBody.messages?.[0]?.text).toContain(
         "仮運用通知本文には含めない相談内容です"
       );
     } finally {

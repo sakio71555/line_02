@@ -324,6 +324,7 @@ export interface AlertRepository {
     tenant_id: string;
     alert_id: string;
     status: AlertStatus;
+    message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
     updated_at: string;
@@ -454,6 +455,7 @@ export interface EnsureOpenUnrepliedCustomerMessageAlertInput {
   tenant_id: string;
   customer: Customer;
   alertRepository: AlertRepository;
+  message?: string;
   createId?: () => string;
   now?: () => string;
 }
@@ -528,7 +530,11 @@ export interface LineReplyInstruction {
 export interface CustomerLineStaffNotificationEvent extends TenantScoped {
   customer_id: string;
   customer_display_name: string | null;
+  customer_phone?: string | null;
+  customer_email?: string | null;
+  customer_address?: string | null;
   action_label: string;
+  detail_text?: string | null;
   occurred_at: string;
 }
 
@@ -625,6 +631,7 @@ const contactStaffContactPromptTimelineBody = "担当者相談連絡先確認案
 const contactStaffContactConfirmedTimelineBody = "担当者相談連絡先確認済み";
 const contactStaffContentPromptTimelineBody = "担当者相談内容入力案内済み";
 const contactStaffAcceptedTimelineBody = "担当者相談受付済み";
+const contactStaffStartActivityLabel = "担当者相談を開始";
 
 export function resolveCustomerContactStaffCategory(text: string | null): string | null {
   const normalized = text?.trim();
@@ -708,6 +715,7 @@ export async function ensureOpenUnrepliedCustomerMessageAlert(
       tenant_id: input.tenant_id,
       alert_id: existingAlert.id,
       status: "open",
+      ...(input.message ? { message: input.message } : {}),
       notified_at: null,
       updated_at: now
     });
@@ -724,6 +732,7 @@ export async function ensureOpenUnrepliedCustomerMessageAlert(
   const alert = createUnrepliedAlert({
     tenant_id: input.tenant_id,
     customer: input.customer,
+    ...(input.message !== undefined ? { message: input.message } : {}),
     now,
     ...(input.createId ? { createId: input.createId } : {})
   });
@@ -979,7 +988,7 @@ export async function notifyOpenAlerts(
       : null;
     const payload = buildStaffNotificationPayload(alert, {
       ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {}),
-      customerDisplayName: customer?.display_name ?? null
+      customer
     });
 
     try {
@@ -1093,6 +1102,9 @@ export async function logLineWebhookEvents(
           tenant_id: input.tenant_id,
           customer_id: customer.id,
           customer_display_name: customer.display_name,
+          customer_phone: customer.phone,
+          customer_email: customer.email,
+          customer_address: customer.address,
           action_label: guideAction.timeline_body,
           occurred_at: eventTime
         });
@@ -1123,6 +1135,16 @@ export async function logLineWebhookEvents(
           reply_token: event.reply_token ?? null,
           text: buildContactStaffCategoryPromptReply(),
           quick_reply_texts: [...customerContactStaffCategories]
+        });
+        staffNotificationEvents.push({
+          tenant_id: input.tenant_id,
+          customer_id: customer.id,
+          customer_display_name: customer.display_name,
+          customer_phone: customer.phone,
+          customer_email: customer.email,
+          customer_address: customer.address,
+          action_label: contactStaffStartActivityLabel,
+          occurred_at: eventTime
         });
         customersUpserted += 1;
         messagesInserted += 1;
@@ -1165,6 +1187,9 @@ export async function logLineWebhookEvents(
         if (contactStaffFlow.alert_notification_required && contactStaffFlow.alert) {
           staffNotificationAlerts.push(contactStaffFlow.alert);
         }
+        if (contactStaffFlow.staff_notification_event) {
+          staffNotificationEvents.push(contactStaffFlow.staff_notification_event);
+        }
         contactStaffFlowsLogged += 1;
         if (contactStaffFlow.reply) {
           lineReplyInstructions.push(contactStaffFlow.reply);
@@ -1199,6 +1224,7 @@ export async function logLineWebhookEvents(
           tenant_id: input.tenant_id,
           customer: updatedCustomer,
           alertRepository: input.alertRepository,
+          ...(event.text ? { message: event.text } : {}),
           ...(input.createId ? { createId: input.createId } : {}),
           now: () => eventTime
         });
@@ -1255,6 +1281,7 @@ async function handleContactStaffFlowMessage(input: {
   alert_created: boolean;
   alert_notification_required: boolean;
   alert: Alert | null;
+  staff_notification_event: CustomerLineStaffNotificationEvent | null;
   reply: LineReplyInstruction | null;
 }> {
   const category = resolveCustomerContactStaffCategory(input.text);
@@ -1291,6 +1318,16 @@ async function handleContactStaffFlowMessage(input: {
         alert_created: false,
         alert_notification_required: false,
         alert: null,
+        staff_notification_event: {
+          tenant_id: input.tenant_id,
+          customer_id: input.customer.id,
+          customer_display_name: input.customer.display_name,
+          customer_phone: input.customer.phone,
+          customer_email: input.customer.email,
+          customer_address: input.customer.address,
+          action_label: `${contactStaffCategoryTimelinePrefix}${category}`,
+          occurred_at: input.event_time
+        },
         reply: {
           reply_token: input.reply_token,
           text: buildContactStaffContentPromptReply(category)
@@ -1315,6 +1352,16 @@ async function handleContactStaffFlowMessage(input: {
       alert_created: false,
       alert_notification_required: false,
       alert: null,
+      staff_notification_event: {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        customer_display_name: input.customer.display_name,
+        customer_phone: input.customer.phone,
+        customer_email: input.customer.email,
+        customer_address: input.customer.address,
+        action_label: `${contactStaffCategoryTimelinePrefix}${category}`,
+        occurred_at: input.event_time
+      },
       reply: {
         reply_token: input.reply_token,
         text: buildContactStaffContactPromptReply(category)
@@ -1332,6 +1379,7 @@ async function handleContactStaffFlowMessage(input: {
         alert_created: false,
         alert_notification_required: false,
         alert: null,
+        staff_notification_event: null,
         reply: {
           reply_token: input.reply_token,
           text: buildContactStaffContactInfoRetryReply(flowState.category)
@@ -1373,6 +1421,16 @@ async function handleContactStaffFlowMessage(input: {
       alert_created: false,
       alert_notification_required: false,
       alert: null,
+      staff_notification_event: {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        customer_display_name: updatedCustomer.display_name,
+        customer_phone: updatedCustomer.phone,
+        customer_email: updatedCustomer.email,
+        customer_address: updatedCustomer.address,
+        action_label: contactStaffContactConfirmedTimelineBody,
+        occurred_at: input.event_time
+      },
       reply: {
         reply_token: input.reply_token,
         text: buildContactStaffContentPromptReply(flowState.category)
@@ -1390,6 +1448,7 @@ async function handleContactStaffFlowMessage(input: {
         alert_created: false,
         alert_notification_required: false,
         alert: null,
+        staff_notification_event: null,
         reply: {
           reply_token: input.reply_token,
           text: buildContactStaffContentRetryReply(flowState.category)
@@ -1438,6 +1497,7 @@ async function handleContactStaffFlowMessage(input: {
         tenant_id: input.tenant_id,
         customer: updatedCustomer,
         alertRepository: input.alertRepository,
+        message: body,
         ...(input.createId ? { createId: input.createId } : {}),
         now: () => input.event_time
       });
@@ -1452,6 +1512,7 @@ async function handleContactStaffFlowMessage(input: {
       alert_created: alertCreated,
       alert_notification_required: alertNotificationRequired,
       alert,
+      staff_notification_event: null,
       reply: {
         reply_token: input.reply_token,
         text: buildContactStaffAcceptedReply()
@@ -1465,6 +1526,7 @@ async function handleContactStaffFlowMessage(input: {
     alert_created: false,
     alert_notification_required: false,
     alert: null,
+    staff_notification_event: null,
     reply: null
   };
 }
@@ -1811,11 +1873,15 @@ function isHumanResponseMode(responseMode: ResponseMode): boolean {
 function createUnrepliedAlert(input: {
   tenant_id: string;
   customer: Customer;
+  message?: string;
   now: string;
   createId?: () => string;
 }): Alert {
   const severity: AlertSeverity =
     input.customer.response_mode === "emergency" ? "critical" : "high";
+  const message =
+    input.message?.trim() ||
+    `customer ${input.customer.id} is unreplied in response_mode ${input.customer.response_mode}.`;
   const parsed = alertCreateSchema.parse({
     tenant_id: input.tenant_id,
     customer_id: input.customer.id,
@@ -1823,7 +1889,7 @@ function createUnrepliedAlert(input: {
     alert_type: "unreplied_customer_message",
     status: "open",
     severity,
-    message: `customer ${input.customer.id} is unreplied in response_mode ${input.customer.response_mode}.`,
+    message,
     triggered_at: input.now
   });
 
@@ -1846,14 +1912,20 @@ function createUnrepliedAlert(input: {
 
 export function buildStaffNotificationPayload(
   alert: Alert,
-  options: { adminBaseUrl?: string; customerDisplayName?: string | null } = {}
+  options: {
+    adminBaseUrl?: string;
+    customer?: Customer | null;
+    customerDisplayName?: string | null;
+  } = {}
 ): StaffNotificationPayload {
   const adminBaseUrl = normalizeAdminBaseUrl(options.adminBaseUrl);
   const adminUrl = `${adminBaseUrl}/customers/${encodeURIComponent(alert.customer_id)}`;
   const customerLabel = formatCustomerLabelForStaffNotification(
-    options.customerDisplayName ?? null,
+    options.customer?.display_name ?? options.customerDisplayName ?? null,
     alert.customer_id
   );
+  const contactLines = formatStaffNotificationContactLines(options.customer ?? null);
+  const detailLines = formatStaffNotificationDetailLines(alert.message);
 
   return {
     tenant_id: alert.tenant_id,
@@ -1868,8 +1940,10 @@ export function buildStaffNotificationPayload(
       `種別：${formatAlertTypeForStaffNotification(alert.alert_type)}`,
       `緊急度：${formatAlertSeverityForStaffNotification(alert.severity)}`,
       `顧客：${customerLabel}`,
+      ...contactLines,
       `日時：${alert.updated_at}`,
       "内容：LINEからの相談・更新",
+      ...detailLines,
       "対応状況：未対応",
       "",
       "管理画面で確認してください。",
@@ -1890,6 +1964,12 @@ export function buildCustomerActivityStaffNotificationPayload(
     event.customer_display_name,
     event.customer_id
   );
+  const contactLines = formatStaffNotificationContactLines({
+    phone: event.customer_phone ?? null,
+    email: event.customer_email ?? null,
+    address: event.customer_address ?? null
+  });
+  const detailLines = formatStaffNotificationDetailLines(event.detail_text ?? null);
 
   return {
     tenant_id: event.tenant_id,
@@ -1903,14 +1983,44 @@ export function buildCustomerActivityStaffNotificationPayload(
       "種別：LINEメニュー操作",
       "緊急度：通常",
       `顧客：${customerLabel}`,
+      ...contactLines,
       `日時：${event.occurred_at}`,
       `内容：${event.action_label}`,
+      ...detailLines,
       "",
       "顧客詳細で確認してください。",
       adminUrl
     ].join("\n"),
     admin_url: adminUrl
   };
+}
+
+function formatStaffNotificationContactLines(
+  customer: Pick<Customer, "phone" | "email" | "address"> | null
+): string[] {
+  if (!customer) {
+    return [];
+  }
+
+  return [
+    customer.phone?.trim() ? `電話：${customer.phone.trim()}` : null,
+    customer.email?.trim() ? `メール：${customer.email.trim()}` : null,
+    customer.address?.trim() ? `住所：${customer.address.trim()}` : null
+  ].filter((line): line is string => Boolean(line));
+}
+
+function formatStaffNotificationDetailLines(detail: string | null): string[] {
+  const normalizedDetail = detail?.trim();
+
+  if (!normalizedDetail || isGenericUnrepliedAlertMessage(normalizedDetail)) {
+    return [];
+  }
+
+  return ["相談内容：", normalizedDetail.slice(0, 1000)];
+}
+
+function isGenericUnrepliedAlertMessage(message: string): boolean {
+  return /^customer .+ is unreplied in response_mode .+\.$/u.test(message);
 }
 
 function formatCustomerLabelForStaffNotification(
@@ -2099,6 +2209,7 @@ export class InMemoryAlertRepository implements AlertRepository {
     tenant_id: string;
     alert_id: string;
     status: AlertStatus;
+    message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
     updated_at: string;
@@ -2112,6 +2223,7 @@ export class InMemoryAlertRepository implements AlertRepository {
     const updated: Alert = {
       ...existing,
       status: input.status,
+      message: input.message !== undefined ? input.message : existing.message,
       notified_at: input.notified_at !== undefined ? input.notified_at : existing.notified_at,
       resolved_at: input.resolved_at !== undefined ? input.resolved_at : existing.resolved_at,
       updated_at: input.updated_at

@@ -1937,7 +1937,7 @@ async function notifySpecificAlertsForProduction(input: {
     );
     const payload = buildStaffNotificationPayload(alert, {
       ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {}),
-      customerDisplayName: customer?.display_name ?? null
+      customer
     });
 
     try {
