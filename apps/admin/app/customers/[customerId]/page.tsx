@@ -9,6 +9,10 @@ import {
   type AdminCustomerDetailResponse,
   type AdminCustomerTimelineResponse
 } from "../../../src/admin-api";
+import {
+  formatAdminDateTime,
+  sortTimelineMessagesNewestFirst
+} from "../../../src/customer-timeline-display";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import { CustomerActionPanel } from "./customer-actions";
 
@@ -27,6 +31,8 @@ export default async function CustomerDetailPage({
   const config = requestOptions.config ?? getAdminApiConfig();
   const detail = await loadCustomerDetail(customerId, requestOptions);
   const timeline = await loadCustomerTimeline(customerId, requestOptions);
+  const timelineMessages =
+    timeline.status === "ok" ? sortTimelineMessagesNewestFirst(timeline.messages) : [];
   const lineRealSendCapability = await loadLineRealSendCapability(requestOptions);
 
   return (
@@ -83,10 +89,10 @@ export default async function CustomerDetailPage({
             <div className="detail-chip-list" aria-label="お客様の状態">
               <span className="status-pill">{formatCustomerStatus(detail.customer.status)}</span>
               <span className="status-pill status-pill-muted">
-                最終お客様発言 {formatDetailValue(detail.customer.last_customer_message_at)}
+                最終お客様発言 {formatAdminDateTime(detail.customer.last_customer_message_at)}
               </span>
               <span className="status-pill status-pill-muted">
-                最終担当者返信 {formatDetailValue(detail.customer.last_staff_reply_at)}
+                最終担当者返信 {formatAdminDateTime(detail.customer.last_staff_reply_at)}
               </span>
             </div>
             <div className="detail-chip-list" aria-label="タグ">
@@ -108,7 +114,7 @@ export default async function CustomerDetailPage({
               {customerDetailEntries(detail.customer).map(([label, value]) => (
                 <dl className="admin-card customer-key-card" key={label}>
                   <dt>{label}</dt>
-                  <dd>{formatDetailValue(value)}</dd>
+                  <dd>{formatCustomerDetailValue(label, value)}</dd>
                 </dl>
               ))}
             </div>
@@ -123,11 +129,11 @@ export default async function CustomerDetailPage({
             <strong>APIエラー</strong>
             <pre>{timeline.message}</pre>
           </div>
-        ) : timeline.messages.length === 0 ? (
+        ) : timelineMessages.length === 0 ? (
           <p className="empty">表示できるメッセージはまだありません。</p>
         ) : (
           <ol className="timeline-list" aria-label="相談タイムライン">
-            {timeline.messages.map((message) => (
+            {timelineMessages.map((message) => (
               <li className={`timeline-item ${getTimelineItemClass(message)}`} key={message.id}>
                 <div className="timeline-meta">
                   <span className={getTimelineRoleBadgeClass(message.role)}>
@@ -136,7 +142,7 @@ export default async function CustomerDetailPage({
                   <span className="status-pill status-pill-muted">
                     {formatMessageType(message.message_type)}
                   </span>
-                  <span className="meta">{message.created_at}</span>
+                  <span className="meta">{formatAdminDateTime(message.created_at)}</span>
                 </div>
                 <p className="timeline-body">{formatDetailValue(message.body)}</p>
                 {message.line_message_id || message.source_url ? (
@@ -257,6 +263,23 @@ function formatDetailValue(value: string | number | boolean | string[] | null | 
   }
 
   return String(value);
+}
+
+function formatCustomerDetailValue(
+  label: string,
+  value: string | number | boolean | string[] | null | undefined
+): string {
+  if (isCustomerDateTimeLabel(label) && typeof value === "string") {
+    return formatAdminDateTime(value);
+  }
+
+  return formatDetailValue(value);
+}
+
+function isCustomerDateTimeLabel(label: string): boolean {
+  return ["最後のお客様メッセージ", "最後の担当者返信", "作成日時", "更新日時"].includes(
+    label
+  );
 }
 
 function formatCustomerStatus(status: string): string {

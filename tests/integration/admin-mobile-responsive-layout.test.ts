@@ -20,6 +20,9 @@ describe("admin mobile responsive layout styles", () => {
     expect(css).toContain(".customer-card-list");
     expect(css).toContain(".alert-card-list");
     expect(css).toContain(".timeline-list");
+    expect(css).toContain("max-height: min(72vh, 680px)");
+    expect(css).toContain("overflow-y: auto");
+    expect(css).toContain("scrollbar-gutter: stable");
     expect(css).toContain(".timeline-item-customer");
     expect(css).toContain(".timeline-item-staff");
     expect(css).toContain(".ai-assist-details");
