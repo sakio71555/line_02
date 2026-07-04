@@ -2,6 +2,10 @@ export type TimelineMessageDisplayInput = {
   created_at: string;
 };
 
+export type TimelineConversationMessageDisplayInput = TimelineMessageDisplayInput & {
+  role: string;
+};
+
 const adminDateTimeFormatter = new Intl.DateTimeFormat("ja-JP", {
   day: "2-digit",
   hour: "2-digit",
@@ -22,6 +26,20 @@ export function sortTimelineMessagesNewestFirst<T extends TimelineMessageDisplay
       timestamp: getSortableTimestamp(message.created_at)
     }))
     .sort((left, right) => right.timestamp - left.timestamp || left.index - right.index)
+    .map(({ message }) => message);
+}
+
+export function toLineConversationTimelineMessages<
+  T extends TimelineConversationMessageDisplayInput
+>(messages: readonly T[]): T[] {
+  return messages
+    .filter((message) => isLineConversationRole(message.role))
+    .map((message, index) => ({
+      index,
+      message,
+      timestamp: getSortableTimestamp(message.created_at)
+    }))
+    .sort((left, right) => left.timestamp - right.timestamp || left.index - right.index)
     .map(({ message }) => message);
 }
 
@@ -50,4 +68,8 @@ function getSortableTimestamp(value: string): number {
   const timestamp = new Date(value).getTime();
 
   return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function isLineConversationRole(role: string): boolean {
+  return role === "customer" || role === "bot" || role === "staff";
 }

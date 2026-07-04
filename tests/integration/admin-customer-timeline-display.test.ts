@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   formatAdminDateTime,
-  sortTimelineMessagesNewestFirst
+  sortTimelineMessagesNewestFirst,
+  toLineConversationTimelineMessages
 } from "../../apps/admin/src/customer-timeline-display";
 
 describe("admin customer timeline display", () => {
@@ -26,6 +27,58 @@ describe("admin customer timeline display", () => {
 
     expect(sorted.map((message) => message.id)).toEqual(["latest", "middle", "old"]);
     expect(messages.map((message) => message.id)).toEqual(["old", "latest", "middle"]);
+  });
+
+  it("builds the customer detail conversation timeline from LINE-visible roles only", () => {
+    const messages = [
+      {
+        id: "customer-menu",
+        role: "customer",
+        created_at: "2026-07-04T16:52:00.000Z"
+      },
+      {
+        id: "system-tree",
+        role: "system",
+        created_at: "2026-07-04T16:52:01.000Z"
+      },
+      {
+        id: "bot-prompt",
+        role: "bot",
+        created_at: "2026-07-04T16:52:01.000Z"
+      },
+      {
+        id: "customer-answer",
+        role: "customer",
+        created_at: "2026-07-04T16:53:00.000Z"
+      },
+      {
+        id: "ai-summary",
+        role: "ai",
+        created_at: "2026-07-04T16:54:00.000Z"
+      },
+      {
+        id: "staff-reply",
+        role: "staff",
+        created_at: "2026-07-04T16:55:00.000Z"
+      }
+    ];
+
+    const conversation = toLineConversationTimelineMessages(messages);
+
+    expect(conversation.map((message) => message.id)).toEqual([
+      "customer-menu",
+      "bot-prompt",
+      "customer-answer",
+      "staff-reply"
+    ]);
+    expect(messages.map((message) => message.id)).toEqual([
+      "customer-menu",
+      "system-tree",
+      "bot-prompt",
+      "customer-answer",
+      "ai-summary",
+      "staff-reply"
+    ]);
   });
 
   it("formats ISO timestamps as concise Japan-time labels for the detail screen", () => {

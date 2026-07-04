@@ -11,7 +11,7 @@ import {
 } from "../../../src/admin-api";
 import {
   formatAdminDateTime,
-  sortTimelineMessagesNewestFirst
+  toLineConversationTimelineMessages
 } from "../../../src/customer-timeline-display";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import { CustomerActionPanel, CustomerRichMenuSwitch } from "./customer-actions";
@@ -32,7 +32,7 @@ export default async function CustomerDetailPage({
   const detail = await loadCustomerDetail(customerId, requestOptions);
   const timeline = await loadCustomerTimeline(customerId, requestOptions);
   const timelineMessages =
-    timeline.status === "ok" ? sortTimelineMessagesNewestFirst(timeline.messages) : [];
+    timeline.status === "ok" ? toLineConversationTimelineMessages(timeline.messages) : [];
   const lineRealSendCapability = await loadLineRealSendCapability(requestOptions);
 
   return (
@@ -149,14 +149,9 @@ export default async function CustomerDetailPage({
                   <span className="meta">{formatAdminDateTime(message.created_at)}</span>
                 </div>
                 <p className="timeline-body">{formatDetailValue(message.body)}</p>
-                {message.line_message_id || message.source_url ? (
+                {message.source_url ? (
                   <div className="timeline-meta">
-                    {message.line_message_id ? (
-                      <span className="meta mono">LINE ID: {message.line_message_id}</span>
-                    ) : null}
-                    {message.source_url ? (
-                      <a href={message.source_url}>参考URL</a>
-                    ) : null}
+                    <a href={message.source_url}>参考URL</a>
                   </div>
                 ) : null}
               </li>
