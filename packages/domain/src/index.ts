@@ -1497,7 +1497,7 @@ async function handleContactStaffFlowMessage(input: {
         tenant_id: input.tenant_id,
         customer: updatedCustomer,
         alertRepository: input.alertRepository,
-        message: body,
+        message: buildContactStaffAlertMessage(flowState.category, body),
         ...(input.createId ? { createId: input.createId } : {}),
         now: () => input.event_time
       });
@@ -1937,7 +1937,7 @@ export function buildStaffNotificationPayload(
       "LINEの更新が届きました。",
       "新しい相談が届きました。",
       "",
-      `種別：${formatAlertTypeForStaffNotification(alert.alert_type)}`,
+      `種別：${formatAlertTypeForStaffNotification(alert.alert_type, alert.message)}`,
       `緊急度：${formatAlertSeverityForStaffNotification(alert.severity)}`,
       `顧客：${customerLabel}`,
       ...contactLines,
@@ -1980,7 +1980,7 @@ export function buildCustomerActivityStaffNotificationPayload(
     message: [
       "LINEの更新が届きました。",
       "",
-      "種別：LINEメニュー操作",
+      `種別：LINEメニュー操作（${event.action_label}）`,
       "緊急度：通常",
       `顧客：${customerLabel}`,
       ...contactLines,
@@ -2016,16 +2016,46 @@ function formatStaffNotificationDetailLines(detail: string | null): string[] {
     return [];
   }
 
-  return ["相談内容：", normalizedDetail.slice(0, 1000)];
+  const contactStaffDetail = parseContactStaffAlertDetail(normalizedDetail);
+  const detailText = contactStaffDetail?.body ?? normalizedDetail;
+
+  return ["相談内容：", detailText.slice(0, 1000)];
 }
 
 function isGenericUnrepliedAlertMessage(message: string): boolean {
   return /^customer .+ is unreplied in response_mode .+\.$/u.test(message);
 }
 
+function buildContactStaffAlertMessage(category: string | null, body: string): string {
+  const normalizedCategory = category?.trim();
+
+  return [
+    normalizedCategory ? `${contactStaffCategoryTimelinePrefix}${normalizedCategory}` : null,
+    body.trim()
+  ]
+    .filter((line): line is string => Boolean(line))
+    .join("\n");
+}
+
+function parseContactStaffAlertDetail(message: string): { category: string; body: string } | null {
+  const [firstLine, ...remainingLines] = message.split(/\r?\n/u);
+  const category = firstLine?.startsWith(contactStaffCategoryTimelinePrefix)
+    ? firstLine.slice(contactStaffCategoryTimelinePrefix.length).trim()
+    : "";
+
+  if (!category) {
+    return null;
+  }
+
+  return {
+    category,
+    body: remainingLines.join("\n").trim()
+  };
+}
+
 function formatCustomerLabelForStaffNotification(
   displayName: string | null,
-  customerId: string
+  _customerId: string
 ): string {
   const normalizedDisplayName = displayName?.trim();
 
@@ -2033,7 +2063,7 @@ function formatCustomerLabelForStaffNotification(
     return normalizedDisplayName;
   }
 
-  return `CRM:${customerId}`;
+  return "未登録顧客";
 }
 
 function normalizeAdminBaseUrl(adminBaseUrl: string | undefined): string {
@@ -2041,7 +2071,13 @@ function normalizeAdminBaseUrl(adminBaseUrl: string | undefined): string {
   return normalized || "https://admin.example.local";
 }
 
-function formatAlertTypeForStaffNotification(alertType: AlertType): string {
+function formatAlertTypeForStaffNotification(alertType: AlertType, detail: string | null): string {
+  const contactStaffDetail = detail ? parseContactStaffAlertDetail(detail.trim()) : null;
+
+  if (contactStaffDetail) {
+    return `担当者に相談（${contactStaffDetail.category}）`;
+  }
+
   switch (alertType) {
     case "unreplied":
     case "unreplied_customer_message":

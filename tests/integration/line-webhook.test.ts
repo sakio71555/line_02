@@ -125,7 +125,7 @@ function expectGuideStaffNotification(input: {
     input.expectedAdminBaseUrl ?? "https://admin.taiyolabel.site";
 
   expect(notification?.message).toContain("LINEの更新が届きました。");
-  expect(notification?.message).toContain("種別：LINEメニュー操作");
+  expect(notification?.message).toContain(`種別：LINEメニュー操作（${input.actionLabel}）`);
   expect(notification?.message).toContain("緊急度：通常");
   expect(notification?.message).toContain(`内容：${input.actionLabel}`);
   expect(notification?.message).toContain(`日時：${input.eventTime}`);
@@ -1179,6 +1179,10 @@ describe("LINE webhook foundation", () => {
     expect(staffNotifier.notifications[2]?.message).toContain("顧客：田中太郎");
     expect(staffNotifier.notifications[2]?.message).toContain("電話：090-1111-2222");
     expect(staffNotifier.notifications[3]?.message).toContain("新しい相談が届きました。");
+    expect(staffNotifier.notifications[3]?.message).toContain(
+      "種別：担当者に相談（モデルハウス見学について）"
+    );
+    expect(staffNotifier.notifications[3]?.message).not.toContain("種別：未返信の相談");
     expect(staffNotifier.notifications[3]?.message).toContain("顧客：田中太郎");
     expect(staffNotifier.notifications[3]?.message).toContain("電話：090-1111-2222");
     expect(staffNotifier.notifications[3]?.message).toContain("相談内容：");
@@ -1300,6 +1304,9 @@ describe("LINE webhook foundation", () => {
       "内容：担当者相談カテゴリ: 費用・ローンについて"
     );
     expect(staffNotifier.notifications[2]?.message).toContain("LINEの更新が届きました。");
+    expect(staffNotifier.notifications[2]?.message).toContain(
+      "種別：担当者に相談（費用・ローンについて）"
+    );
     expect(staffNotifier.notifications[2]?.message).toContain("顧客：登録済み 太郎");
     expect(staffNotifier.notifications[2]?.message).toContain("電話：090-2222-3333");
     expect(staffNotifier.notifications[2]?.message).toContain("日時：2024-03-09T16:00:42.000Z");

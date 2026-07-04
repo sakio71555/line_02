@@ -333,6 +333,10 @@ describe("admin open alert staff notification API", () => {
       });
       expect(pushBody.messages?.[0]?.text).toContain("新しい相談が届きました。");
       expect(pushBody.messages?.[0]?.text).toContain("管理画面で確認してください。");
+      expect(pushBody.messages?.[0]?.text).toContain(
+        "https://admin.taiyolabel.site/customers/customer_amami"
+      );
+      expect(pushBody.messages?.[0]?.text).not.toContain("http://localhost:3000");
       expect(pushBody.messages?.[0]?.text).toContain("通知本文には含めない相談内容です");
       expect(updatedOpenAlert).toMatchObject({
         status: "notified",
@@ -416,6 +420,10 @@ describe("admin open alert staff notification API", () => {
       expect(linePushRequests[0]?.authorization).toBe("Bearer test_customer_line_access_token");
       expect(pushBody.to).toBe("U_TEST_CUSTOMER_CHANNEL_STAFF_TARGET");
       expect(pushBody.messages?.[0]?.text).toContain("新しい相談が届きました。");
+      expect(pushBody.messages?.[0]?.text).toContain(
+        "https://admin.taiyolabel.site/customers/customer_amami"
+      );
+      expect(pushBody.messages?.[0]?.text).not.toContain("http://localhost:3000");
       expect(pushBody.messages?.[0]?.text).toContain(
         "仮運用通知本文には含めない相談内容です"
       );

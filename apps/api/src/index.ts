@@ -2384,7 +2384,10 @@ function resolveStaffNotificationAdminBaseUrl(
 
   const normalizedConfiguredBaseUrl = configuredBaseUrl.trim().replace(/\/+$/u, "");
 
-  if (isProductionRuntime(env) && isLocalAdminBaseUrl(normalizedConfiguredBaseUrl)) {
+  if (
+    (isProductionRuntime(env) || isStaffLineRuntimeConfigured(env)) &&
+    isLocalAdminBaseUrl(normalizedConfiguredBaseUrl)
+  ) {
     return PRODUCTION_STAFF_NOTIFICATION_ADMIN_BASE_URL;
   }
 
