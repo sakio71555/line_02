@@ -517,6 +517,9 @@ export interface LogLineWebhookEventsResult {
   contact_staff_flows_logged: number;
   contact_staff_alerts_created: number;
   contact_staff_alerts_notification_required: number;
+  structured_consultation_flows_logged: number;
+  structured_consultation_alerts_created: number;
+  structured_consultation_alerts_notification_required: number;
   unsupported_events: number;
   line_reply_instructions: LineReplyInstruction[];
   staff_notification_alerts: Alert[];
@@ -661,6 +664,402 @@ const contactStaffContentPromptTimelineBody = "担当者相談内容入力案内
 const contactStaffAcceptedTimelineBody = "担当者相談受付済み";
 const contactStaffStartActivityLabel = "担当者相談を開始";
 
+type StructuredConsultationOption = {
+  label: string;
+  value: string;
+  notification_label?: string;
+};
+
+type StructuredConsultationStep =
+  | {
+      key: string;
+      kind: "choice";
+      prompt_timeline_body: string;
+      value_timeline_prefix: string;
+      prompt_reply: string;
+      retry_reply: string;
+      options: readonly StructuredConsultationOption[];
+    }
+  | {
+      key: string;
+      kind: "text";
+      prompt_timeline_body: string;
+      value_timeline_prefix: string;
+      prompt_reply: string;
+      retry_reply: string;
+    };
+
+type StructuredConsultationFlowConfig = {
+  flow_key: string;
+  trigger_text: string;
+  title: string;
+  start_activity_label: string;
+  category: string;
+  assigned_role: string;
+  secondary_role?: string;
+  default_severity: AlertSeverity;
+  default_priority: "normal" | "high";
+  ai_auto_reply: boolean;
+  requires_staff_confirmation: boolean;
+  steps: readonly StructuredConsultationStep[];
+};
+
+const structuredConsultationFlowConfigs = [
+  {
+    flow_key: "negotiation.meeting_schedule",
+    trigger_text: "打合せ予約・変更",
+    title: "打合せ予約・変更",
+    start_activity_label: "打合せ予約・変更を開始",
+    category: "meeting",
+    assigned_role: "sales",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "打合せ予約・変更 用件選択案内済み",
+        value_timeline_prefix: "打合せ予約・変更 用件: ",
+        prompt_reply: "打合せ予約・変更ですね。用件を次から選んで送ってください。",
+        retry_reply: "用件を次から選んで送ってください。",
+        options: [
+          { label: "新しく打合せを予約したい", value: "new_schedule", notification_label: "新規予約" },
+          { label: "日時を変更したい", value: "reschedule", notification_label: "日時変更" },
+          { label: "キャンセルしたい", value: "cancel", notification_label: "キャンセル" },
+          { label: "打合せ内容を確認したい", value: "confirm", notification_label: "内容確認" }
+        ]
+      },
+      {
+        key: "method",
+        kind: "choice",
+        prompt_timeline_body: "打合せ予約・変更 希望方法選択案内済み",
+        value_timeline_prefix: "打合せ予約・変更 希望方法: ",
+        prompt_reply: "希望方法を次から選んで送ってください。",
+        retry_reply: "希望方法を次から選んで送ってください。",
+        options: [
+          { label: "来店", value: "office" },
+          { label: "モデルハウス", value: "model_house" },
+          { label: "現地", value: "site" },
+          { label: "オンライン", value: "online" },
+          { label: "電話", value: "phone" }
+        ]
+      },
+      {
+        key: "desired_datetime",
+        kind: "text",
+        prompt_timeline_body: "打合せ予約・変更 希望日時入力案内済み",
+        value_timeline_prefix: "打合せ予約・変更 希望日時: ",
+        prompt_reply: [
+          "希望日時を入力してください。",
+          "第1希望・第2希望・第3希望があれば、まとめて送ってください。"
+        ].join("\n"),
+        retry_reply: "希望日時を入力して送ってください。"
+      },
+      {
+        key: "meeting_topic",
+        kind: "choice",
+        prompt_timeline_body: "打合せ予約・変更 打合せ内容選択案内済み",
+        value_timeline_prefix: "打合せ予約・変更 打合せ内容: ",
+        prompt_reply: "打合せしたい内容を次から選んで送ってください。",
+        retry_reply: "打合せしたい内容を次から選んで送ってください。",
+        options: [
+          { label: "プラン", value: "plan" },
+          { label: "見積", value: "estimate" },
+          { label: "土地", value: "land" },
+          { label: "ローン", value: "loan" },
+          { label: "契約前確認", value: "pre_contract" },
+          { label: "その他", value: "other" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "打合せ予約・変更 補足入力案内済み",
+        value_timeline_prefix: "打合せ予約・変更 補足: ",
+        prompt_reply: "補足があれば入力してください。なければ「なし」と送ってください。",
+        retry_reply: "補足を入力して送ってください。"
+      }
+    ]
+  },
+  {
+    flow_key: "negotiation.plan_consultation",
+    trigger_text: "プラン・間取り相談",
+    title: "プラン・間取り相談",
+    start_activity_label: "プラン・間取り相談を開始",
+    category: "plan_design",
+    assigned_role: "designer",
+    secondary_role: "estimator",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "プラン・間取り相談 内容選択案内済み",
+        value_timeline_prefix: "プラン・間取り相談 内容: ",
+        prompt_reply: "相談したい内容を次から選んで送ってください。",
+        retry_reply: "相談したい内容を次から選んで送ってください。",
+        options: [
+          { label: "間取りについて", value: "layout", notification_label: "間取り" },
+          { label: "外観デザインについて", value: "exterior", notification_label: "外観デザイン" },
+          { label: "内装デザインについて", value: "interior", notification_label: "内装デザイン" },
+          { label: "収納について", value: "storage", notification_label: "収納" },
+          { label: "家事動線について", value: "flow", notification_label: "家事動線" },
+          { label: "採光・風通しについて", value: "lighting", notification_label: "採光・風通し" },
+          { label: "要望を変更したい", value: "requirement_change", notification_label: "要望変更" },
+          { label: "その他", value: "other", notification_label: "その他" }
+        ]
+      },
+      {
+        key: "target_area",
+        kind: "choice",
+        prompt_timeline_body: "プラン・間取り相談 対象場所選択案内済み",
+        value_timeline_prefix: "プラン・間取り相談 対象場所: ",
+        prompt_reply: "対象の場所を次から選んで送ってください。",
+        retry_reply: "対象の場所を次から選んで送ってください。",
+        options: [
+          { label: "LDK", value: "ldk" },
+          { label: "キッチン", value: "kitchen" },
+          { label: "洗面脱衣", value: "washroom" },
+          { label: "浴室", value: "bathroom" },
+          { label: "トイレ", value: "toilet" },
+          { label: "寝室", value: "bedroom" },
+          { label: "子ども部屋", value: "kids_room" },
+          { label: "玄関", value: "entrance" },
+          { label: "収納", value: "storage_area" },
+          { label: "外観", value: "exterior_area" },
+          { label: "その他", value: "other" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "プラン・間取り相談 内容入力案内済み",
+        value_timeline_prefix: "プラン・間取り相談 相談内容: ",
+        prompt_reply: [
+          "具体的な相談内容を入力してください。",
+          "参考画像や手書きメモがあれば、このあとLINEで送ってください。"
+        ].join("\n"),
+        retry_reply: "具体的な相談内容を入力して送ってください。"
+      },
+      {
+        key: "request_priority",
+        kind: "choice",
+        prompt_timeline_body: "プラン・間取り相談 希望優先度選択案内済み",
+        value_timeline_prefix: "プラン・間取り相談 希望優先度: ",
+        prompt_reply: "希望の優先度を次から選んで送ってください。",
+        retry_reply: "希望の優先度を次から選んで送ってください。",
+        options: [
+          { label: "必ず反映したい", value: "must_have" },
+          { label: "できれば反映したい", value: "nice_to_have" },
+          { label: "相談して決めたい", value: "consult" }
+        ]
+      }
+    ]
+  },
+  {
+    flow_key: "negotiation.estimate_budget",
+    trigger_text: "見積・資金計画",
+    title: "見積・資金計画",
+    start_activity_label: "見積・資金計画を開始",
+    category: "estimate_budget",
+    assigned_role: "sales",
+    secondary_role: "estimator",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "見積・資金計画 内容選択案内済み",
+        value_timeline_prefix: "見積・資金計画 内容: ",
+        prompt_reply: "相談内容を次から選んで送ってください。",
+        retry_reply: "相談内容を次から選んで送ってください。",
+        options: [
+          { label: "見積について確認したい", value: "estimate", notification_label: "見積" },
+          { label: "予算について相談したい", value: "budget", notification_label: "予算" },
+          { label: "住宅ローンについて相談したい", value: "loan", notification_label: "住宅ローン" },
+          { label: "補助金について相談したい", value: "subsidy", notification_label: "補助金" },
+          { label: "追加費用について確認したい", value: "additional_cost", notification_label: "追加費用" },
+          { label: "減額案を相談したい", value: "cost_reduction", notification_label: "減額案" },
+          { label: "その他", value: "other", notification_label: "その他" }
+        ]
+      },
+      {
+        key: "current_status",
+        kind: "choice",
+        prompt_timeline_body: "見積・資金計画 現在状況選択案内済み",
+        value_timeline_prefix: "見積・資金計画 現在状況: ",
+        prompt_reply: "現在の状況を次から選んで送ってください。",
+        retry_reply: "現在の状況を次から選んで送ってください。",
+        options: [
+          { label: "初回見積前", value: "before_first_estimate" },
+          { label: "見積確認中", value: "reviewing_estimate" },
+          { label: "プラン変更後", value: "after_plan_change" },
+          { label: "契約前", value: "pre_contract" },
+          { label: "ローン相談中", value: "loan_consulting" },
+          { label: "その他", value: "other" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "見積・資金計画 内容入力案内済み",
+        value_timeline_prefix: "見積・資金計画 気になる内容: ",
+        prompt_reply: "気になっている内容を入力してください。",
+        retry_reply: "気になっている内容を入力して送ってください。"
+      },
+      {
+        key: "desired_response",
+        kind: "choice",
+        prompt_timeline_body: "見積・資金計画 希望対応選択案内済み",
+        value_timeline_prefix: "見積・資金計画 希望対応: ",
+        prompt_reply: "希望する対応を次から選んで送ってください。",
+        retry_reply: "希望する対応を次から選んで送ってください。",
+        options: [
+          { label: "説明してほしい", value: "explain" },
+          { label: "見直し案がほしい", value: "revision_proposal" },
+          { label: "金額を確認したい", value: "confirm_amount" },
+          { label: "次回打合せで相談したい", value: "next_meeting" }
+        ]
+      }
+    ]
+  },
+  {
+    flow_key: "negotiation.land_site",
+    trigger_text: "土地・敷地の相談",
+    title: "土地・敷地の相談",
+    start_activity_label: "土地・敷地の相談を開始",
+    category: "land_site",
+    assigned_role: "sales",
+    secondary_role: "designer_or_site_staff",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "土地・敷地の相談 内容選択案内済み",
+        value_timeline_prefix: "土地・敷地の相談 内容: ",
+        prompt_reply: "相談内容を次から選んで送ってください。",
+        retry_reply: "相談内容を次から選んで送ってください。",
+        options: [
+          { label: "土地を探している", value: "land_search", notification_label: "土地探し" },
+          { label: "候補地について相談したい", value: "candidate_land", notification_label: "候補地あり" },
+          { label: "所有地について相談したい", value: "owned_land", notification_label: "所有地あり" },
+          { label: "敷地調査をお願いしたい", value: "site_survey", notification_label: "敷地調査" },
+          { label: "造成・外構について相談したい", value: "development_exterior", notification_label: "造成・外構" },
+          { label: "その他", value: "other", notification_label: "その他" }
+        ]
+      },
+      {
+        key: "land_status",
+        kind: "choice",
+        prompt_timeline_body: "土地・敷地の相談 土地状況選択案内済み",
+        value_timeline_prefix: "土地・敷地の相談 土地状況: ",
+        prompt_reply: "土地の状況を次から選んで送ってください。",
+        retry_reply: "土地の状況を次から選んで送ってください。",
+        options: [
+          { label: "まだ土地なし", value: "no_land" },
+          { label: "候補地あり", value: "candidate_land" },
+          { label: "所有地あり", value: "owned_land" },
+          { label: "契約予定", value: "planned_contract" },
+          { label: "不明", value: "unknown" }
+        ]
+      },
+      {
+        key: "area",
+        kind: "text",
+        prompt_timeline_body: "土地・敷地の相談 エリア入力案内済み",
+        value_timeline_prefix: "土地・敷地の相談 住所またはエリア: ",
+        prompt_reply: "住所またはエリアを入力してください。",
+        retry_reply: "住所またはエリアを入力して送ってください。"
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "土地・敷地の相談 内容入力案内済み",
+        value_timeline_prefix: "土地・敷地の相談 確認内容: ",
+        prompt_reply: [
+          "確認したい内容を入力してください。",
+          "資料や写真があれば、このあとLINEで送ってください。"
+        ].join("\n"),
+        retry_reply: "確認したい内容を入力して送ってください。"
+      }
+    ]
+  },
+  {
+    flow_key: "negotiation.required_documents",
+    trigger_text: "必要書類・確認事項",
+    title: "必要書類・確認事項",
+    start_activity_label: "必要書類・確認事項を開始",
+    category: "documents",
+    assigned_role: "sales_admin",
+    secondary_role: "sales",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "必要書類・確認事項 内容選択案内済み",
+        value_timeline_prefix: "必要書類・確認事項 内容: ",
+        prompt_reply: "確認したい内容を次から選んで送ってください。",
+        retry_reply: "確認したい内容を次から選んで送ってください。",
+        options: [
+          { label: "必要書類を知りたい", value: "required_docs", notification_label: "必要書類" },
+          { label: "提出済み書類を確認したい", value: "submitted_docs", notification_label: "提出済み書類" },
+          { label: "これから提出する書類について", value: "future_submission", notification_label: "これから提出する書類" },
+          { label: "契約前の確認", value: "pre_contract", notification_label: "契約前確認" },
+          { label: "ローン関連書類", value: "loan_docs", notification_label: "ローン関連書類" },
+          { label: "補助金関連書類", value: "subsidy_docs", notification_label: "補助金関連書類" },
+          { label: "その他", value: "other", notification_label: "その他" }
+        ]
+      },
+      {
+        key: "current_stage",
+        kind: "choice",
+        prompt_timeline_body: "必要書類・確認事項 現在段階選択案内済み",
+        value_timeline_prefix: "必要書類・確認事項 現在段階: ",
+        prompt_reply: "現在の段階を次から選んで送ってください。",
+        retry_reply: "現在の段階を次から選んで送ってください。",
+        options: [
+          { label: "初回相談", value: "first_consultation" },
+          { label: "プラン提案中", value: "plan_proposal" },
+          { label: "見積確認中", value: "estimate_review" },
+          { label: "契約前", value: "pre_contract" },
+          { label: "ローン審査中", value: "loan_review" },
+          { label: "その他", value: "other" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "必要書類・確認事項 内容入力案内済み",
+        value_timeline_prefix: "必要書類・確認事項 具体内容: ",
+        prompt_reply: [
+          "具体的な内容を入力してください。",
+          "書類画像があれば、このあとLINEで送ってください。"
+        ].join("\n"),
+        retry_reply: "具体的な内容を入力して送ってください。"
+      }
+    ]
+  }
+] as const satisfies readonly StructuredConsultationFlowConfig[];
+
+const structuredConsultationStartTimelinePrefix = "相談フロー開始: ";
+const structuredConsultationAcceptedTimelinePrefix = "相談フロー受付済み: ";
+
 export function resolveCustomerContactStaffCategory(text: string | null): string | null {
   const normalized = text?.trim();
 
@@ -681,6 +1080,33 @@ function resolveCustomerContactStaffPriority(
   }
 
   return customerContactStaffPriorityOptions.find((option) => option.label === normalized) ?? null;
+}
+
+function resolveStructuredConsultationFlowTrigger(
+  text: string | null
+): StructuredConsultationFlowConfig | null {
+  const normalized = text?.trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  return (
+    structuredConsultationFlowConfigs.find((config) => config.trigger_text === normalized) ?? null
+  );
+}
+
+function resolveStructuredConsultationOption(
+  step: StructuredConsultationStep,
+  text: string | null
+): StructuredConsultationOption | null {
+  const normalized = text?.trim();
+
+  if (!normalized || step.kind !== "choice") {
+    return null;
+  }
+
+  return step.options.find((option) => option.label === normalized) ?? null;
 }
 
 export async function upsertLineCustomer(
@@ -1098,6 +1524,9 @@ export async function logLineWebhookEvents(
   let contactStaffFlowsLogged = 0;
   let contactStaffAlertsCreated = 0;
   let contactStaffAlertsNotificationRequired = 0;
+  let structuredConsultationFlowsLogged = 0;
+  let structuredConsultationAlertsCreated = 0;
+  let structuredConsultationAlertsNotificationRequired = 0;
   let unsupportedEvents = 0;
   const lineReplyInstructions: LineReplyInstruction[] = [];
   const staffNotificationAlerts: Alert[] = [];
@@ -1177,6 +1606,40 @@ export async function logLineWebhookEvents(
         continue;
       }
 
+      const structuredConsultationTrigger = resolveStructuredConsultationFlowTrigger(event.text);
+
+      if (structuredConsultationTrigger) {
+        const customer = await upsertLineCustomer(
+          input.customerRepository,
+          {
+            tenant_id: input.tenant_id,
+            line_user_id: event.source_user_id,
+            display_name: displayName
+          },
+          serviceOptions
+        );
+        const structuredConsultationFlow = await startStructuredConsultationFlow({
+          tenant_id: input.tenant_id,
+          customer,
+          config: structuredConsultationTrigger,
+          event_time: eventTime,
+          reply_token: event.reply_token ?? null,
+          messageRepository: input.messageRepository,
+          serviceOptions
+        });
+
+        customersUpserted += 1;
+        messagesInserted += structuredConsultationFlow.messages_inserted;
+        structuredConsultationFlowsLogged += 1;
+        if (structuredConsultationFlow.staff_notification_event) {
+          staffNotificationEvents.push(structuredConsultationFlow.staff_notification_event);
+        }
+        if (structuredConsultationFlow.reply) {
+          lineReplyInstructions.push(structuredConsultationFlow.reply);
+        }
+        continue;
+      }
+
       if (event.text?.trim() === customerContactStaffTriggerText) {
         const customer = await upsertLineCustomer(
           input.customerRepository,
@@ -1227,6 +1690,46 @@ export async function logLineWebhookEvents(
         },
         serviceOptions
       );
+      const structuredConsultationFlow = await handleStructuredConsultationFlowMessage({
+        tenant_id: input.tenant_id,
+        customer,
+        text: event.text,
+        line_message_id: event.message_id,
+        event_time: eventTime,
+        reply_token: event.reply_token ?? null,
+        customerRepository: input.customerRepository,
+        messageRepository: input.messageRepository,
+        alertRepository: input.alertRepository,
+        createId: input.createId,
+        serviceOptions
+      });
+
+      if (structuredConsultationFlow.handled) {
+        customersUpserted += 1;
+        messagesInserted += structuredConsultationFlow.messages_inserted;
+        alertsCreated += structuredConsultationFlow.alert_created ? 1 : 0;
+        alertsNotificationRequired += structuredConsultationFlow.alert_notification_required
+          ? 1
+          : 0;
+        structuredConsultationAlertsCreated += structuredConsultationFlow.alert_created ? 1 : 0;
+        structuredConsultationAlertsNotificationRequired +=
+          structuredConsultationFlow.alert_notification_required ? 1 : 0;
+        if (
+          structuredConsultationFlow.alert_notification_required &&
+          structuredConsultationFlow.alert
+        ) {
+          staffNotificationAlerts.push(structuredConsultationFlow.alert);
+        }
+        if (structuredConsultationFlow.staff_notification_event) {
+          staffNotificationEvents.push(structuredConsultationFlow.staff_notification_event);
+        }
+        structuredConsultationFlowsLogged += 1;
+        if (structuredConsultationFlow.reply) {
+          lineReplyInstructions.push(structuredConsultationFlow.reply);
+        }
+        continue;
+      }
+
       const contactStaffFlow = await handleContactStaffFlowMessage({
         tenant_id: input.tenant_id,
         customer,
@@ -1322,11 +1825,488 @@ export async function logLineWebhookEvents(
     contact_staff_flows_logged: contactStaffFlowsLogged,
     contact_staff_alerts_created: contactStaffAlertsCreated,
     contact_staff_alerts_notification_required: contactStaffAlertsNotificationRequired,
+    structured_consultation_flows_logged: structuredConsultationFlowsLogged,
+    structured_consultation_alerts_created: structuredConsultationAlertsCreated,
+    structured_consultation_alerts_notification_required:
+      structuredConsultationAlertsNotificationRequired,
     unsupported_events: unsupportedEvents,
     line_reply_instructions: lineReplyInstructions,
     staff_notification_alerts: staffNotificationAlerts,
     staff_notification_events: staffNotificationEvents
   };
+}
+
+type StructuredConsultationFlowResult = {
+  handled: boolean;
+  messages_inserted: number;
+  alert_created: boolean;
+  alert_notification_required: boolean;
+  alert: Alert | null;
+  staff_notification_event: CustomerLineStaffNotificationEvent | null;
+  reply: LineReplyInstruction | null;
+};
+
+type StructuredConsultationFlowState =
+  | { stage: "none" }
+  | {
+      stage: "awaiting_step";
+      config: StructuredConsultationFlowConfig;
+      step: StructuredConsultationStep;
+      step_index: number;
+      values: Record<string, string>;
+    };
+
+async function startStructuredConsultationFlow(input: {
+  tenant_id: string;
+  customer: Customer;
+  config: StructuredConsultationFlowConfig;
+  event_time: string;
+  reply_token: string | null;
+  messageRepository: MessageRepository;
+  serviceOptions: { createId?: () => string; now?: () => string };
+}): Promise<StructuredConsultationFlowResult> {
+  const firstStep = input.config.steps[0];
+
+  if (!firstStep) {
+    return createUnhandledStructuredConsultationFlowResult();
+  }
+
+  await insertSystemTextTimelineMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer.id,
+      body: buildStructuredConsultationStartTimelineBody(input.config),
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+  await insertSystemTextTimelineMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer.id,
+      body: firstStep.prompt_timeline_body,
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+
+  return {
+    handled: true,
+    messages_inserted: 2,
+    alert_created: false,
+    alert_notification_required: false,
+    alert: null,
+    staff_notification_event: {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer.id,
+      customer_display_name: input.customer.display_name,
+      customer_phone: input.customer.phone,
+      customer_email: input.customer.email,
+      customer_address: input.customer.address,
+      action_label: input.config.start_activity_label,
+      occurred_at: input.event_time
+    },
+    reply: buildStructuredConsultationStepReply(input.reply_token, firstStep)
+  };
+}
+
+async function handleStructuredConsultationFlowMessage(input: {
+  tenant_id: string;
+  customer: Customer;
+  text: string | null;
+  line_message_id: string | null;
+  event_time: string;
+  reply_token: string | null;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+  alertRepository: AlertRepository | undefined;
+  createId: (() => string) | undefined;
+  serviceOptions: { createId?: () => string; now?: () => string };
+}): Promise<StructuredConsultationFlowResult> {
+  const timeline = await input.messageRepository.listByCustomer(input.tenant_id, input.customer.id);
+  const flowState = resolveStructuredConsultationFlowState(timeline);
+
+  if (flowState.stage === "none") {
+    return createUnhandledStructuredConsultationFlowResult();
+  }
+
+  const resolvedValue = resolveStructuredConsultationStepInput(flowState.step, input.text);
+
+  if (!resolvedValue) {
+    return {
+      handled: true,
+      messages_inserted: 0,
+      alert_created: false,
+      alert_notification_required: false,
+      alert: null,
+      staff_notification_event: null,
+      reply: buildStructuredConsultationStepRetryReply(input.reply_token, flowState.step)
+    };
+  }
+
+  let messagesInserted = 0;
+  if (flowState.step.kind === "text") {
+    await insertLineTextMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        line_message_id: input.line_message_id ?? createDefaultId(),
+        body: resolvedValue.label,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
+  }
+  await insertSystemTextTimelineMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer.id,
+      body: `${flowState.step.value_timeline_prefix}${resolvedValue.label}`,
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+  messagesInserted += 1;
+
+  const values = {
+    ...flowState.values,
+    [flowState.step.key]: resolvedValue.label
+  };
+  const nextStep = flowState.config.steps[flowState.step_index + 1];
+
+  if (nextStep) {
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: nextStep.prompt_timeline_body,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
+
+    return {
+      handled: true,
+      messages_inserted: messagesInserted,
+      alert_created: false,
+      alert_notification_required: false,
+      alert: null,
+      staff_notification_event: {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        customer_display_name: input.customer.display_name,
+        customer_phone: input.customer.phone,
+        customer_email: input.customer.email,
+        customer_address: input.customer.address,
+        action_label: `${flowState.step.value_timeline_prefix}${resolvedValue.label}`,
+        occurred_at: input.event_time
+      },
+      reply: buildStructuredConsultationStepReply(input.reply_token, nextStep)
+    };
+  }
+
+  const updatedCustomer = await input.customerRepository.save({
+    ...input.customer,
+    response_mode: resolveNextCustomerResponseMode(input.customer, "human_required"),
+    last_message_at: input.event_time,
+    last_customer_message_at: input.event_time,
+    updated_at: input.event_time
+  });
+  await insertSystemTextTimelineMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: updatedCustomer.id,
+      body: buildStructuredConsultationAcceptedTimelineBody(flowState.config),
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+  messagesInserted += 1;
+
+  let alertCreated = false;
+  let alertNotificationRequired = false;
+  let alert: Alert | null = null;
+  if (input.alertRepository) {
+    const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
+      tenant_id: input.tenant_id,
+      customer: updatedCustomer,
+      alertRepository: input.alertRepository,
+      message: buildStructuredConsultationAlertMessage(flowState.config, values),
+      severity: resolveStructuredConsultationAlertSeverity(flowState.config, values),
+      ...(input.createId ? { createId: input.createId } : {}),
+      now: () => input.event_time
+    });
+    alertCreated = alertResult.created;
+    alertNotificationRequired = alertResult.notification_required;
+    alert = alertResult.alert;
+  }
+
+  return {
+    handled: true,
+    messages_inserted: messagesInserted,
+    alert_created: alertCreated,
+    alert_notification_required: alertNotificationRequired,
+    alert,
+    staff_notification_event: null,
+    reply: {
+      reply_token: input.reply_token,
+      text: buildStructuredConsultationAcceptedReply(flowState.config)
+    }
+  };
+}
+
+function createUnhandledStructuredConsultationFlowResult(): StructuredConsultationFlowResult {
+  return {
+    handled: false,
+    messages_inserted: 0,
+    alert_created: false,
+    alert_notification_required: false,
+    alert: null,
+    staff_notification_event: null,
+    reply: null
+  };
+}
+
+function buildStructuredConsultationStartTimelineBody(
+  config: StructuredConsultationFlowConfig
+): string {
+  return `${structuredConsultationStartTimelinePrefix}${config.flow_key}`;
+}
+
+function buildStructuredConsultationAcceptedTimelineBody(
+  config: StructuredConsultationFlowConfig
+): string {
+  return `${structuredConsultationAcceptedTimelinePrefix}${config.flow_key}`;
+}
+
+function resolveStructuredConsultationFlowState(messages: Message[]): StructuredConsultationFlowState {
+  let latest:
+    | {
+        start_index: number;
+        config: StructuredConsultationFlowConfig;
+        step: StructuredConsultationStep;
+        step_index: number;
+        values: Record<string, string>;
+      }
+    | null = null;
+
+  for (const config of structuredConsultationFlowConfigs) {
+    const lastAcceptedIndex = findLastMessageIndex(
+      messages,
+      (message) =>
+        message.role === "system" &&
+        message.body === buildStructuredConsultationAcceptedTimelineBody(config)
+    );
+    const activeMessages = messages.slice(lastAcceptedIndex + 1);
+    const startIndex = findLastMessageIndex(
+      activeMessages,
+      (message) =>
+        message.role === "system" &&
+        message.body === buildStructuredConsultationStartTimelineBody(config)
+    );
+
+    if (startIndex < 0) {
+      continue;
+    }
+
+    const flowMessages = activeMessages.slice(startIndex);
+    const values: Record<string, string> = {};
+    for (const step of config.steps) {
+      const valueMessage = findLastMessage(flowMessages, (message) =>
+        Boolean(message.role === "system" && message.body?.startsWith(step.value_timeline_prefix))
+      );
+      const value = valueMessage?.body?.slice(step.value_timeline_prefix.length).trim();
+
+      if (value) {
+        values[step.key] = value;
+      }
+    }
+
+    const stepIndex = config.steps.findIndex((step) => !values[step.key]);
+    const step = config.steps[stepIndex];
+
+    if (stepIndex < 0 || !step) {
+      continue;
+    }
+
+    const absoluteStartIndex = lastAcceptedIndex + 1 + startIndex;
+    if (!latest || absoluteStartIndex > latest.start_index) {
+      latest = {
+        start_index: absoluteStartIndex,
+        config,
+        step,
+        step_index: stepIndex,
+        values
+      };
+    }
+  }
+
+  if (!latest) {
+    return { stage: "none" };
+  }
+
+  return {
+    stage: "awaiting_step",
+    config: latest.config,
+    step: latest.step,
+    step_index: latest.step_index,
+    values: latest.values
+  };
+}
+
+function resolveStructuredConsultationStepInput(
+  step: StructuredConsultationStep,
+  text: string | null
+): { label: string; value: string } | null {
+  const normalized = sanitizeStructuredConsultationFieldValue(text ?? "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (step.kind === "choice") {
+    const option = resolveStructuredConsultationOption(step, normalized);
+    return option ? { label: option.label, value: option.value } : null;
+  }
+
+  return { label: normalized, value: normalized };
+}
+
+function buildStructuredConsultationStepReply(
+  replyToken: string | null,
+  step: StructuredConsultationStep
+): LineReplyInstruction {
+  return {
+    reply_token: replyToken,
+    text: [
+      step.prompt_reply,
+      step.kind === "choice" ? "" : null,
+      ...(step.kind === "choice" ? step.options.map((option) => `・${option.label}`) : [])
+    ]
+      .filter((line): line is string => line !== null)
+      .join("\n"),
+    ...(step.kind === "choice"
+      ? { quick_reply_texts: step.options.map((option) => option.label) }
+      : {})
+  };
+}
+
+function buildStructuredConsultationStepRetryReply(
+  replyToken: string | null,
+  step: StructuredConsultationStep
+): LineReplyInstruction {
+  return {
+    reply_token: replyToken,
+    text: [
+      step.retry_reply,
+      step.kind === "choice" ? "" : null,
+      ...(step.kind === "choice" ? step.options.map((option) => `・${option.label}`) : [])
+    ]
+      .filter((line): line is string => line !== null)
+      .join("\n"),
+    ...(step.kind === "choice"
+      ? { quick_reply_texts: step.options.map((option) => option.label) }
+      : {})
+  };
+}
+
+function buildStructuredConsultationAcceptedReply(config: StructuredConsultationFlowConfig): string {
+  return [
+    `${config.title}の内容を受け付けました。`,
+    "担当者が確認して、管理画面から返信します。"
+  ].join("\n");
+}
+
+function buildStructuredConsultationAlertMessage(
+  config: StructuredConsultationFlowConfig,
+  values: Record<string, string>
+): string {
+  const lines = [
+    `structured_consultation_flow=${config.flow_key}`,
+    `title=${config.title}`,
+    `category=${config.category}`,
+    `assigned_role=${config.assigned_role}`,
+    config.secondary_role ? `secondary_role=${config.secondary_role}` : null,
+    `priority=${config.default_priority}`,
+    `ai_auto_reply=${String(config.ai_auto_reply)}`,
+    `requires_staff_confirmation=${String(config.requires_staff_confirmation)}`
+  ];
+
+  for (const step of config.steps) {
+    const label = sanitizeStructuredConsultationFieldValue(values[step.key] ?? "");
+    if (!label) {
+      continue;
+    }
+
+    lines.push(`${step.key}=${resolveStructuredConsultationStoredValue(step, label)}`);
+    lines.push(`${step.key}_label=${label}`);
+    if (step.kind === "text") {
+      lines.push(`${step.key}_present=true`);
+    }
+  }
+
+  if (config.category === "plan_design") {
+    lines.push("estimate_impact_possible=true");
+    lines.push("notify_estimator=true");
+    lines.push("attachment_guidance=sent");
+  }
+
+  if (config.category === "estimate_budget") {
+    lines.push("requires_staff_confirmation=true");
+    lines.push("ai_auto_reply=false");
+  }
+
+  if (config.category === "land_site") {
+    lines.push("attachment_guidance=sent");
+  }
+
+  if (config.category === "documents") {
+    lines.push("document_image_guidance=sent");
+  }
+
+  return lines.filter((line): line is string => line !== null).join("\n");
+}
+
+function resolveStructuredConsultationStoredValue(
+  step: StructuredConsultationStep,
+  label: string
+): string {
+  if (step.kind !== "choice") {
+    return label;
+  }
+
+  return step.options.find((option) => option.label === label)?.value ?? label;
+}
+
+function resolveStructuredConsultationAlertSeverity(
+  config: StructuredConsultationFlowConfig,
+  values: Record<string, string>
+): AlertSeverity {
+  if (config.category === "estimate_budget") {
+    const subCategory = values.sub_category;
+    if (
+      subCategory === "住宅ローンについて相談したい" ||
+      subCategory === "補助金について相談したい" ||
+      subCategory === "追加費用について確認したい" ||
+      subCategory === "減額案を相談したい"
+    ) {
+      return "high";
+    }
+  }
+
+  return config.default_severity;
+}
+
+function sanitizeStructuredConsultationFieldValue(value: string): string {
+  return value.trim().replace(/\s+/gu, " ").slice(0, 1000);
 }
 
 async function handleContactStaffFlowMessage(input: {
@@ -2124,6 +3104,7 @@ export function buildStaffNotificationPayload(
     alert.customer_id
   );
   const contactLines = formatStaffNotificationContactLines(options.customer ?? null);
+  const headline = formatStaffNotificationHeadline(alert.message);
   const detailLines = formatStaffNotificationDetailLines(alert.message);
 
   return {
@@ -2134,7 +3115,7 @@ export function buildStaffNotificationPayload(
     severity: alert.severity,
     message: [
       "LINEの更新が届きました。",
-      "新しい相談が届きました。",
+      headline,
       "",
       `種別：${formatAlertTypeForStaffNotification(alert.alert_type, alert.message)}`,
       `緊急度：${formatAlertSeverityForStaffNotification(alert.severity)}`,
@@ -2194,6 +3175,16 @@ export function buildCustomerActivityStaffNotificationPayload(
   };
 }
 
+function formatStaffNotificationHeadline(detail: string | null): string {
+  const structuredDetail = detail ? parseStructuredConsultationAlertDetail(detail.trim()) : null;
+
+  if (structuredDetail) {
+    return `${structuredDetail.config.title}の相談が届きました。`;
+  }
+
+  return "新しい相談が届きました。";
+}
+
 function formatStaffNotificationContactLines(
   customer: Pick<Customer, "phone" | "email" | "address"> | null
 ): string[] {
@@ -2213,6 +3204,11 @@ function formatStaffNotificationDetailLines(detail: string | null): string[] {
 
   if (!normalizedDetail || isGenericUnrepliedAlertMessage(normalizedDetail)) {
     return [];
+  }
+
+  const structuredConsultationDetail = parseStructuredConsultationAlertDetail(normalizedDetail);
+  if (structuredConsultationDetail) {
+    return formatStructuredConsultationDetailLines(structuredConsultationDetail);
   }
 
   const contactStaffDetail = parseContactStaffAlertDetail(normalizedDetail);
@@ -2269,6 +3265,103 @@ function parseContactStaffAlertDetail(
   };
 }
 
+function parseStructuredConsultationAlertDetail(message: string):
+  | {
+      config: StructuredConsultationFlowConfig;
+      fields: Record<string, string>;
+    }
+  | null {
+  const fields: Record<string, string> = {};
+
+  for (const line of message.split(/\r?\n/u)) {
+    const separatorIndex = line.indexOf("=");
+    if (separatorIndex <= 0) {
+      continue;
+    }
+
+    fields[line.slice(0, separatorIndex)] = line.slice(separatorIndex + 1);
+  }
+
+  const config =
+    structuredConsultationFlowConfigs.find(
+      (candidate) => candidate.flow_key === fields.structured_consultation_flow
+    ) ?? null;
+
+  return config ? { config, fields } : null;
+}
+
+function formatStructuredConsultationDetailLines(input: {
+  config: StructuredConsultationFlowConfig;
+  fields: Record<string, string>;
+}): string[] {
+  const body = input.fields.body_label?.trim();
+  const bodyLines = body ? ["相談内容：", body.slice(0, 1000)] : [];
+  const subCategoryLabel = formatStructuredConsultationChoiceLabel(input, "sub_category");
+
+  switch (input.config.category) {
+    case "meeting":
+      return [
+        `希望方法：${input.fields.method_label ?? "未入力"}`,
+        `希望日時：${input.fields.desired_datetime_present === "true" ? "入力あり" : "未入力"}`,
+        `打合せ内容：${input.fields.meeting_topic_label ?? "未入力"}`,
+        "担当：営業",
+        ...bodyLines
+      ];
+    case "plan_design":
+      return [
+        `対象：${input.fields.target_area_label ?? "未入力"}`,
+        `内容：${subCategoryLabel ?? "未入力"}`,
+        `希望優先度：${input.fields.request_priority_label ?? "未入力"}`,
+        `見積影響：${input.fields.estimate_impact_possible === "true" ? "可能性あり" : "未判定"}`,
+        "担当：設計",
+        ...bodyLines
+      ];
+    case "estimate_budget":
+      return [
+        `現在の状況：${input.fields.current_status_label ?? "未入力"}`,
+        `希望対応：${input.fields.desired_response_label ?? "未入力"}`,
+        "AI自動返信：不可",
+        "担当確認：必要",
+        "担当：営業 / 積算",
+        ...bodyLines
+      ];
+    case "land_site":
+      return [
+        `土地状況：${input.fields.land_status_label ?? "未入力"}`,
+        `エリア：${input.fields.area_present === "true" ? "入力あり" : "未入力"}`,
+        "資料添付：案内済み",
+        "担当：営業",
+        ...bodyLines
+      ];
+    case "documents":
+      return [
+        `現在の段階：${input.fields.current_stage_label ?? "未入力"}`,
+        "書類画像：添付案内済み",
+        "担当：営業事務 / 営業",
+        ...bodyLines
+      ];
+    default:
+      return bodyLines;
+  }
+}
+
+function formatStructuredConsultationChoiceLabel(input: {
+  config: StructuredConsultationFlowConfig;
+  fields: Record<string, string>;
+}, key: string): string | null {
+  const storedValue = input.fields[key]?.trim();
+  const storedLabel = input.fields[`${key}_label`]?.trim();
+  const step = input.config.steps.find(
+    (candidate): candidate is Extract<StructuredConsultationStep, { kind: "choice" }> =>
+      candidate.kind === "choice" && candidate.key === key
+  );
+  const option = step?.options.find(
+    (candidate) => candidate.value === storedValue || candidate.label === storedLabel
+  );
+
+  return option?.notification_label ?? storedLabel ?? storedValue ?? null;
+}
+
 function formatCustomerLabelForStaffNotification(
   displayName: string | null,
   _customerId: string
@@ -2288,6 +3381,14 @@ function normalizeAdminBaseUrl(adminBaseUrl: string | undefined): string {
 }
 
 function formatAlertTypeForStaffNotification(alertType: AlertType, detail: string | null): string {
+  const structuredDetail = detail ? parseStructuredConsultationAlertDetail(detail.trim()) : null;
+  if (structuredDetail) {
+    return (
+      formatStructuredConsultationChoiceLabel(structuredDetail, "sub_category") ??
+      structuredDetail.config.title
+    );
+  }
+
   const contactStaffDetail = detail ? parseContactStaffAlertDetail(detail.trim()) : null;
 
   if (contactStaffDetail) {

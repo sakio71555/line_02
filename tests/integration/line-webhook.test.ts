@@ -190,6 +190,49 @@ function lineTextMessageBody(input: {
   });
 }
 
+async function sendLineText(
+  app: { fetch: (request: Request) => Promise<Response> },
+  input: {
+    userId: string;
+    eventId: string;
+    messageId: string;
+    replyToken: string;
+    text: string;
+    timestamp: number;
+  }
+): Promise<Response> {
+  return app.fetch(
+    signedRequest(`/api/line/webhook/${knownWebhookSecret}`, lineTextMessageBody(input))
+  );
+}
+
+function buildRegisteredCustomer(input: {
+  id: string;
+  lineUserId: string;
+  displayName?: string;
+  phone?: string | null;
+}): Customer {
+  return {
+    id: input.id,
+    tenant_id: "tenant_amamihome",
+    line_user_id: input.lineUserId,
+    display_name: input.displayName ?? "商談 顧客",
+    picture_url: null,
+    phone: input.phone ?? "090-3333-4444",
+    email: null,
+    postal_code: null,
+    address: null,
+    interest_tags: ["情報登録済み"],
+    response_mode: "bot_auto",
+    status: "active",
+    last_message_at: null,
+    last_customer_message_at: null,
+    last_staff_reply_at: null,
+    created_at: "2026-07-04T00:00:00.000Z",
+    updated_at: "2026-07-04T00:00:00.000Z"
+  };
+}
+
 describe("LINE webhook foundation", () => {
   it("returns 200 and logs follow/text message events for a valid request", async () => {
     const { app, customerRepository, messageRepository } = createTestContext();
@@ -1516,6 +1559,272 @@ describe("LINE webhook foundation", () => {
     expect(alertRepository.list()[0]).toMatchObject({
       severity: "low"
     });
+  });
+
+  it("creates a structured meeting alert and staff notification with customer detail link", async () => {
+    const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository, customerRepository } = createTestContext({
+      lineClient,
+      staffNotifier,
+      env: {
+        APP_ENV: "production"
+      }
+    });
+    const userId = "U_TEST_USER_STRUCTURED_MEETING";
+
+    await customerRepository.save(
+      buildRegisteredCustomer({
+        id: "customer_structured_meeting",
+        lineUserId: userId,
+        displayName: "構造 太郎",
+        phone: "090-3333-4444"
+      })
+    );
+
+    const texts = [
+      "打合せ予約・変更",
+      "日時を変更したい",
+      "来店",
+      "第1希望 7/10 10:00\n第2希望 7/11 13:00",
+      "プラン",
+      "間取りの打合せ日時を変更したいです。"
+    ];
+    let finalBody: unknown = null;
+    for (const [index, text] of texts.entries()) {
+      const response = await sendLineText(app, {
+        userId,
+        eventId: `01TESTSTRUCTUREDMEETING${index}`,
+        messageId: `test-structured-meeting-${index}`,
+        replyToken: `reply_token_structured_meeting_${index}`,
+        text,
+        timestamp: 1710000050000 + index * 1000
+      });
+      finalBody = await response.json();
+      expect(response.status).toBe(200);
+    }
+
+    expect(finalBody).toMatchObject({
+      staff_notifications: {
+        attempted: true,
+        notified: 1,
+        failed: 0
+      },
+      logging: {
+        alerts_created: 1,
+        structured_consultation_alerts_created: 1,
+        structured_consultation_alerts_notification_required: 1
+      }
+    });
+    expect(lineClient.replies.at(0)?.messages[0]?.text).toContain("用件を次から選んで");
+    expect(lineClient.replies.at(-1)?.messages[0]?.text).toContain(
+      "打合せ予約・変更の内容を受け付けました。"
+    );
+    expect(alertRepository.list()[0]?.message).toContain(
+      "structured_consultation_flow=negotiation.meeting_schedule"
+    );
+    expect(alertRepository.list()[0]?.message).toContain("sub_category=reschedule");
+    expect(alertRepository.list()[0]?.message).toContain(
+      "body_label=間取りの打合せ日時を変更したいです。"
+    );
+
+    const notification = staffNotifier.notifications[staffNotifier.notifications.length - 1];
+    expect(notification?.message).toContain("打合せ予約・変更の相談が届きました。");
+    expect(notification?.message).toContain("種別：日時変更");
+    expect(notification?.message).toContain("緊急度：通常");
+    expect(notification?.message).toContain("顧客：構造 太郎");
+    expect(notification?.message).toContain("電話：090-3333-4444");
+    expect(notification?.message).toContain("希望方法：来店");
+    expect(notification?.message).toContain("希望日時：入力あり");
+    expect(notification?.message).toContain("打合せ内容：プラン");
+    expect(notification?.message).toContain("担当：営業");
+    expect(notification?.message).toContain("間取りの打合せ日時を変更したいです。");
+    expect(notification?.message).toContain(
+      "https://admin.taiyolabel.site/customers/customer_structured_meeting"
+    );
+    expect(notification?.message).not.toContain("http://localhost:3000");
+  });
+
+  it("creates structured staff notifications for plan estimate land and document flows", async () => {
+    const cases = [
+      {
+        id: "plan",
+        userId: "U_TEST_USER_STRUCTURED_PLAN",
+        customerId: "customer_structured_plan",
+        texts: [
+          "プラン・間取り相談",
+          "要望を変更したい",
+          "LDK",
+          "LDKの収納を増やしたいです。",
+          "必ず反映したい"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=negotiation.plan_consultation",
+          "category=plan_design",
+          "sub_category=requirement_change",
+          "estimate_impact_possible=true",
+          "notify_estimator=true"
+        ],
+        notificationSnippets: [
+          "プラン・間取り相談の相談が届きました。",
+          "種別：要望変更",
+          "対象：LDK",
+          "内容：要望変更",
+          "希望優先度：必ず反映したい",
+          "見積影響：可能性あり",
+          "担当：設計",
+          "LDKの収納を増やしたいです。"
+        ]
+      },
+      {
+        id: "estimate",
+        userId: "U_TEST_USER_STRUCTURED_ESTIMATE",
+        customerId: "customer_structured_estimate",
+        texts: [
+          "見積・資金計画",
+          "住宅ローンについて相談したい",
+          "ローン相談中",
+          "借入額の目安を確認したいです。",
+          "説明してほしい"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=negotiation.estimate_budget",
+          "category=estimate_budget",
+          "sub_category=loan",
+          "secondary_role=estimator",
+          "requires_staff_confirmation=true",
+          "ai_auto_reply=false"
+        ],
+        notificationSnippets: [
+          "見積・資金計画の相談が届きました。",
+          "種別：住宅ローン",
+          "緊急度：高",
+          "現在の状況：ローン相談中",
+          "希望対応：説明してほしい",
+          "AI自動返信：不可",
+          "担当確認：必要",
+          "担当：営業 / 積算",
+          "借入額の目安を確認したいです。"
+        ]
+      },
+      {
+        id: "land",
+        userId: "U_TEST_USER_STRUCTURED_LAND",
+        customerId: "customer_structured_land",
+        texts: [
+          "土地・敷地の相談",
+          "候補地について相談したい",
+          "候補地あり",
+          "松山市周辺",
+          "候補地の造成費が気になります。"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=negotiation.land_site",
+          "category=land_site",
+          "sub_category=candidate_land",
+          "land_status=candidate_land",
+          "area_present=true",
+          "attachment_guidance=sent"
+        ],
+        notificationSnippets: [
+          "土地・敷地の相談の相談が届きました。",
+          "種別：候補地あり",
+          "土地状況：候補地あり",
+          "エリア：入力あり",
+          "資料添付：案内済み",
+          "担当：営業",
+          "候補地の造成費が気になります。"
+        ]
+      },
+      {
+        id: "documents",
+        userId: "U_TEST_USER_STRUCTURED_DOCUMENTS",
+        customerId: "customer_structured_documents",
+        texts: [
+          "必要書類・確認事項",
+          "ローン関連書類",
+          "ローン審査中",
+          "事前審査に必要な書類を確認したいです。"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=negotiation.required_documents",
+          "category=documents",
+          "sub_category=loan_docs",
+          "assigned_role=sales_admin",
+          "secondary_role=sales",
+          "document_image_guidance=sent"
+        ],
+        notificationSnippets: [
+          "必要書類・確認事項の相談が届きました。",
+          "種別：ローン関連書類",
+          "現在の段階：ローン審査中",
+          "書類画像：添付案内済み",
+          "担当：営業事務 / 営業",
+          "事前審査に必要な書類を確認したいです。"
+        ]
+      }
+    ];
+
+    for (const testCase of cases) {
+      const lineClient = new MockLineClient();
+      const staffNotifier = new RecordingStaffNotifier();
+      const { app, alertRepository, customerRepository } = createTestContext({
+        lineClient,
+        staffNotifier,
+        env: {
+          APP_ENV: "production"
+        }
+      });
+
+      await customerRepository.save(
+        buildRegisteredCustomer({
+          id: testCase.customerId,
+          lineUserId: testCase.userId
+        })
+      );
+
+      let finalBody: unknown = null;
+      for (const [index, text] of testCase.texts.entries()) {
+        const response = await sendLineText(app, {
+          userId: testCase.userId,
+          eventId: `01TESTSTRUCTURED${testCase.id}${index}`,
+          messageId: `test-structured-${testCase.id}-${index}`,
+          replyToken: `reply_token_structured_${testCase.id}_${index}`,
+          text,
+          timestamp: 1710000060000 + index * 1000
+        });
+        finalBody = await response.json();
+        expect(response.status).toBe(200);
+      }
+
+      expect(finalBody).toMatchObject({
+        staff_notifications: {
+          attempted: true,
+          notified: 1,
+          failed: 0
+        },
+        logging: {
+          alerts_created: 1,
+          structured_consultation_alerts_created: 1,
+          structured_consultation_alerts_notification_required: 1
+        }
+      });
+
+      const alertMessage = alertRepository.list()[0]?.message ?? "";
+      for (const snippet of testCase.alertSnippets) {
+        expect(alertMessage).toContain(snippet);
+      }
+
+      const notification = staffNotifier.notifications[staffNotifier.notifications.length - 1];
+      expect(notification?.message).toContain("顧客：商談 顧客");
+      expect(notification?.message).toContain(
+        `https://admin.taiyolabel.site/customers/${testCase.customerId}`
+      );
+      expect(notification?.message).not.toContain("http://localhost:3000");
+      for (const snippet of testCase.notificationSnippets) {
+        expect(notification?.message).toContain(snippet);
+      }
+    }
   });
 
   it("stores the LINE profile display name when profile lookup succeeds", async () => {
