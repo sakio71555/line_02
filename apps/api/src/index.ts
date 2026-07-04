@@ -143,6 +143,7 @@ const defaultLineClient = new MockLineClient();
 const defaultStaffNotifier = new MockStaffNotifier();
 const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository([]);
 const defaultLineIdTokenVerifier = new FetchLineIdTokenVerifier();
+const PRODUCTION_STAFF_NOTIFICATION_ADMIN_BASE_URL = "https://admin.taiyolabel.site";
 
 function shouldCreateRuntimeRepositories(dependencies: ApiAppDependencies): boolean {
   return (
@@ -216,6 +217,10 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
           fetch: dependencies.productionAuthRuntimeFetch
         })
       : undefined);
+  const staffNotificationAdminBaseUrl = resolveStaffNotificationAdminBaseUrl(
+    env,
+    config.urls.appBaseUrl
+  );
 
   api.get("/health", (c) => {
     return c.json({
@@ -301,8 +306,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenantId: config.tenant.id,
       alertCount: alertResult.notification_required ? 1 : 0,
       alertRepository,
+      customerRepository,
       staffNotifier,
-      adminBaseUrl: config.urls.appBaseUrl,
+      adminBaseUrl: staffNotificationAdminBaseUrl,
       ...(now ? { now } : {})
     });
 
@@ -908,8 +914,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const result = await notifyOpenAlerts({
       tenant_id: tenant.tenantId,
       alertRepository,
+      customerRepository,
       staffNotifier,
-      adminBaseUrl: config.urls.appBaseUrl,
+      adminBaseUrl: staffNotificationAdminBaseUrl,
       ...(now ? { now } : {})
     });
 
@@ -980,7 +987,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         env,
         alerts: staffNotificationAlerts,
         staffNotifier,
-        adminBaseUrl: config.urls.appBaseUrl,
+        customerRepository,
+        adminBaseUrl: staffNotificationAdminBaseUrl,
         alertRepository,
         ...(now ? { now } : {})
       });
@@ -988,7 +996,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         env,
         events: staffNotificationEvents,
         staffNotifier,
-        adminBaseUrl: config.urls.appBaseUrl
+        adminBaseUrl: staffNotificationAdminBaseUrl
       });
       const staffNotifications = combineStaffNotificationCounts(
         alertStaffNotifications,
@@ -1857,6 +1865,7 @@ async function notifyNewAlertsForProduction(input: {
   tenantId: string;
   alertCount: number;
   alertRepository: AlertRepository;
+  customerRepository: CustomerRepository;
   staffNotifier: StaffNotifier;
   adminBaseUrl?: string | undefined;
   now?: (() => string) | undefined;
@@ -1878,6 +1887,7 @@ async function notifyNewAlertsForProduction(input: {
   const result = await notifyOpenAlerts({
     tenant_id: input.tenantId,
     alertRepository: input.alertRepository,
+    customerRepository: input.customerRepository,
     staffNotifier: input.staffNotifier,
     ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {}),
     ...(input.now ? { now: input.now } : {})
@@ -1896,6 +1906,7 @@ async function notifySpecificAlertsForProduction(input: {
   alerts: Alert[];
   staffNotifier: StaffNotifier;
   alertRepository: AlertRepository;
+  customerRepository: CustomerRepository;
   adminBaseUrl?: string | undefined;
   now?: (() => string) | undefined;
 }): Promise<{
@@ -1920,8 +1931,13 @@ async function notifySpecificAlertsForProduction(input: {
   let skipped = 0;
 
   for (const alert of alerts) {
+    const customer = await input.customerRepository.findByIdForTenant(
+      alert.tenant_id,
+      alert.customer_id
+    );
     const payload = buildStaffNotificationPayload(alert, {
-      ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {})
+      ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {}),
+      customerDisplayName: customer?.display_name ?? null
     });
 
     try {
@@ -2354,6 +2370,29 @@ function createDemoMessages(tenantId: string): Message[] {
 
 function isProductionRuntime(env: NodeJS.ProcessEnv): boolean {
   return env.APP_ENV === "production" || env.NODE_ENV === "production";
+}
+
+function resolveStaffNotificationAdminBaseUrl(
+  env: NodeJS.ProcessEnv,
+  configuredBaseUrl: string
+): string {
+  const explicitBaseUrl = readNonEmptyEnvValue(env.STAFF_NOTIFICATION_ADMIN_BASE_URL);
+
+  if (explicitBaseUrl) {
+    return explicitBaseUrl.replace(/\/+$/u, "");
+  }
+
+  const normalizedConfiguredBaseUrl = configuredBaseUrl.trim().replace(/\/+$/u, "");
+
+  if (isProductionRuntime(env) && isLocalAdminBaseUrl(normalizedConfiguredBaseUrl)) {
+    return PRODUCTION_STAFF_NOTIFICATION_ADMIN_BASE_URL;
+  }
+
+  return normalizedConfiguredBaseUrl || PRODUCTION_STAFF_NOTIFICATION_ADMIN_BASE_URL;
+}
+
+function isLocalAdminBaseUrl(value: string): boolean {
+  return /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/u.test(value);
 }
 
 function isStaffLineRuntimeConfigured(env: NodeJS.ProcessEnv): boolean {

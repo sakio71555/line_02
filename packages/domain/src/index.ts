@@ -468,6 +468,7 @@ export interface EnsureOpenUnrepliedCustomerMessageAlertResult {
 export interface NotifyOpenAlertsInput {
   tenant_id: string;
   alertRepository: AlertRepository;
+  customerRepository?: CustomerRepository;
   staffNotifier: StaffNotifier;
   adminBaseUrl?: string;
   now?: () => string;
@@ -973,8 +974,12 @@ export async function notifyOpenAlerts(
   const failedAlerts: Alert[] = [];
 
   for (const alert of openAlerts) {
+    const customer = input.customerRepository
+      ? await input.customerRepository.findByIdForTenant(alert.tenant_id, alert.customer_id)
+      : null;
     const payload = buildStaffNotificationPayload(alert, {
-      ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {})
+      ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {}),
+      customerDisplayName: customer?.display_name ?? null
     });
 
     try {
@@ -1841,10 +1846,14 @@ function createUnrepliedAlert(input: {
 
 export function buildStaffNotificationPayload(
   alert: Alert,
-  options: { adminBaseUrl?: string } = {}
+  options: { adminBaseUrl?: string; customerDisplayName?: string | null } = {}
 ): StaffNotificationPayload {
   const adminBaseUrl = normalizeAdminBaseUrl(options.adminBaseUrl);
   const adminUrl = `${adminBaseUrl}/customers/${encodeURIComponent(alert.customer_id)}`;
+  const customerLabel = formatCustomerLabelForStaffNotification(
+    options.customerDisplayName ?? null,
+    alert.customer_id
+  );
 
   return {
     tenant_id: alert.tenant_id,
@@ -1858,7 +1867,7 @@ export function buildStaffNotificationPayload(
       "",
       `種別：${formatAlertTypeForStaffNotification(alert.alert_type)}`,
       `緊急度：${formatAlertSeverityForStaffNotification(alert.severity)}`,
-      `顧客：${alert.customer_id}`,
+      `顧客：${customerLabel}`,
       `日時：${alert.updated_at}`,
       "内容：LINEからの相談・更新",
       "対応状況：未対応",
@@ -1911,7 +1920,7 @@ function formatCustomerLabelForStaffNotification(
   const normalizedDisplayName = displayName?.trim();
 
   if (normalizedDisplayName) {
-    return `${normalizedDisplayName}（CRM:${customerId}）`;
+    return normalizedDisplayName;
   }
 
   return `CRM:${customerId}`;

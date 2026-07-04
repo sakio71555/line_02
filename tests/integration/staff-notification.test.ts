@@ -11,6 +11,7 @@ import {
   MockStaffNotifier,
   type Alert,
   type AlertStatus,
+  type Customer,
   type StaffNotificationPayload,
   type StaffNotifier
 } from "@amami-line-crm/domain";
@@ -30,12 +31,13 @@ function createTestApp(input: {
   tenantId: string;
   tenantSlug: string;
   alertRepository: InMemoryAlertRepository;
+  customerRepository?: InMemoryCustomerRepository;
   staffNotifier?: StaffNotifier;
   env?: Record<string, string>;
 }) {
   return createApiApp({
     alertRepository: input.alertRepository,
-    customerRepository: new InMemoryCustomerRepository(),
+    customerRepository: input.customerRepository ?? new InMemoryCustomerRepository(),
     messageRepository: new InMemoryMessageRepository(),
     ...(input.staffNotifier ? { staffNotifier: input.staffNotifier } : {}),
     now: () => now,
@@ -109,13 +111,34 @@ describe("admin open alert staff notification API", () => {
 
   it("notifies only the known tenant open alerts and marks successful alerts as notified", async () => {
     const alertRepository = new InMemoryAlertRepository();
+    const customerRepository = new InMemoryCustomerRepository();
     const staffNotifier = new MockStaffNotifier();
     const app = createTestApp({
       tenantId: "tenant_amamihome",
       tenantSlug: "amamihome",
       alertRepository,
+      customerRepository,
       staffNotifier
     });
+    const customer: Customer = {
+      id: "customer_amami",
+      tenant_id: "tenant_amamihome",
+      line_user_id: "U_TEST_NOTIFY_CUSTOMER",
+      display_name: "山田 太郎",
+      picture_url: null,
+      phone: null,
+      email: null,
+      postal_code: null,
+      address: null,
+      interest_tags: [],
+      response_mode: "human_required",
+      status: "active",
+      last_message_at: null,
+      last_customer_message_at: null,
+      last_staff_reply_at: null,
+      created_at: now,
+      updated_at: now
+    };
     const openAlert = makeAlert({
       id: "alert_open",
       customerId: "customer_amami",
@@ -123,6 +146,7 @@ describe("admin open alert staff notification API", () => {
       message: "未返信の緊急相談があります"
     });
 
+    await customerRepository.save(customer);
     await alertRepository.create(openAlert);
     await alertRepository.create(
       makeAlert({ id: "alert_notified", customerId: "customer_notified", status: "notified" })
@@ -173,6 +197,7 @@ describe("admin open alert staff notification API", () => {
     expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
     expect(staffNotifier.notifications[0]?.message).toContain("種別：未返信の相談");
     expect(staffNotifier.notifications[0]?.message).toContain("緊急度：緊急");
+    expect(staffNotifier.notifications[0]?.message).toContain("顧客：山田 太郎");
     expect(staffNotifier.notifications[0]?.message).toContain("対応状況：未対応");
     expect(staffNotifier.notifications[0]?.message).toContain(
       "http://localhost:3000/customers/customer_amami"

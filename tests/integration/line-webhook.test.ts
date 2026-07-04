@@ -117,9 +117,12 @@ function expectGuideStaffNotification(input: {
   actionLabel: string;
   eventTime: string;
   lineUserId: string;
+  expectedAdminBaseUrl?: string;
 }) {
   expect(input.staffNotifier.notifications).toHaveLength(1);
   const notification = input.staffNotifier.notifications[0];
+  const expectedAdminBaseUrl =
+    input.expectedAdminBaseUrl ?? "https://admin.taiyolabel.site";
 
   expect(notification?.message).toContain("LINEの更新が届きました。");
   expect(notification?.message).toContain("種別：LINEメニュー操作");
@@ -127,7 +130,9 @@ function expectGuideStaffNotification(input: {
   expect(notification?.message).toContain(`内容：${input.actionLabel}`);
   expect(notification?.message).toContain(`日時：${input.eventTime}`);
   expect(notification?.message).toContain("顧客詳細で確認してください。");
-  expect(notification?.message).toContain(`http://localhost:3000/customers/${input.customer?.id}`);
+  expect(notification?.message).toContain(
+    `${expectedAdminBaseUrl}/customers/${input.customer?.id}`
+  );
   expect(notification?.message).not.toContain(input.lineUserId);
 }
 
@@ -1281,12 +1286,10 @@ describe("LINE webhook foundation", () => {
     });
     expect(staffNotifier.notifications).toHaveLength(1);
     expect(staffNotifier.notifications[0]?.message).toContain("LINEの更新が届きました。");
-    expect(staffNotifier.notifications[0]?.message).toContain(
-      "顧客：customer_registered_contact_staff_repeat"
-    );
+    expect(staffNotifier.notifications[0]?.message).toContain("顧客：登録済み 太郎");
     expect(staffNotifier.notifications[0]?.message).toContain("日時：2024-03-09T16:00:42.000Z");
     expect(staffNotifier.notifications[0]?.message).toContain(
-      "http://localhost:3000/customers/customer_registered_contact_staff_repeat"
+      "https://admin.taiyolabel.site/customers/customer_registered_contact_staff_repeat"
     );
     expect(staffNotifier.notifications[0]?.message).not.toContain(
       "資金計画について担当者に相談したいです。"
