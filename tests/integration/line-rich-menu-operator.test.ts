@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyDefaultRichMenu,
+  applyLifecycleRichMenus,
   buildRichMenuDefinitionForApply,
   CUSTOMER_REGISTRATION_ENDPOINT,
   formatLineRichMenuDryRunResult,
+  formatLineRichMenuLifecycleApplyResult,
   formatLineRichMenuRemoveDefaultResult,
   removeDefaultRichMenu,
   runLineRichMenuDryRun,
@@ -109,6 +111,7 @@ describe("LINE rich menu operator", () => {
       createRichMenuStatus: "success",
       uploadImageStatus: "success",
       setDefaultStatus: "success",
+      menuType: "default",
       liffUrlApplied: true,
       liffIdRecorded: false,
       richMenuIdRecorded: false,
@@ -164,6 +167,74 @@ describe("LINE rich menu operator", () => {
       text: "資料請求"
     });
     expect(JSON.stringify(createBody)).not.toContain(CUSTOMER_REGISTRATION_ENDPOINT);
+  });
+
+  it("applies lifecycle rich menus without exposing tokens or created IDs", async () => {
+    const calls: Array<{ input: string; init: RequestInit }> = [];
+    let createCount = 0;
+    const result = await applyLifecycleRichMenus({
+      channelAccessToken: "test-channel-access-token",
+      liffId: "1234567890-testLiff",
+      async fetchImplementation(input, init) {
+        calls.push({ input: String(input), init });
+
+        if (String(input).endsWith("/v2/bot/richmenu")) {
+          createCount += 1;
+          return new Response(JSON.stringify({ richMenuId: `richmenu-lifecycle-${createCount}` }), {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          });
+        }
+
+        return new Response("{}", { status: 200 });
+      }
+    });
+    const output = formatLineRichMenuLifecycleApplyResult(result);
+
+    expect(result).toEqual({
+      createRichMenuStatus: "success",
+      uploadImageStatus: "success",
+      setDefaultStatus: "success",
+      lifecycleMenuCount: 3,
+      defaultMenuType: "initial",
+      initialRichMenuCreated: true,
+      negotiationRichMenuCreated: true,
+      aftercareRichMenuCreated: true,
+      richMenuEnvOutputWritten: false,
+      liffUrlApplied: true,
+      liffIdRecorded: false,
+      richMenuIdRecorded: false,
+      lineSendAttempted: false,
+      secretRecorded: false
+    });
+    expect(calls.map((call) => call.input)).toEqual([
+      "https://api.line.me/v2/bot/richmenu",
+      "https://api-data.line.me/v2/bot/richmenu/richmenu-lifecycle-1/content",
+      "https://api.line.me/v2/bot/richmenu",
+      "https://api-data.line.me/v2/bot/richmenu/richmenu-lifecycle-2/content",
+      "https://api.line.me/v2/bot/richmenu",
+      "https://api-data.line.me/v2/bot/richmenu/richmenu-lifecycle-3/content",
+      "https://api.line.me/v2/bot/user/all/richmenu/richmenu-lifecycle-1"
+    ]);
+    expect(output).toContain("line_rich_menu_operator_mode=apply_lifecycle");
+    expect(output).toContain("lifecycle_menu_count=3");
+    expect(output).toContain("initial_rich_menu_created=true");
+    expect(output).toContain("negotiation_rich_menu_created=true");
+    expect(output).toContain("aftercare_rich_menu_created=true");
+    expect(output).toContain("default_menu_type=initial");
+    expect(output).toContain("rich_menu_id_recorded=false");
+    expect(output).not.toContain("richmenu-lifecycle");
+    expect(output).not.toContain("test-channel-access-token");
+    expect(output).not.toContain("1234567890-testLiff");
+
+    const createBodies = calls
+      .filter((call) => call.input === "https://api.line.me/v2/bot/richmenu")
+      .map((call) => JSON.parse(String(call.init.body ?? "{}")) as { name: string });
+    expect(createBodies.map((body) => body.name)).toEqual([
+      "Amami Home Initial Menu",
+      "Amami Home Negotiation Menu",
+      "Amami Home Aftercare Menu"
+    ]);
   });
 
   it("builds apply definitions with LIFF URLs while keeping source definitions unchanged", async () => {

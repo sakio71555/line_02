@@ -4,6 +4,7 @@ import type {
   AlertType,
   CustomerDetail,
   CustomerListItem as DomainCustomerListItem,
+  CustomerRichMenuType,
   CustomerTimelineMessage,
   ResponseMode
 } from "@amami-line-crm/domain";
@@ -126,6 +127,20 @@ export interface AdminStaffReplyResponse {
     response_mode: ResponseMode;
     last_staff_reply_at: string | null;
   };
+}
+
+export type AdminCustomerRichMenuType = CustomerRichMenuType;
+
+export interface AdminCustomerRichMenuSwitchResponse {
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  menu_type: AdminCustomerRichMenuType;
+  menu_label: string;
+  rich_menu_linked: true;
+  line_message_sent: false;
+  rich_menu_id_recorded: false;
+  message: CustomerTimelineMessage;
 }
 
 export interface AdminAlertListItem {
@@ -306,6 +321,10 @@ export function adminCustomerReplyPath(customerId: string): string {
   return `/api/admin/customers/${encodeURIComponent(customerId)}/reply`;
 }
 
+export function adminCustomerRichMenuPath(customerId: string): string {
+  return `/api/admin/customers/${encodeURIComponent(customerId)}/rich-menu`;
+}
+
 export function adminLineRealSendCapabilityPath(): string {
   return "/api/admin/runtime/line-real-send-capability";
 }
@@ -479,6 +498,39 @@ export async function sendStaffReply(
       method: "POST",
       headers,
       body: JSON.stringify(requestBody)
+    },
+    {
+      ...options,
+      config
+    }
+  );
+}
+
+export async function switchAdminCustomerRichMenu(
+  input: {
+    customerId: string;
+    menuType: AdminCustomerRichMenuType;
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<AdminCustomerRichMenuSwitchResponse> {
+  const config = options.config ?? getAdminApiConfig();
+  const headers: Record<string, string> = {
+    "content-type": "application/json"
+  };
+  const staffId = config.staffId?.trim();
+
+  if (staffId) {
+    headers["x-staff-id"] = staffId;
+  }
+
+  return adminApiFetch<AdminCustomerRichMenuSwitchResponse>(
+    adminCustomerRichMenuPath(input.customerId),
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        menu_type: input.menuType
+      })
     },
     {
       ...options,

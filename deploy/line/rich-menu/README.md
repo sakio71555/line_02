@@ -48,6 +48,16 @@ LINE_RICH_MENU_APPLY_APPROVED=YES npx pnpm@10.12.1 exec tsx scripts/ops/line_ric
 
 The apply command reads `LINE_CHANNEL_ACCESS_TOKEN` from the runtime environment. It does not print the token or the rich menu ID.
 
+## Apply lifecycle menus
+
+Use this for the production customer-facing account when all three lifecycle menus must exist before per-customer switching:
+
+```sh
+LINE_RICH_MENU_APPLY_APPROVED=YES npx pnpm@10.12.1 exec tsx scripts/ops/line_rich_menu_operator.ts --apply-lifecycle --rich-menu-env-output <root-only-env-file>
+```
+
+This creates the initial, negotiation, and aftercare rich menus, sets the initial menu as the default, and writes the runtime rich menu IDs to the operator-provided root-only env file. The command output prints sanitized booleans only; it does not print the access token, LIFF ID, or rich menu IDs.
+
 ## Remove the default rich menu
 
 Use this only when the LINE Official Account is the separate internal staff notification account.

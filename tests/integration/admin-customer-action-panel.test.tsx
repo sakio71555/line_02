@@ -16,8 +16,12 @@ describe("admin customer action panel", () => {
         replyDraftState={{ status: "idle" }}
         ragAnswerPending={false}
         ragAnswerState={{ status: "idle" }}
+        richMenuCustomerAvailable={true}
+        richMenuSwitchPending={false}
+        richMenuSwitchState={{ status: "idle" }}
         runRagAnswer={noopAction}
         runReplyDraft={noopAction}
+        runRichMenuSwitch={noopAction}
         runStaffReply={noopAction}
         runSummary={noopAction}
         staffReplyLineRealSendCustomerAvailable={false}
@@ -49,6 +53,10 @@ describe("admin customer action panel", () => {
     expect(html).toContain("登録済み情報だけを参考");
     expect(html).toContain("オンライン相談 / メンテナンス / 新築 / リフォーム");
     expect(html).toContain("担当者として返信する");
+    expect(html).toContain("LINEメニュー切替");
+    expect(html).toContain("初期メニューへ切替");
+    expect(html).toContain("商談中メニューへ切替");
+    expect(html).toContain("アフターメニューへ切替");
     expect(html).toContain("タイムライン保存");
     expect(html).toContain("LINE送信なし");
     expect(html).toContain("送信前に確認する");
@@ -56,6 +64,9 @@ describe("admin customer action panel", () => {
     expect(html).toContain("AI補助は担当者確認前提で使い");
     expect(html).toContain("name=\"body\"");
     expect(html).toContain("name=\"query\"");
+    expect(html).toContain("value=\"initial\" name=\"menu_type\"");
+    expect(html).toContain("value=\"negotiation\" name=\"menu_type\"");
+    expect(html).toContain("value=\"aftercare\" name=\"menu_type\"");
   });
 
   it("renders a disabled real LINE send action while the runtime capability is closed", () => {
@@ -66,8 +77,12 @@ describe("admin customer action panel", () => {
         replyDraftState={{ status: "idle" }}
         ragAnswerPending={false}
         ragAnswerState={{ status: "idle" }}
+        richMenuCustomerAvailable={true}
+        richMenuSwitchPending={false}
+        richMenuSwitchState={{ status: "idle" }}
         runRagAnswer={noopAction}
         runReplyDraft={noopAction}
+        runRichMenuSwitch={noopAction}
         runStaffReply={noopAction}
         runSummary={noopAction}
         staffReplyLineRealSendCustomerAvailable={true}
@@ -97,8 +112,12 @@ describe("admin customer action panel", () => {
         replyDraftState={{ status: "idle" }}
         ragAnswerPending={false}
         ragAnswerState={{ status: "idle" }}
+        richMenuCustomerAvailable={false}
+        richMenuSwitchPending={false}
+        richMenuSwitchState={{ status: "idle" }}
         runRagAnswer={noopAction}
         runReplyDraft={noopAction}
+        runRichMenuSwitch={noopAction}
         runStaffReply={noopAction}
         runSummary={noopAction}
         staffReplyLineRealSendCustomerAvailable={false}
@@ -126,8 +145,12 @@ describe("admin customer action panel", () => {
         replyDraftState={{ status: "idle" }}
         ragAnswerPending={false}
         ragAnswerState={{ status: "idle" }}
+        richMenuCustomerAvailable={true}
+        richMenuSwitchPending={false}
+        richMenuSwitchState={{ status: "idle" }}
         runRagAnswer={noopAction}
         runReplyDraft={noopAction}
+        runRichMenuSwitch={noopAction}
         runStaffReply={noopAction}
         runSummary={noopAction}
         staffReplyLineRealSendCustomerAvailable={true}

@@ -4,6 +4,7 @@ import {
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
   adminApiFetch,
   adminCustomerDetailPath,
+  adminCustomerRichMenuPath,
   adminLineRealSendCapabilityPath,
   checkUnrepliedAlerts,
   createAiReplyDraft,
@@ -19,6 +20,7 @@ import {
   listAlerts,
   notifyOpenAlerts,
   sendStaffReply,
+  switchAdminCustomerRichMenu,
   shouldIncludeDevTenantHeader
 } from "../../apps/admin/src/admin-api";
 import {
@@ -85,6 +87,12 @@ describe("admin read-only API client", () => {
 
   it("builds encoded customer detail paths", () => {
     expect(adminCustomerDetailPath("customer 1/2")).toBe("/api/admin/customers/customer%201%2F2");
+  });
+
+  it("builds encoded customer rich menu paths", () => {
+    expect(adminCustomerRichMenuPath("customer 1/2")).toBe(
+      "/api/admin/customers/customer%201%2F2/rich-menu"
+    );
   });
 
   it("builds the admin line real send capability path", () => {
@@ -487,6 +495,57 @@ describe("admin read-only API client", () => {
         body: "返信内容を確認しました。"
       })
     );
+  });
+
+  it("posts customer rich menu switch requests without exposing rich menu IDs", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+
+    await switchAdminCustomerRichMenu(
+      {
+        customerId: "customer 1/2",
+        menuType: "negotiation"
+      },
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome",
+          staffId: "staff_admin_001"
+        },
+        fetchFn: async (input, init) => {
+          calls.push({ input, init });
+          return jsonResponse({
+            ok: true,
+            tenant_id: "tenant_amamihome",
+            customer_id: "customer 1/2",
+            menu_type: "negotiation",
+            menu_label: "商談中メニュー",
+            rich_menu_linked: true,
+            line_message_sent: false,
+            rich_menu_id_recorded: false,
+            message: {
+              id: "message_menu_switch",
+              tenant_id: "tenant_amamihome",
+              customer_id: "customer 1/2",
+              role: "system",
+              message_type: "text",
+              body: "LINEリッチメニューを商談中メニューへ切り替えました。",
+              created_at: "2026-07-04T00:00:00.000Z"
+            }
+          });
+        }
+      }
+    );
+
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(calls[0]?.input).toBe(
+      "http://localhost:4000/api/admin/customers/customer%201%2F2/rich-menu"
+    );
+    expect(calls[0]?.init?.method).toBe("POST");
+    expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
+    expect(headers.get("x-staff-id")).toBe("staff_admin_001");
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(calls[0]?.init?.body).toBe(JSON.stringify({ menu_type: "negotiation" }));
   });
 
   it("can include real LINE push confirmation fields in staff reply requests", async () => {

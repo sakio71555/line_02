@@ -1,18 +1,34 @@
-import { readFile } from "node:fs/promises";
+import { chmod, readFile, writeFile } from "node:fs/promises";
 import { statSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export const RICH_MENU_ASSET_DIR = path.join(
-  "deploy",
-  "line",
-  "rich-menu",
-  "amamihome-default"
-);
-export const RICH_MENU_DEFINITION_PATH = path.join(RICH_MENU_ASSET_DIR, "rich-menu.json");
-export const RICH_MENU_IMAGE_PATH = path.join(RICH_MENU_ASSET_DIR, "rich-menu.png");
+export type LineRichMenuAssetKey = "default" | "initial" | "negotiation" | "aftercare";
+export type LineRichMenuLifecycleKey = Exclude<LineRichMenuAssetKey, "default">;
+
+export const LINE_RICH_MENU_LIFECYCLE_KEYS: LineRichMenuLifecycleKey[] = [
+  "initial",
+  "negotiation",
+  "aftercare"
+];
+
+export const RICH_MENU_ASSET_DIR_BY_KEY: Record<LineRichMenuAssetKey, string> = {
+  default: path.join("deploy", "line", "rich-menu", "amamihome-default"),
+  initial: path.join("deploy", "line", "rich-menu", "amamihome-initial"),
+  negotiation: path.join("deploy", "line", "rich-menu", "amamihome-negotiation"),
+  aftercare: path.join("deploy", "line", "rich-menu", "amamihome-aftercare")
+};
+
+export const RICH_MENU_ASSET_DIR = RICH_MENU_ASSET_DIR_BY_KEY.default;
+export const RICH_MENU_DEFINITION_PATH = getRichMenuDefinitionPath("default");
+export const RICH_MENU_IMAGE_PATH = getRichMenuImagePath("default");
 export const LINE_RICH_MENU_APPLY_APPROVAL = "YES";
 export const LINE_RICH_MENU_REMOVE_APPROVAL = "YES";
+export const LINE_RICH_MENU_ENV_KEYS: Record<LineRichMenuLifecycleKey, string> = {
+  initial: "LINE_RICH_MENU_INITIAL_ID",
+  negotiation: "LINE_RICH_MENU_NEGOTIATION_ID",
+  aftercare: "LINE_RICH_MENU_AFTERCARE_ID"
+};
 export const CUSTOMER_REGISTRATION_ENDPOINT =
   "https://admin.taiyolabel.site/line/customer-registration";
 export const CONTACT_CHANGE_ENDPOINT =
@@ -52,6 +68,7 @@ export type LineRichMenuAction =
     };
 
 export interface LineRichMenuDryRunResult {
+  menuType: LineRichMenuAssetKey;
   definitionAvailable: boolean;
   imageAvailable: boolean;
   imageBytes: number | null;
@@ -69,6 +86,24 @@ export interface LineRichMenuApplyResult {
   createRichMenuStatus: "success";
   uploadImageStatus: "success";
   setDefaultStatus: "success";
+  menuType: LineRichMenuAssetKey;
+  liffUrlApplied: boolean;
+  liffIdRecorded: false;
+  richMenuIdRecorded: false;
+  lineSendAttempted: false;
+  secretRecorded: false;
+}
+
+export interface LineRichMenuLifecycleApplyResult {
+  createRichMenuStatus: "success";
+  uploadImageStatus: "success";
+  setDefaultStatus: "success";
+  lifecycleMenuCount: number;
+  defaultMenuType: LineRichMenuLifecycleKey;
+  initialRichMenuCreated: true;
+  negotiationRichMenuCreated: true;
+  aftercareRichMenuCreated: true;
+  richMenuEnvOutputWritten: boolean;
   liffUrlApplied: boolean;
   liffIdRecorded: false;
   richMenuIdRecorded: false;
@@ -90,10 +125,19 @@ export class LineRichMenuOperatorError extends Error {
   }
 }
 
+export function getRichMenuDefinitionPath(menuType: LineRichMenuAssetKey): string {
+  return path.join(RICH_MENU_ASSET_DIR_BY_KEY[menuType], "rich-menu.json");
+}
+
+export function getRichMenuImagePath(menuType: LineRichMenuAssetKey): string {
+  return path.join(RICH_MENU_ASSET_DIR_BY_KEY[menuType], "rich-menu.png");
+}
+
 export async function loadAmamiHomeRichMenuDefinition(
-  repoRoot = process.cwd()
+  repoRoot = process.cwd(),
+  menuType: LineRichMenuAssetKey = "default"
 ): Promise<LineRichMenuDefinition> {
-  const body = await readFile(path.join(repoRoot, RICH_MENU_DEFINITION_PATH), "utf8");
+  const body = await readFile(path.join(repoRoot, getRichMenuDefinitionPath(menuType)), "utf8");
   const parsed: unknown = JSON.parse(body);
 
   if (!isLineRichMenuDefinition(parsed)) {
@@ -160,10 +204,13 @@ export function validateRichMenuDefinition(definition: LineRichMenuDefinition): 
   return errors;
 }
 
-export async function runLineRichMenuDryRun(repoRoot = process.cwd()): Promise<LineRichMenuDryRunResult> {
-  const definition = await loadAmamiHomeRichMenuDefinition(repoRoot);
+export async function runLineRichMenuDryRun(
+  repoRoot = process.cwd(),
+  menuType: LineRichMenuAssetKey = "default"
+): Promise<LineRichMenuDryRunResult> {
+  const definition = await loadAmamiHomeRichMenuDefinition(repoRoot, menuType);
   const validationErrors = validateRichMenuDefinition(definition);
-  const imagePath = path.join(repoRoot, RICH_MENU_IMAGE_PATH);
+  const imagePath = path.join(repoRoot, getRichMenuImagePath(menuType));
   let imageBytes: number | null = null;
   let imageAvailable = false;
 
@@ -176,6 +223,7 @@ export async function runLineRichMenuDryRun(repoRoot = process.cwd()): Promise<L
   }
 
   return {
+    menuType,
     definitionAvailable: true,
     imageAvailable,
     imageBytes,
@@ -193,6 +241,7 @@ export async function runLineRichMenuDryRun(repoRoot = process.cwd()): Promise<L
 export function formatLineRichMenuDryRunResult(result: LineRichMenuDryRunResult): string {
   return [
     "line_rich_menu_operator_mode=dry_run",
+    `menu_type=${result.menuType}`,
     `definition_available=${result.definitionAvailable}`,
     `image_available=${result.imageAvailable}`,
     `image_size_bytes=${result.imageBytes ?? "unknown"}`,
@@ -222,70 +271,26 @@ export async function applyDefaultRichMenu(input: {
     throw new LineRichMenuOperatorError("line_channel_access_token_missing");
   }
 
-  const sourceDefinition = await loadAmamiHomeRichMenuDefinition(repoRoot);
-  const definition = liffId
-    ? buildRichMenuDefinitionForApply(sourceDefinition, liffId)
-    : sourceDefinition;
-  const validationErrors = validateRichMenuDefinition(definition);
-
-  if (validationErrors.length > 0) {
-    throw new LineRichMenuOperatorError("rich_menu_definition_invalid");
-  }
-
-  const image = await readFile(path.join(repoRoot, RICH_MENU_IMAGE_PATH));
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
-
-  const createResponse = await fetchImplementation("https://api.line.me/v2/bot/richmenu", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(definition)
+  const createResult = await createRichMenu({
+    repoRoot,
+    menuType: "default",
+    token,
+    liffId,
+    fetchImplementation
   });
-
-  if (!createResponse.ok) {
-    throw new LineRichMenuOperatorError("rich_menu_create_failed");
-  }
-
-  const createBody: unknown = await createResponse.json();
-  const richMenuId = readRichMenuId(createBody);
-
-  const uploadResponse = await fetchImplementation(
-    `https://api-data.line.me/v2/bot/richmenu/${encodeURIComponent(richMenuId)}/content`,
-    {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "image/png"
-      },
-      body: image
-    }
-  );
-
-  if (!uploadResponse.ok) {
-    throw new LineRichMenuOperatorError("rich_menu_image_upload_failed");
-  }
-
-  const defaultResponse = await fetchImplementation(
-    `https://api.line.me/v2/bot/user/all/richmenu/${encodeURIComponent(richMenuId)}`,
-    {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`
-      }
-    }
-  );
-
-  if (!defaultResponse.ok) {
-    throw new LineRichMenuOperatorError("rich_menu_set_default_failed");
-  }
+  await setDefaultRichMenu({
+    token,
+    richMenuId: createResult.richMenuId,
+    fetchImplementation
+  });
 
   return {
     createRichMenuStatus: "success",
     uploadImageStatus: "success",
     setDefaultStatus: "success",
-    liffUrlApplied: Boolean(liffId),
+    menuType: "default",
+    liffUrlApplied: createResult.liffUrlApplied,
     liffIdRecorded: false,
     richMenuIdRecorded: false,
     lineSendAttempted: false,
@@ -296,9 +301,97 @@ export async function applyDefaultRichMenu(input: {
 export function formatLineRichMenuApplyResult(result: LineRichMenuApplyResult): string {
   return [
     "line_rich_menu_operator_mode=apply",
+    `menu_type=${result.menuType}`,
     `create_rich_menu_status=${result.createRichMenuStatus}`,
     `upload_rich_menu_image_status=${result.uploadImageStatus}`,
     `set_default_rich_menu_status=${result.setDefaultStatus}`,
+    `liff_url_applied=${result.liffUrlApplied}`,
+    `liff_id_recorded=${result.liffIdRecorded}`,
+    `rich_menu_id_recorded=${result.richMenuIdRecorded}`,
+    `line_send_attempted=${result.lineSendAttempted}`,
+    `secret_recorded=${result.secretRecorded}`
+  ].join("\n");
+}
+
+export async function applyLifecycleRichMenus(input: {
+  repoRoot?: string;
+  channelAccessToken: string;
+  liffId?: string;
+  richMenuEnvOutputPath?: string;
+  fetchImplementation?: typeof globalThis.fetch;
+}): Promise<LineRichMenuLifecycleApplyResult> {
+  const repoRoot = input.repoRoot ?? process.cwd();
+  const token = input.channelAccessToken.trim();
+  const liffId = input.liffId?.trim() ?? "";
+
+  if (!token) {
+    throw new LineRichMenuOperatorError("line_channel_access_token_missing");
+  }
+
+  const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
+  const createdRichMenuIds = new Map<LineRichMenuLifecycleKey, string>();
+  let liffUrlApplied = false;
+
+  for (const menuType of LINE_RICH_MENU_LIFECYCLE_KEYS) {
+    const createResult = await createRichMenu({
+      repoRoot,
+      menuType,
+      token,
+      liffId,
+      fetchImplementation
+    });
+    createdRichMenuIds.set(menuType, createResult.richMenuId);
+    liffUrlApplied = liffUrlApplied || createResult.liffUrlApplied;
+  }
+
+  const initialRichMenuId = createdRichMenuIds.get("initial");
+
+  if (!initialRichMenuId) {
+    throw new LineRichMenuOperatorError("initial_rich_menu_id_missing");
+  }
+
+  await setDefaultRichMenu({
+    token,
+    richMenuId: initialRichMenuId,
+    fetchImplementation
+  });
+
+  if (input.richMenuEnvOutputPath) {
+    await writeRichMenuEnvOutput(input.richMenuEnvOutputPath, createdRichMenuIds);
+  }
+
+  return {
+    createRichMenuStatus: "success",
+    uploadImageStatus: "success",
+    setDefaultStatus: "success",
+    lifecycleMenuCount: LINE_RICH_MENU_LIFECYCLE_KEYS.length,
+    defaultMenuType: "initial",
+    initialRichMenuCreated: true,
+    negotiationRichMenuCreated: true,
+    aftercareRichMenuCreated: true,
+    richMenuEnvOutputWritten: Boolean(input.richMenuEnvOutputPath),
+    liffUrlApplied,
+    liffIdRecorded: false,
+    richMenuIdRecorded: false,
+    lineSendAttempted: false,
+    secretRecorded: false
+  };
+}
+
+export function formatLineRichMenuLifecycleApplyResult(
+  result: LineRichMenuLifecycleApplyResult
+): string {
+  return [
+    "line_rich_menu_operator_mode=apply_lifecycle",
+    `lifecycle_menu_count=${result.lifecycleMenuCount}`,
+    `initial_rich_menu_created=${result.initialRichMenuCreated}`,
+    `negotiation_rich_menu_created=${result.negotiationRichMenuCreated}`,
+    `aftercare_rich_menu_created=${result.aftercareRichMenuCreated}`,
+    `default_menu_type=${result.defaultMenuType}`,
+    `create_rich_menu_status=${result.createRichMenuStatus}`,
+    `upload_rich_menu_image_status=${result.uploadImageStatus}`,
+    `set_default_rich_menu_status=${result.setDefaultStatus}`,
+    `rich_menu_env_output_written=${result.richMenuEnvOutputWritten}`,
     `liff_url_applied=${result.liffUrlApplied}`,
     `liff_id_recorded=${result.liffIdRecorded}`,
     `rich_menu_id_recorded=${result.richMenuIdRecorded}`,
@@ -391,6 +484,127 @@ export function buildRichMenuDefinitionForApply(
   };
 }
 
+async function createRichMenu(input: {
+  repoRoot: string;
+  menuType: LineRichMenuAssetKey;
+  token: string;
+  liffId: string;
+  fetchImplementation: typeof globalThis.fetch;
+}): Promise<{ richMenuId: string; liffUrlApplied: boolean }> {
+  const sourceDefinition = await loadAmamiHomeRichMenuDefinition(input.repoRoot, input.menuType);
+  const definition = input.liffId
+    ? buildRichMenuDefinitionForApply(sourceDefinition, input.liffId)
+    : sourceDefinition;
+  const validationErrors = validateRichMenuDefinition(definition);
+
+  if (validationErrors.length > 0) {
+    throw new LineRichMenuOperatorError("rich_menu_definition_invalid");
+  }
+
+  const image = await readFile(path.join(input.repoRoot, getRichMenuImagePath(input.menuType)));
+  const createResponse = await input.fetchImplementation("https://api.line.me/v2/bot/richmenu", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${input.token}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(definition)
+  });
+
+  if (!createResponse.ok) {
+    throw new LineRichMenuOperatorError("rich_menu_create_failed");
+  }
+
+  const createBody: unknown = await createResponse.json();
+  const richMenuId = readRichMenuId(createBody);
+
+  const uploadResponse = await input.fetchImplementation(
+    `https://api-data.line.me/v2/bot/richmenu/${encodeURIComponent(richMenuId)}/content`,
+    {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${input.token}`,
+        "content-type": "image/png"
+      },
+      body: image
+    }
+  );
+
+  if (!uploadResponse.ok) {
+    throw new LineRichMenuOperatorError("rich_menu_image_upload_failed");
+  }
+
+  return {
+    richMenuId,
+    liffUrlApplied: Boolean(input.liffId)
+  };
+}
+
+async function setDefaultRichMenu(input: {
+  token: string;
+  richMenuId: string;
+  fetchImplementation: typeof globalThis.fetch;
+}): Promise<void> {
+  const defaultResponse = await input.fetchImplementation(
+    `https://api.line.me/v2/bot/user/all/richmenu/${encodeURIComponent(input.richMenuId)}`,
+    {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${input.token}`
+      }
+    }
+  );
+
+  if (!defaultResponse.ok) {
+    throw new LineRichMenuOperatorError("rich_menu_set_default_failed");
+  }
+}
+
+async function writeRichMenuEnvOutput(
+  outputPath: string,
+  richMenuIds: Map<LineRichMenuLifecycleKey, string>
+): Promise<void> {
+  const existingBody = await readFile(outputPath, "utf8").catch(() => "");
+  const replacements = new Map<string, string>();
+
+  for (const menuType of LINE_RICH_MENU_LIFECYCLE_KEYS) {
+    const richMenuId = richMenuIds.get(menuType);
+
+    if (!richMenuId) {
+      throw new LineRichMenuOperatorError(`${menuType}_rich_menu_id_missing`);
+    }
+
+    replacements.set(LINE_RICH_MENU_ENV_KEYS[menuType], richMenuId);
+  }
+
+  const seenKeys = new Set<string>();
+  const lines = existingBody.length > 0 ? existingBody.split(/\r?\n/) : [];
+  const outputLines = lines.map((line) => {
+    const match = /^\s*(?:export\s+)?([A-Z0-9_]+)=/.exec(line);
+    const key = match?.[1];
+
+    if (!key || !replacements.has(key)) {
+      return line;
+    }
+
+    seenKeys.add(key);
+    return `${key}=${quoteEnvValue(replacements.get(key) ?? "")}`;
+  });
+
+  for (const [key, value] of replacements) {
+    if (!seenKeys.has(key)) {
+      outputLines.push(`${key}=${quoteEnvValue(value)}`);
+    }
+  }
+
+  await writeFile(outputPath, `${outputLines.join("\n").replace(/\n+$/, "")}\n`, { mode: 0o600 });
+  await chmod(outputPath, 0o600);
+}
+
+function quoteEnvValue(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`;
+}
+
 function buildLiffUrl(liffId: string, suffix = ""): string {
   return `https://liff.line.me/${encodeURIComponent(liffId)}${suffix}`;
 }
@@ -451,7 +665,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 async function main(): Promise<void> {
-  const args = new Set(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  const args = new Set(argv);
 
   if (args.has("--apply")) {
     if (process.env.LINE_RICH_MENU_APPLY_APPROVED !== LINE_RICH_MENU_APPLY_APPROVAL) {
@@ -463,6 +678,20 @@ async function main(): Promise<void> {
       liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID
     });
     console.log(formatLineRichMenuApplyResult(result));
+    return;
+  }
+
+  if (args.has("--apply-lifecycle")) {
+    if (process.env.LINE_RICH_MENU_APPLY_APPROVED !== LINE_RICH_MENU_APPLY_APPROVAL) {
+      throw new LineRichMenuOperatorError("line_rich_menu_apply_not_approved");
+    }
+
+    const result = await applyLifecycleRichMenus({
+      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "",
+      liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID,
+      richMenuEnvOutputPath: readOptionValue(argv, "--rich-menu-env-output")
+    });
+    console.log(formatLineRichMenuLifecycleApplyResult(result));
     return;
   }
 
@@ -480,6 +709,17 @@ async function main(): Promise<void> {
 
   const result = await runLineRichMenuDryRun();
   console.log(formatLineRichMenuDryRunResult(result));
+}
+
+function readOptionValue(argv: string[], optionName: string): string | undefined {
+  const index = argv.indexOf(optionName);
+
+  if (index === -1) {
+    return undefined;
+  }
+
+  const value = argv[index + 1]?.trim();
+  return value ? value : undefined;
 }
 
 const executedPath = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : "";

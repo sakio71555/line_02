@@ -1,6 +1,7 @@
 import type {
   AdminAiReplyDraftResponse,
   AdminAiSummaryResponse,
+  AdminCustomerRichMenuSwitchResponse,
   AdminRagAnswerDraftResponse,
   AdminStaffReplyResponse
 } from "../../../src/admin-api";
@@ -30,4 +31,10 @@ export interface StaffReplyActionState {
   result?: AdminStaffReplyResponse;
   error?: string;
   deliveryMode?: "demo_save" | "real_line_push";
+}
+
+export interface RichMenuSwitchActionState {
+  status: ActionStatus;
+  result?: AdminCustomerRichMenuSwitchResponse;
+  error?: string;
 }

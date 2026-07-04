@@ -75,6 +75,100 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
     ]);
   });
 
+  it("switches an owner-authenticated customer's rich menu without sending LINE messages", async () => {
+    const { app, customerRepository, messageRepository, lineClient } = createCustomerWriteAiApp({
+      includeAuthRuntime: true,
+      env: {
+        LINE_RICH_MENU_NEGOTIATION_ID: "richmenu-negotiation-test"
+      }
+    });
+    await seedCustomerWriteAiData(customerRepository);
+
+    const response = await app.fetch(
+      richMenuSwitchRequest("customer_amami", "negotiation", {
+        authorization: "Bearer fake-valid-owner"
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      customer_id: "customer_amami",
+      menu_type: "negotiation",
+      menu_label: "商談中メニュー",
+      rich_menu_linked: true,
+      line_message_sent: false,
+      rich_menu_id_recorded: false,
+      message: {
+        tenant_id: "tenant_amamihome",
+        customer_id: "customer_amami",
+        role: "system",
+        message_type: "text"
+      }
+    });
+    expect(lineClient.richMenuLinks).toEqual([
+      {
+        userId: "U_AMAMI_CUSTOMER",
+        richMenuId: "richmenu-negotiation-test"
+      }
+    ]);
+    expect(lineClient.pushes).toEqual([]);
+    expect(messageRepository.insertCalls).toEqual([
+      expect.objectContaining({
+        tenant_id: "tenant_amamihome",
+        customer_id: "customer_amami",
+        role: "system",
+        body: "LINEリッチメニューを商談中メニューへ切り替えました。"
+      })
+    ]);
+  });
+
+  it("blocks customer rich menu switches when the selected menu id is not configured", async () => {
+    const { app, customerRepository, lineClient } = createCustomerWriteAiApp({
+      includeAuthRuntime: true
+    });
+    await seedCustomerWriteAiData(customerRepository);
+
+    const response = await app.fetch(
+      richMenuSwitchRequest("customer_amami", "aftercare", {
+        authorization: "Bearer fake-valid-owner"
+      })
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "rich_menu_id_not_configured"
+    });
+    expect(lineClient.richMenuLinks).toEqual([]);
+    expect(lineClient.pushes).toEqual([]);
+  });
+
+  it("rejects invalid customer rich menu switch request bodies", async () => {
+    const { app, customerRepository, lineClient } = createCustomerWriteAiApp({
+      includeAuthRuntime: true,
+      env: {
+        LINE_RICH_MENU_NEGOTIATION_ID: "richmenu-negotiation-test"
+      }
+    });
+    await seedCustomerWriteAiData(customerRepository);
+
+    const response = await app.fetch(
+      richMenuSwitchRequest("customer_amami", "unknown", {
+        authorization: "Bearer fake-valid-owner"
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "invalid_rich_menu_switch_body"
+    });
+    expect(lineClient.richMenuLinks).toEqual([]);
+  });
+
   it("requires selectedTenantId for a multi-tenant staff reply request", async () => {
     const { app, customerRepository, lineClient } = createCustomerWriteAiApp({
       includeAuthRuntime: true
@@ -479,6 +573,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
 interface CustomerWriteAiAppInput {
   includeAuthRuntime?: boolean;
   authenticatedSelectedTenantId?: string | null;
+  env?: NodeJS.ProcessEnv;
 }
 
 function createCustomerWriteAiApp(input: CustomerWriteAiAppInput = {}) {
@@ -513,7 +608,8 @@ function createCustomerWriteAiApp(input: CustomerWriteAiAppInput = {}) {
     env: {
       TENANT_ID: "tenant_amamihome",
       TENANT_SLUG: "amamihome",
-      LINE_CHANNEL_SECRET: "test-secret"
+      LINE_CHANNEL_SECRET: "test-secret",
+      ...input.env
     }
   });
 
@@ -600,6 +696,23 @@ function realLinePushStaffReplyRequest(customerId: string, headers: HeadersInit 
   });
 }
 
+function richMenuSwitchRequest(
+  customerId: string,
+  menuType: string,
+  headers: HeadersInit = {}
+): Request {
+  return new Request(`http://localhost/api/admin/customers/${customerId}/rich-menu`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...headers
+    },
+    body: JSON.stringify({
+      menu_type: menuType
+    })
+  });
+}
+
 class SpyCustomerRepository extends InMemoryCustomerRepository {
   readonly findByIdForTenantCalls: Array<{ tenantId: string; customerId: string }> = [];
 
@@ -626,6 +739,7 @@ class SpyMessageRepository extends InMemoryMessageRepository {
 
 class RecordingLineClient implements LineClient {
   readonly pushes: Array<{ to: string; messages: LineReplyMessage[] }> = [];
+  readonly richMenuLinks: Array<{ userId: string; richMenuId: string }> = [];
 
   async replyMessage(): Promise<void> {
     throw new Error("replyMessage is not used by staff reply routes.");
@@ -633,6 +747,10 @@ class RecordingLineClient implements LineClient {
 
   async pushMessage(to: string, messages: LineReplyMessage[]): Promise<void> {
     this.pushes.push({ to, messages });
+  }
+
+  async linkRichMenuToUser(userId: string, richMenuId: string): Promise<void> {
+    this.richMenuLinks.push({ userId, richMenuId });
   }
 }
 

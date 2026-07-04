@@ -547,6 +547,24 @@ export interface CustomerRichMenuGuideAction {
   message_type: MessageType;
 }
 
+export const customerRichMenuTypes = ["initial", "negotiation", "aftercare"] as const;
+
+export type CustomerRichMenuType = (typeof customerRichMenuTypes)[number];
+
+const customerRichMenuTypeLabels: Record<CustomerRichMenuType, string> = {
+  initial: "初期メニュー",
+  negotiation: "商談中メニュー",
+  aftercare: "アフターメニュー"
+};
+
+export function isCustomerRichMenuType(value: string): value is CustomerRichMenuType {
+  return (customerRichMenuTypes as readonly string[]).includes(value);
+}
+
+export function formatCustomerRichMenuTypeLabel(type: CustomerRichMenuType): string {
+  return customerRichMenuTypeLabels[type];
+}
+
 export const customerRichMenuGuideActions = [
   {
     action_key: "initial.model_house_reservation",
@@ -850,6 +868,30 @@ async function insertSystemTextTimelineMessage(
   };
 
   return repository.insert(message);
+}
+
+export async function recordCustomerRichMenuSwitchMessage(
+  repository: MessageRepository,
+  input: {
+    tenant_id: string;
+    customer_id: string;
+    menu_type: CustomerRichMenuType;
+    created_at: string;
+  },
+  options: { createId?: () => string } = {}
+): Promise<Message> {
+  return insertSystemTextTimelineMessage(
+    repository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer_id,
+      body: `LINEリッチメニューを${formatCustomerRichMenuTypeLabel(
+        input.menu_type
+      )}へ切り替えました。`,
+      created_at: input.created_at
+    },
+    options
+  );
 }
 
 export async function recordStaffTextReply(

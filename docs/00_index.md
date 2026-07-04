@@ -159,6 +159,8 @@
 - Loop 321 staff LINE webhook foundation: `11_codex_tasks/321_staff_line_webhook_foundation.md`
 - Loop 322 staff LINE target persistence and diagnostics: `11_codex_tasks/322_staff_line_target_persistence_and_diagnostics.md`
 - Loop 323 staff LINE runtime config enablement: `11_codex_tasks/323_staff_line_runtime_config_enablement.md`
+- Loop 324 customer channel staff notification temporary fallback: `11_codex_tasks/324_customer_channel_staff_notification_temporary_fallback.md`
+- Loop 325 customer rich menu switching: `11_codex_tasks/325_customer_rich_menu_switching.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 - LINE canary operator window helper: `../scripts/ops/line_canary_window_operator.sh`

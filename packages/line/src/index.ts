@@ -168,6 +168,7 @@ export type LineIdTokenVerifyFetch = (
 export interface LineClient {
   replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void>;
   pushMessage(to: string, messages: LineReplyMessage[]): Promise<void>;
+  linkRichMenuToUser?(userId: string, richMenuId: string): Promise<void>;
   getProfile?(userId: string): Promise<LineUserProfile | null>;
 }
 
@@ -191,10 +192,18 @@ export interface LineMessagingProfileRequest {
   userId: string;
 }
 
+export interface LineMessagingRichMenuLinkRequest {
+  channelAccessToken: string;
+  endpoint: string;
+  userId: string;
+  richMenuId: string;
+}
+
 export interface LineMessagingTransport {
   pushMessage(request: LineMessagingPushRequest): Promise<void>;
   replyMessage?(request: LineMessagingReplyRequest): Promise<void>;
   getProfile?(request: LineMessagingProfileRequest): Promise<LineUserProfile>;
+  linkRichMenuToUser?(request: LineMessagingRichMenuLinkRequest): Promise<void>;
 }
 
 export interface LineMessagingFetchResponse {
@@ -213,6 +222,7 @@ export interface RealLineClientConfig {
   pushEndpoint?: string;
   replyEndpoint?: string;
   profileEndpointBase?: string;
+  richMenuEndpointBase?: string;
 }
 
 export class LineMessagingApiError extends Error {
@@ -304,6 +314,10 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
     return parseLineUserProfileResponse(await response.text());
   }
 
+  async linkRichMenuToUser(request: LineMessagingRichMenuLinkRequest): Promise<void> {
+    await this.postWithoutBody(request.endpoint, request.channelAccessToken);
+  }
+
   private async postJson(
     endpoint: string,
     channelAccessToken: string,
@@ -316,6 +330,19 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
         "content-type": "application/json"
       },
       body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new LineMessagingApiError("LINE Messaging API request failed.", readStatus(response));
+    }
+  }
+
+  private async postWithoutBody(endpoint: string, channelAccessToken: string): Promise<void> {
+    const response = await this.fetchImplementation(endpoint, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${channelAccessToken}`
+      }
     });
 
     if (!response.ok) {
@@ -335,6 +362,7 @@ export class RealLineClient implements LineClient {
   private readonly pushEndpoint: string;
   private readonly replyEndpoint: string;
   private readonly profileEndpointBase: string;
+  private readonly richMenuEndpointBase: string;
   private readonly transport: LineMessagingTransport;
 
   constructor(config: RealLineClientConfig) {
@@ -350,6 +378,8 @@ export class RealLineClient implements LineClient {
     this.replyEndpoint = config.replyEndpoint ?? "https://api.line.me/v2/bot/message/reply";
     this.profileEndpointBase =
       config.profileEndpointBase?.replace(/\/+$/u, "") ?? "https://api.line.me/v2/bot/profile";
+    this.richMenuEndpointBase =
+      config.richMenuEndpointBase?.replace(/\/+$/u, "") ?? "https://api.line.me/v2/bot/user";
   }
 
   async replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void> {
@@ -415,11 +445,42 @@ export class RealLineClient implements LineClient {
       throw new LineMessagingApiError();
     }
   }
+
+  async linkRichMenuToUser(userId: string, richMenuId: string): Promise<void> {
+    const normalizedUserId = userId.trim();
+    const normalizedRichMenuId = richMenuId.trim();
+
+    if (!normalizedUserId || !normalizedRichMenuId) {
+      throw new LineMessagingApiError("LINE rich menu target and id are required.");
+    }
+
+    if (!this.transport.linkRichMenuToUser) {
+      throw new LineMessagingApiError("LINE rich menu link transport is not configured.");
+    }
+
+    try {
+      await this.transport.linkRichMenuToUser({
+        channelAccessToken: this.channelAccessToken,
+        endpoint: `${this.richMenuEndpointBase}/${encodeURIComponent(
+          normalizedUserId
+        )}/richmenu/${encodeURIComponent(normalizedRichMenuId)}`,
+        userId: normalizedUserId,
+        richMenuId: normalizedRichMenuId
+      });
+    } catch (error) {
+      if (error instanceof LineMessagingApiError) {
+        throw error;
+      }
+
+      throw new LineMessagingApiError();
+    }
+  }
 }
 
 export class MockLineClient implements LineClient {
   readonly replies: Array<{ replyToken: string; messages: LineReplyMessage[] }> = [];
   readonly pushes: Array<{ to: string; messages: LineReplyMessage[] }> = [];
+  readonly richMenuLinks: Array<{ userId: string; richMenuId: string }> = [];
   readonly profiles = new Map<string, LineUserProfile>();
 
   async replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void> {
@@ -428,6 +489,10 @@ export class MockLineClient implements LineClient {
 
   async pushMessage(to: string, messages: LineReplyMessage[]): Promise<void> {
     this.pushes.push({ to, messages });
+  }
+
+  async linkRichMenuToUser(userId: string, richMenuId: string): Promise<void> {
+    this.richMenuLinks.push({ userId, richMenuId });
   }
 
   async getProfile(userId: string): Promise<LineUserProfile | null> {

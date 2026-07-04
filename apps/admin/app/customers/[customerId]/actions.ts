@@ -4,16 +4,19 @@ import { revalidatePath } from "next/cache";
 
 import {
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+  type AdminCustomerRichMenuType,
   createAiReplyDraft,
   createAiSummary,
   createRagAnswerDraft,
-  sendStaffReply
+  sendStaffReply,
+  switchAdminCustomerRichMenu
 } from "../../../src/admin-api";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
   RagAnswerDraftActionState,
+  RichMenuSwitchActionState,
   StaffReplyActionState
 } from "./action-types";
 
@@ -137,6 +140,42 @@ export async function runStaffReplyAction(
   }
 }
 
+export async function runRichMenuSwitchAction(
+  customerId: string,
+  _previousState: RichMenuSwitchActionState,
+  formData: FormData
+): Promise<RichMenuSwitchActionState> {
+  const menuType = readCustomerRichMenuType(formData);
+
+  if (!menuType) {
+    return {
+      status: "error",
+      error: "切り替えるメニューを選択してください。"
+    };
+  }
+
+  try {
+    const result = await switchAdminCustomerRichMenu(
+      {
+        customerId,
+        menuType
+      },
+      await getServerAdminApiRequestOptions()
+    );
+    revalidatePath(`/customers/${customerId}`);
+
+    return {
+      status: "success",
+      result
+    };
+  } catch (error) {
+    return {
+      status: "error",
+      error: formatActionError(error)
+    };
+  }
+}
+
 function readStaffReplyDeliveryMode(formData: FormData): "demo_save" | "real_line_push" {
   return readTrimmedFormValue(formData, "delivery_mode") === "real_line_push"
     ? "real_line_push"
@@ -150,6 +189,19 @@ function isRealLinePushConfirmed(formData: FormData): boolean {
       ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE &&
     Boolean(readTrimmedFormValue(formData, "idempotency_key"))
   );
+}
+
+function readCustomerRichMenuType(formData: FormData): AdminCustomerRichMenuType | null {
+  const value = readTrimmedFormValue(formData, "menu_type");
+
+  switch (value) {
+    case "initial":
+    case "negotiation":
+    case "aftercare":
+      return value;
+    default:
+      return null;
+  }
 }
 
 function readTrimmedFormValue(formData: FormData, key: string): string {

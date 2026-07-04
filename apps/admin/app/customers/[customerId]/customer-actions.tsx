@@ -3,11 +3,15 @@
 import React, { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE } from "../../../src/admin-api";
+import {
+  ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+  type AdminCustomerRichMenuType
+} from "../../../src/admin-api";
 import {
   runAiReplyDraftAction,
   runAiSummaryAction,
   runRagAnswerDraftAction,
+  runRichMenuSwitchAction,
   runStaffReplyAction
 } from "./actions";
 import { RoleVisibilityNote } from "../../role-visibility-note";
@@ -15,6 +19,7 @@ import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
   RagAnswerDraftActionState,
+  RichMenuSwitchActionState,
   StaffReplyActionState
 } from "./action-types";
 
@@ -34,7 +39,33 @@ const initialStaffReplyState: StaffReplyActionState = {
   status: "idle"
 };
 
+const initialRichMenuSwitchState: RichMenuSwitchActionState = {
+  status: "idle"
+};
+
 const ragExampleKeywords = ["オンライン相談", "メンテナンス", "新築", "リフォーム"] as const;
+
+const customerRichMenuSwitchOptions = [
+  {
+    menuType: "initial",
+    label: "初期メニュー",
+    description: "新規相談・未登録のお客様向け"
+  },
+  {
+    menuType: "negotiation",
+    label: "商談中メニュー",
+    description: "面談中・見積中・プラン相談中のお客様向け"
+  },
+  {
+    menuType: "aftercare",
+    label: "アフターメニュー",
+    description: "契約後・引き渡し後・OBのお客様向け"
+  }
+] as const satisfies ReadonlyArray<{
+  menuType: AdminCustomerRichMenuType;
+  label: string;
+  description: string;
+}>;
 
 type FormAction = (formData: FormData) => void;
 
@@ -56,6 +87,10 @@ export function CustomerActionPanel({
     runStaffReplyAction.bind(null, customerId),
     initialStaffReplyState
   );
+  const [richMenuSwitchState, runRichMenuSwitch, richMenuSwitchPending] = useActionState(
+    runRichMenuSwitchAction.bind(null, customerId),
+    initialRichMenuSwitchState
+  );
   const [summaryState, runSummary, summaryPending] = useActionState(
     runAiSummaryAction.bind(null, customerId),
     initialAiSummaryState
@@ -70,10 +105,16 @@ export function CustomerActionPanel({
   );
 
   useEffect(() => {
-    if (summaryState.status === "success" || staffReplyState.status === "success") {
+    if (
+      summaryState.status === "success" ||
+      staffReplyState.status === "success" ||
+      richMenuSwitchState.status === "success"
+    ) {
       router.refresh();
     }
   }, [
+    richMenuSwitchState.result?.message.id,
+    richMenuSwitchState.status,
     router,
     staffReplyState.status,
     staffReplyState.result?.message.id,
@@ -87,8 +128,12 @@ export function CustomerActionPanel({
       replyDraftState={replyDraftState}
       ragAnswerPending={ragAnswerPending}
       ragAnswerState={ragAnswerState}
+      richMenuCustomerAvailable={lineRealSendCustomerAvailable}
+      richMenuSwitchPending={richMenuSwitchPending}
+      richMenuSwitchState={richMenuSwitchState}
       runRagAnswer={runRagAnswer}
       runReplyDraft={runReplyDraft}
+      runRichMenuSwitch={runRichMenuSwitch}
       runStaffReply={runStaffReply}
       runSummary={runSummary}
       staffReplyLineRealSendCustomerAvailable={lineRealSendCustomerAvailable}
@@ -108,8 +153,12 @@ export function CustomerActionPanelView({
   replyDraftState,
   ragAnswerPending,
   ragAnswerState,
+  richMenuCustomerAvailable,
+  richMenuSwitchPending,
+  richMenuSwitchState,
   runRagAnswer,
   runReplyDraft,
+  runRichMenuSwitch,
   runStaffReply,
   runSummary,
   staffReplyForm,
@@ -126,8 +175,12 @@ export function CustomerActionPanelView({
   replyDraftState: AiReplyDraftActionState;
   ragAnswerPending: boolean;
   ragAnswerState: RagAnswerDraftActionState;
+  richMenuCustomerAvailable: boolean;
+  richMenuSwitchPending: boolean;
+  richMenuSwitchState: RichMenuSwitchActionState;
   runRagAnswer: FormAction;
   runReplyDraft: FormAction;
+  runRichMenuSwitch: FormAction;
   runStaffReply: FormAction;
   runSummary: FormAction;
   staffReplyForm?: React.ReactNode;
@@ -232,6 +285,13 @@ export function CustomerActionPanelView({
         </div>
       </details>
 
+      <CustomerRichMenuSwitchPanel
+        customerAvailable={richMenuCustomerAvailable}
+        pending={richMenuSwitchPending}
+        runRichMenuSwitch={runRichMenuSwitch}
+        state={richMenuSwitchState}
+      />
+
       <article className="action-panel action-panel-wide staff-reply-panel">
         <div className="action-card-header">
           <p className="result-label">担当者返信</p>
@@ -260,6 +320,56 @@ export function CustomerActionPanelView({
         <StaffReplyResult state={staffReplyState} />
       </article>
     </section>
+  );
+}
+
+function CustomerRichMenuSwitchPanel({
+  customerAvailable,
+  pending,
+  runRichMenuSwitch,
+  state
+}: {
+  customerAvailable: boolean;
+  pending: boolean;
+  runRichMenuSwitch: FormAction;
+  state: RichMenuSwitchActionState;
+}) {
+  return (
+    <article className="action-panel action-panel-wide">
+      <div className="action-card-header">
+        <p className="result-label">LINEメニュー切替</p>
+        <h3>顧客のリッチメニューを切り替える</h3>
+      </div>
+      <div className="status-pill-list">
+        <span className="status-pill">初期</span>
+        <span className="status-pill">商談中</span>
+        <span className="status-pill">アフター</span>
+      </div>
+      <p className="meta">
+        この顧客のLINE上に表示されるメニューだけを切り替えます。LINEメッセージ送信、
+        broadcast、multicastは行いません。
+      </p>
+      {!customerAvailable ? (
+        <p className="meta">この顧客はLINE連携ID未取得のため、メニュー切替はまだ使えません。</p>
+      ) : null}
+      <form action={runRichMenuSwitch} className="action-form">
+        <div className="action-grid rich-menu-switch-grid">
+          {customerRichMenuSwitchOptions.map((option) => (
+            <button
+              key={option.menuType}
+              name="menu_type"
+              type="submit"
+              value={option.menuType}
+              disabled={!customerAvailable || pending}
+            >
+              {pending ? "切替中..." : `${option.label}へ切替`}
+              <span className="button-subtext">{option.description}</span>
+            </button>
+          ))}
+        </div>
+      </form>
+      <RichMenuSwitchResult state={state} />
+    </article>
   );
 }
 
@@ -539,6 +649,31 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
         label="最後の担当者返信日時"
         value={result.customer.last_staff_reply_at ?? "-"}
       />
+    </div>
+  );
+}
+
+function RichMenuSwitchResult({ state }: { state: RichMenuSwitchActionState }) {
+  if (state.status === "idle") {
+    return null;
+  }
+
+  if (state.status === "error") {
+    return <ActionError message={state.error} />;
+  }
+
+  const result = state.result;
+
+  if (!result) {
+    return null;
+  }
+
+  return (
+    <div className="action-result">
+      <p className="result-label">切替結果</p>
+      <p>{result.menu_label}へ切り替えました。LINEメッセージ送信は行っていません。</p>
+      <ResultField label="保存したメッセージID" value={result.message.id} />
+      <ResultField label="メニュー種別" value={result.menu_type} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   RealLineClient,
   type LineMessagingProfileRequest,
   type LineMessagingPushRequest,
+  type LineMessagingRichMenuLinkRequest,
   type LineMessagingTransport,
   type LineUserProfile
 } from "@amami-line-crm/line";
@@ -56,6 +57,26 @@ describe("Loop 102 RealLineClient boundary", () => {
     ]);
   });
 
+  it("builds LINE rich menu link requests through an injected transport", async () => {
+    const transport = new RecordingLineMessagingTransport();
+    const client = new RealLineClient({
+      channelAccessToken: "test-channel-access-token",
+      richMenuEndpointBase: "https://line.example.invalid/user/",
+      transport
+    });
+
+    await client.linkRichMenuToUser("U TEST/LINE", "richmenu-test-id");
+
+    expect(transport.richMenuLinks).toEqual([
+      {
+        channelAccessToken: "test-channel-access-token",
+        endpoint: "https://line.example.invalid/user/U%20TEST%2FLINE/richmenu/richmenu-test-id",
+        userId: "U TEST/LINE",
+        richMenuId: "richmenu-test-id"
+      }
+    ]);
+  });
+
   it("parses LINE profile responses through the fetch transport", async () => {
     const transport = new FetchLineMessagingTransport({
       async fetch(input, init) {
@@ -95,6 +116,37 @@ describe("Loop 102 RealLineClient boundary", () => {
     });
   });
 
+  it("links rich menus through the fetch transport without a message body", async () => {
+    const transport = new FetchLineMessagingTransport({
+      async fetch(input, init) {
+        expect(input).toBe(
+          "https://line.example.invalid/user/U_TEST_LINE_TARGET/richmenu/richmenu-test-id"
+        );
+        expect(init.method).toBe("POST");
+        expect(init.headers).toMatchObject({
+          authorization: "Bearer test-channel-access-token"
+        });
+        expect(init.body).toBeUndefined();
+
+        return {
+          ok: true,
+          async text() {
+            return "{}";
+          }
+        };
+      }
+    });
+
+    await expect(
+      transport.linkRichMenuToUser({
+        channelAccessToken: "test-channel-access-token",
+        endpoint: "https://line.example.invalid/user/U_TEST_LINE_TARGET/richmenu/richmenu-test-id",
+        userId: "U_TEST_LINE_TARGET",
+        richMenuId: "richmenu-test-id"
+      })
+    ).resolves.toBeUndefined();
+  });
+
   it("redacts transport error details from RealLineClient errors", async () => {
     const client = new RealLineClient({
       channelAccessToken: "test-channel-access-token",
@@ -118,6 +170,7 @@ describe("Loop 102 RealLineClient boundary", () => {
 class RecordingLineMessagingTransport implements LineMessagingTransport {
   readonly pushes: LineMessagingPushRequest[] = [];
   readonly profiles: LineMessagingProfileRequest[] = [];
+  readonly richMenuLinks: LineMessagingRichMenuLinkRequest[] = [];
 
   async pushMessage(request: LineMessagingPushRequest): Promise<void> {
     this.pushes.push(request);
@@ -133,5 +186,9 @@ class RecordingLineMessagingTransport implements LineMessagingTransport {
       statusMessage: null,
       language: null
     };
+  }
+
+  async linkRichMenuToUser(request: LineMessagingRichMenuLinkRequest): Promise<void> {
+    this.richMenuLinks.push(request);
   }
 }

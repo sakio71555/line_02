@@ -311,6 +311,20 @@ dl.detail-grid {
   gap: 10px;
 }
 
+.rich-menu-switch-grid button {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.button-subtext {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .login-form fieldset {
   background: var(--admin-surface);
   border: 1px solid var(--admin-border);

@@ -18,11 +18,13 @@ import {
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
   ensureOpenUnrepliedCustomerMessageAlert,
+  formatCustomerRichMenuTypeLabel,
   listCustomerListItems,
   listCustomerTimeline,
   logLineWebhookEvents,
   MockStaffNotifier,
   notifyOpenAlerts,
+  recordCustomerRichMenuSwitchMessage,
   recordAiSummaryMessage,
   recordStaffTextReply,
   resolveCustomerRichMenuGuideAction,
@@ -31,13 +33,15 @@ import {
   type AlertRepository,
   type Customer,
   type CustomerLineStaffNotificationEvent,
+  type CustomerRichMenuType,
   type CustomerRepository,
   type LineReplyInstruction,
   type Message,
   type MessageRepository,
   type StaffAuthLookup,
   type StaffNotificationPayload,
-  type StaffNotifier
+  type StaffNotifier,
+  isCustomerRichMenuType
 } from "@amami-line-crm/domain";
 import {
   FetchLineMessagingTransport,
@@ -506,6 +510,78 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       single_send_only: true,
       retry_allowed: false,
       bulk_multicast_broadcast_allowed: false
+    });
+  });
+
+  api.post("/api/admin/customers/:customerId/rich-menu", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.sendStaffReply,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const customer = await customerRepository.findByIdForTenant(
+      tenant.tenantId,
+      c.req.param("customerId")
+    );
+
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const switchRequest = await readCustomerRichMenuSwitchBody(c.req.raw);
+
+    if (!switchRequest) {
+      return c.json({ ok: false, error: "invalid_rich_menu_switch_body" }, 400);
+    }
+
+    const lineUserId = customer.line_user_id?.trim();
+
+    if (!lineUserId) {
+      return c.json({ ok: false, error: "cannot_switch_rich_menu_without_line_user_id" }, 409);
+    }
+
+    const richMenuId = readCustomerRichMenuIdFromEnv(env, switchRequest.menuType);
+
+    if (!richMenuId) {
+      return c.json({ ok: false, error: "rich_menu_id_not_configured" }, 409);
+    }
+
+    if (!lineClient.linkRichMenuToUser) {
+      return c.json({ ok: false, error: "line_rich_menu_link_not_configured" }, 501);
+    }
+
+    try {
+      await lineClient.linkRichMenuToUser(lineUserId, richMenuId);
+    } catch {
+      return c.json({ ok: false, error: "line_rich_menu_switch_failed" }, 502);
+    }
+
+    const message = await recordCustomerRichMenuSwitchMessage(messageRepository, {
+      tenant_id: tenant.tenantId,
+      customer_id: customer.id,
+      menu_type: switchRequest.menuType,
+      created_at: now?.() ?? new Date().toISOString()
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_id: customer.id,
+      menu_type: switchRequest.menuType,
+      menu_label: formatCustomerRichMenuTypeLabel(switchRequest.menuType),
+      rich_menu_linked: true,
+      line_message_sent: false,
+      rich_menu_id_recorded: false,
+      message: toAdminTimelineMessage(message)
     });
   });
 
@@ -2732,6 +2808,55 @@ async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushR
         ? parsed.idempotency_key.trim()
         : null
   };
+}
+
+async function readCustomerRichMenuSwitchBody(
+  request: Request
+): Promise<{ menuType: CustomerRichMenuType } | null> {
+  let parsed: unknown;
+
+  try {
+    parsed = await request.json();
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed) || typeof parsed.menu_type !== "string") {
+    return null;
+  }
+
+  const menuType = parsed.menu_type.trim();
+
+  if (!isCustomerRichMenuType(menuType)) {
+    return null;
+  }
+
+  return { menuType };
+}
+
+function readCustomerRichMenuIdFromEnv(
+  env: NodeJS.ProcessEnv,
+  menuType: CustomerRichMenuType
+): string | undefined {
+  switch (menuType) {
+    case "initial":
+      return (
+        readNonEmptyEnvValue(env.LINE_RICH_MENU_INITIAL_ID) ??
+        readNonEmptyEnvValue(env.AMAMIHOME_LINE_RICH_MENU_INITIAL_ID) ??
+        readNonEmptyEnvValue(env.LINE_RICH_MENU_DEFAULT_ID) ??
+        readNonEmptyEnvValue(env.AMAMIHOME_LINE_RICH_MENU_DEFAULT_ID)
+      );
+    case "negotiation":
+      return (
+        readNonEmptyEnvValue(env.LINE_RICH_MENU_NEGOTIATION_ID) ??
+        readNonEmptyEnvValue(env.AMAMIHOME_LINE_RICH_MENU_NEGOTIATION_ID)
+      );
+    case "aftercare":
+      return (
+        readNonEmptyEnvValue(env.LINE_RICH_MENU_AFTERCARE_ID) ??
+        readNonEmptyEnvValue(env.AMAMIHOME_LINE_RICH_MENU_AFTERCARE_ID)
+      );
+  }
 }
 
 function isLineRealSendWindowOpen(input: {
