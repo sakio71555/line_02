@@ -747,6 +747,14 @@ function isDocumentStageQuestionNeeded(values: StructuredConsultationValues): bo
   return values.sub_category !== "契約前の確認";
 }
 
+function isAftercareUrgent(values: StructuredConsultationValues): boolean {
+  return values.urgency === "急ぎ";
+}
+
+function isAftercareSoon(values: StructuredConsultationValues): boolean {
+  return values.urgency === "数日以内";
+}
+
 const structuredConsultationFlowConfigs = [
   {
     flow_key: "negotiation.meeting_schedule",
@@ -1136,6 +1144,236 @@ const structuredConsultationFlowConfigs = [
           "書類画像があれば、このあとLINEで送ってください。"
         ].join("\n"),
         retry_reply: "具体的な内容を入力して送ってください。"
+      }
+    ]
+  },
+  {
+    flow_key: "aftercare.repair_inspection",
+    trigger_text: "修理・点検依頼",
+    title: "修理・点検依頼",
+    start_activity_label: "修理・点検依頼を開始",
+    category: "aftercare_repair_inspection",
+    assigned_role: "aftercare",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "修理・点検依頼 内容選択案内済み",
+        value_timeline_prefix: "修理・点検依頼 内容: ",
+        prompt_reply: "修理・点検依頼ですね。内容を次から選んで送ってください。",
+        retry_reply: "内容を次から選んで送ってください。",
+        options: [
+          { label: "修理をお願いしたい", value: "repair", notification_label: "修理" },
+          { label: "点検をお願いしたい", value: "inspection", notification_label: "点検" },
+          { label: "状況を相談したい", value: "consultation", notification_label: "状況相談" },
+          { label: "その他", value: "other", notification_label: "その他" }
+        ]
+      },
+      {
+        key: "target_area",
+        kind: "choice",
+        prompt_timeline_body: "修理・点検依頼 対象箇所選択案内済み",
+        value_timeline_prefix: "修理・点検依頼 対象箇所: ",
+        prompt_reply: "対象箇所を次から選んで送ってください。",
+        retry_reply: "対象箇所を次から選んで送ってください。",
+        options: [
+          { label: "水まわり", value: "water" },
+          { label: "建具", value: "fixtures" },
+          { label: "電気", value: "electric" },
+          { label: "外壁・屋根", value: "exterior_roof" },
+          { label: "設備", value: "equipment" },
+          { label: "内装", value: "interior" },
+          { label: "その他", value: "other" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "修理・点検依頼 状況入力案内済み",
+        value_timeline_prefix: "修理・点検依頼 状況: ",
+        prompt_reply: [
+          "状況を入力してください。",
+          "写真や動画があれば、このあとLINEで送ってください。"
+        ].join("\n"),
+        retry_reply: "状況を入力して送ってください。"
+      },
+      {
+        key: "desired_datetime",
+        kind: "text",
+        prompt_timeline_body: "修理・点検依頼 希望日時入力案内済み",
+        value_timeline_prefix: "修理・点検依頼 希望日時: ",
+        prompt_reply: "希望対応日時があれば入力してください。なければ「未定」と送ってください。",
+        retry_reply: "希望対応日時を入力して送ってください。"
+      },
+      {
+        key: "urgency",
+        kind: "choice",
+        prompt_timeline_body: "修理・点検依頼 緊急度選択案内済み",
+        value_timeline_prefix: "修理・点検依頼 緊急度: ",
+        prompt_reply: "緊急度を次から選んで送ってください。",
+        retry_reply: "緊急度を次から選んで送ってください。",
+        options: [
+          { label: "急ぎ", value: "urgent", notification_label: "高" },
+          { label: "数日以内", value: "soon", notification_label: "中" },
+          { label: "急ぎではない", value: "not_urgent", notification_label: "低" }
+        ]
+      }
+    ]
+  },
+  {
+    flow_key: "aftercare.periodic_inspection",
+    trigger_text: "定期点検予約",
+    title: "定期点検予約",
+    start_activity_label: "定期点検予約を開始",
+    category: "aftercare_periodic_inspection",
+    assigned_role: "aftercare",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "desired_datetime",
+        kind: "text",
+        prompt_timeline_body: "定期点検予約 希望日時入力案内済み",
+        value_timeline_prefix: "定期点検予約 希望日時: ",
+        prompt_reply: [
+          "点検の希望日時を入力してください。",
+          "第1希望・第2希望・第3希望があれば、まとめて送ってください。"
+        ].join("\n"),
+        retry_reply: "点検の希望日時を入力して送ってください。"
+      },
+      {
+        key: "concern_area",
+        kind: "choice",
+        prompt_timeline_body: "定期点検予約 気になる箇所選択案内済み",
+        value_timeline_prefix: "定期点検予約 気になる箇所: ",
+        prompt_reply: "気になる箇所を次から選んで送ってください。",
+        retry_reply: "気になる箇所を次から選んで送ってください。",
+        options: [
+          { label: "特になし", value: "none" },
+          { label: "水まわり", value: "water" },
+          { label: "建具", value: "fixtures" },
+          { label: "電気", value: "electric" },
+          { label: "外壁・屋根", value: "exterior_roof" },
+          { label: "設備", value: "equipment" },
+          { label: "その他", value: "other" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "定期点検予約 補足入力案内済み",
+        value_timeline_prefix: "定期点検予約 補足: ",
+        prompt_reply: "補足があれば入力してください。なければ「なし」と送ってください。",
+        retry_reply: "補足を入力して送ってください。"
+      }
+    ]
+  },
+  {
+    flow_key: "aftercare.trouble_consultation",
+    trigger_text: "不具合を相談",
+    title: "不具合相談",
+    start_activity_label: "不具合相談を開始",
+    category: "aftercare_trouble",
+    assigned_role: "aftercare",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "不具合相談 種類選択案内済み",
+        value_timeline_prefix: "不具合相談 種類: ",
+        prompt_reply: "不具合の種類を次から選んで送ってください。",
+        retry_reply: "不具合の種類を次から選んで送ってください。",
+        options: [
+          { label: "水まわりの不具合", value: "water", notification_label: "水まわり" },
+          { label: "建具の不具合", value: "fixtures", notification_label: "建具" },
+          { label: "電気の不具合", value: "electric", notification_label: "電気" },
+          { label: "外壁・屋根の不具合", value: "exterior_roof", notification_label: "外壁・屋根" },
+          { label: "設備の不具合", value: "equipment", notification_label: "設備" },
+          { label: "その他", value: "other", notification_label: "その他" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "不具合相談 状況入力案内済み",
+        value_timeline_prefix: "不具合相談 状況: ",
+        prompt_reply: [
+          "不具合の状況を入力してください。",
+          "写真や動画があれば、このあとLINEで送ってください。"
+        ].join("\n"),
+        retry_reply: "不具合の状況を入力して送ってください。"
+      },
+      {
+        key: "urgency",
+        kind: "choice",
+        prompt_timeline_body: "不具合相談 緊急度選択案内済み",
+        value_timeline_prefix: "不具合相談 緊急度: ",
+        prompt_reply: "緊急度を次から選んで送ってください。",
+        retry_reply: "緊急度を次から選んで送ってください。",
+        options: [
+          { label: "急ぎ", value: "urgent", notification_label: "高" },
+          { label: "数日以内", value: "soon", notification_label: "中" },
+          { label: "急ぎではない", value: "not_urgent", notification_label: "低" }
+        ]
+      }
+    ]
+  },
+  {
+    flow_key: "aftercare.warranty_maintenance",
+    trigger_text: "保証・メンテナンス",
+    title: "保証・メンテナンス",
+    start_activity_label: "保証・メンテナンスを開始",
+    category: "aftercare_warranty_maintenance",
+    assigned_role: "aftercare",
+    default_severity: "medium",
+    default_priority: "normal",
+    ai_auto_reply: false,
+    requires_staff_confirmation: true,
+    steps: [
+      {
+        key: "sub_category",
+        kind: "choice",
+        prompt_timeline_body: "保証・メンテナンス 内容選択案内済み",
+        value_timeline_prefix: "保証・メンテナンス 内容: ",
+        prompt_reply: "確認したい内容を次から選んで送ってください。",
+        retry_reply: "確認したい内容を次から選んで送ってください。",
+        options: [
+          { label: "保証について確認したい", value: "warranty", notification_label: "保証" },
+          { label: "メンテナンス時期を確認したい", value: "maintenance_timing", notification_label: "メンテナンス時期" },
+          { label: "設備の使い方を相談したい", value: "equipment_usage", notification_label: "設備の使い方" },
+          { label: "その他", value: "other", notification_label: "その他" }
+        ]
+      },
+      {
+        key: "body",
+        kind: "text",
+        prompt_timeline_body: "保証・メンテナンス 内容入力案内済み",
+        value_timeline_prefix: "保証・メンテナンス 具体内容: ",
+        prompt_reply: "確認したい内容を入力してください。",
+        retry_reply: "確認したい内容を入力して送ってください。"
+      },
+      {
+        key: "desired_response",
+        kind: "choice",
+        prompt_timeline_body: "保証・メンテナンス 希望対応選択案内済み",
+        value_timeline_prefix: "保証・メンテナンス 希望対応: ",
+        prompt_reply: "希望する対応を次から選んで送ってください。",
+        retry_reply: "希望する対応を次から選んで送ってください。",
+        options: [
+          { label: "説明してほしい", value: "explain" },
+          { label: "担当者に確認してほしい", value: "staff_confirmation" },
+          { label: "次回連絡で相談したい", value: "next_contact" }
+        ]
       }
     ]
   }
@@ -2574,6 +2812,23 @@ function buildStructuredConsultationAlertMessage(
     lines.push("document_image_guidance=sent");
   }
 
+  if (config.category === "aftercare_repair_inspection") {
+    lines.push("photo_video_guidance=sent");
+  }
+
+  if (config.category === "aftercare_periodic_inspection") {
+    lines.push("inspection_schedule_requested=true");
+  }
+
+  if (config.category === "aftercare_trouble") {
+    lines.push("photo_video_guidance=sent");
+  }
+
+  if (config.category === "aftercare_warranty_maintenance") {
+    lines.push("requires_staff_confirmation=true");
+    lines.push("ai_auto_reply=false");
+  }
+
   return lines.filter((line): line is string => line !== null).join("\n");
 }
 
@@ -2624,6 +2879,14 @@ function resolveStructuredConsultationClassificationKeys(
       return ["sub_category", "land_status"];
     case "documents":
       return ["sub_category", "current_stage"];
+    case "aftercare_repair_inspection":
+      return ["sub_category", "target_area", "urgency"];
+    case "aftercare_periodic_inspection":
+      return ["concern_area"];
+    case "aftercare_trouble":
+      return ["sub_category", "urgency"];
+    case "aftercare_warranty_maintenance":
+      return ["sub_category", "desired_response"];
     default:
       return ["sub_category"];
   }
@@ -2680,6 +2943,23 @@ function resolveStructuredConsultationAlertSeverity(
       subCategory === "減額案を相談したい"
     ) {
       return "high";
+    }
+  }
+
+  if (
+    config.category === "aftercare_repair_inspection" ||
+    config.category === "aftercare_trouble"
+  ) {
+    if (isAftercareUrgent(values)) {
+      return "high";
+    }
+
+    if (isAftercareSoon(values)) {
+      return "medium";
+    }
+
+    if (values.urgency === "急ぎではない") {
+      return "low";
     }
   }
 
@@ -3858,6 +4138,9 @@ function formatStructuredConsultationDetailLines(input: {
   const classificationTree = input.fields.classification_tree?.trim();
   const classificationLines = classificationTree ? [`分類：${classificationTree}`] : [];
   const subCategoryLabel = formatStructuredConsultationChoiceLabel(input, "sub_category");
+  const aftercareTargetLabel = formatStructuredConsultationChoiceLabel(input, "target_area");
+  const aftercareConcernAreaLabel = formatStructuredConsultationChoiceLabel(input, "concern_area");
+  const aftercareUrgencyLabel = formatStructuredConsultationChoiceLabel(input, "urgency");
   const planTargetLabel =
     input.fields.target_area_label?.trim() ??
     input.fields.exterior_target_area_label?.trim() ??
@@ -3914,6 +4197,44 @@ function formatStructuredConsultationDetailLines(input: {
         `現在の段階：${documentStageLabel}`,
         "書類画像：添付案内済み",
         "担当：営業事務 / 営業",
+        ...bodyLines
+      ];
+    case "aftercare_repair_inspection":
+      return [
+        ...classificationLines,
+        `内容：${subCategoryLabel ?? "未入力"}`,
+        `対象箇所：${aftercareTargetLabel ?? "未入力"}`,
+        `緊急度：${aftercareUrgencyLabel ?? "未入力"}`,
+        input.fields.desired_datetime_present === "true" ? "希望対応日時：入力あり" : null,
+        "写真・動画：添付案内済み",
+        "担当：アフター",
+        ...bodyLines
+      ].filter((line): line is string => line !== null);
+    case "aftercare_periodic_inspection":
+      return [
+        ...classificationLines,
+        input.fields.desired_datetime_present === "true" ? "希望日時：入力あり" : null,
+        `気になる箇所：${aftercareConcernAreaLabel ?? "未入力"}`,
+        "担当：アフター",
+        ...bodyLines
+      ].filter((line): line is string => line !== null);
+    case "aftercare_trouble":
+      return [
+        ...classificationLines,
+        `不具合種別：${subCategoryLabel ?? "未入力"}`,
+        `緊急度：${aftercareUrgencyLabel ?? "未入力"}`,
+        "写真・動画：添付案内済み",
+        "担当：アフター",
+        ...bodyLines
+      ];
+    case "aftercare_warranty_maintenance":
+      return [
+        ...classificationLines,
+        `内容：${subCategoryLabel ?? "未入力"}`,
+        `希望対応：${input.fields.desired_response_label ?? "未入力"}`,
+        "AI自動返信：不可",
+        "担当確認：必要",
+        "担当：アフター",
         ...bodyLines
       ];
     default:

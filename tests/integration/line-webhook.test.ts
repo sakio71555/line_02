@@ -2254,6 +2254,198 @@ describe("LINE webhook foundation", () => {
     }
   });
 
+  it("creates structured aftercare flow alerts and staff notifications", async () => {
+    const cases = [
+      {
+        id: "repair",
+        userId: "U_TEST_USER_AFTERCARE_REPAIR",
+        customerId: "customer_aftercare_repair",
+        texts: [
+          "修理・点検依頼",
+          "修理をお願いしたい",
+          "水まわり",
+          "キッチン下から水漏れしています。",
+          "7/8 午前希望",
+          "急ぎ"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=aftercare.repair_inspection",
+          "category=aftercare_repair_inspection",
+          "assigned_role=aftercare",
+          "sub_category=repair",
+          "target_area=water",
+          "desired_datetime_present=true",
+          "urgency=urgent",
+          "photo_video_guidance=sent",
+          "classification_tree=アフターメニュー > 修理・点検依頼 > 修理 > 水まわり > 高"
+        ],
+        notificationSnippets: [
+          "修理・点検依頼の相談が届きました。",
+          "種別：修理",
+          "緊急度：高",
+          "顧客：アフター 顧客",
+          "内容：修理",
+          "対象箇所：水まわり",
+          "希望対応日時：入力あり",
+          "写真・動画：添付案内済み",
+          "担当：アフター",
+          "キッチン下から水漏れしています。"
+        ]
+      },
+      {
+        id: "periodic",
+        userId: "U_TEST_USER_AFTERCARE_PERIODIC",
+        customerId: "customer_aftercare_periodic",
+        texts: [
+          "定期点検予約",
+          "第1希望 7/15 10:00\n第2希望 7/16 14:00",
+          "外壁・屋根",
+          "外壁の汚れも見てほしいです。"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=aftercare.periodic_inspection",
+          "category=aftercare_periodic_inspection",
+          "assigned_role=aftercare",
+          "desired_datetime_present=true",
+          "concern_area=exterior_roof",
+          "inspection_schedule_requested=true",
+          "classification_tree=アフターメニュー > 定期点検予約 > 外壁・屋根"
+        ],
+        notificationSnippets: [
+          "定期点検予約の相談が届きました。",
+          "種別：定期点検予約",
+          "緊急度：通常",
+          "希望日時：入力あり",
+          "気になる箇所：外壁・屋根",
+          "担当：アフター",
+          "外壁の汚れも見てほしいです。"
+        ]
+      },
+      {
+        id: "trouble",
+        userId: "U_TEST_USER_AFTERCARE_TROUBLE",
+        customerId: "customer_aftercare_trouble",
+        texts: [
+          "不具合を相談",
+          "建具の不具合",
+          "玄関ドアが閉まりにくいです。",
+          "数日以内"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=aftercare.trouble_consultation",
+          "category=aftercare_trouble",
+          "assigned_role=aftercare",
+          "sub_category=fixtures",
+          "urgency=soon",
+          "photo_video_guidance=sent",
+          "classification_tree=アフターメニュー > 不具合相談 > 建具 > 中"
+        ],
+        notificationSnippets: [
+          "不具合相談の相談が届きました。",
+          "種別：建具",
+          "緊急度：通常",
+          "不具合種別：建具",
+          "緊急度：中",
+          "写真・動画：添付案内済み",
+          "担当：アフター",
+          "玄関ドアが閉まりにくいです。"
+        ]
+      },
+      {
+        id: "warranty",
+        userId: "U_TEST_USER_AFTERCARE_WARRANTY",
+        customerId: "customer_aftercare_warranty",
+        texts: [
+          "保証・メンテナンス",
+          "保証について確認したい",
+          "設備保証の範囲を確認したいです。",
+          "担当者に確認してほしい"
+        ],
+        alertSnippets: [
+          "structured_consultation_flow=aftercare.warranty_maintenance",
+          "category=aftercare_warranty_maintenance",
+          "assigned_role=aftercare",
+          "sub_category=warranty",
+          "desired_response=staff_confirmation",
+          "requires_staff_confirmation=true",
+          "ai_auto_reply=false",
+          "classification_tree=アフターメニュー > 保証・メンテナンス > 保証 > 担当者に確認してほしい"
+        ],
+        notificationSnippets: [
+          "保証・メンテナンスの相談が届きました。",
+          "種別：保証",
+          "緊急度：通常",
+          "希望対応：担当者に確認してほしい",
+          "AI自動返信：不可",
+          "担当確認：必要",
+          "担当：アフター",
+          "設備保証の範囲を確認したいです。"
+        ]
+      }
+    ];
+
+    for (const testCase of cases) {
+      const lineClient = new MockLineClient();
+      const staffNotifier = new RecordingStaffNotifier();
+      const { app, alertRepository, customerRepository } = createTestContext({
+        lineClient,
+        staffNotifier,
+        env: {
+          APP_ENV: "production"
+        }
+      });
+
+      await customerRepository.save(
+        buildRegisteredCustomer({
+          id: testCase.customerId,
+          lineUserId: testCase.userId,
+          displayName: "アフター 顧客"
+        })
+      );
+
+      let finalBody: unknown = null;
+      for (const [index, text] of testCase.texts.entries()) {
+        const response = await sendLineText(app, {
+          userId: testCase.userId,
+          eventId: `01TESTAFTERCARE${testCase.id}${index}`,
+          messageId: `test-aftercare-${testCase.id}-${index}`,
+          replyToken: `reply_token_aftercare_${testCase.id}_${index}`,
+          text,
+          timestamp: 1710000070000 + index * 1000
+        });
+        finalBody = await response.json();
+        expect(response.status).toBe(200);
+      }
+
+      expect(finalBody).toMatchObject({
+        staff_notifications: {
+          attempted: true,
+          notified: 1,
+          failed: 0
+        },
+        logging: {
+          alerts_created: 1,
+          structured_consultation_alerts_created: 1,
+          structured_consultation_alerts_notification_required: 1
+        }
+      });
+
+      const alertMessage = alertRepository.list()[0]?.message ?? "";
+      for (const snippet of testCase.alertSnippets) {
+        expect(alertMessage).toContain(snippet);
+      }
+
+      const notification = staffNotifier.notifications[staffNotifier.notifications.length - 1];
+      for (const snippet of testCase.notificationSnippets) {
+        expect(notification?.message).toContain(snippet);
+      }
+      expect(notification?.message).toContain(
+        `https://admin.taiyolabel.site/customers/${testCase.customerId}`
+      );
+      expect(notification?.message).not.toContain("http://localhost:3000");
+    }
+  });
+
   it("stores the LINE profile display name when profile lookup succeeds", async () => {
     const lineClient = new ProfileLineClient({
       U_TEST_USER_001: {
