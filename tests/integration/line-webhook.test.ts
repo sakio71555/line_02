@@ -1816,6 +1816,32 @@ describe("LINE webhook foundation", () => {
         ]
       },
       {
+        id: "plan-interior",
+        userId: "U_TEST_USER_STRUCTURED_PLAN_INTERIOR",
+        customerId: "customer_structured_plan_interior",
+        texts: [
+          "プラン・間取り相談",
+          "内装デザインについて",
+          "LDK",
+          "LDKの内装イメージを相談したいです。",
+          "できれば反映したい"
+        ],
+        nextPromptContains: "対象の場所",
+        nextPromptNotContains: "外観",
+        alertSnippets: [
+          "sub_category=interior",
+          "target_area=ldk",
+          "target_area_label=LDK"
+        ],
+        alertNotSnippets: ["\nexterior_target_area="],
+        notificationSnippets: [
+          "プラン・間取り相談の相談が届きました。",
+          "種別：内装デザイン",
+          "対象：LDK",
+          "LDKの内装イメージを相談したいです。"
+        ]
+      },
+      {
         id: "land-search",
         userId: "U_TEST_USER_STRUCTURED_LAND_SEARCH",
         customerId: "customer_structured_land_search",
@@ -1838,6 +1864,31 @@ describe("LINE webhook foundation", () => {
           "種別：土地探し",
           "土地状況：土地探し中",
           "駅に近い土地を探しています。"
+        ]
+      },
+      {
+        id: "land-site-survey",
+        userId: "U_TEST_USER_STRUCTURED_LAND_SITE_SURVEY",
+        customerId: "customer_structured_land_site_survey",
+        texts: [
+          "土地・敷地の相談",
+          "敷地調査をお願いしたい",
+          "松山市周辺",
+          "候補地の敷地調査について確認したいです。"
+        ],
+        nextPromptContains: "住所またはエリア",
+        nextPromptNotContains: "土地の状況",
+        alertSnippets: [
+          "sub_category=site_survey",
+          "area_present=true",
+          "body_label=候補地の敷地調査について確認したいです。"
+        ],
+        alertNotSnippets: ["\nland_status="],
+        notificationSnippets: [
+          "土地・敷地の相談の相談が届きました。",
+          "種別：敷地調査",
+          "土地状況：敷地調査希望",
+          "候補地の敷地調査について確認したいです。"
         ]
       },
       {
@@ -2005,7 +2056,6 @@ describe("LINE webhook foundation", () => {
         texts: [
           "土地・敷地の相談",
           "敷地調査をお願いしたい",
-          "候補地あり",
           "松山市周辺",
           "候補地の敷地調査について確認したいです。"
         ],
@@ -2013,14 +2063,13 @@ describe("LINE webhook foundation", () => {
           "structured_consultation_flow=negotiation.land_site",
           "category=land_site",
           "sub_category=site_survey",
-          "land_status=candidate_land",
           "area_present=true",
           "attachment_guidance=sent"
         ],
         notificationSnippets: [
           "土地・敷地の相談の相談が届きました。",
           "種別：敷地調査",
-          "土地状況：候補地あり",
+          "土地状況：敷地調査希望",
           "エリア：入力あり",
           "資料添付：案内済み",
           "担当：営業",

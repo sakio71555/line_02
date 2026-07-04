@@ -737,7 +737,9 @@ function isLandStatusQuestionNeeded(values: StructuredConsultationValues): boole
     values.sub_category &&
       values.sub_category !== "土地を探している" &&
       values.sub_category !== "候補地について相談したい" &&
-      values.sub_category !== "所有地について相談したい"
+      values.sub_category !== "所有地について相談したい" &&
+      values.sub_category !== "敷地調査をお願いしたい" &&
+      values.sub_category !== "造成・外構について相談したい"
   );
 }
 
@@ -894,7 +896,6 @@ const structuredConsultationFlowConfigs = [
           { label: "子ども部屋", value: "kids_room" },
           { label: "玄関", value: "entrance" },
           { label: "収納", value: "storage_area" },
-          { label: "外観", value: "exterior_area" },
           { label: "その他", value: "other" }
         ]
       },
@@ -3484,6 +3485,10 @@ function resolveLandStatusLabelForStaffNotification(fields: Record<string, strin
       return "候補地あり";
     case "owned_land":
       return "所有地あり";
+    case "site_survey":
+      return "敷地調査希望";
+    case "development_exterior":
+      return "造成・外構相談";
     default:
       return "未入力";
   }
