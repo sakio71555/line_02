@@ -324,6 +324,7 @@ export interface AlertRepository {
     tenant_id: string;
     alert_id: string;
     status: AlertStatus;
+    severity?: AlertSeverity;
     message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
@@ -456,6 +457,7 @@ export interface EnsureOpenUnrepliedCustomerMessageAlertInput {
   customer: Customer;
   alertRepository: AlertRepository;
   message?: string;
+  severity?: AlertSeverity;
   createId?: () => string;
   now?: () => string;
 }
@@ -643,8 +645,16 @@ export const customerContactStaffCategories = [
   "その他"
 ] as const;
 
+export const customerContactStaffPriorityOptions = [
+  { label: "はやく返事が欲しい", severity: "high" },
+  { label: "通常でよい", severity: "medium" },
+  { label: "急ぎではない", severity: "low" }
+] as const satisfies readonly { label: string; severity: AlertSeverity }[];
+
 const contactStaffCategoryPromptTimelineBody = "担当者相談カテゴリ選択案内済み";
 const contactStaffCategoryTimelinePrefix = "担当者相談カテゴリ: ";
+const contactStaffPriorityPromptTimelineBody = "担当者相談優先度選択案内済み";
+const contactStaffPriorityTimelinePrefix = "担当者相談優先度: ";
 const contactStaffContactPromptTimelineBody = "担当者相談連絡先確認案内済み";
 const contactStaffContactConfirmedTimelineBody = "担当者相談連絡先確認済み";
 const contactStaffContentPromptTimelineBody = "担当者相談内容入力案内済み";
@@ -659,6 +669,18 @@ export function resolveCustomerContactStaffCategory(text: string | null): string
   }
 
   return customerContactStaffCategories.find((category) => category === normalized) ?? null;
+}
+
+function resolveCustomerContactStaffPriority(
+  text: string | null
+): (typeof customerContactStaffPriorityOptions)[number] | null {
+  const normalized = text?.trim();
+
+  if (!normalized) {
+    return null;
+  }
+
+  return customerContactStaffPriorityOptions.find((option) => option.label === normalized) ?? null;
 }
 
 export async function upsertLineCustomer(
@@ -733,6 +755,7 @@ export async function ensureOpenUnrepliedCustomerMessageAlert(
       tenant_id: input.tenant_id,
       alert_id: existingAlert.id,
       status: "open",
+      ...(input.severity ? { severity: input.severity } : {}),
       ...(input.message ? { message: input.message } : {}),
       notified_at: null,
       updated_at: now
@@ -751,6 +774,7 @@ export async function ensureOpenUnrepliedCustomerMessageAlert(
     tenant_id: input.tenant_id,
     customer: input.customer,
     ...(input.message !== undefined ? { message: input.message } : {}),
+    ...(input.severity ? { severity: input.severity } : {}),
     now,
     ...(input.createId ? { createId: input.createId } : {})
   });
@@ -1327,6 +1351,7 @@ async function handleContactStaffFlowMessage(input: {
   reply: LineReplyInstruction | null;
 }> {
   const category = resolveCustomerContactStaffCategory(input.text);
+  const priority = resolveCustomerContactStaffPriority(input.text);
   const timeline = await input.messageRepository.listByCustomer(input.tenant_id, input.customer.id);
   const flowState = resolveContactStaffFlowState(timeline);
 
@@ -1337,6 +1362,68 @@ async function handleContactStaffFlowMessage(input: {
         tenant_id: input.tenant_id,
         customer_id: input.customer.id,
         body: `${contactStaffCategoryTimelinePrefix}${category}`,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: contactStaffPriorityPromptTimelineBody,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+
+    return {
+      handled: true,
+      messages_inserted: 2,
+      alert_created: false,
+      alert_notification_required: false,
+      alert: null,
+      staff_notification_event: {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        customer_display_name: input.customer.display_name,
+        customer_phone: input.customer.phone,
+        customer_email: input.customer.email,
+        customer_address: input.customer.address,
+        action_label: `${contactStaffCategoryTimelinePrefix}${category}`,
+        occurred_at: input.event_time
+      },
+      reply: {
+        reply_token: input.reply_token,
+        text: buildContactStaffPriorityPromptReply(category),
+        quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
+      }
+    };
+  }
+
+  if (flowState.stage === "awaiting_priority") {
+    if (!priority) {
+      return {
+        handled: true,
+        messages_inserted: 0,
+        alert_created: false,
+        alert_notification_required: false,
+        alert: null,
+        staff_notification_event: null,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffPriorityRetryReply(flowState.category),
+          quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
+        }
+      };
+    }
+
+    await insertSystemTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: `${contactStaffPriorityTimelinePrefix}${priority.label}`,
         created_at: input.event_time
       },
       input.serviceOptions
@@ -1367,12 +1454,12 @@ async function handleContactStaffFlowMessage(input: {
           customer_phone: input.customer.phone,
           customer_email: input.customer.email,
           customer_address: input.customer.address,
-          action_label: `${contactStaffCategoryTimelinePrefix}${category}`,
+          action_label: `${contactStaffPriorityTimelinePrefix}${priority.label}`,
           occurred_at: input.event_time
         },
         reply: {
           reply_token: input.reply_token,
-          text: buildContactStaffContentPromptReply(category)
+          text: buildContactStaffContentPromptReply(flowState.category, priority.label)
         }
       };
     }
@@ -1401,12 +1488,12 @@ async function handleContactStaffFlowMessage(input: {
         customer_phone: input.customer.phone,
         customer_email: input.customer.email,
         customer_address: input.customer.address,
-        action_label: `${contactStaffCategoryTimelinePrefix}${category}`,
+        action_label: `${contactStaffPriorityTimelinePrefix}${priority.label}`,
         occurred_at: input.event_time
       },
       reply: {
         reply_token: input.reply_token,
-        text: buildContactStaffContactPromptReply(category)
+        text: buildContactStaffContactPromptReply(flowState.category, priority.label)
       }
     };
   }
@@ -1424,7 +1511,7 @@ async function handleContactStaffFlowMessage(input: {
         staff_notification_event: null,
         reply: {
           reply_token: input.reply_token,
-          text: buildContactStaffContactInfoRetryReply(flowState.category)
+          text: buildContactStaffContactInfoRetryReply(flowState.category, flowState.priority?.label)
         }
       };
     }
@@ -1475,7 +1562,7 @@ async function handleContactStaffFlowMessage(input: {
       },
       reply: {
         reply_token: input.reply_token,
-        text: buildContactStaffContentPromptReply(flowState.category)
+        text: buildContactStaffContentPromptReply(flowState.category, flowState.priority?.label)
       }
     };
   }
@@ -1493,7 +1580,7 @@ async function handleContactStaffFlowMessage(input: {
         staff_notification_event: null,
         reply: {
           reply_token: input.reply_token,
-          text: buildContactStaffContentRetryReply(flowState.category)
+          text: buildContactStaffContentRetryReply(flowState.category, flowState.priority?.label)
         }
       };
     }
@@ -1539,7 +1626,12 @@ async function handleContactStaffFlowMessage(input: {
         tenant_id: input.tenant_id,
         customer: updatedCustomer,
         alertRepository: input.alertRepository,
-        message: buildContactStaffAlertMessage(flowState.category, body),
+        message: buildContactStaffAlertMessage(
+          flowState.category,
+          body,
+          flowState.priority?.label ?? null
+        ),
+        severity: flowState.priority?.severity ?? "high",
         ...(input.createId ? { createId: input.createId } : {}),
         now: () => input.event_time
       });
@@ -1574,8 +1666,14 @@ async function handleContactStaffFlowMessage(input: {
 }
 
 function resolveContactStaffFlowState(messages: Message[]): {
-  stage: "none" | "awaiting_category" | "awaiting_contact_info" | "awaiting_consultation_body";
+  stage:
+    | "none"
+    | "awaiting_category"
+    | "awaiting_priority"
+    | "awaiting_contact_info"
+    | "awaiting_consultation_body";
   category: string | null;
+  priority: (typeof customerContactStaffPriorityOptions)[number] | null;
 } {
   const lastAcceptedIndex = findLastMessageIndex(
     messages,
@@ -1588,7 +1686,7 @@ function resolveContactStaffFlowState(messages: Message[]): {
   );
 
   if (categoryPromptIndex < 0) {
-    return { stage: "none", category: null };
+    return { stage: "none", category: null, priority: null };
   }
 
   const flowMessages = activeMessages.slice(categoryPromptIndex);
@@ -1601,9 +1699,21 @@ function resolveContactStaffFlowState(messages: Message[]): {
     categoryMessage?.body?.slice(contactStaffCategoryTimelinePrefix.length).trim() ?? null;
 
   if (!category) {
-    return { stage: "awaiting_category", category: null };
+    return { stage: "awaiting_category", category: null, priority: null };
   }
 
+  const priorityPromptIndex = findLastMessageIndex(
+    flowMessages,
+    (message) => message.role === "system" && message.body === contactStaffPriorityPromptTimelineBody
+  );
+  const priorityMessage = findLastMessage(flowMessages, (message) =>
+    Boolean(
+      message.role === "system" && message.body?.startsWith(contactStaffPriorityTimelinePrefix)
+    )
+  );
+  const priorityLabel =
+    priorityMessage?.body?.slice(contactStaffPriorityTimelinePrefix.length).trim() ?? null;
+  const priority = resolveCustomerContactStaffPriority(priorityLabel);
   const contactPromptIndex = findLastMessageIndex(
     flowMessages,
     (message) => message.role === "system" && message.body === contactStaffContactPromptTimelineBody
@@ -1619,14 +1729,18 @@ function resolveContactStaffFlowState(messages: Message[]): {
   );
 
   if (contactPromptIndex >= 0 && contactConfirmedIndex < contactPromptIndex) {
-    return { stage: "awaiting_contact_info", category };
+    return { stage: "awaiting_contact_info", category, priority };
   }
 
   if (contentPromptIndex >= 0) {
-    return { stage: "awaiting_consultation_body", category };
+    return { stage: "awaiting_consultation_body", category, priority };
   }
 
-  return { stage: "none", category: null };
+  if (priorityPromptIndex >= 0 && !priority) {
+    return { stage: "awaiting_priority", category, priority: null };
+  }
+
+  return { stage: "none", category: null, priority: null };
 }
 
 function findLastMessage(
@@ -1702,38 +1816,80 @@ function buildContactStaffCategoryPromptReply(): string {
   ].join("\n");
 }
 
-function buildContactStaffContactPromptReply(category: string | null): string {
+function buildContactStaffPriorityPromptReply(category: string | null): string {
   return [
     category ? `カテゴリ「${category}」で受け付けます。` : "カテゴリを受け付けました。",
-    "ご本人確認のため、お名前と電話番号を次の形式で送ってください。",
+    "返信の優先度を次から選んで、そのままLINEで送ってください。",
     "",
-    "例：山田太郎 / 090-0000-0000"
+    ...customerContactStaffPriorityOptions.map((option) => `・${option.label}`)
   ].join("\n");
 }
 
-function buildContactStaffContactInfoRetryReply(category: string | null): string {
+function buildContactStaffPriorityRetryReply(category: string | null): string {
   return [
     category ? `カテゴリ「${category}」で受け付けています。` : "担当者相談を受け付けています。",
+    "返信の優先度を次から選んで送ってください。",
+    "",
+    ...customerContactStaffPriorityOptions.map((option) => `・${option.label}`)
+  ].join("\n");
+}
+
+function buildContactStaffContactPromptReply(
+  category: string | null,
+  priorityLabel: string | null = null
+): string {
+  return [
+    category ? `カテゴリ「${category}」で受け付けます。` : "カテゴリを受け付けました。",
+    priorityLabel ? `優先度「${priorityLabel}」で受け付けます。` : null,
+    "ご本人確認のため、お名前と電話番号を次の形式で送ってください。",
+    "",
+    "例：山田太郎 / 090-0000-0000"
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
+}
+
+function buildContactStaffContactInfoRetryReply(
+  category: string | null,
+  priorityLabel: string | null = null
+): string {
+  return [
+    category ? `カテゴリ「${category}」で受け付けています。` : "担当者相談を受け付けています。",
+    priorityLabel ? `優先度「${priorityLabel}」で受け付けています。` : null,
     "お名前と電話番号を確認できませんでした。",
     "次の形式で送ってください。",
     "",
     "例：山田太郎 / 090-0000-0000"
-  ].join("\n");
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
 }
 
-function buildContactStaffContentPromptReply(category: string | null): string {
+function buildContactStaffContentPromptReply(
+  category: string | null,
+  priorityLabel: string | null = null
+): string {
   return [
     category ? `カテゴリ「${category}」で受け付けます。` : "担当者相談を受け付けます。",
+    priorityLabel ? `優先度「${priorityLabel}」で受け付けます。` : null,
     "相談内容をこのままLINEで送ってください。",
     "担当者がAdmin画面で確認して返信します。"
-  ].join("\n");
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
 }
 
-function buildContactStaffContentRetryReply(category: string | null): string {
+function buildContactStaffContentRetryReply(
+  category: string | null,
+  priorityLabel: string | null = null
+): string {
   return [
     category ? `カテゴリ「${category}」で受け付けています。` : "担当者相談を受け付けています。",
+    priorityLabel ? `優先度「${priorityLabel}」で受け付けています。` : null,
     "相談内容を入力して送ってください。"
-  ].join("\n");
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
 }
 
 function buildContactStaffAcceptedReply(): string {
@@ -1916,11 +2072,12 @@ function createUnrepliedAlert(input: {
   tenant_id: string;
   customer: Customer;
   message?: string;
+  severity?: AlertSeverity;
   now: string;
   createId?: () => string;
 }): Alert {
   const severity: AlertSeverity =
-    input.customer.response_mode === "emergency" ? "critical" : "high";
+    input.severity ?? (input.customer.response_mode === "emergency" ? "critical" : "high");
   const message =
     input.message?.trim() ||
     `customer ${input.customer.id} is unreplied in response_mode ${input.customer.response_mode}.`;
@@ -2061,26 +2218,38 @@ function formatStaffNotificationDetailLines(detail: string | null): string[] {
   const contactStaffDetail = parseContactStaffAlertDetail(normalizedDetail);
   const detailText = contactStaffDetail?.body ?? normalizedDetail;
 
-  return ["相談内容：", detailText.slice(0, 1000)];
+  return [
+    contactStaffDetail?.priority_label ? `優先度：${contactStaffDetail.priority_label}` : null,
+    "相談内容：",
+    detailText.slice(0, 1000)
+  ].filter((line): line is string => line !== null);
 }
 
 function isGenericUnrepliedAlertMessage(message: string): boolean {
   return /^customer .+ is unreplied in response_mode .+\.$/u.test(message);
 }
 
-function buildContactStaffAlertMessage(category: string | null, body: string): string {
+function buildContactStaffAlertMessage(
+  category: string | null,
+  body: string,
+  priorityLabel: string | null = null
+): string {
   const normalizedCategory = category?.trim();
+  const normalizedPriority = priorityLabel?.trim();
 
   return [
     normalizedCategory ? `${contactStaffCategoryTimelinePrefix}${normalizedCategory}` : null,
+    normalizedPriority ? `${contactStaffPriorityTimelinePrefix}${normalizedPriority}` : null,
     body.trim()
   ]
     .filter((line): line is string => Boolean(line))
     .join("\n");
 }
 
-function parseContactStaffAlertDetail(message: string): { category: string; body: string } | null {
-  const [firstLine, ...remainingLines] = message.split(/\r?\n/u);
+function parseContactStaffAlertDetail(
+  message: string
+): { category: string; priority_label: string | null; body: string } | null {
+  const [firstLine, secondLine, ...remainingLines] = message.split(/\r?\n/u);
   const category = firstLine?.startsWith(contactStaffCategoryTimelinePrefix)
     ? firstLine.slice(contactStaffCategoryTimelinePrefix.length).trim()
     : "";
@@ -2089,9 +2258,14 @@ function parseContactStaffAlertDetail(message: string): { category: string; body
     return null;
   }
 
+  const priorityLabel = secondLine?.startsWith(contactStaffPriorityTimelinePrefix)
+    ? secondLine.slice(contactStaffPriorityTimelinePrefix.length).trim()
+    : null;
+
   return {
     category,
-    body: remainingLines.join("\n").trim()
+    priority_label: priorityLabel,
+    body: (priorityLabel ? remainingLines : [secondLine, ...remainingLines]).join("\n").trim()
   };
 }
 
@@ -2287,6 +2461,7 @@ export class InMemoryAlertRepository implements AlertRepository {
     tenant_id: string;
     alert_id: string;
     status: AlertStatus;
+    severity?: AlertSeverity;
     message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
@@ -2301,6 +2476,7 @@ export class InMemoryAlertRepository implements AlertRepository {
     const updated: Alert = {
       ...existing,
       status: input.status,
+      severity: input.severity !== undefined ? input.severity : existing.severity,
       message: input.message !== undefined ? input.message : existing.message,
       notified_at: input.notified_at !== undefined ? input.notified_at : existing.notified_at,
       resolved_at: input.resolved_at !== undefined ? input.resolved_at : existing.resolved_at,

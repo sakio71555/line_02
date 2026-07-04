@@ -868,7 +868,7 @@ describe("LINE webhook foundation", () => {
     });
   });
 
-  it("guides an unregistered customer through contact-staff category, contact info, and alert creation", async () => {
+  it("guides an unregistered customer through contact-staff priority and alert creation", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
       lineClient
@@ -906,6 +906,19 @@ describe("LINE webhook foundation", () => {
         `/api/line/webhook/${knownWebhookSecret}`,
         lineTextMessageBody({
           userId,
+          eventId: "01TESTCONTACTSTAFFPRIORITY",
+          messageId: "test-contact-staff-priority",
+          replyToken: "reply_token_contact_staff_priority",
+          text: "はやく返事が欲しい",
+          timestamp: 1710000007500
+        })
+      )
+    );
+    const contactInfoResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
           eventId: "01TESTCONTACTSTAFFCONTACT",
           messageId: "test-contact-staff-contact",
           replyToken: "reply_token_contact_staff_contact",
@@ -934,6 +947,7 @@ describe("LINE webhook foundation", () => {
     expect(triggerResponse.status).toBe(200);
     expect(categoryResponse.status).toBe(200);
     expect(contactResponse.status).toBe(200);
+    expect(contactInfoResponse.status).toBe(200);
     expect(bodyResponse.status).toBe(200);
     expect(body).toMatchObject({
       ok: true,
@@ -951,7 +965,7 @@ describe("LINE webhook foundation", () => {
         unsupported_events: 0
       }
     });
-    expect(lineClient.replies).toHaveLength(4);
+    expect(lineClient.replies).toHaveLength(5);
     expect(lineClient.replies[0]).toMatchObject({
       replyToken: "reply_token_contact_staff_trigger",
       messages: [
@@ -973,9 +987,22 @@ describe("LINE webhook foundation", () => {
         }
       ]
     });
-    expect(lineClient.replies[1]?.messages[0]?.text).toContain("お名前と電話番号");
-    expect(lineClient.replies[2]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
-    expect(lineClient.replies[3]?.messages[0]?.text).toContain("相談内容を受け付けました");
+    expect(lineClient.replies[1]?.messages[0]?.text).toContain("返信の優先度");
+    expect(lineClient.replies[1]?.messages[0]?.quickReply?.items).toEqual(
+      expect.arrayContaining([
+        {
+          type: "action",
+          action: {
+            type: "message",
+            label: "はやく返事が欲しい",
+            text: "はやく返事が欲しい"
+          }
+        }
+      ])
+    );
+    expect(lineClient.replies[2]?.messages[0]?.text).toContain("お名前と電話番号");
+    expect(lineClient.replies[3]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
+    expect(lineClient.replies[4]?.messages[0]?.text).toContain("相談内容を受け付けました");
     expect(customer).toMatchObject({
       tenant_id: "tenant_amamihome",
       line_user_id: userId,
@@ -988,13 +1015,15 @@ describe("LINE webhook foundation", () => {
     expect(messages.map((message) => message.body)).toEqual([
       "担当者相談カテゴリ選択案内済み",
       "担当者相談カテゴリ: 費用・ローンについて",
+      "担当者相談優先度選択案内済み",
+      "担当者相談優先度: はやく返事が欲しい",
       "担当者相談連絡先確認案内済み",
       "担当者相談連絡先確認済み",
       "担当者相談内容入力案内済み",
       "住宅ローンと予算について相談したいです。",
       "担当者相談受付済み"
     ]);
-    expect(messages[5]).toMatchObject({
+    expect(messages[7]).toMatchObject({
       tenant_id: "tenant_amamihome",
       customer_id: customer?.id,
       line_message_id: "test-contact-staff-body",
@@ -1009,6 +1038,9 @@ describe("LINE webhook foundation", () => {
       status: "open",
       severity: "high"
     });
+    expect(alertRepository.list()[0]?.message).toContain(
+      "担当者相談優先度: はやく返事が欲しい"
+    );
     expect(alertRepository.list()[0]?.message).toContain("住宅ローンと予算");
   });
 
@@ -1085,10 +1117,10 @@ describe("LINE webhook foundation", () => {
     expect(messageRepository.list().map((message) => message.body)).toEqual([
       "担当者相談カテゴリ選択案内済み",
       "担当者相談カテゴリ: その他",
-      "担当者相談連絡先確認案内済み",
+      "担当者相談優先度選択案内済み",
       "担当者相談カテゴリ選択案内済み",
       "担当者相談カテゴリ: モデルハウス見学について",
-      "担当者相談連絡先確認案内済み"
+      "担当者相談優先度選択案内済み"
     ]);
   });
 
@@ -1135,6 +1167,19 @@ describe("LINE webhook foundation", () => {
         `/api/line/webhook/${knownWebhookSecret}`,
         lineTextMessageBody({
           userId,
+          eventId: "01TESTCONTACTSTAFFNOTIFYPRIORITY",
+          messageId: "test-contact-staff-notify-priority",
+          replyToken: "reply_token_contact_staff_notify_priority",
+          text: "はやく返事が欲しい",
+          timestamp: 1710000031500
+        })
+      )
+    );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
           eventId: "01TESTCONTACTSTAFFNOTIFYCONTACT",
           messageId: "test-contact-staff-notify-contact",
           replyToken: "reply_token_contact_staff_notify_contact",
@@ -1170,28 +1215,34 @@ describe("LINE webhook foundation", () => {
         contact_staff_alerts_created: 1
       }
     });
-    expect(staffNotifier.notifications).toHaveLength(4);
+    expect(staffNotifier.notifications).toHaveLength(5);
     expect(staffNotifier.notifications[0]?.message).toContain("内容：担当者相談を開始");
     expect(staffNotifier.notifications[1]?.message).toContain(
       "内容：担当者相談カテゴリ: モデルハウス見学について"
     );
-    expect(staffNotifier.notifications[2]?.message).toContain("内容：担当者相談連絡先確認済み");
-    expect(staffNotifier.notifications[2]?.message).toContain("顧客：田中太郎");
-    expect(staffNotifier.notifications[2]?.message).toContain("電話：090-1111-2222");
-    expect(staffNotifier.notifications[3]?.message).toContain("新しい相談が届きました。");
-    expect(staffNotifier.notifications[3]?.message).toContain(
-      "種別：担当者に相談（モデルハウス見学について）"
+    expect(staffNotifier.notifications[2]?.message).toContain(
+      "内容：担当者相談優先度: はやく返事が欲しい"
     );
-    expect(staffNotifier.notifications[3]?.message).not.toContain("種別：未返信の相談");
+    expect(staffNotifier.notifications[3]?.message).toContain("内容：担当者相談連絡先確認済み");
     expect(staffNotifier.notifications[3]?.message).toContain("顧客：田中太郎");
     expect(staffNotifier.notifications[3]?.message).toContain("電話：090-1111-2222");
-    expect(staffNotifier.notifications[3]?.message).toContain("相談内容：");
-    expect(staffNotifier.notifications[3]?.message).toContain(
+    expect(staffNotifier.notifications[4]?.message).toContain("新しい相談が届きました。");
+    expect(staffNotifier.notifications[4]?.message).toContain(
+      "種別：担当者に相談（モデルハウス見学について）"
+    );
+    expect(staffNotifier.notifications[4]?.message).not.toContain("種別：未返信の相談");
+    expect(staffNotifier.notifications[4]?.message).toContain("緊急度：高");
+    expect(staffNotifier.notifications[4]?.message).toContain("顧客：田中太郎");
+    expect(staffNotifier.notifications[4]?.message).toContain("電話：090-1111-2222");
+    expect(staffNotifier.notifications[4]?.message).toContain("優先度：はやく返事が欲しい");
+    expect(staffNotifier.notifications[4]?.message).toContain("相談内容：");
+    expect(staffNotifier.notifications[4]?.message).toContain(
       "モデルハウス見学の日程について相談したいです。"
     );
-    expect(staffNotifier.notifications[3]?.message).toContain("管理画面で確認してください。");
+    expect(staffNotifier.notifications[4]?.message).toContain("管理画面で確認してください。");
     expect(alertRepository.list()[0]).toMatchObject({
-      status: "notified"
+      status: "notified",
+      severity: "high"
     });
   });
 
@@ -1269,6 +1320,19 @@ describe("LINE webhook foundation", () => {
         })
       )
     );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREPEATCONTACTSTAFFPRIORITY",
+          messageId: "test-repeat-contact-staff-priority",
+          replyToken: "reply_token_repeat_contact_staff_priority",
+          text: "通常でよい",
+          timestamp: 1710000041500
+        })
+      )
+    );
     const bodyResponse = await app.fetch(
       signedRequest(
         `/api/line/webhook/${knownWebhookSecret}`,
@@ -1298,26 +1362,31 @@ describe("LINE webhook foundation", () => {
         contact_staff_alerts_notification_required: 1
       }
     });
-    expect(staffNotifier.notifications).toHaveLength(3);
+    expect(staffNotifier.notifications).toHaveLength(4);
     expect(staffNotifier.notifications[0]?.message).toContain("内容：担当者相談を開始");
     expect(staffNotifier.notifications[1]?.message).toContain(
       "内容：担当者相談カテゴリ: 費用・ローンについて"
     );
-    expect(staffNotifier.notifications[2]?.message).toContain("LINEの更新が届きました。");
     expect(staffNotifier.notifications[2]?.message).toContain(
+      "内容：担当者相談優先度: 通常でよい"
+    );
+    expect(staffNotifier.notifications[3]?.message).toContain("LINEの更新が届きました。");
+    expect(staffNotifier.notifications[3]?.message).toContain(
       "種別：担当者に相談（費用・ローンについて）"
     );
-    expect(staffNotifier.notifications[2]?.message).toContain("顧客：登録済み 太郎");
-    expect(staffNotifier.notifications[2]?.message).toContain("電話：090-2222-3333");
-    expect(staffNotifier.notifications[2]?.message).toContain("日時：2024-03-09T16:00:42.000Z");
-    expect(staffNotifier.notifications[2]?.message).toContain(
+    expect(staffNotifier.notifications[3]?.message).toContain("緊急度：通常");
+    expect(staffNotifier.notifications[3]?.message).toContain("顧客：登録済み 太郎");
+    expect(staffNotifier.notifications[3]?.message).toContain("電話：090-2222-3333");
+    expect(staffNotifier.notifications[3]?.message).toContain("日時：2024-03-09T16:00:42.000Z");
+    expect(staffNotifier.notifications[3]?.message).toContain(
       "https://admin.taiyolabel.site/customers/customer_registered_contact_staff_repeat"
     );
-    expect(staffNotifier.notifications[2]?.message).toContain("相談内容：");
-    expect(staffNotifier.notifications[2]?.message).toContain(
+    expect(staffNotifier.notifications[3]?.message).toContain("優先度：通常でよい");
+    expect(staffNotifier.notifications[3]?.message).toContain("相談内容：");
+    expect(staffNotifier.notifications[3]?.message).toContain(
       "資金計画について担当者に相談したいです。"
     );
-    expect(staffNotifier.notifications[2]?.message).not.toContain(
+    expect(staffNotifier.notifications[3]?.message).not.toContain(
       "通知本文には含めない相談内容です"
     );
     expect(alertRepository.list()).toHaveLength(1);
@@ -1379,6 +1448,19 @@ describe("LINE webhook foundation", () => {
         })
       )
     );
+    const priorityResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREGISTEREDCONTACTSTAFFPRIORITY",
+          messageId: "test-registered-contact-staff-priority",
+          replyToken: "reply_token_registered_contact_staff_priority",
+          text: "急ぎではない",
+          timestamp: 1710000011500
+        })
+      )
+    );
     await app.fetch(
       signedRequest(
         `/api/line/webhook/${knownWebhookSecret}`,
@@ -1393,6 +1475,7 @@ describe("LINE webhook foundation", () => {
       )
     );
     const categoryBody = await categoryResponse.json();
+    const priorityBody = await priorityResponse.json();
     const messages = messageRepository.list();
     const customer = customerRepository.list()[0];
 
@@ -1404,11 +1487,22 @@ describe("LINE webhook foundation", () => {
         contact_staff_alerts_created: 0
       }
     });
-    expect(lineClient.replies[1]?.messages[0]?.text).not.toContain("お名前と電話番号");
-    expect(lineClient.replies[1]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
+    expect(priorityBody).toMatchObject({
+      logging: {
+        messages_inserted: 2,
+        alerts_created: 0,
+        contact_staff_flows_logged: 1,
+        contact_staff_alerts_created: 0
+      }
+    });
+    expect(lineClient.replies[1]?.messages[0]?.text).toContain("返信の優先度");
+    expect(lineClient.replies[2]?.messages[0]?.text).not.toContain("お名前と電話番号");
+    expect(lineClient.replies[2]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
     expect(messages.map((message) => message.body)).toEqual([
       "担当者相談カテゴリ選択案内済み",
       "担当者相談カテゴリ: 家づくりについて",
+      "担当者相談優先度選択案内済み",
+      "担当者相談優先度: 急ぎではない",
       "担当者相談内容入力案内済み",
       "平屋の進め方を担当者に相談したいです。",
       "担当者相談受付済み"
@@ -1419,6 +1513,9 @@ describe("LINE webhook foundation", () => {
       response_mode: "human_required"
     });
     expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      severity: "low"
+    });
   });
 
   it("stores the LINE profile display name when profile lookup succeeds", async () => {

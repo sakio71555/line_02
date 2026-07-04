@@ -161,6 +161,7 @@
 - Loop 323 staff LINE runtime config enablement: `11_codex_tasks/323_staff_line_runtime_config_enablement.md`
 - Loop 324 customer channel staff notification temporary fallback: `11_codex_tasks/324_customer_channel_staff_notification_temporary_fallback.md`
 - Loop 325 customer rich menu switching: `11_codex_tasks/325_customer_rich_menu_switching.md`
+- Loop 326 contact staff priority selection: `11_codex_tasks/326_contact_staff_priority_selection.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 - LINE canary operator window helper: `../scripts/ops/line_canary_window_operator.sh`

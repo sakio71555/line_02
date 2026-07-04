@@ -22,6 +22,7 @@ interface SupabaseAlertRow {
 interface SupabaseAlertStatusUpdateRow {
   status: AlertStatus;
   updated_at: string;
+  severity?: Alert["severity"];
   message?: string;
   notified_at?: string | null;
   resolved_at?: string | null;
@@ -114,6 +115,7 @@ export class SupabaseAlertRepository implements AlertRepository {
     tenant_id: string;
     alert_id: string;
     status: AlertStatus;
+    severity?: Alert["severity"];
     message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
@@ -172,6 +174,7 @@ function toAlertRow(alert: Alert): SupabaseAlertRow {
 
 function toAlertStatusUpdateRow(input: {
   status: AlertStatus;
+  severity?: Alert["severity"];
   message?: string;
   notified_at?: string | null;
   resolved_at?: string | null;
@@ -181,6 +184,10 @@ function toAlertStatusUpdateRow(input: {
     status: input.status,
     updated_at: input.updated_at
   };
+
+  if (input.severity !== undefined) {
+    row.severity = input.severity;
+  }
 
   if (input.message !== undefined) {
     row.message = input.message;
