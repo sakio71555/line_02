@@ -87,10 +87,6 @@ export function CustomerActionPanel({
     runStaffReplyAction.bind(null, customerId),
     initialStaffReplyState
   );
-  const [richMenuSwitchState, runRichMenuSwitch, richMenuSwitchPending] = useActionState(
-    runRichMenuSwitchAction.bind(null, customerId),
-    initialRichMenuSwitchState
-  );
   const [summaryState, runSummary, summaryPending] = useActionState(
     runAiSummaryAction.bind(null, customerId),
     initialAiSummaryState
@@ -107,14 +103,11 @@ export function CustomerActionPanel({
   useEffect(() => {
     if (
       summaryState.status === "success" ||
-      staffReplyState.status === "success" ||
-      richMenuSwitchState.status === "success"
+      staffReplyState.status === "success"
     ) {
       router.refresh();
     }
   }, [
-    richMenuSwitchState.result?.message.id,
-    richMenuSwitchState.status,
     router,
     staffReplyState.status,
     staffReplyState.result?.message.id,
@@ -128,12 +121,8 @@ export function CustomerActionPanel({
       replyDraftState={replyDraftState}
       ragAnswerPending={ragAnswerPending}
       ragAnswerState={ragAnswerState}
-      richMenuCustomerAvailable={lineRealSendCustomerAvailable}
-      richMenuSwitchPending={richMenuSwitchPending}
-      richMenuSwitchState={richMenuSwitchState}
       runRagAnswer={runRagAnswer}
       runReplyDraft={runReplyDraft}
-      runRichMenuSwitch={runRichMenuSwitch}
       runStaffReply={runStaffReply}
       runSummary={runSummary}
       staffReplyLineRealSendCustomerAvailable={lineRealSendCustomerAvailable}
@@ -153,12 +142,8 @@ export function CustomerActionPanelView({
   replyDraftState,
   ragAnswerPending,
   ragAnswerState,
-  richMenuCustomerAvailable,
-  richMenuSwitchPending,
-  richMenuSwitchState,
   runRagAnswer,
   runReplyDraft,
-  runRichMenuSwitch,
   runStaffReply,
   runSummary,
   staffReplyForm,
@@ -175,12 +160,8 @@ export function CustomerActionPanelView({
   replyDraftState: AiReplyDraftActionState;
   ragAnswerPending: boolean;
   ragAnswerState: RagAnswerDraftActionState;
-  richMenuCustomerAvailable: boolean;
-  richMenuSwitchPending: boolean;
-  richMenuSwitchState: RichMenuSwitchActionState;
   runRagAnswer: FormAction;
   runReplyDraft: FormAction;
-  runRichMenuSwitch: FormAction;
   runStaffReply: FormAction;
   runSummary: FormAction;
   staffReplyForm?: React.ReactNode;
@@ -285,13 +266,6 @@ export function CustomerActionPanelView({
         </div>
       </details>
 
-      <CustomerRichMenuSwitchPanel
-        customerAvailable={richMenuCustomerAvailable}
-        pending={richMenuSwitchPending}
-        runRichMenuSwitch={runRichMenuSwitch}
-        state={richMenuSwitchState}
-      />
-
       <article className="action-panel action-panel-wide staff-reply-panel">
         <div className="action-card-header">
           <p className="result-label">担当者返信</p>
@@ -323,19 +297,57 @@ export function CustomerActionPanelView({
   );
 }
 
-function CustomerRichMenuSwitchPanel({
+export function CustomerRichMenuSwitch({
+  customerAvailable,
+  customerId
+}: {
+  customerAvailable: boolean;
+  customerId: string;
+}) {
+  const router = useRouter();
+  const [richMenuSwitchState, runRichMenuSwitch, richMenuSwitchPending] = useActionState(
+    runRichMenuSwitchAction.bind(null, customerId),
+    initialRichMenuSwitchState
+  );
+
+  useEffect(() => {
+    if (richMenuSwitchState.status === "success") {
+      router.refresh();
+    }
+  }, [richMenuSwitchState.result?.message.id, richMenuSwitchState.status, router]);
+
+  return (
+    <CustomerRichMenuSwitchPanel
+      customerAvailable={customerAvailable}
+      pending={richMenuSwitchPending}
+      runRichMenuSwitch={runRichMenuSwitch}
+      state={richMenuSwitchState}
+      variant="embedded"
+    />
+  );
+}
+
+export function CustomerRichMenuSwitchPanel({
   customerAvailable,
   pending,
   runRichMenuSwitch,
-  state
+  state,
+  variant = "standalone"
 }: {
   customerAvailable: boolean;
   pending: boolean;
   runRichMenuSwitch: FormAction;
   state: RichMenuSwitchActionState;
+  variant?: "embedded" | "standalone";
 }) {
   return (
-    <article className="action-panel action-panel-wide">
+    <article
+      className={
+        variant === "embedded"
+          ? "customer-rich-menu-switch"
+          : "action-panel action-panel-wide"
+      }
+    >
       <div className="action-card-header">
         <p className="result-label">LINEメニュー切替</p>
         <h3>顧客のリッチメニューを切り替える</h3>

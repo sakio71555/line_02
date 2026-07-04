@@ -14,7 +14,7 @@ import {
   sortTimelineMessagesNewestFirst
 } from "../../../src/customer-timeline-display";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
-import { CustomerActionPanel } from "./customer-actions";
+import { CustomerActionPanel, CustomerRichMenuSwitch } from "./customer-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -106,6 +106,10 @@ export default async function CustomerDetailPage({
                 <span className="status-pill status-pill-muted">タグなし</span>
               )}
             </div>
+            <CustomerRichMenuSwitch
+              customerAvailable={Boolean(detail.customer.line_user_id)}
+              customerId={customerId}
+            />
           </section>
 
           <section className="section">
