@@ -670,24 +670,25 @@ type StructuredConsultationOption = {
   notification_label?: string;
 };
 
+type StructuredConsultationValues = Record<string, string>;
+
+type StructuredConsultationStepBase = {
+  key: string;
+  prompt_timeline_body: string;
+  value_timeline_prefix: string;
+  prompt_reply: string;
+  retry_reply: string;
+  is_applicable?: (values: StructuredConsultationValues) => boolean;
+};
+
 type StructuredConsultationStep =
-  | {
-      key: string;
+  | (StructuredConsultationStepBase & {
       kind: "choice";
-      prompt_timeline_body: string;
-      value_timeline_prefix: string;
-      prompt_reply: string;
-      retry_reply: string;
       options: readonly StructuredConsultationOption[];
-    }
-  | {
-      key: string;
+    })
+  | (StructuredConsultationStepBase & {
       kind: "text";
-      prompt_timeline_body: string;
-      value_timeline_prefix: string;
-      prompt_reply: string;
-      retry_reply: string;
-    };
+    });
 
 type StructuredConsultationFlowConfig = {
   flow_key: string;
@@ -703,6 +704,21 @@ type StructuredConsultationFlowConfig = {
   requires_staff_confirmation: boolean;
   steps: readonly StructuredConsultationStep[];
 };
+
+function isMeetingScheduleBookingRequest(values: StructuredConsultationValues): boolean {
+  return (
+    values.sub_category === "新しく打合せを予約したい" ||
+    values.sub_category === "日時を変更したい"
+  );
+}
+
+function isMeetingScheduleCancelRequest(values: StructuredConsultationValues): boolean {
+  return values.sub_category === "キャンセルしたい";
+}
+
+function isMeetingScheduleConfirmRequest(values: StructuredConsultationValues): boolean {
+  return values.sub_category === "打合せ内容を確認したい";
+}
 
 const structuredConsultationFlowConfigs = [
   {
@@ -738,6 +754,7 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "打合せ予約・変更 希望方法: ",
         prompt_reply: "希望方法を次から選んで送ってください。",
         retry_reply: "希望方法を次から選んで送ってください。",
+        is_applicable: isMeetingScheduleBookingRequest,
         options: [
           { label: "来店", value: "office" },
           { label: "モデルハウス", value: "model_house" },
@@ -755,7 +772,26 @@ const structuredConsultationFlowConfigs = [
           "希望日時を入力してください。",
           "第1希望・第2希望・第3希望があれば、まとめて送ってください。"
         ].join("\n"),
-        retry_reply: "希望日時を入力して送ってください。"
+        retry_reply: "希望日時を入力して送ってください。",
+        is_applicable: isMeetingScheduleBookingRequest
+      },
+      {
+        key: "cancel_meeting_datetime",
+        kind: "text",
+        prompt_timeline_body: "打合せ予約・変更 キャンセル対象日時入力案内済み",
+        value_timeline_prefix: "打合せ予約・変更 キャンセル対象日時: ",
+        prompt_reply: "キャンセルしたい打合せの日時を入力してください。分かる範囲で大丈夫です。",
+        retry_reply: "キャンセルしたい打合せの日時を入力して送ってください。",
+        is_applicable: isMeetingScheduleCancelRequest
+      },
+      {
+        key: "confirm_meeting_datetime",
+        kind: "text",
+        prompt_timeline_body: "打合せ予約・変更 確認対象入力案内済み",
+        value_timeline_prefix: "打合せ予約・変更 確認対象: ",
+        prompt_reply: "確認したい打合せの日時や内容を入力してください。分かる範囲で大丈夫です。",
+        retry_reply: "確認したい打合せの日時や内容を入力して送ってください。",
+        is_applicable: isMeetingScheduleConfirmRequest
       },
       {
         key: "meeting_topic",
@@ -764,6 +800,7 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "打合せ予約・変更 打合せ内容: ",
         prompt_reply: "打合せしたい内容を次から選んで送ってください。",
         retry_reply: "打合せしたい内容を次から選んで送ってください。",
+        is_applicable: isMeetingScheduleBookingRequest,
         options: [
           { label: "プラン", value: "plan" },
           { label: "見積", value: "estimate" },
@@ -778,7 +815,7 @@ const structuredConsultationFlowConfigs = [
         kind: "text",
         prompt_timeline_body: "打合せ予約・変更 補足入力案内済み",
         value_timeline_prefix: "打合せ予約・変更 補足: ",
-        prompt_reply: "補足があれば入力してください。なければ「なし」と送ってください。",
+        prompt_reply: "補足や担当者への連絡事項があれば入力してください。なければ「なし」と送ってください。",
         retry_reply: "補足を入力して送ってください。"
       }
     ]
@@ -1865,7 +1902,8 @@ async function startStructuredConsultationFlow(input: {
   messageRepository: MessageRepository;
   serviceOptions: { createId?: () => string; now?: () => string };
 }): Promise<StructuredConsultationFlowResult> {
-  const firstStep = input.config.steps[0];
+  const firstStepState = resolveNextStructuredConsultationStep(input.config, {});
+  const firstStep = firstStepState?.step;
 
   if (!firstStep) {
     return createUnhandledStructuredConsultationFlowResult();
@@ -1977,7 +2015,12 @@ async function handleStructuredConsultationFlowMessage(input: {
     ...flowState.values,
     [flowState.step.key]: resolvedValue.label
   };
-  const nextStep = flowState.config.steps[flowState.step_index + 1];
+  const nextStepState = resolveNextStructuredConsultationStep(
+    flowState.config,
+    values,
+    flowState.step_index
+  );
+  const nextStep = nextStepState?.step;
 
   if (nextStep) {
     await insertSystemTextTimelineMessage(
@@ -2094,7 +2137,7 @@ function resolveStructuredConsultationFlowState(messages: Message[]): Structured
         config: StructuredConsultationFlowConfig;
         step: StructuredConsultationStep;
         step_index: number;
-        values: Record<string, string>;
+        values: StructuredConsultationValues;
       }
     | null = null;
 
@@ -2118,7 +2161,7 @@ function resolveStructuredConsultationFlowState(messages: Message[]): Structured
     }
 
     const flowMessages = activeMessages.slice(startIndex);
-    const values: Record<string, string> = {};
+    const values: StructuredConsultationValues = {};
     for (const step of config.steps) {
       const valueMessage = findLastMessage(flowMessages, (message) =>
         Boolean(message.role === "system" && message.body?.startsWith(step.value_timeline_prefix))
@@ -2130,8 +2173,9 @@ function resolveStructuredConsultationFlowState(messages: Message[]): Structured
       }
     }
 
-    const stepIndex = config.steps.findIndex((step) => !values[step.key]);
-    const step = config.steps[stepIndex];
+    const stepState = resolveNextStructuredConsultationStep(config, values);
+    const stepIndex = stepState?.step_index ?? -1;
+    const step = stepState?.step;
 
     if (stepIndex < 0 || !step) {
       continue;
@@ -2160,6 +2204,32 @@ function resolveStructuredConsultationFlowState(messages: Message[]): Structured
     step_index: latest.step_index,
     values: latest.values
   };
+}
+
+function resolveNextStructuredConsultationStep(
+  config: StructuredConsultationFlowConfig,
+  values: StructuredConsultationValues,
+  afterStepIndex = -1
+): { step: StructuredConsultationStep; step_index: number } | null {
+  for (let index = afterStepIndex + 1; index < config.steps.length; index += 1) {
+    const step = config.steps[index];
+
+    if (!step) {
+      continue;
+    }
+
+    if (values[step.key]) {
+      continue;
+    }
+
+    if (step.is_applicable && !step.is_applicable(values)) {
+      continue;
+    }
+
+    return { step, step_index: index };
+  }
+
+  return null;
 }
 
 function resolveStructuredConsultationStepInput(
@@ -3301,12 +3371,16 @@ function formatStructuredConsultationDetailLines(input: {
   switch (input.config.category) {
     case "meeting":
       return [
-        `希望方法：${input.fields.method_label ?? "未入力"}`,
-        `希望日時：${input.fields.desired_datetime_present === "true" ? "入力あり" : "未入力"}`,
-        `打合せ内容：${input.fields.meeting_topic_label ?? "未入力"}`,
+        input.fields.method_label ? `希望方法：${input.fields.method_label}` : null,
+        input.fields.desired_datetime_present === "true" ? "希望日時：入力あり" : null,
+        input.fields.cancel_meeting_datetime_present === "true"
+          ? "キャンセル対象日時：入力あり"
+          : null,
+        input.fields.confirm_meeting_datetime_present === "true" ? "確認対象：入力あり" : null,
+        input.fields.meeting_topic_label ? `打合せ内容：${input.fields.meeting_topic_label}` : null,
         "担当：営業",
         ...bodyLines
-      ];
+      ].filter((line): line is string => line !== null);
     case "plan_design":
       return [
         `対象：${input.fields.target_area_label ?? "未入力"}`,

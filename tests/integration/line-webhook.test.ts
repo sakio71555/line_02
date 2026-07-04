@@ -1645,6 +1645,127 @@ describe("LINE webhook foundation", () => {
     expect(notification?.message).not.toContain("http://localhost:3000");
   });
 
+  it("skips booking-only meeting questions for cancel and confirm requests", async () => {
+    const cases = [
+      {
+        id: "cancel",
+        userId: "U_TEST_USER_STRUCTURED_MEETING_CANCEL",
+        customerId: "customer_structured_meeting_cancel",
+        texts: [
+          "打合せ予約・変更",
+          "キャンセルしたい",
+          "7/20 10:00の打合せ",
+          "都合が悪くなりました。"
+        ],
+        nextPrompt: "キャンセルしたい打合せの日時",
+        alertSnippets: [
+          "sub_category=cancel",
+          "cancel_meeting_datetime_present=true",
+          "body_label=都合が悪くなりました。"
+        ],
+        notificationSnippets: [
+          "打合せ予約・変更の相談が届きました。",
+          "種別：キャンセル",
+          "キャンセル対象日時：入力あり",
+          "担当：営業",
+          "都合が悪くなりました。"
+        ]
+      },
+      {
+        id: "confirm",
+        userId: "U_TEST_USER_STRUCTURED_MEETING_CONFIRM",
+        customerId: "customer_structured_meeting_confirm",
+        texts: [
+          "打合せ予約・変更",
+          "打合せ内容を確認したい",
+          "7/22 13:00の打合せ内容",
+          "持ち物も確認したいです。"
+        ],
+        nextPrompt: "確認したい打合せの日時や内容",
+        alertSnippets: [
+          "sub_category=confirm",
+          "confirm_meeting_datetime_present=true",
+          "body_label=持ち物も確認したいです。"
+        ],
+        notificationSnippets: [
+          "打合せ予約・変更の相談が届きました。",
+          "種別：内容確認",
+          "確認対象：入力あり",
+          "担当：営業",
+          "持ち物も確認したいです。"
+        ]
+      }
+    ];
+
+    for (const testCase of cases) {
+      const lineClient = new MockLineClient();
+      const staffNotifier = new RecordingStaffNotifier();
+      const { app, alertRepository, customerRepository } = createTestContext({
+        lineClient,
+        staffNotifier,
+        env: {
+          APP_ENV: "production"
+        }
+      });
+
+      await customerRepository.save(
+        buildRegisteredCustomer({
+          id: testCase.customerId,
+          lineUserId: testCase.userId,
+          displayName: "分岐 顧客"
+        })
+      );
+
+      let finalBody: unknown = null;
+      for (const [index, text] of testCase.texts.entries()) {
+        const response = await sendLineText(app, {
+          userId: testCase.userId,
+          eventId: `01TESTSTRUCTUREDMEETINGBRANCH${testCase.id}${index}`,
+          messageId: `test-structured-meeting-branch-${testCase.id}-${index}`,
+          replyToken: `reply_token_structured_meeting_branch_${testCase.id}_${index}`,
+          text,
+          timestamp: 1710000055000 + index * 1000
+        });
+        finalBody = await response.json();
+        expect(response.status).toBe(200);
+      }
+
+      expect(lineClient.replies[1]?.messages[0]?.text).toContain(testCase.nextPrompt);
+      expect(lineClient.replies[1]?.messages[0]?.text).not.toContain("希望方法");
+      expect(finalBody).toMatchObject({
+        staff_notifications: {
+          attempted: true,
+          notified: 1,
+          failed: 0
+        },
+        logging: {
+          alerts_created: 1,
+          structured_consultation_alerts_created: 1,
+          structured_consultation_alerts_notification_required: 1
+        }
+      });
+
+      const alertMessage = alertRepository.list()[0]?.message ?? "";
+      for (const snippet of testCase.alertSnippets) {
+        expect(alertMessage).toContain(snippet);
+      }
+      expect(alertMessage).not.toContain("\nmethod=");
+      expect(alertMessage).not.toContain("\nmeeting_topic=");
+
+      const notification = staffNotifier.notifications[staffNotifier.notifications.length - 1];
+      for (const snippet of testCase.notificationSnippets) {
+        expect(notification?.message).toContain(snippet);
+      }
+      expect(notification?.message).toContain(
+        `https://admin.taiyolabel.site/customers/${testCase.customerId}`
+      );
+      expect(notification?.message).not.toContain("希望方法：");
+      expect(notification?.message).not.toContain("希望日時：");
+      expect(notification?.message).not.toContain("打合せ内容：");
+      expect(notification?.message).not.toContain("http://localhost:3000");
+    }
+  });
+
   it("creates structured staff notifications for plan estimate land and document flows", async () => {
     const cases = [
       {
