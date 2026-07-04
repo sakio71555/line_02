@@ -11,6 +11,7 @@ import {
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  type Message,
   type StaffNotificationPayload,
   type StaffNotifier
 } from "@amami-line-crm/domain";
@@ -134,6 +135,50 @@ function expectGuideStaffNotification(input: {
     `${expectedAdminBaseUrl}/customers/${input.customer?.id}`
   );
   expect(notification?.message).not.toContain(input.lineUserId);
+}
+
+function expectGuideTimelineMessages(input: {
+  messages: Message[];
+  customer: Customer | undefined;
+  triggerText: string;
+  lineMessageId: string;
+  systemBody: string;
+  messageType: Message["message_type"];
+  mediaStoragePath: string;
+  botReplyText: string | undefined;
+  eventTime: string;
+}) {
+  expect(input.messages).toHaveLength(3);
+  expect(input.messages[0]).toMatchObject({
+    tenant_id: "tenant_amamihome",
+    customer_id: input.customer?.id,
+    role: "customer",
+    message_type: "text",
+    body: input.triggerText,
+    line_message_id: input.lineMessageId,
+    media_storage_path: null,
+    created_at: input.eventTime
+  });
+  expect(input.messages[1]).toMatchObject({
+    tenant_id: "tenant_amamihome",
+    customer_id: input.customer?.id,
+    role: "system",
+    message_type: input.messageType,
+    body: input.systemBody,
+    line_message_id: null,
+    media_storage_path: input.mediaStoragePath,
+    created_at: input.eventTime
+  });
+  expect(input.messages[2]).toMatchObject({
+    tenant_id: "tenant_amamihome",
+    customer_id: input.customer?.id,
+    role: "bot",
+    message_type: "text",
+    body: input.botReplyText,
+    line_message_id: null,
+    media_storage_path: null,
+    created_at: input.eventTime
+  });
 }
 
 function createStaffLineWebhookTestApp(input: {
@@ -538,7 +583,7 @@ describe("LINE webhook foundation", () => {
       },
       logging: {
         customers_upserted: 1,
-        messages_inserted: 1,
+        messages_inserted: 3,
         alerts_created: 0,
         rich_menu_guides_logged: 1,
         unsupported_events: 0
@@ -566,16 +611,16 @@ describe("LINE webhook foundation", () => {
       response_mode: "bot_auto",
       last_customer_message_at: null
     });
-    expect(messages).toHaveLength(1);
-    expect(messages[0]).toMatchObject({
-      tenant_id: "tenant_amamihome",
-      customer_id: customer?.id,
-      role: "system",
-      message_type: "reservation",
-      body: "モデルハウス見学予約ページ案内済み",
-      line_message_id: null,
-      media_storage_path: "https://amamihome.net/reservation/",
-      created_at: eventTime
+    expectGuideTimelineMessages({
+      messages,
+      customer,
+      triggerText: "モデルハウス見学予約",
+      lineMessageId: "test-line-message-menu-001",
+      systemBody: "モデルハウス見学予約ページ案内済み",
+      messageType: "reservation",
+      mediaStoragePath: "https://amamihome.net/reservation/",
+      botReplyText: lineClient.replies[0]?.messages[0]?.text,
+      eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
     expectGuideStaffNotification({
@@ -646,7 +691,7 @@ describe("LINE webhook foundation", () => {
       },
       logging: {
         customers_upserted: 1,
-        messages_inserted: 1,
+        messages_inserted: 3,
         alerts_created: 0,
         rich_menu_guides_logged: 1,
         unsupported_events: 0
@@ -674,16 +719,16 @@ describe("LINE webhook foundation", () => {
       response_mode: "bot_auto",
       last_customer_message_at: null
     });
-    expect(messages).toHaveLength(1);
-    expect(messages[0]).toMatchObject({
-      tenant_id: "tenant_amamihome",
-      customer_id: customer?.id,
-      role: "system",
-      message_type: "text",
-      body: "家づくり相談ページ案内済み",
-      line_message_id: null,
-      media_storage_path: "https://amamihome.net/consultation/",
-      created_at: eventTime
+    expectGuideTimelineMessages({
+      messages,
+      customer,
+      triggerText: "家づくり相談",
+      lineMessageId: "test-line-message-menu-002",
+      systemBody: "家づくり相談ページ案内済み",
+      messageType: "text",
+      mediaStoragePath: "https://amamihome.net/consultation/",
+      botReplyText: lineClient.replies[0]?.messages[0]?.text,
+      eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
     expectGuideStaffNotification({
@@ -754,7 +799,7 @@ describe("LINE webhook foundation", () => {
       },
       logging: {
         customers_upserted: 1,
-        messages_inserted: 1,
+        messages_inserted: 3,
         alerts_created: 0,
         rich_menu_guides_logged: 1,
         unsupported_events: 0
@@ -782,16 +827,16 @@ describe("LINE webhook foundation", () => {
       response_mode: "bot_auto",
       last_customer_message_at: null
     });
-    expect(messages).toHaveLength(1);
-    expect(messages[0]).toMatchObject({
-      tenant_id: "tenant_amamihome",
-      customer_id: customer?.id,
-      role: "system",
-      message_type: "text",
-      body: "施工事例ページ案内済み",
-      line_message_id: null,
-      media_storage_path: "https://amamihome.net/works/",
-      created_at: eventTime
+    expectGuideTimelineMessages({
+      messages,
+      customer,
+      triggerText: "施工事例を見る",
+      lineMessageId: "test-line-message-menu-003",
+      systemBody: "施工事例ページ案内済み",
+      messageType: "text",
+      mediaStoragePath: "https://amamihome.net/works/",
+      botReplyText: lineClient.replies[0]?.messages[0]?.text,
+      eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
     expectGuideStaffNotification({
@@ -862,7 +907,7 @@ describe("LINE webhook foundation", () => {
       },
       logging: {
         customers_upserted: 1,
-        messages_inserted: 1,
+        messages_inserted: 3,
         alerts_created: 0,
         rich_menu_guides_logged: 1,
         unsupported_events: 0
@@ -890,16 +935,16 @@ describe("LINE webhook foundation", () => {
       response_mode: "bot_auto",
       last_customer_message_at: null
     });
-    expect(messages).toHaveLength(1);
-    expect(messages[0]).toMatchObject({
-      tenant_id: "tenant_amamihome",
-      customer_id: customer?.id,
-      role: "system",
-      message_type: "text",
-      body: "資料請求ページ案内済み",
-      line_message_id: null,
-      media_storage_path: "https://amamihome.net/download/",
-      created_at: eventTime
+    expectGuideTimelineMessages({
+      messages,
+      customer,
+      triggerText: "資料請求",
+      lineMessageId: "test-line-message-menu-004",
+      systemBody: "資料請求ページ案内済み",
+      messageType: "text",
+      mediaStoragePath: "https://amamihome.net/download/",
+      botReplyText: lineClient.replies[0]?.messages[0]?.text,
+      eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
     expectGuideStaffNotification({
@@ -1001,7 +1046,7 @@ describe("LINE webhook foundation", () => {
       },
       logging: {
         customers_upserted: 1,
-        messages_inserted: 2,
+        messages_inserted: 3,
         alerts_created: 1,
         contact_staff_flows_logged: 1,
         contact_staff_alerts_created: 1,
@@ -1055,24 +1100,55 @@ describe("LINE webhook foundation", () => {
       last_customer_message_at: new Date(1710000009000).toISOString()
     });
     expect(customer?.interest_tags).toContain("担当者相談連絡先確認済み");
-    expect(messages.map((message) => message.body)).toEqual([
-      "担当者相談カテゴリ選択案内済み",
-      "担当者相談カテゴリ: 費用・ローンについて",
-      "担当者相談優先度選択案内済み",
-      "担当者相談優先度: はやく返事が欲しい",
-      "担当者相談連絡先確認案内済み",
-      "担当者相談連絡先確認済み",
-      "担当者相談内容入力案内済み",
-      "住宅ローンと予算について相談したいです。",
-      "担当者相談受付済み"
-    ]);
-    expect(messages[7]).toMatchObject({
-      tenant_id: "tenant_amamihome",
-      customer_id: customer?.id,
-      line_message_id: "test-contact-staff-body",
-      role: "customer",
-      message_type: "text"
-    });
+    const messageBodies = messages.map((message) => message.body);
+    expect(messageBodies).toEqual(
+      expect.arrayContaining([
+        "担当者に相談",
+        "担当者相談カテゴリ選択案内済み",
+        "費用・ローンについて",
+        "担当者相談カテゴリ: 費用・ローンについて",
+        "担当者相談優先度選択案内済み",
+        "はやく返事が欲しい",
+        "担当者相談優先度: はやく返事が欲しい",
+        "担当者相談連絡先確認案内済み",
+        "佐藤花子 / 090-1111-2222",
+        "担当者相談連絡先確認済み",
+        "担当者相談内容入力案内済み",
+        "住宅ローンと予算について相談したいです。",
+        "担当者相談受付済み"
+      ])
+    );
+    expect(messages.filter((message) => message.role === "customer").map((message) => message.body))
+      .toEqual([
+        "担当者に相談",
+        "費用・ローンについて",
+        "はやく返事が欲しい",
+        "佐藤花子 / 090-1111-2222",
+        "住宅ローンと予算について相談したいです。"
+      ]);
+    expect(messages.some((message) => message.role === "bot" && message.body?.includes(
+      "相談カテゴリを次から選んで"
+    ))).toBe(true);
+    expect(messages.some((message) => message.role === "bot" && message.body?.includes(
+      "返信の優先度"
+    ))).toBe(true);
+    expect(messages.some((message) => message.role === "bot" && message.body?.includes(
+      "お名前と電話番号"
+    ))).toBe(true);
+    expect(messages.some((message) => message.role === "bot" && message.body?.includes(
+      "相談内容をこのままLINEで"
+    ))).toBe(true);
+    expect(messages.some((message) => message.role === "bot" && message.body?.includes(
+      "相談内容を受け付けました"
+    ))).toBe(true);
+    expect(messages.find((message) => message.line_message_id === "test-contact-staff-body"))
+      .toMatchObject({
+        tenant_id: "tenant_amamihome",
+        customer_id: customer?.id,
+        line_message_id: "test-contact-staff-body",
+        role: "customer",
+        message_type: "text"
+      });
     expect(alertRepository.list()).toHaveLength(1);
     expect(alertRepository.list()[0]).toMatchObject({
       tenant_id: "tenant_amamihome",
@@ -1150,21 +1226,24 @@ describe("LINE webhook foundation", () => {
 
     expect(categoryResponse.status).toBe(200);
     expect(categoryBody.logging).toMatchObject({
-      messages_inserted: 2,
+      messages_inserted: 4,
       contact_staff_flows_logged: 1
     });
     expect(lineClient.replies[3]?.messages[0]?.text).toContain(
       "カテゴリ「モデルハウス見学について」で受け付けます。"
     );
     expect(lineClient.replies[3]?.messages[0]?.text).not.toContain("カテゴリ「その他」");
-    expect(messageRepository.list().map((message) => message.body)).toEqual([
-      "担当者相談カテゴリ選択案内済み",
-      "担当者相談カテゴリ: その他",
-      "担当者相談優先度選択案内済み",
-      "担当者相談カテゴリ選択案内済み",
-      "担当者相談カテゴリ: モデルハウス見学について",
-      "担当者相談優先度選択案内済み"
-    ]);
+    const messages = messageRepository.list();
+    expect(messages.filter((message) => message.role === "customer").map((message) => message.body))
+      .toEqual(["担当者に相談", "その他", "担当者に相談", "モデルハウス見学について"]);
+    expect(messages.map((message) => message.body)).toEqual(
+      expect.arrayContaining([
+        "担当者相談カテゴリ選択案内済み",
+        "担当者相談カテゴリ: その他",
+        "担当者相談優先度選択案内済み",
+        "担当者相談カテゴリ: モデルハウス見学について"
+      ])
+    );
   });
 
   it("notifies staff notification boundary for newly created production contact-staff alerts", async () => {
@@ -1524,7 +1603,7 @@ describe("LINE webhook foundation", () => {
 
     expect(categoryBody).toMatchObject({
       logging: {
-        messages_inserted: 2,
+        messages_inserted: 4,
         alerts_created: 0,
         contact_staff_flows_logged: 1,
         contact_staff_alerts_created: 0
@@ -1532,7 +1611,7 @@ describe("LINE webhook foundation", () => {
     });
     expect(priorityBody).toMatchObject({
       logging: {
-        messages_inserted: 2,
+        messages_inserted: 4,
         alerts_created: 0,
         contact_staff_flows_logged: 1,
         contact_staff_alerts_created: 0
@@ -1541,15 +1620,23 @@ describe("LINE webhook foundation", () => {
     expect(lineClient.replies[1]?.messages[0]?.text).toContain("返信の優先度");
     expect(lineClient.replies[2]?.messages[0]?.text).not.toContain("お名前と電話番号");
     expect(lineClient.replies[2]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
-    expect(messages.map((message) => message.body)).toEqual([
-      "担当者相談カテゴリ選択案内済み",
-      "担当者相談カテゴリ: 家づくりについて",
-      "担当者相談優先度選択案内済み",
-      "担当者相談優先度: 急ぎではない",
-      "担当者相談内容入力案内済み",
-      "平屋の進め方を担当者に相談したいです。",
-      "担当者相談受付済み"
-    ]);
+    expect(messages.filter((message) => message.role === "customer").map((message) => message.body))
+      .toEqual([
+        "担当者に相談",
+        "家づくりについて",
+        "急ぎではない",
+        "平屋の進め方を担当者に相談したいです。"
+      ]);
+    expect(messages.map((message) => message.body)).toEqual(
+      expect.arrayContaining([
+        "担当者相談カテゴリ選択案内済み",
+        "担当者相談カテゴリ: 家づくりについて",
+        "担当者相談優先度選択案内済み",
+        "担当者相談優先度: 急ぎではない",
+        "担当者相談内容入力案内済み",
+        "担当者相談受付済み"
+      ])
+    );
     expect(customer).toMatchObject({
       display_name: "登録済み 太郎",
       phone: "090-2222-3333",

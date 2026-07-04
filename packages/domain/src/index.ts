@@ -1143,6 +1143,7 @@ const structuredConsultationFlowConfigs = [
 
 const structuredConsultationStartTimelinePrefix = "相談フロー開始: ";
 const structuredConsultationAcceptedTimelinePrefix = "相談フロー受付済み: ";
+const structuredConsultationClassificationTreeTimelinePrefix = "分類ツリー: ";
 
 export function resolveCustomerContactStaffCategory(text: string | null): string | null {
   const normalized = text?.trim();
@@ -1382,6 +1383,43 @@ async function insertSystemTextTimelineMessage(
     customer_id: input.customer_id,
     line_message_id: null,
     role: "system",
+    message_type: "text",
+    body: input.body
+  });
+  const message: Message = {
+    id: options.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: parsed.consultation_id ?? null,
+    line_message_id: parsed.line_message_id ?? null,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: null,
+    staff_user_id: parsed.staff_user_id ?? null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: null,
+    created_at: input.created_at
+  };
+
+  return repository.insert(message);
+}
+
+async function insertBotTextTimelineMessage(
+  repository: MessageRepository,
+  input: {
+    tenant_id: string;
+    customer_id: string;
+    body: string;
+    created_at: string;
+  },
+  options: { createId?: () => string } = {}
+): Promise<Message> {
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer_id,
+    line_message_id: null,
+    role: "bot",
     message_type: "text",
     body: input.body
   });
@@ -1664,6 +1702,17 @@ export async function logLineWebhookEvents(
           },
           serviceOptions
         );
+        await insertLineTextMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: customer.id,
+            line_message_id: event.message_id,
+            body: event.text,
+            created_at: eventTime
+          },
+          serviceOptions
+        );
         await insertRichMenuGuideTimelineMessage(
           input.messageRepository,
           {
@@ -1674,8 +1723,18 @@ export async function logLineWebhookEvents(
           },
           serviceOptions
         );
+        await insertBotTextTimelineMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: customer.id,
+            body: guideAction.reply_text,
+            created_at: eventTime
+          },
+          serviceOptions
+        );
         customersUpserted += 1;
-        messagesInserted += 1;
+        messagesInserted += 3;
         richMenuGuidesLogged += 1;
         staffNotificationEvents.push({
           tenant_id: input.tenant_id,
@@ -1708,6 +1767,8 @@ export async function logLineWebhookEvents(
           config: structuredConsultationTrigger,
           event_time: eventTime,
           reply_token: event.reply_token ?? null,
+          line_message_id: event.message_id,
+          trigger_text: event.text,
           messageRepository: input.messageRepository,
           serviceOptions
         });
@@ -1734,6 +1795,17 @@ export async function logLineWebhookEvents(
           },
           serviceOptions
         );
+        await insertLineTextMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: customer.id,
+            line_message_id: event.message_id,
+            body: event.text,
+            created_at: eventTime
+          },
+          serviceOptions
+        );
         await insertSystemTextTimelineMessage(
           input.messageRepository,
           {
@@ -1744,11 +1816,22 @@ export async function logLineWebhookEvents(
           },
           serviceOptions
         );
-        lineReplyInstructions.push({
+        const reply = {
           reply_token: event.reply_token ?? null,
           text: buildContactStaffCategoryPromptReply(),
           quick_reply_texts: [...customerContactStaffCategories]
-        });
+        };
+        await insertBotTextTimelineMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: customer.id,
+            body: reply.text,
+            created_at: eventTime
+          },
+          serviceOptions
+        );
+        lineReplyInstructions.push(reply);
         staffNotificationEvents.push({
           tenant_id: input.tenant_id,
           customer_id: customer.id,
@@ -1760,7 +1843,7 @@ export async function logLineWebhookEvents(
           occurred_at: eventTime
         });
         customersUpserted += 1;
-        messagesInserted += 1;
+        messagesInserted += 3;
         contactStaffFlowsLogged += 1;
         continue;
       }
@@ -1946,6 +2029,8 @@ async function startStructuredConsultationFlow(input: {
   config: StructuredConsultationFlowConfig;
   event_time: string;
   reply_token: string | null;
+  line_message_id: string | null;
+  trigger_text: string | null;
   messageRepository: MessageRepository;
   serviceOptions: { createId?: () => string; now?: () => string };
 }): Promise<StructuredConsultationFlowResult> {
@@ -1954,6 +2039,22 @@ async function startStructuredConsultationFlow(input: {
 
   if (!firstStep) {
     return createUnhandledStructuredConsultationFlowResult();
+  }
+
+  let messagesInserted = 0;
+  if (input.trigger_text?.trim()) {
+    await insertLineTextMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        line_message_id: input.line_message_id ?? createDefaultId(),
+        body: input.trigger_text,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
   }
 
   await insertSystemTextTimelineMessage(
@@ -1966,6 +2067,7 @@ async function startStructuredConsultationFlow(input: {
     },
     input.serviceOptions
   );
+  messagesInserted += 1;
   await insertSystemTextTimelineMessage(
     input.messageRepository,
     {
@@ -1976,10 +2078,24 @@ async function startStructuredConsultationFlow(input: {
     },
     input.serviceOptions
   );
+  messagesInserted += 1;
+
+  const reply = buildStructuredConsultationStepReply(input.reply_token, firstStep);
+  await insertBotTextTimelineMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer.id,
+      body: reply.text,
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+  messagesInserted += 1;
 
   return {
     handled: true,
-    messages_inserted: 2,
+    messages_inserted: messagesInserted,
     alert_created: false,
     alert_notification_required: false,
     alert: null,
@@ -1993,7 +2109,7 @@ async function startStructuredConsultationFlow(input: {
       action_label: input.config.start_activity_label,
       occurred_at: input.event_time
     },
-    reply: buildStructuredConsultationStepReply(input.reply_token, firstStep)
+    reply
   };
 }
 
@@ -2020,32 +2136,60 @@ async function handleStructuredConsultationFlowMessage(input: {
   const resolvedValue = resolveStructuredConsultationStepInput(flowState.step, input.text);
 
   if (!resolvedValue) {
-    return {
-      handled: true,
-      messages_inserted: 0,
-      alert_created: false,
-      alert_notification_required: false,
-      alert: null,
-      staff_notification_event: null,
-      reply: buildStructuredConsultationStepRetryReply(input.reply_token, flowState.step)
-    };
-  }
-
-  let messagesInserted = 0;
-  if (flowState.step.kind === "text") {
-    await insertLineTextMessage(
+    let messagesInserted = 0;
+    if (input.text?.trim()) {
+      await insertLineTextMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: input.customer.id,
+          line_message_id: input.line_message_id ?? createDefaultId(),
+          body: input.text,
+          created_at: input.event_time
+        },
+        input.serviceOptions
+      );
+      messagesInserted += 1;
+    }
+    const retryReply = buildStructuredConsultationStepRetryReply(input.reply_token, flowState.step);
+    await insertBotTextTimelineMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: input.customer.id,
-        line_message_id: input.line_message_id ?? createDefaultId(),
-        body: resolvedValue.label,
+        body: retryReply.text,
         created_at: input.event_time
       },
       input.serviceOptions
     );
     messagesInserted += 1;
+
+    return {
+      handled: true,
+      messages_inserted: messagesInserted,
+      alert_created: false,
+      alert_notification_required: false,
+      alert: null,
+      staff_notification_event: null,
+      reply: retryReply
+    };
   }
+
+  let messagesInserted = 0;
+  const customerTimelineBody = input.text?.trim() || resolvedValue.label;
+  await insertLineTextMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer.id,
+      line_message_id: input.line_message_id ?? createDefaultId(),
+      body: customerTimelineBody,
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+  messagesInserted += 1;
+
   await insertSystemTextTimelineMessage(
     input.messageRepository,
     {
@@ -2070,12 +2214,24 @@ async function handleStructuredConsultationFlowMessage(input: {
   const nextStep = nextStepState?.step;
 
   if (nextStep) {
+    const reply = buildStructuredConsultationStepReply(input.reply_token, nextStep);
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: input.customer.id,
         body: nextStep.prompt_timeline_body,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
+    await insertBotTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: reply.text,
         created_at: input.event_time
       },
       input.serviceOptions
@@ -2098,10 +2254,14 @@ async function handleStructuredConsultationFlowMessage(input: {
         action_label: `${flowState.step.value_timeline_prefix}${resolvedValue.label}`,
         occurred_at: input.event_time
       },
-      reply: buildStructuredConsultationStepReply(input.reply_token, nextStep)
+      reply
     };
   }
 
+  const classificationTree = buildStructuredConsultationClassificationTree(
+    flowState.config,
+    values
+  );
   const updatedCustomer = await input.customerRepository.save({
     ...input.customer,
     response_mode: resolveNextCustomerResponseMode(input.customer, "human_required"),
@@ -2120,6 +2280,29 @@ async function handleStructuredConsultationFlowMessage(input: {
     input.serviceOptions
   );
   messagesInserted += 1;
+  await insertSystemTextTimelineMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: updatedCustomer.id,
+      body: `${structuredConsultationClassificationTreeTimelinePrefix}${classificationTree}`,
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+  messagesInserted += 1;
+  const acceptedReply = buildStructuredConsultationAcceptedReply(flowState.config);
+  await insertBotTextTimelineMessage(
+    input.messageRepository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: updatedCustomer.id,
+      body: acceptedReply,
+      created_at: input.event_time
+    },
+    input.serviceOptions
+  );
+  messagesInserted += 1;
 
   let alertCreated = false;
   let alertNotificationRequired = false;
@@ -2129,7 +2312,7 @@ async function handleStructuredConsultationFlowMessage(input: {
       tenant_id: input.tenant_id,
       customer: updatedCustomer,
       alertRepository: input.alertRepository,
-      message: buildStructuredConsultationAlertMessage(flowState.config, values),
+      message: buildStructuredConsultationAlertMessage(flowState.config, values, classificationTree),
       severity: resolveStructuredConsultationAlertSeverity(flowState.config, values),
       ...(input.createId ? { createId: input.createId } : {}),
       now: () => input.event_time
@@ -2148,7 +2331,7 @@ async function handleStructuredConsultationFlowMessage(input: {
     staff_notification_event: null,
     reply: {
       reply_token: input.reply_token,
-      text: buildStructuredConsultationAcceptedReply(flowState.config)
+      text: acceptedReply
     }
   };
 }
@@ -2344,11 +2527,13 @@ function buildStructuredConsultationAcceptedReply(config: StructuredConsultation
 
 function buildStructuredConsultationAlertMessage(
   config: StructuredConsultationFlowConfig,
-  values: Record<string, string>
+  values: Record<string, string>,
+  classificationTree: string | null = null
 ): string {
   const lines = [
     `structured_consultation_flow=${config.flow_key}`,
     `title=${config.title}`,
+    classificationTree ? `classification_tree=${classificationTree}` : null,
     `category=${config.category}`,
     `assigned_role=${config.assigned_role}`,
     config.secondary_role ? `secondary_role=${config.secondary_role}` : null,
@@ -2390,6 +2575,85 @@ function buildStructuredConsultationAlertMessage(
   }
 
   return lines.filter((line): line is string => line !== null).join("\n");
+}
+
+function buildStructuredConsultationClassificationTree(
+  config: StructuredConsultationFlowConfig,
+  values: Record<string, string>
+): string {
+  const parts = [resolveStructuredConsultationMenuGroupLabel(config), config.title];
+
+  for (const key of resolveStructuredConsultationClassificationKeys(config)) {
+    const label = resolveStructuredConsultationChoiceDisplayLabel(config, key, values[key]);
+    if (label) {
+      parts.push(label);
+    }
+  }
+
+  return parts.join(" > ");
+}
+
+function resolveStructuredConsultationMenuGroupLabel(
+  config: StructuredConsultationFlowConfig
+): string {
+  const [group] = config.flow_key.split(".");
+
+  switch (group) {
+    case "initial":
+      return "初期メニュー";
+    case "negotiation":
+      return "商談中メニュー";
+    case "aftercare":
+      return "アフターメニュー";
+    default:
+      return "リッチメニュー";
+  }
+}
+
+function resolveStructuredConsultationClassificationKeys(
+  config: StructuredConsultationFlowConfig
+): string[] {
+  switch (config.category) {
+    case "meeting":
+      return ["sub_category", "method", "meeting_topic"];
+    case "plan_design":
+      return ["sub_category", "target_area", "exterior_target_area", "request_priority"];
+    case "estimate_budget":
+      return ["sub_category", "current_status", "desired_response"];
+    case "land_site":
+      return ["sub_category", "land_status"];
+    case "documents":
+      return ["sub_category", "current_stage"];
+    default:
+      return ["sub_category"];
+  }
+}
+
+function resolveStructuredConsultationChoiceDisplayLabel(
+  config: StructuredConsultationFlowConfig,
+  key: string,
+  label: string | undefined
+): string | null {
+  const normalized = sanitizeStructuredConsultationFieldValue(label ?? "");
+
+  if (!normalized) {
+    return null;
+  }
+
+  const step = config.steps.find(
+    (candidate): candidate is Extract<StructuredConsultationStep, { kind: "choice" }> =>
+      candidate.kind === "choice" && candidate.key === key
+  );
+
+  if (!step) {
+    return null;
+  }
+
+  const option = step.options.find(
+    (candidate) => candidate.label === normalized || candidate.value === normalized
+  );
+
+  return option?.notification_label ?? option?.label ?? normalized;
 }
 
 function resolveStructuredConsultationStoredValue(
@@ -2453,6 +2717,20 @@ async function handleContactStaffFlowMessage(input: {
   const flowState = resolveContactStaffFlowState(timeline);
 
   if (category && flowState.stage === "awaiting_category") {
+    let messagesInserted = 0;
+    const customerTimelineBody = input.text?.trim() || category;
+    await insertLineTextMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        line_message_id: input.line_message_id ?? createDefaultId(),
+        body: customerTimelineBody,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
@@ -2463,6 +2741,7 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    messagesInserted += 1;
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
@@ -2473,10 +2752,27 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    messagesInserted += 1;
+    const reply = {
+      reply_token: input.reply_token,
+      text: buildContactStaffPriorityPromptReply(category),
+      quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
+    };
+    await insertBotTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: reply.text,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
 
     return {
       handled: true,
-      messages_inserted: 2,
+      messages_inserted: messagesInserted,
       alert_created: false,
       alert_notification_required: false,
       alert: null,
@@ -2490,31 +2786,69 @@ async function handleContactStaffFlowMessage(input: {
         action_label: `${contactStaffCategoryTimelinePrefix}${category}`,
         occurred_at: input.event_time
       },
-      reply: {
-        reply_token: input.reply_token,
-        text: buildContactStaffPriorityPromptReply(category),
-        quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
-      }
+      reply
     };
   }
 
   if (flowState.stage === "awaiting_priority") {
     if (!priority) {
+      let messagesInserted = 0;
+      if (input.text?.trim()) {
+        await insertLineTextMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: input.customer.id,
+            line_message_id: input.line_message_id ?? createDefaultId(),
+            body: input.text,
+            created_at: input.event_time
+          },
+          input.serviceOptions
+        );
+        messagesInserted += 1;
+      }
+      const reply = {
+        reply_token: input.reply_token,
+        text: buildContactStaffPriorityRetryReply(flowState.category),
+        quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
+      };
+      await insertBotTextTimelineMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: input.customer.id,
+          body: reply.text,
+          created_at: input.event_time
+        },
+        input.serviceOptions
+      );
+      messagesInserted += 1;
+
       return {
         handled: true,
-        messages_inserted: 0,
+        messages_inserted: messagesInserted,
         alert_created: false,
         alert_notification_required: false,
         alert: null,
         staff_notification_event: null,
-        reply: {
-          reply_token: input.reply_token,
-          text: buildContactStaffPriorityRetryReply(flowState.category),
-          quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
-        }
+        reply
       };
     }
 
+    let messagesInserted = 0;
+    const customerTimelineBody = input.text?.trim() || priority.label;
+    await insertLineTextMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        line_message_id: input.line_message_id ?? createDefaultId(),
+        body: customerTimelineBody,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
@@ -2525,6 +2859,7 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    messagesInserted += 1;
 
     if (isCustomerInformationRegistered(input.customer)) {
       await insertSystemTextTimelineMessage(
@@ -2537,10 +2872,26 @@ async function handleContactStaffFlowMessage(input: {
         },
         input.serviceOptions
       );
+      messagesInserted += 1;
+      const reply = {
+        reply_token: input.reply_token,
+        text: buildContactStaffContentPromptReply(flowState.category, priority.label)
+      };
+      await insertBotTextTimelineMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: input.customer.id,
+          body: reply.text,
+          created_at: input.event_time
+        },
+        input.serviceOptions
+      );
+      messagesInserted += 1;
 
       return {
         handled: true,
-        messages_inserted: 2,
+        messages_inserted: messagesInserted,
         alert_created: false,
         alert_notification_required: false,
         alert: null,
@@ -2554,10 +2905,7 @@ async function handleContactStaffFlowMessage(input: {
           action_label: `${contactStaffPriorityTimelinePrefix}${priority.label}`,
           occurred_at: input.event_time
         },
-        reply: {
-          reply_token: input.reply_token,
-          text: buildContactStaffContentPromptReply(flowState.category, priority.label)
-        }
+        reply
       };
     }
 
@@ -2571,10 +2919,26 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    messagesInserted += 1;
+    const reply = {
+      reply_token: input.reply_token,
+      text: buildContactStaffContactPromptReply(flowState.category, priority.label)
+    };
+    await insertBotTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: input.customer.id,
+        body: reply.text,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
 
     return {
       handled: true,
-      messages_inserted: 2,
+      messages_inserted: messagesInserted,
       alert_created: false,
       alert_notification_required: false,
       alert: null,
@@ -2588,10 +2952,7 @@ async function handleContactStaffFlowMessage(input: {
         action_label: `${contactStaffPriorityTimelinePrefix}${priority.label}`,
         occurred_at: input.event_time
       },
-      reply: {
-        reply_token: input.reply_token,
-        text: buildContactStaffContactPromptReply(flowState.category, priority.label)
-      }
+      reply
     };
   }
 
@@ -2599,17 +2960,45 @@ async function handleContactStaffFlowMessage(input: {
     const contactInfo = parseContactStaffContactInfo(input.text);
 
     if (!contactInfo) {
+      let messagesInserted = 0;
+      if (input.text?.trim()) {
+        await insertLineTextMessage(
+          input.messageRepository,
+          {
+            tenant_id: input.tenant_id,
+            customer_id: input.customer.id,
+            line_message_id: input.line_message_id ?? createDefaultId(),
+            body: input.text,
+            created_at: input.event_time
+          },
+          input.serviceOptions
+        );
+        messagesInserted += 1;
+      }
+      const reply = {
+        reply_token: input.reply_token,
+        text: buildContactStaffContactInfoRetryReply(flowState.category, flowState.priority?.label)
+      };
+      await insertBotTextTimelineMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: input.customer.id,
+          body: reply.text,
+          created_at: input.event_time
+        },
+        input.serviceOptions
+      );
+      messagesInserted += 1;
+
       return {
         handled: true,
-        messages_inserted: 0,
+        messages_inserted: messagesInserted,
         alert_created: false,
         alert_notification_required: false,
         alert: null,
         staff_notification_event: null,
-        reply: {
-          reply_token: input.reply_token,
-          text: buildContactStaffContactInfoRetryReply(flowState.category, flowState.priority?.label)
-        }
+        reply
       };
     }
 
@@ -2620,6 +3009,19 @@ async function handleContactStaffFlowMessage(input: {
       interest_tags: mergeContactStaffInterestTag(input.customer.interest_tags),
       updated_at: input.event_time
     });
+    let messagesInserted = 0;
+    await insertLineTextMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        line_message_id: input.line_message_id ?? createDefaultId(),
+        body: input.text?.trim() ?? `${contactInfo.name} / ${contactInfo.phone}`,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
@@ -2630,6 +3032,7 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    messagesInserted += 1;
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
@@ -2640,10 +3043,26 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    messagesInserted += 1;
+    const reply = {
+      reply_token: input.reply_token,
+      text: buildContactStaffContentPromptReply(flowState.category, flowState.priority?.label)
+    };
+    await insertBotTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        body: reply.text,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
 
     return {
       handled: true,
-      messages_inserted: 2,
+      messages_inserted: messagesInserted,
       alert_created: false,
       alert_notification_required: false,
       alert: null,
@@ -2657,10 +3076,7 @@ async function handleContactStaffFlowMessage(input: {
         action_label: contactStaffContactConfirmedTimelineBody,
         occurred_at: input.event_time
       },
-      reply: {
-        reply_token: input.reply_token,
-        text: buildContactStaffContentPromptReply(flowState.category, flowState.priority?.label)
-      }
+      reply
     };
   }
 
@@ -2668,17 +3084,29 @@ async function handleContactStaffFlowMessage(input: {
     const body = input.text?.trim();
 
     if (!body) {
+      const reply = {
+        reply_token: input.reply_token,
+        text: buildContactStaffContentRetryReply(flowState.category, flowState.priority?.label)
+      };
+      await insertBotTextTimelineMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: input.customer.id,
+          body: reply.text,
+          created_at: input.event_time
+        },
+        input.serviceOptions
+      );
+
       return {
         handled: true,
-        messages_inserted: 0,
+        messages_inserted: 1,
         alert_created: false,
         alert_notification_required: false,
         alert: null,
         staff_notification_event: null,
-        reply: {
-          reply_token: input.reply_token,
-          text: buildContactStaffContentRetryReply(flowState.category, flowState.priority?.label)
-        }
+        reply
       };
     }
 
@@ -2704,6 +3132,7 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    let messagesInserted = 1;
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
@@ -2714,6 +3143,22 @@ async function handleContactStaffFlowMessage(input: {
       },
       input.serviceOptions
     );
+    messagesInserted += 1;
+    const reply = {
+      reply_token: input.reply_token,
+      text: buildContactStaffAcceptedReply()
+    };
+    await insertBotTextTimelineMessage(
+      input.messageRepository,
+      {
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        body: reply.text,
+        created_at: input.event_time
+      },
+      input.serviceOptions
+    );
+    messagesInserted += 1;
 
     let alertCreated = false;
     let alertNotificationRequired = false;
@@ -2739,15 +3184,12 @@ async function handleContactStaffFlowMessage(input: {
 
     return {
       handled: true,
-      messages_inserted: 2,
+      messages_inserted: messagesInserted,
       alert_created: alertCreated,
       alert_notification_required: alertNotificationRequired,
       alert,
       staff_notification_event: null,
-      reply: {
-        reply_token: input.reply_token,
-        text: buildContactStaffAcceptedReply()
-      }
+      reply
     };
   }
 
@@ -3413,6 +3855,8 @@ function formatStructuredConsultationDetailLines(input: {
 }): string[] {
   const body = input.fields.body_label?.trim();
   const bodyLines = body ? ["相談内容：", body.slice(0, 1000)] : [];
+  const classificationTree = input.fields.classification_tree?.trim();
+  const classificationLines = classificationTree ? [`分類：${classificationTree}`] : [];
   const subCategoryLabel = formatStructuredConsultationChoiceLabel(input, "sub_category");
   const planTargetLabel =
     input.fields.target_area_label?.trim() ??
@@ -3424,6 +3868,7 @@ function formatStructuredConsultationDetailLines(input: {
   switch (input.config.category) {
     case "meeting":
       return [
+        ...classificationLines,
         input.fields.method_label ? `希望方法：${input.fields.method_label}` : null,
         input.fields.desired_datetime_present === "true" ? "希望日時：入力あり" : null,
         input.fields.cancel_meeting_datetime_present === "true"
@@ -3436,6 +3881,7 @@ function formatStructuredConsultationDetailLines(input: {
       ].filter((line): line is string => line !== null);
     case "plan_design":
       return [
+        ...classificationLines,
         `対象：${planTargetLabel}`,
         `内容：${subCategoryLabel ?? "未入力"}`,
         `希望優先度：${input.fields.request_priority_label ?? "未入力"}`,
@@ -3445,6 +3891,7 @@ function formatStructuredConsultationDetailLines(input: {
       ];
     case "estimate_budget":
       return [
+        ...classificationLines,
         `現在の状況：${input.fields.current_status_label ?? "未入力"}`,
         `希望対応：${input.fields.desired_response_label ?? "未入力"}`,
         "AI自動返信：不可",
@@ -3454,6 +3901,7 @@ function formatStructuredConsultationDetailLines(input: {
       ];
     case "land_site":
       return [
+        ...classificationLines,
         `土地状況：${landStatusLabel}`,
         `エリア：${input.fields.area_present === "true" ? "入力あり" : "未入力"}`,
         "資料添付：案内済み",
@@ -3462,13 +3910,14 @@ function formatStructuredConsultationDetailLines(input: {
       ];
     case "documents":
       return [
+        ...classificationLines,
         `現在の段階：${documentStageLabel}`,
         "書類画像：添付案内済み",
         "担当：営業事務 / 営業",
         ...bodyLines
       ];
     default:
-      return bodyLines;
+      return [...classificationLines, ...bodyLines];
   }
 }
 
