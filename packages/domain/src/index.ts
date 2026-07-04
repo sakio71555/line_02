@@ -461,6 +461,8 @@ export interface EnsureOpenUnrepliedCustomerMessageAlertInput {
 export interface EnsureOpenUnrepliedCustomerMessageAlertResult {
   alert: Alert | null;
   created: boolean;
+  notification_required: boolean;
+  reopened: boolean;
 }
 
 export interface NotifyOpenAlertsInput {
@@ -505,17 +507,28 @@ export interface LogLineWebhookEventsResult {
   customers_upserted: number;
   messages_inserted: number;
   alerts_created: number;
+  alerts_notification_required: number;
   rich_menu_guides_logged: number;
   contact_staff_flows_logged: number;
   contact_staff_alerts_created: number;
+  contact_staff_alerts_notification_required: number;
   unsupported_events: number;
   line_reply_instructions: LineReplyInstruction[];
+  staff_notification_alerts: Alert[];
+  staff_notification_events: CustomerLineStaffNotificationEvent[];
 }
 
 export interface LineReplyInstruction {
   reply_token: string | null;
   text: string;
   quick_reply_texts?: string[];
+}
+
+export interface CustomerLineStaffNotificationEvent extends TenantScoped {
+  customer_id: string;
+  customer_display_name: string | null;
+  action_label: string;
+  occurred_at: string;
 }
 
 export interface CustomerRichMenuGuideAction {
@@ -689,9 +702,20 @@ export async function ensureOpenUnrepliedCustomerMessageAlert(
   );
 
   if (existingAlert) {
+    const now = input.now?.() ?? new Date().toISOString();
+    const refreshedAlert = await input.alertRepository.updateStatus({
+      tenant_id: input.tenant_id,
+      alert_id: existingAlert.id,
+      status: "open",
+      notified_at: null,
+      updated_at: now
+    });
+
     return {
-      alert: existingAlert,
-      created: false
+      alert: refreshedAlert ?? existingAlert,
+      created: false,
+      notification_required: Boolean(refreshedAlert),
+      reopened: existingAlert.status === "notified" && Boolean(refreshedAlert)
     };
   }
 
@@ -705,7 +729,9 @@ export async function ensureOpenUnrepliedCustomerMessageAlert(
 
   return {
     alert: await input.alertRepository.create(alert),
-    created: true
+    created: true,
+    notification_required: true,
+    reopened: false
   };
 }
 
@@ -987,11 +1013,15 @@ export async function logLineWebhookEvents(
   let customersUpserted = 0;
   let messagesInserted = 0;
   let alertsCreated = 0;
+  let alertsNotificationRequired = 0;
   let richMenuGuidesLogged = 0;
   let contactStaffFlowsLogged = 0;
   let contactStaffAlertsCreated = 0;
+  let contactStaffAlertsNotificationRequired = 0;
   let unsupportedEvents = 0;
   const lineReplyInstructions: LineReplyInstruction[] = [];
+  const staffNotificationAlerts: Alert[] = [];
+  const staffNotificationEvents: CustomerLineStaffNotificationEvent[] = [];
   const serviceOptions = createMessageLoggingServiceOptions(input);
   const lineDisplayNameCache = new Map<string, string | null>();
 
@@ -1054,6 +1084,13 @@ export async function logLineWebhookEvents(
         customersUpserted += 1;
         messagesInserted += 1;
         richMenuGuidesLogged += 1;
+        staffNotificationEvents.push({
+          tenant_id: input.tenant_id,
+          customer_id: customer.id,
+          customer_display_name: customer.display_name,
+          action_label: guideAction.timeline_body,
+          occurred_at: eventTime
+        });
         continue;
       }
 
@@ -1115,7 +1152,14 @@ export async function logLineWebhookEvents(
         customersUpserted += 1;
         messagesInserted += contactStaffFlow.messages_inserted;
         alertsCreated += contactStaffFlow.alert_created ? 1 : 0;
+        alertsNotificationRequired += contactStaffFlow.alert_notification_required ? 1 : 0;
         contactStaffAlertsCreated += contactStaffFlow.alert_created ? 1 : 0;
+        contactStaffAlertsNotificationRequired += contactStaffFlow.alert_notification_required
+          ? 1
+          : 0;
+        if (contactStaffFlow.alert_notification_required && contactStaffFlow.alert) {
+          staffNotificationAlerts.push(contactStaffFlow.alert);
+        }
         contactStaffFlowsLogged += 1;
         if (contactStaffFlow.reply) {
           lineReplyInstructions.push(contactStaffFlow.reply);
@@ -1157,6 +1201,12 @@ export async function logLineWebhookEvents(
         if (alertResult.created) {
           alertsCreated += 1;
         }
+        if (alertResult.notification_required) {
+          alertsNotificationRequired += 1;
+          if (alertResult.alert) {
+            staffNotificationAlerts.push(alertResult.alert);
+          }
+        }
       }
       customersUpserted += 1;
       messagesInserted += 1;
@@ -1170,11 +1220,15 @@ export async function logLineWebhookEvents(
     customers_upserted: customersUpserted,
     messages_inserted: messagesInserted,
     alerts_created: alertsCreated,
+    alerts_notification_required: alertsNotificationRequired,
     rich_menu_guides_logged: richMenuGuidesLogged,
     contact_staff_flows_logged: contactStaffFlowsLogged,
     contact_staff_alerts_created: contactStaffAlertsCreated,
+    contact_staff_alerts_notification_required: contactStaffAlertsNotificationRequired,
     unsupported_events: unsupportedEvents,
-    line_reply_instructions: lineReplyInstructions
+    line_reply_instructions: lineReplyInstructions,
+    staff_notification_alerts: staffNotificationAlerts,
+    staff_notification_events: staffNotificationEvents
   };
 }
 
@@ -1194,6 +1248,8 @@ async function handleContactStaffFlowMessage(input: {
   handled: boolean;
   messages_inserted: number;
   alert_created: boolean;
+  alert_notification_required: boolean;
+  alert: Alert | null;
   reply: LineReplyInstruction | null;
 }> {
   const category = resolveCustomerContactStaffCategory(input.text);
@@ -1228,6 +1284,8 @@ async function handleContactStaffFlowMessage(input: {
         handled: true,
         messages_inserted: 2,
         alert_created: false,
+        alert_notification_required: false,
+        alert: null,
         reply: {
           reply_token: input.reply_token,
           text: buildContactStaffContentPromptReply(category)
@@ -1250,6 +1308,8 @@ async function handleContactStaffFlowMessage(input: {
       handled: true,
       messages_inserted: 2,
       alert_created: false,
+      alert_notification_required: false,
+      alert: null,
       reply: {
         reply_token: input.reply_token,
         text: buildContactStaffContactPromptReply(category)
@@ -1265,6 +1325,8 @@ async function handleContactStaffFlowMessage(input: {
         handled: true,
         messages_inserted: 0,
         alert_created: false,
+        alert_notification_required: false,
+        alert: null,
         reply: {
           reply_token: input.reply_token,
           text: buildContactStaffContactInfoRetryReply(flowState.category)
@@ -1304,6 +1366,8 @@ async function handleContactStaffFlowMessage(input: {
       handled: true,
       messages_inserted: 2,
       alert_created: false,
+      alert_notification_required: false,
+      alert: null,
       reply: {
         reply_token: input.reply_token,
         text: buildContactStaffContentPromptReply(flowState.category)
@@ -1319,6 +1383,8 @@ async function handleContactStaffFlowMessage(input: {
         handled: true,
         messages_inserted: 0,
         alert_created: false,
+        alert_notification_required: false,
+        alert: null,
         reply: {
           reply_token: input.reply_token,
           text: buildContactStaffContentRetryReply(flowState.category)
@@ -1360,6 +1426,8 @@ async function handleContactStaffFlowMessage(input: {
     );
 
     let alertCreated = false;
+    let alertNotificationRequired = false;
+    let alert: Alert | null = null;
     if (input.alertRepository) {
       const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
         tenant_id: input.tenant_id,
@@ -1369,12 +1437,16 @@ async function handleContactStaffFlowMessage(input: {
         now: () => input.event_time
       });
       alertCreated = alertResult.created;
+      alertNotificationRequired = alertResult.notification_required;
+      alert = alertResult.alert;
     }
 
     return {
       handled: true,
       messages_inserted: 2,
       alert_created: alertCreated,
+      alert_notification_required: alertNotificationRequired,
+      alert,
       reply: {
         reply_token: input.reply_token,
         text: buildContactStaffAcceptedReply()
@@ -1386,6 +1458,8 @@ async function handleContactStaffFlowMessage(input: {
     handled: false,
     messages_inserted: 0,
     alert_created: false,
+    alert_notification_required: false,
+    alert: null,
     reply: null
   };
 }
@@ -1779,17 +1853,68 @@ export function buildStaffNotificationPayload(
     alert_type: alert.alert_type,
     severity: alert.severity,
     message: [
+      "LINEの更新が届きました。",
       "新しい相談が届きました。",
       "",
       `種別：${formatAlertTypeForStaffNotification(alert.alert_type)}`,
       `緊急度：${formatAlertSeverityForStaffNotification(alert.severity)}`,
+      `顧客：${alert.customer_id}`,
+      `日時：${alert.updated_at}`,
+      "内容：LINEからの相談・更新",
       "対応状況：未対応",
       "",
       "管理画面で確認してください。",
+      "顧客詳細で確認してください。",
       adminUrl
     ].join("\n"),
     admin_url: adminUrl
   };
+}
+
+export function buildCustomerActivityStaffNotificationPayload(
+  event: CustomerLineStaffNotificationEvent,
+  options: { adminBaseUrl?: string } = {}
+): StaffNotificationPayload {
+  const adminBaseUrl = normalizeAdminBaseUrl(options.adminBaseUrl);
+  const adminUrl = `${adminBaseUrl}/customers/${encodeURIComponent(event.customer_id)}`;
+  const customerLabel = formatCustomerLabelForStaffNotification(
+    event.customer_display_name,
+    event.customer_id
+  );
+
+  return {
+    tenant_id: event.tenant_id,
+    alert_id: `customer_activity:${event.customer_id}:${event.occurred_at}`,
+    customer_id: event.customer_id,
+    alert_type: "unreplied_customer_message",
+    severity: "low",
+    message: [
+      "LINEの更新が届きました。",
+      "",
+      "種別：LINEメニュー操作",
+      "緊急度：通常",
+      `顧客：${customerLabel}`,
+      `日時：${event.occurred_at}`,
+      `内容：${event.action_label}`,
+      "",
+      "顧客詳細で確認してください。",
+      adminUrl
+    ].join("\n"),
+    admin_url: adminUrl
+  };
+}
+
+function formatCustomerLabelForStaffNotification(
+  displayName: string | null,
+  customerId: string
+): string {
+  const normalizedDisplayName = displayName?.trim();
+
+  if (normalizedDisplayName) {
+    return `${normalizedDisplayName}（CRM:${customerId}）`;
+  }
+
+  return `CRM:${customerId}`;
 }
 
 function normalizeAdminBaseUrl(adminBaseUrl: string | undefined): string {
@@ -1978,8 +2103,8 @@ export class InMemoryAlertRepository implements AlertRepository {
     const updated: Alert = {
       ...existing,
       status: input.status,
-      notified_at: input.notified_at ?? existing.notified_at,
-      resolved_at: input.resolved_at ?? existing.resolved_at,
+      notified_at: input.notified_at !== undefined ? input.notified_at : existing.notified_at,
+      resolved_at: input.resolved_at !== undefined ? input.resolved_at : existing.resolved_at,
       updated_at: input.updated_at
     };
 

@@ -10,6 +10,8 @@ import {
 } from "@amami-line-crm/ai";
 import { loadAppConfig } from "@amami-line-crm/config";
 import {
+  buildCustomerActivityStaffNotificationPayload,
+  buildStaffNotificationPayload,
   checkUnrepliedAlerts,
   getCustomerDetail,
   InMemoryAlertRepository,
@@ -28,6 +30,7 @@ import {
   type Alert,
   type AlertRepository,
   type Customer,
+  type CustomerLineStaffNotificationEvent,
   type CustomerRepository,
   type LineReplyInstruction,
   type Message,
@@ -296,7 +299,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const staffNotifications = await notifyNewAlertsForProduction({
       env,
       tenantId: config.tenant.id,
-      alertCount: alertResult.created ? 1 : 0,
+      alertCount: alertResult.notification_required ? 1 : 0,
       alertRepository,
       staffNotifier,
       adminBaseUrl: config.urls.appBaseUrl,
@@ -964,19 +967,33 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         alertRepository,
         getLineDisplayName: (lineUserId) => getLineDisplayNameFromLineProfile(lineClient, lineUserId)
       });
-      const { line_reply_instructions: lineReplyInstructions, ...publicLogging } = logging;
+      const {
+        line_reply_instructions: lineReplyInstructions,
+        staff_notification_alerts: staffNotificationAlerts,
+        staff_notification_events: staffNotificationEvents,
+        ...publicLogging
+      } = logging;
       const guideReplies = await replyToCustomerRichMenuGuideEvents(customerLoggingEvents, lineClient);
       const flowReplies = await replyToLineReplyInstructions(lineReplyInstructions, lineClient);
       const lineMenuReplies = combineLineReplyCounts(guideReplies, flowReplies);
-      const staffNotifications = await notifyNewAlertsForProduction({
+      const alertStaffNotifications = await notifySpecificAlertsForProduction({
         env,
-        tenantId: tenant.tenantId,
-        alertCount: logging.alerts_created,
-        alertRepository,
+        alerts: staffNotificationAlerts,
         staffNotifier,
         adminBaseUrl: config.urls.appBaseUrl,
+        alertRepository,
         ...(now ? { now } : {})
       });
+      const activityStaffNotifications = await notifyCustomerActivitiesForProduction({
+        env,
+        events: staffNotificationEvents,
+        staffNotifier,
+        adminBaseUrl: config.urls.appBaseUrl
+      });
+      const staffNotifications = combineStaffNotificationCounts(
+        alertStaffNotifications,
+        activityStaffNotifications
+      );
 
       return c.json({
         ok: true,
@@ -1872,6 +1889,146 @@ async function notifyNewAlertsForProduction(input: {
     failed: result.failed,
     skipped: result.skipped
   };
+}
+
+async function notifySpecificAlertsForProduction(input: {
+  env: NodeJS.ProcessEnv;
+  alerts: Alert[];
+  staffNotifier: StaffNotifier;
+  alertRepository: AlertRepository;
+  adminBaseUrl?: string | undefined;
+  now?: (() => string) | undefined;
+}): Promise<{
+  attempted: boolean;
+  notified: number;
+  failed: number;
+  skipped: number;
+}> {
+  const alerts = dedupeAlertsById(input.alerts);
+  if (!shouldAttemptStaffLineAlertNotification(input.env) || alerts.length <= 0) {
+    return {
+      attempted: false,
+      notified: 0,
+      failed: 0,
+      skipped: 0
+    };
+  }
+
+  const now = input.now?.() ?? new Date().toISOString();
+  let notified = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const alert of alerts) {
+    const payload = buildStaffNotificationPayload(alert, {
+      ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {})
+    });
+
+    try {
+      await input.staffNotifier.notify(payload);
+    } catch {
+      failed += 1;
+      continue;
+    }
+
+    const updated = await input.alertRepository.updateStatus({
+      tenant_id: alert.tenant_id,
+      alert_id: alert.id,
+      status: "notified",
+      notified_at: now,
+      updated_at: now
+    });
+
+    if (updated) {
+      notified += 1;
+    } else {
+      skipped += 1;
+    }
+  }
+
+  return {
+    attempted: true,
+    notified,
+    failed,
+    skipped
+  };
+}
+
+function dedupeAlertsById(alerts: Alert[]): Alert[] {
+  return [...new Map(alerts.map((alert) => [alert.id, alert])).values()];
+}
+
+async function notifyCustomerActivitiesForProduction(input: {
+  env: NodeJS.ProcessEnv;
+  events: CustomerLineStaffNotificationEvent[];
+  staffNotifier: StaffNotifier;
+  adminBaseUrl?: string | undefined;
+}): Promise<{
+  attempted: boolean;
+  notified: number;
+  failed: number;
+  skipped: number;
+}> {
+  if (!shouldAttemptStaffLineAlertNotification(input.env) || input.events.length <= 0) {
+    return {
+      attempted: false,
+      notified: 0,
+      failed: 0,
+      skipped: 0
+    };
+  }
+
+  let notified = 0;
+  let failed = 0;
+
+  for (const event of input.events) {
+    const payload = buildCustomerActivityStaffNotificationPayload(event, {
+      ...(input.adminBaseUrl ? { adminBaseUrl: input.adminBaseUrl } : {})
+    });
+
+    try {
+      await input.staffNotifier.notify(payload);
+      notified += 1;
+    } catch {
+      failed += 1;
+    }
+  }
+
+  return {
+    attempted: true,
+    notified,
+    failed,
+    skipped: 0
+  };
+}
+
+function combineStaffNotificationCounts(
+  ...results: Array<{
+    attempted: boolean;
+    notified: number;
+    failed: number;
+    skipped: number;
+  }>
+): {
+  attempted: boolean;
+  notified: number;
+  failed: number;
+  skipped: number;
+} {
+  return results.reduce(
+    (accumulator, result) => ({
+      attempted: accumulator.attempted || result.attempted,
+      notified: accumulator.notified + result.notified,
+      failed: accumulator.failed + result.failed,
+      skipped: accumulator.skipped + result.skipped
+    }),
+    {
+      attempted: false,
+      notified: 0,
+      failed: 0,
+      skipped: 0
+    }
+  );
 }
 
 function shouldAttemptStaffLineAlertNotification(env: NodeJS.ProcessEnv): boolean {

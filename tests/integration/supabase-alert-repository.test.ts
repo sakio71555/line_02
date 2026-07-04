@@ -311,7 +311,7 @@ describe("Supabase alert repository", () => {
     });
   });
 
-  it("does not clear timestamps when updateStatus receives null timestamp fields", async () => {
+  it("clears timestamps when updateStatus receives explicit null timestamp fields", async () => {
     const client = createFakeClient();
     client.setResult("alerts", "maybeSingle", {
       data: createAlert({ status: "resolved", resolved_at: now }),
@@ -334,7 +334,9 @@ describe("Supabase alert repository", () => {
         action: "update",
         payload: {
           status: "resolved",
-          updated_at: now
+          updated_at: now,
+          notified_at: null,
+          resolved_at: null
         }
       })
     );

@@ -22,8 +22,8 @@ interface SupabaseAlertRow {
 interface SupabaseAlertStatusUpdateRow {
   status: AlertStatus;
   updated_at: string;
-  notified_at?: string;
-  resolved_at?: string;
+  notified_at?: string | null;
+  resolved_at?: string | null;
 }
 
 const activeAlertStatuses = ["open", "notified"] as const;
@@ -179,11 +179,11 @@ function toAlertStatusUpdateRow(input: {
     updated_at: input.updated_at
   };
 
-  if (input.notified_at) {
+  if (input.notified_at !== undefined) {
     row.notified_at = input.notified_at;
   }
 
-  if (input.resolved_at) {
+  if (input.resolved_at !== undefined) {
     row.resolved_at = input.resolved_at;
   }
 

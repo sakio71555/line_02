@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
 import {
+  type Alert,
   type Customer,
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
@@ -108,6 +109,26 @@ class RecordingStaffNotifier implements StaffNotifier {
   async notify(payload: StaffNotificationPayload): Promise<void> {
     this.notifications.push(payload);
   }
+}
+
+function expectGuideStaffNotification(input: {
+  staffNotifier: RecordingStaffNotifier;
+  customer: Customer | undefined;
+  actionLabel: string;
+  eventTime: string;
+  lineUserId: string;
+}) {
+  expect(input.staffNotifier.notifications).toHaveLength(1);
+  const notification = input.staffNotifier.notifications[0];
+
+  expect(notification?.message).toContain("LINEの更新が届きました。");
+  expect(notification?.message).toContain("種別：LINEメニュー操作");
+  expect(notification?.message).toContain("緊急度：通常");
+  expect(notification?.message).toContain(`内容：${input.actionLabel}`);
+  expect(notification?.message).toContain(`日時：${input.eventTime}`);
+  expect(notification?.message).toContain("顧客詳細で確認してください。");
+  expect(notification?.message).toContain(`http://localhost:3000/customers/${input.customer?.id}`);
+  expect(notification?.message).not.toContain(input.lineUserId);
 }
 
 function createStaffLineWebhookTestApp(input: {
@@ -410,11 +431,17 @@ describe("LINE webhook foundation", () => {
     }
   });
 
-  it("replies with the model house reservation guide and records page guidance without an alert", async () => {
+  it("replies with the model house reservation guide and notifies staff without an alert", async () => {
     const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
-      lineClient
+      lineClient,
+      staffNotifier,
+      env: {
+        APP_ENV: "production"
+      }
     });
+    const eventTime = new Date(1710000002000).toISOString();
     const menuBody = JSON.stringify({
       destination: "U_TEST_DESTINATION",
       events: [
@@ -452,6 +479,12 @@ describe("LINE webhook foundation", () => {
       ok: true,
       line_menu_replies: {
         sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      staff_notifications: {
+        attempted: true,
+        notified: 1,
         failed: 0,
         skipped: 0
       },
@@ -494,16 +527,29 @@ describe("LINE webhook foundation", () => {
       body: "モデルハウス見学予約ページ案内済み",
       line_message_id: null,
       media_storage_path: "https://amamihome.net/reservation/",
-      created_at: new Date(1710000002000).toISOString()
+      created_at: eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
+    expectGuideStaffNotification({
+      staffNotifier,
+      customer,
+      actionLabel: "モデルハウス見学予約ページ案内済み",
+      eventTime,
+      lineUserId: "U_TEST_USER_MENU"
+    });
   });
 
-  it("replies with the home building consultation guide and records page guidance without an alert", async () => {
+  it("replies with the home building consultation guide and notifies staff without an alert", async () => {
     const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
-      lineClient
+      lineClient,
+      staffNotifier,
+      env: {
+        APP_ENV: "production"
+      }
     });
+    const eventTime = new Date(1710000003000).toISOString();
     const menuBody = JSON.stringify({
       destination: "U_TEST_DESTINATION",
       events: [
@@ -541,6 +587,12 @@ describe("LINE webhook foundation", () => {
       ok: true,
       line_menu_replies: {
         sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      staff_notifications: {
+        attempted: true,
+        notified: 1,
         failed: 0,
         skipped: 0
       },
@@ -583,16 +635,29 @@ describe("LINE webhook foundation", () => {
       body: "家づくり相談ページ案内済み",
       line_message_id: null,
       media_storage_path: "https://amamihome.net/consultation/",
-      created_at: new Date(1710000003000).toISOString()
+      created_at: eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
+    expectGuideStaffNotification({
+      staffNotifier,
+      customer,
+      actionLabel: "家づくり相談ページ案内済み",
+      eventTime,
+      lineUserId: "U_TEST_USER_CONSULTATION_MENU"
+    });
   });
 
-  it("replies with the works guide and records page guidance without an alert", async () => {
+  it("replies with the works guide and notifies staff without an alert", async () => {
     const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
-      lineClient
+      lineClient,
+      staffNotifier,
+      env: {
+        APP_ENV: "production"
+      }
     });
+    const eventTime = new Date(1710000004000).toISOString();
     const menuBody = JSON.stringify({
       destination: "U_TEST_DESTINATION",
       events: [
@@ -630,6 +695,12 @@ describe("LINE webhook foundation", () => {
       ok: true,
       line_menu_replies: {
         sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      staff_notifications: {
+        attempted: true,
+        notified: 1,
         failed: 0,
         skipped: 0
       },
@@ -672,16 +743,29 @@ describe("LINE webhook foundation", () => {
       body: "施工事例ページ案内済み",
       line_message_id: null,
       media_storage_path: "https://amamihome.net/works/",
-      created_at: new Date(1710000004000).toISOString()
+      created_at: eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
+    expectGuideStaffNotification({
+      staffNotifier,
+      customer,
+      actionLabel: "施工事例ページ案内済み",
+      eventTime,
+      lineUserId: "U_TEST_USER_WORKS_MENU"
+    });
   });
 
-  it("replies with the catalog request guide and records page guidance without an alert", async () => {
+  it("replies with the catalog request guide and notifies staff without an alert", async () => {
     const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
-      lineClient
+      lineClient,
+      staffNotifier,
+      env: {
+        APP_ENV: "production"
+      }
     });
+    const eventTime = new Date(1710000005000).toISOString();
     const menuBody = JSON.stringify({
       destination: "U_TEST_DESTINATION",
       events: [
@@ -719,6 +803,12 @@ describe("LINE webhook foundation", () => {
       ok: true,
       line_menu_replies: {
         sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      staff_notifications: {
+        attempted: true,
+        notified: 1,
         failed: 0,
         skipped: 0
       },
@@ -761,9 +851,16 @@ describe("LINE webhook foundation", () => {
       body: "資料請求ページ案内済み",
       line_message_id: null,
       media_storage_path: "https://amamihome.net/download/",
-      created_at: new Date(1710000005000).toISOString()
+      created_at: eventTime
     });
     expect(alertRepository.list()).toHaveLength(0);
+    expectGuideStaffNotification({
+      staffNotifier,
+      customer,
+      actionLabel: "資料請求ページ案内済み",
+      eventTime,
+      lineUserId: "U_TEST_USER_CATALOG_MENU"
+    });
   });
 
   it("guides an unregistered customer through contact-staff category, contact info, and alert creation", async () => {
@@ -1074,6 +1171,130 @@ describe("LINE webhook foundation", () => {
     expect(staffNotifier.notifications[0]?.message).not.toContain(
       "モデルハウス見学の日程について相談したいです。"
     );
+    expect(alertRepository.list()[0]).toMatchObject({
+      status: "notified"
+    });
+  });
+
+  it("reopens notified contact-staff alerts and notifies staff for later customer updates", async () => {
+    const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository, customerRepository } = createTestContext({
+      lineClient,
+      staffNotifier,
+      env: {
+        APP_ENV: "production"
+      }
+    });
+    const userId = "U_TEST_USER_CONTACT_STAFF_NOTIFY_REPEAT";
+    const customer: Customer = {
+      id: "customer_registered_contact_staff_repeat",
+      tenant_id: "tenant_amamihome",
+      line_user_id: userId,
+      display_name: "登録済み 太郎",
+      picture_url: null,
+      phone: "090-2222-3333",
+      email: null,
+      postal_code: null,
+      address: null,
+      interest_tags: ["情報登録済み"],
+      response_mode: "human_required",
+      status: "active",
+      last_message_at: null,
+      last_customer_message_at: "2026-07-03T00:00:00.000Z",
+      last_staff_reply_at: null,
+      created_at: "2026-07-03T00:00:00.000Z",
+      updated_at: "2026-07-03T00:00:00.000Z"
+    };
+    const notifiedAlert: Alert = {
+      id: "alert_registered_contact_staff_repeat",
+      tenant_id: "tenant_amamihome",
+      customer_id: customer.id,
+      consultation_id: null,
+      alert_type: "unreplied_customer_message",
+      status: "notified",
+      severity: "high",
+      message: "通知本文には含めない相談内容です",
+      triggered_at: "2026-07-03T00:00:00.000Z",
+      notified_at: "2026-07-03T00:01:00.000Z",
+      resolved_at: null,
+      created_at: "2026-07-03T00:00:00.000Z",
+      updated_at: "2026-07-03T00:01:00.000Z"
+    };
+
+    await customerRepository.save(customer);
+    await alertRepository.create(notifiedAlert);
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREPEATCONTACTSTAFFTRIGGER",
+          messageId: "test-repeat-contact-staff-trigger",
+          replyToken: "reply_token_repeat_contact_staff_trigger",
+          text: "担当者に相談",
+          timestamp: 1710000040000
+        })
+      )
+    );
+    await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREPEATCONTACTSTAFFCATEGORY",
+          messageId: "test-repeat-contact-staff-category",
+          replyToken: "reply_token_repeat_contact_staff_category",
+          text: "費用・ローンについて",
+          timestamp: 1710000041000
+        })
+      )
+    );
+    const bodyResponse = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineTextMessageBody({
+          userId,
+          eventId: "01TESTREPEATCONTACTSTAFFBODY",
+          messageId: "test-repeat-contact-staff-body",
+          replyToken: "reply_token_repeat_contact_staff_body",
+          text: "資金計画について担当者に相談したいです。",
+          timestamp: 1710000042000
+        })
+      )
+    );
+    const body = await bodyResponse.json();
+
+    expect(bodyResponse.status).toBe(200);
+    expect(body).toMatchObject({
+      staff_notifications: {
+        attempted: true,
+        notified: 1,
+        failed: 0
+      },
+      logging: {
+        alerts_created: 0,
+        alerts_notification_required: 1,
+        contact_staff_alerts_created: 0,
+        contact_staff_alerts_notification_required: 1
+      }
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(staffNotifier.notifications[0]?.message).toContain("LINEの更新が届きました。");
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "顧客：customer_registered_contact_staff_repeat"
+    );
+    expect(staffNotifier.notifications[0]?.message).toContain("日時：2024-03-09T16:00:42.000Z");
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "http://localhost:3000/customers/customer_registered_contact_staff_repeat"
+    );
+    expect(staffNotifier.notifications[0]?.message).not.toContain(
+      "資金計画について担当者に相談したいです。"
+    );
+    expect(staffNotifier.notifications[0]?.message).not.toContain(
+      "通知本文には含めない相談内容です"
+    );
+    expect(alertRepository.list()).toHaveLength(1);
     expect(alertRepository.list()[0]).toMatchObject({
       status: "notified"
     });
