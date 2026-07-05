@@ -676,7 +676,6 @@ const contactStaffContactPromptTimelineBody = "担当者相談連絡先確認案
 const contactStaffContactConfirmedTimelineBody = "担当者相談連絡先確認済み";
 const contactStaffContentPromptTimelineBody = "担当者相談内容入力案内済み";
 const contactStaffAcceptedTimelineBody = "担当者相談受付済み";
-const contactStaffStartActivityLabel = "担当者相談を開始";
 
 type StructuredConsultationOption = {
   label: string;
@@ -2085,16 +2084,6 @@ export async function logLineWebhookEvents(
           serviceOptions
         );
         lineReplyInstructions.push(reply);
-        staffNotificationEvents.push({
-          tenant_id: input.tenant_id,
-          customer_id: customer.id,
-          customer_display_name: customer.display_name,
-          customer_phone: customer.phone,
-          customer_email: customer.email,
-          customer_address: customer.address,
-          action_label: contactStaffStartActivityLabel,
-          occurred_at: eventTime
-        });
         customersUpserted += 1;
         messagesInserted += 3;
         contactStaffFlowsLogged += 1;
@@ -2345,16 +2334,7 @@ async function startStructuredConsultationFlow(input: {
     alert_created: false,
     alert_notification_required: false,
     alert: null,
-    staff_notification_event: {
-      tenant_id: input.tenant_id,
-      customer_id: input.customer.id,
-      customer_display_name: input.customer.display_name,
-      customer_phone: input.customer.phone,
-      customer_email: input.customer.email,
-      customer_address: input.customer.address,
-      action_label: input.config.start_activity_label,
-      occurred_at: input.event_time
-    },
+    staff_notification_event: null,
     reply
   };
 }
@@ -2490,16 +2470,7 @@ async function handleStructuredConsultationFlowMessage(input: {
       alert_created: false,
       alert_notification_required: false,
       alert: null,
-      staff_notification_event: {
-        tenant_id: input.tenant_id,
-        customer_id: input.customer.id,
-        customer_display_name: input.customer.display_name,
-        customer_phone: input.customer.phone,
-        customer_email: input.customer.email,
-        customer_address: input.customer.address,
-        action_label: `${flowState.step.value_timeline_prefix}${resolvedValue.label}`,
-        occurred_at: input.event_time
-      },
+      staff_notification_event: null,
       reply
     };
   }
@@ -3064,16 +3035,7 @@ async function handleContactStaffFlowMessage(input: {
       alert_created: false,
       alert_notification_required: false,
       alert: null,
-      staff_notification_event: {
-        tenant_id: input.tenant_id,
-        customer_id: input.customer.id,
-        customer_display_name: input.customer.display_name,
-        customer_phone: input.customer.phone,
-        customer_email: input.customer.email,
-        customer_address: input.customer.address,
-        action_label: `${contactStaffCategoryTimelinePrefix}${category}`,
-        occurred_at: input.event_time
-      },
+      staff_notification_event: null,
       reply
     };
   }
@@ -3183,16 +3145,7 @@ async function handleContactStaffFlowMessage(input: {
         alert_created: false,
         alert_notification_required: false,
         alert: null,
-        staff_notification_event: {
-          tenant_id: input.tenant_id,
-          customer_id: input.customer.id,
-          customer_display_name: input.customer.display_name,
-          customer_phone: input.customer.phone,
-          customer_email: input.customer.email,
-          customer_address: input.customer.address,
-          action_label: `${contactStaffPriorityTimelinePrefix}${priority.label}`,
-          occurred_at: input.event_time
-        },
+        staff_notification_event: null,
         reply
       };
     }
@@ -3230,16 +3183,7 @@ async function handleContactStaffFlowMessage(input: {
       alert_created: false,
       alert_notification_required: false,
       alert: null,
-      staff_notification_event: {
-        tenant_id: input.tenant_id,
-        customer_id: input.customer.id,
-        customer_display_name: input.customer.display_name,
-        customer_phone: input.customer.phone,
-        customer_email: input.customer.email,
-        customer_address: input.customer.address,
-        action_label: `${contactStaffPriorityTimelinePrefix}${priority.label}`,
-        occurred_at: input.event_time
-      },
+      staff_notification_event: null,
       reply
     };
   }
@@ -3354,16 +3298,7 @@ async function handleContactStaffFlowMessage(input: {
       alert_created: false,
       alert_notification_required: false,
       alert: null,
-      staff_notification_event: {
-        tenant_id: input.tenant_id,
-        customer_id: updatedCustomer.id,
-        customer_display_name: updatedCustomer.display_name,
-        customer_phone: updatedCustomer.phone,
-        customer_email: updatedCustomer.email,
-        customer_address: updatedCustomer.address,
-        action_label: contactStaffContactConfirmedTimelineBody,
-        occurred_at: input.event_time
-      },
+      staff_notification_event: null,
       reply
     };
   }
