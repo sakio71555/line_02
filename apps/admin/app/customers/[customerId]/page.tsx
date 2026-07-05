@@ -128,7 +128,7 @@ export default async function CustomerDetailPage({
       <section className="section">
         <h2>LINEトーク履歴</h2>
         <p className="meta">
-          実機のLINE画面に表示されるお客様発言・自動応答・担当者返信だけを、そのまま時系列で表示します。
+          実機のLINE画面に表示されるお客様発言・自動応答・担当者返信だけを、新しいものが上になる順で表示します。
           分類ツリーや受付済みなどのCRM内部記録はこの枠には表示しません。
         </p>
         {timeline.status === "error" ? (

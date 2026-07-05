@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-
 import type { AdminCustomerTimelineResponse } from "../../../src/admin-api";
 import { formatAdminDateTime } from "../../../src/customer-timeline-display";
 
@@ -12,23 +10,10 @@ export function CustomerTimelineList({
 }: {
   messages: AdminTimelineMessage[];
 }) {
-  const listRef = useRef<HTMLOListElement>(null);
-
-  useEffect(() => {
-    const list = listRef.current;
-
-    if (!list) {
-      return;
-    }
-
-    list.scrollTop = list.scrollHeight;
-  }, [messages.length]);
-
   return (
     <ol
       aria-label="LINEトーク履歴"
       className="timeline-list timeline-list-line-log"
-      ref={listRef}
     >
       {messages.map((message) => (
         <li className={`timeline-item ${getTimelineItemClass(message)}`} key={message.id}>

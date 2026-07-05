@@ -39,7 +39,7 @@ export function toLineConversationTimelineMessages<
       message,
       timestamp: getSortableTimestamp(message.created_at)
     }))
-    .sort((left, right) => left.timestamp - right.timestamp || left.index - right.index)
+    .sort((left, right) => right.timestamp - left.timestamp || left.index - right.index)
     .map(({ message }) => message);
 }
 

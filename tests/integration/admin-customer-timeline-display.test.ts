@@ -29,7 +29,7 @@ describe("admin customer timeline display", () => {
     expect(messages.map((message) => message.id)).toEqual(["old", "latest", "middle"]);
   });
 
-  it("builds the customer detail conversation timeline from LINE-visible roles only", () => {
+  it("builds the customer detail conversation timeline from LINE-visible roles newest first", () => {
     const messages = [
       {
         id: "customer-menu",
@@ -72,10 +72,10 @@ describe("admin customer timeline display", () => {
     const conversation = toLineConversationTimelineMessages(messages);
 
     expect(conversation.map((message) => message.id)).toEqual([
-      "customer-menu",
-      "bot-prompt",
+      "staff-reply",
       "customer-answer",
-      "staff-reply"
+      "bot-prompt",
+      "customer-menu"
     ]);
     expect(messages.map((message) => message.id)).toEqual([
       "customer-menu",
@@ -86,10 +86,10 @@ describe("admin customer timeline display", () => {
       "staff-reply"
     ]);
     expect(conversation.map((message) => message.body)).toEqual([
-      "担当者に相談",
-      "相談カテゴリを次から選んで、そのままLINEで送ってください。",
+      "担当者から返信します。",
       "モデルハウス見学について",
-      "担当者から返信します。"
+      "相談カテゴリを次から選んで、そのままLINEで送ってください。",
+      "担当者に相談"
     ]);
   });
 
