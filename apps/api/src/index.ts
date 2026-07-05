@@ -1314,7 +1314,9 @@ async function replyToNormalChatAiCandidates(input: {
       continue;
     }
 
-    if (candidate.customer_response_mode !== "bot_auto") {
+    const staffRequired = requiresStaffForNormalChat(text);
+
+    if (shouldDeferNormalChatToStaff(candidate.customer_response_mode, staffRequired)) {
       const alertResult = await createNormalChatHandoffAlert({
         candidate,
         alertRepository: input.alertRepository,
@@ -1330,7 +1332,7 @@ async function replyToNormalChatAiCandidates(input: {
       continue;
     }
 
-    if (requiresStaffForNormalChat(text)) {
+    if (staffRequired) {
       const replyText = buildNormalChatStaffHandoffReply();
       const replied = await replyAndLogNormalChatBotMessage({
         candidate,
@@ -1553,6 +1555,21 @@ function buildNormalChatOutOfScopeReply(): string {
 
 function requiresStaffForNormalChat(text: string): boolean {
   return normalChatStaffRequiredKeywords.some((keyword) => text.includes(keyword));
+}
+
+function shouldDeferNormalChatToStaff(
+  responseMode: CustomerNormalChatAiCandidate["customer_response_mode"],
+  staffRequired: boolean
+): boolean {
+  if (responseMode === "bot_auto") {
+    return false;
+  }
+
+  if (responseMode === "human_required") {
+    return staffRequired;
+  }
+
+  return true;
 }
 
 function isAmamiHomeRelatedNormalChat(text: string): boolean {

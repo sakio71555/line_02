@@ -443,6 +443,111 @@ describe("LINE webhook foundation", () => {
     expect(messages[1]?.body).toContain("関係のない内容にはお答えできません。");
   });
 
+  it("replies to safe official-site normal chat while a staff follow-up is pending", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const userId = "U_TEST_USER_PENDING_SAFE_NORMAL_CHAT";
+    const customer = {
+      ...buildRegisteredCustomer({
+        id: "customer_pending_safe_normal_chat",
+        lineUserId: userId,
+        displayName: "通常質問 太郎"
+      }),
+      response_mode: "human_required" as const
+    };
+
+    await customerRepository.save(customer);
+
+    const response = await sendLineText(app, {
+      userId,
+      eventId: "01TESTPENDINGSAFENORMALCHAT",
+      messageId: "test-pending-safe-normal-chat-1",
+      replyToken: "reply_token_pending_safe_normal_chat",
+      text: "営業時間は？",
+      timestamp: 1710000003000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.logging.alerts_created).toBe(0);
+    expect(body.normal_chat_ai).toMatchObject({
+      attempted: 1,
+      answered: 1,
+      handoff_required: 0,
+      out_of_scope: 0,
+      line_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      }
+    });
+    expect(alertRepository.list()).toHaveLength(0);
+    expect(lineClient.replies).toHaveLength(1);
+    expect(lineClient.replies[0]?.messages[0]?.text).toContain("会社情報・営業時間");
+    expect(lineClient.replies[0]?.messages[0]?.text).toContain("https://amamihome.net/");
+
+    const messages = messageRepository.list();
+    expect(messages).toHaveLength(2);
+    expect(messages[0]).toMatchObject({
+      role: "customer",
+      body: "営業時間は？"
+    });
+    expect(messages[1]).toMatchObject({
+      role: "bot",
+      message_type: "text"
+    });
+    expect(messages[1]?.body).toContain("会社情報・営業時間");
+  });
+
+  it("does not auto reply to normal chat while a staff member is actively handling the customer", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const userId = "U_TEST_USER_HUMAN_ACTIVE_NORMAL_CHAT";
+    const customer = {
+      ...buildRegisteredCustomer({
+        id: "customer_human_active_normal_chat",
+        lineUserId: userId,
+        displayName: "対応中 太郎"
+      }),
+      response_mode: "human_active" as const
+    };
+
+    await customerRepository.save(customer);
+
+    const response = await sendLineText(app, {
+      userId,
+      eventId: "01TESTHUMANACTIVENORMALCHAT",
+      messageId: "test-human-active-normal-chat-1",
+      replyToken: "reply_token_human_active_normal_chat",
+      text: "営業時間は？",
+      timestamp: 1710000004000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.normal_chat_ai).toMatchObject({
+      attempted: 1,
+      answered: 0,
+      handoff_required: 1,
+      line_replies: {
+        sent: 0,
+        failed: 0,
+        skipped: 1
+      }
+    });
+    expect(lineClient.replies).toHaveLength(0);
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(messageRepository.list()).toHaveLength(1);
+    expect(messageRepository.list()[0]).toMatchObject({
+      role: "customer",
+      body: "営業時間は？"
+    });
+  });
+
   it("attempts staff notifications when staff LINE runtime is configured in a development-labeled process", async () => {
     const staffNotifier = new RecordingStaffNotifier();
     const { app, alertRepository } = createTestContext({
