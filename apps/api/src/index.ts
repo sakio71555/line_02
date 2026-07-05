@@ -150,6 +150,9 @@ const defaultStaffNotifier = new MockStaffNotifier();
 const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository(
   createAmamiHomeKnowledgePages()
 );
+const staticAmamiHomeKnowledgeFallbackRepository = new InMemoryKnowledgePageRepository(
+  createAmamiHomeKnowledgePages()
+);
 const defaultLineIdTokenVerifier = new FetchLineIdTokenVerifier();
 const PRODUCTION_STAFF_NOTIFICATION_ADMIN_BASE_URL = "https://admin.taiyolabel.site";
 
@@ -1359,7 +1362,7 @@ async function replyToNormalChatAiCandidates(input: {
       continue;
     }
 
-    const results = await searchTenantKnowledge({
+    const results = await searchTenantKnowledgeWithStaticFallback({
       tenant_id: input.tenant_id,
       query: text,
       limit: 3,
@@ -1455,6 +1458,24 @@ async function replyToNormalChatAiCandidates(input: {
     staff_notification_alerts: staffNotificationAlerts,
     line_replies: lineReplies
   };
+}
+
+async function searchTenantKnowledgeWithStaticFallback(input: {
+  tenant_id: string;
+  query: string;
+  limit: number;
+  repository: KnowledgePageRepository;
+}) {
+  const results = await searchTenantKnowledge(input);
+
+  if (results.length > 0 || input.tenant_id !== AMAMI_HOME_TENANT_ID) {
+    return results;
+  }
+
+  return searchTenantKnowledge({
+    ...input,
+    repository: staticAmamiHomeKnowledgeFallbackRepository
+  });
 }
 
 async function replyAndLogNormalChatBotMessage(input: {

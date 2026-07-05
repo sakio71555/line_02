@@ -23,7 +23,10 @@ import {
   type LineReplyMessage,
   type LineUserProfile
 } from "@amami-line-crm/line";
-import type { KnowledgePageRepository } from "@amami-line-crm/rag";
+import {
+  InMemoryKnowledgePageRepository,
+  type KnowledgePageRepository
+} from "@amami-line-crm/rag";
 
 const channelSecret = "test_line_channel_secret";
 const knownWebhookSecret = "wh_dev_amamihome";
@@ -542,6 +545,63 @@ describe("LINE webhook foundation", () => {
     expect(lineClient.replies).toHaveLength(1);
     expect(lineClient.replies[0]?.messages[0]?.text).toContain("会社情報・営業時間");
     expect(alertRepository.list()).toHaveLength(0);
+    const messages = messageRepository.list();
+    expect(messages).toHaveLength(2);
+    expect(messages[0]).toMatchObject({
+      role: "customer",
+      body: "営業時間は？"
+    });
+    expect(messages[1]).toMatchObject({
+      role: "bot",
+      message_type: "text"
+    });
+    expect(messages[1]?.body).toContain("会社情報・営業時間");
+  });
+
+  it("replies to safe official-site normal chat with static fallback when stored knowledge is empty", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient,
+      knowledgePageRepository: new InMemoryKnowledgePageRepository([])
+    });
+    const userId = "U_TEST_USER_EMPTY_KNOWLEDGE_NORMAL_CHAT";
+    const customer = {
+      ...buildRegisteredCustomer({
+        id: "customer_empty_knowledge_normal_chat",
+        lineUserId: userId,
+        displayName: "知識空 太郎"
+      }),
+      response_mode: "human_active" as const
+    };
+
+    await customerRepository.save(customer);
+
+    const response = await sendLineText(app, {
+      userId,
+      eventId: "01TESTEMPTYKNOWLEDGENORMALCHAT",
+      messageId: "test-empty-knowledge-normal-chat-1",
+      replyToken: "reply_token_empty_knowledge_normal_chat",
+      text: "営業時間は？",
+      timestamp: 1710000004500
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.normal_chat_ai).toMatchObject({
+      attempted: 1,
+      answered: 1,
+      handoff_required: 0,
+      line_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      }
+    });
+    expect(alertRepository.list()).toHaveLength(0);
+    expect(lineClient.replies).toHaveLength(1);
+    expect(lineClient.replies[0]?.messages[0]?.text).toContain("会社情報・営業時間");
+    expect(lineClient.replies[0]?.messages[0]?.text).toContain("https://amamihome.net/");
+
     const messages = messageRepository.list();
     expect(messages).toHaveLength(2);
     expect(messages[0]).toMatchObject({
