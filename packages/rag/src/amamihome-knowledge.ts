@@ -17,6 +17,30 @@ const amamiHomeKnowledgePages = [
     last_crawled_at: null
   },
   {
+    id: "knowledge_amamihome_model_house_reservation",
+    tenant_id: AMAMI_HOME_TENANT_ID,
+    title: "モデルハウス見学予約",
+    url: "https://amamihome.net/reservation/",
+    category: "モデルハウス見学",
+    source_type: "official_site",
+    content:
+      "モデルハウス見学予約は、モデルハウスやモデルホームの見学、来場予約を希望するお客様へ案内する公式ページです。希望日時の確定や変更は担当者確認を前提にします。",
+    allowed_for_ai: true,
+    last_crawled_at: null
+  },
+  {
+    id: "knowledge_amamihome_consultation",
+    tenant_id: AMAMI_HOME_TENANT_ID,
+    title: "家づくり相談",
+    url: "https://amamihome.net/consultation/",
+    category: "家づくり相談",
+    source_type: "official_site",
+    content:
+      "家づくり相談は、新築や住まいづくりの進め方について相談したいお客様へ案内する公式ページです。個別条件は担当者が確認します。",
+    allowed_for_ai: true,
+    last_crawled_at: null
+  },
+  {
     id: "knowledge_amamihome_construction_cases",
     tenant_id: AMAMI_HOME_TENANT_ID,
     title: "施工事例",
@@ -56,11 +80,23 @@ const amamiHomeKnowledgePages = [
     id: "knowledge_amamihome_document_request",
     tenant_id: AMAMI_HOME_TENANT_ID,
     title: "資料請求",
-    url: "https://amamihome.net/request/",
+    url: "https://amamihome.net/download/",
     category: "資料請求",
     source_type: "official_site",
     content:
       "資料請求は、検討中のお客様へ資料案内を行うための初期ナレッジです。送付資料や受付条件は担当者が確認し、必要な連絡先情報を安全に扱います。",
+    allowed_for_ai: true,
+    last_crawled_at: null
+  },
+  {
+    id: "knowledge_amamihome_company_hours",
+    tenant_id: AMAMI_HOME_TENANT_ID,
+    title: "会社情報・営業時間",
+    url: "https://amamihome.net/",
+    category: "会社案内",
+    source_type: "official_site",
+    content:
+      "会社情報や営業時間、所在地、アクセスなどの一般的な質問は、公式サイトの情報を確認して案内します。最新情報や個別の来場可否は担当者確認を前提にします。",
     allowed_for_ai: true,
     last_crawled_at: null
   },

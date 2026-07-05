@@ -189,7 +189,7 @@ describe("admin customer detail and timeline API", () => {
         phone: null,
         email: null,
         status: "new",
-        response_mode: "human_required",
+        response_mode: "bot_auto",
         assigned_staff_id: null,
         address_area: null,
         planned_area: null,
@@ -206,10 +206,11 @@ describe("admin customer detail and timeline API", () => {
     expect(timelineBody.ok).toBe(true);
     expect(timelineBody.tenant_id).toBe("tenant_amamihome");
     expect(timelineBody.customer_id).toBe(customer.id);
-    expect(timelineBody.messages).toHaveLength(2);
+    expect(timelineBody.messages).toHaveLength(3);
     expect(timelineBody.messages.map((message: { body: string | null }) => message.body)).toEqual([
       "初回受付メモ",
-      "モデルホームを見学したいです"
+      "モデルホームを見学したいです",
+      expect.stringContaining("公式ページで確認できます。")
     ]);
     expect(timelineBody.messages[1]).toMatchObject({
       tenant_id: "tenant_amamihome",
@@ -218,6 +219,14 @@ describe("admin customer detail and timeline API", () => {
       message_type: "text",
       body: "モデルホームを見学したいです",
       line_message_id: "test-line-message-001",
+      source_url: null,
+      created_at: new Date(1710000001000).toISOString()
+    });
+    expect(timelineBody.messages[2]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customer.id,
+      role: "bot",
+      message_type: "text",
       source_url: null,
       created_at: new Date(1710000001000).toISOString()
     });

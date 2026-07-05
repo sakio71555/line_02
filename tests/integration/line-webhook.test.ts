@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { createApiApp } from "../../apps/api/src/index";
+import type { AiProvider } from "@amami-line-crm/ai";
 import {
   type Alert,
   type Customer,
@@ -22,6 +23,7 @@ import {
   type LineReplyMessage,
   type LineUserProfile
 } from "@amami-line-crm/line";
+import type { KnowledgePageRepository } from "@amami-line-crm/rag";
 
 const channelSecret = "test_line_channel_secret";
 const knownWebhookSecret = "wh_dev_amamihome";
@@ -74,6 +76,8 @@ function createTestContext(
     lineClient?: LineClient;
     staffLineClient?: LineClient;
     staffNotifier?: StaffNotifier;
+    aiProvider?: AiProvider;
+    knowledgePageRepository?: KnowledgePageRepository;
     env?: NodeJS.ProcessEnv;
   } = {}
 ) {
@@ -87,6 +91,10 @@ function createTestContext(
     ...(input.lineClient ? { lineClient: input.lineClient } : {}),
     ...(input.staffLineClient ? { staffLineClient: input.staffLineClient } : {}),
     ...(input.staffNotifier ? { staffNotifier: input.staffNotifier } : {}),
+    ...(input.aiProvider ? { aiProvider: input.aiProvider } : {}),
+    ...(input.knowledgePageRepository
+      ? { knowledgePageRepository: input.knowledgePageRepository }
+      : {}),
     env: {
       LINE_CHANNEL_SECRET: channelSecret,
       LINE_WEBHOOK_SECRET_PATH: input.webhookSecret ?? knownWebhookSecret,
@@ -295,9 +303,22 @@ describe("LINE webhook foundation", () => {
       event_count: 2,
       logging: {
         customers_upserted: 2,
-        messages_inserted: 1,
-        alerts_created: 1,
+        messages_inserted: 2,
+        alerts_created: 0,
         unsupported_events: 0
+      },
+      normal_chat_ai: {
+        attempted: 1,
+        answered: 1,
+        handoff_required: 0,
+        out_of_scope: 0,
+        line_replies: {
+          sent: 1,
+          failed: 0,
+          skipped: 0
+        },
+        raw_prompt_recorded: false,
+        openai_direct_verification_executed: false
       }
     });
     expect(body.events[0]).toMatchObject({
@@ -318,12 +339,12 @@ describe("LINE webhook foundation", () => {
     expect(customers[0]).toMatchObject({
       tenant_id: "tenant_amamihome",
       line_user_id: "U_TEST_USER_001",
-      response_mode: "human_required",
+      response_mode: "bot_auto",
       last_customer_message_at: new Date(1710000001000).toISOString()
     });
 
     const messages = messageRepository.list();
-    expect(messages).toHaveLength(1);
+    expect(messages).toHaveLength(2);
     expect(messages[0]).toMatchObject({
       tenant_id: "tenant_amamihome",
       customer_id: customers[0]?.id,
@@ -332,16 +353,34 @@ describe("LINE webhook foundation", () => {
       message_type: "text",
       body: "モデルホームを見学したいです"
     });
+    expect(messages[1]).toMatchObject({
+      tenant_id: "tenant_amamihome",
+      customer_id: customers[0]?.id,
+      role: "bot",
+      message_type: "text"
+    });
+    expect(messages[1]?.body).toContain("モデルハウス見学予約については、公式ページで確認できます。");
+    expect(messages[1]?.body).toContain("https://amamihome.net/reservation/");
   });
 
   it("creates one open staff follow-up alert for a customer LINE update", async () => {
     const { app, alertRepository, customerRepository } = createTestContext();
-    const firstResponse = await app.fetch(
-      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
-    );
-    const secondResponse = await app.fetch(
-      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
-    );
+    const firstResponse = await sendLineText(app, {
+      userId: "U_TEST_USER_STAFF_REQUIRED",
+      eventId: "01TESTSTAFFREQUIRED1",
+      messageId: "test-staff-required-1",
+      replyToken: "reply_token_staff_required_1",
+      text: "見積について確認したいです",
+      timestamp: 1710000001000
+    });
+    const secondResponse = await sendLineText(app, {
+      userId: "U_TEST_USER_STAFF_REQUIRED",
+      eventId: "01TESTSTAFFREQUIRED2",
+      messageId: "test-staff-required-2",
+      replyToken: "reply_token_staff_required_2",
+      text: "見積について確認したいです",
+      timestamp: 1710000002000
+    });
     const firstBody = await firstResponse.json();
     const secondBody = await secondResponse.json();
     const customer = customerRepository.list()[0];
@@ -358,7 +397,50 @@ describe("LINE webhook foundation", () => {
       status: "open",
       severity: "high"
     });
-    expect(alertRepository.list()[0]?.message).toContain("モデルホームを見学したいです");
+    expect(alertRepository.list()[0]?.message).toContain("見積について確認したいです");
+  });
+
+  it("replies to unrelated normal chat without creating a staff alert", async () => {
+    const { app, alertRepository, messageRepository } = createTestContext();
+
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_OUT_OF_SCOPE",
+      eventId: "01TESTOUTOFSCOPE",
+      messageId: "test-out-of-scope-1",
+      replyToken: "reply_token_out_of_scope_1",
+      text: "今日の天気を教えて",
+      timestamp: 1710000001000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.logging.alerts_created).toBe(0);
+    expect(body.normal_chat_ai).toMatchObject({
+      attempted: 1,
+      answered: 0,
+      handoff_required: 0,
+      out_of_scope: 1,
+      line_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      },
+      raw_prompt_recorded: false,
+      openai_direct_verification_executed: false
+    });
+    expect(alertRepository.list()).toHaveLength(0);
+
+    const messages = messageRepository.list();
+    expect(messages).toHaveLength(2);
+    expect(messages[0]).toMatchObject({
+      role: "customer",
+      body: "今日の天気を教えて"
+    });
+    expect(messages[1]).toMatchObject({
+      role: "bot",
+      message_type: "text"
+    });
+    expect(messages[1]?.body).toContain("関係のない内容にはお答えできません。");
   });
 
   it("attempts staff notifications when staff LINE runtime is configured in a development-labeled process", async () => {
@@ -372,9 +454,14 @@ describe("LINE webhook foundation", () => {
       }
     });
 
-    const response = await app.fetch(
-      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, fixtureBody)
-    );
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_STAFF_NOTIFICATION",
+      eventId: "01TESTSTAFFNOTIFICATION",
+      messageId: "test-staff-notification",
+      replyToken: "reply_token_staff_notification",
+      text: "ローンについて個別相談したいです",
+      timestamp: 1710000001000
+    });
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -387,7 +474,7 @@ describe("LINE webhook foundation", () => {
     });
     expect(staffNotifier.notifications).toHaveLength(1);
     expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
-    expect(staffNotifier.notifications[0]?.message).toContain("モデルホームを見学したいです");
+    expect(staffNotifier.notifications[0]?.message).toContain("ローンについて個別相談したいです");
     expect(alertRepository.list()[0]).toMatchObject({
       status: "notified"
     });
@@ -2554,9 +2641,11 @@ describe("LINE webhook foundation", () => {
       "tenant_amamihome",
       "tenant_other"
     ]);
-    expect(messageRepository.list()).toHaveLength(2);
+    expect(messageRepository.list()).toHaveLength(4);
     expect(messageRepository.list().map((message) => message.tenant_id).sort()).toEqual([
       "tenant_amamihome",
+      "tenant_amamihome",
+      "tenant_other",
       "tenant_other"
     ]);
   });

@@ -118,7 +118,7 @@ describe("admin customer list API", () => {
     expect(body.customers[0]).toMatchObject({
       tenant_id: "tenant_amamihome",
       line_user_id: "U_TEST_USER_001",
-      response_mode: "human_required",
+      response_mode: "bot_auto",
       last_message_body: "モデルホームを見学したいです",
       last_message_at: new Date(1710000001000).toISOString(),
       last_customer_message_at: new Date(1710000001000).toISOString()

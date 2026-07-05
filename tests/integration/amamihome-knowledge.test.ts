@@ -41,10 +41,13 @@ describe("Amami Home static knowledge seed", () => {
 
     expect(pages.map((page) => page.id).sort()).toEqual([
       "knowledge_amamihome_after_support",
+      "knowledge_amamihome_company_hours",
       "knowledge_amamihome_construction_cases",
+      "knowledge_amamihome_consultation",
       "knowledge_amamihome_contact_visit",
       "knowledge_amamihome_document_request",
       "knowledge_amamihome_land_and_ready_built",
+      "knowledge_amamihome_model_house_reservation",
       "knowledge_amamihome_online_consultation",
       "knowledge_amamihome_owner_interviews",
       "knowledge_amamihome_sotono_ma",
@@ -77,9 +80,11 @@ describe("Amami Home static knowledge seed", () => {
   it("finds Amami Home knowledge by expected queries", async () => {
     const repository = createSeededRepository();
 
-    await expect(search(repository, "オンライン相談")).resolves.toEqual([
-      expect.objectContaining({ id: "knowledge_amamihome_online_consultation" })
-    ]);
+    await expect(search(repository, "オンライン相談")).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "knowledge_amamihome_online_consultation" })
+      ])
+    );
     await expect(search(repository, "施工事例")).resolves.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "knowledge_amamihome_construction_cases" })
@@ -95,9 +100,11 @@ describe("Amami Home static knowledge seed", () => {
         expect.objectContaining({ id: "knowledge_amamihome_warranty_maintenance" })
       ])
     );
-    await expect(search(repository, "SoToNo MA")).resolves.toEqual([
-      expect.objectContaining({ id: "knowledge_amamihome_sotono_ma" })
-    ]);
+    await expect(search(repository, "SoToNo MA")).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "knowledge_amamihome_sotono_ma" })
+      ])
+    );
   });
 
   it("does not return Amami Home knowledge for another tenant", async () => {

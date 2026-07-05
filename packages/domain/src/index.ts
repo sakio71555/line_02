@@ -522,6 +522,7 @@ export interface LogLineWebhookEventsResult {
   structured_consultation_alerts_notification_required: number;
   unsupported_events: number;
   line_reply_instructions: LineReplyInstruction[];
+  normal_chat_ai_candidates: CustomerNormalChatAiCandidate[];
   staff_notification_alerts: Alert[];
   staff_notification_events: CustomerLineStaffNotificationEvent[];
 }
@@ -530,6 +531,19 @@ export interface LineReplyInstruction {
   reply_token: string | null;
   text: string;
   quick_reply_texts?: string[];
+}
+
+export interface CustomerNormalChatAiCandidate extends TenantScoped {
+  customer_id: string;
+  customer_display_name: string | null;
+  customer_response_mode: ResponseMode;
+  customer_phone: string | null;
+  customer_email: string | null;
+  customer_address: string | null;
+  text: string;
+  reply_token: string | null;
+  line_message_id: string | null;
+  occurred_at: string;
 }
 
 export interface CustomerLineStaffNotificationEvent extends TenantScoped {
@@ -1643,7 +1657,7 @@ async function insertSystemTextTimelineMessage(
   return repository.insert(message);
 }
 
-async function insertBotTextTimelineMessage(
+export async function insertBotTextTimelineMessage(
   repository: MessageRepository,
   input: {
     tenant_id: string;
@@ -1889,6 +1903,7 @@ export async function logLineWebhookEvents(
   let structuredConsultationAlertsNotificationRequired = 0;
   let unsupportedEvents = 0;
   const lineReplyInstructions: LineReplyInstruction[] = [];
+  const normalChatAiCandidates: CustomerNormalChatAiCandidate[] = [];
   const staffNotificationAlerts: Alert[] = [];
   const staffNotificationEvents: CustomerLineStaffNotificationEvent[] = [];
   const serviceOptions = createMessageLoggingServiceOptions(input);
@@ -2177,7 +2192,6 @@ export async function logLineWebhookEvents(
           tenant_id: input.tenant_id,
           line_user_id: event.source_user_id,
           display_name: displayName,
-          response_mode: "human_required",
           last_customer_message_at: eventTime
         },
         serviceOptions
@@ -2193,26 +2207,19 @@ export async function logLineWebhookEvents(
         },
         serviceOptions
       );
-      if (input.alertRepository) {
-        const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
-          tenant_id: input.tenant_id,
-          customer: updatedCustomer,
-          alertRepository: input.alertRepository,
-          ...(event.text ? { message: event.text } : {}),
-          ...(input.createId ? { createId: input.createId } : {}),
-          now: () => eventTime
-        });
-
-        if (alertResult.created) {
-          alertsCreated += 1;
-        }
-        if (alertResult.notification_required) {
-          alertsNotificationRequired += 1;
-          if (alertResult.alert) {
-            staffNotificationAlerts.push(alertResult.alert);
-          }
-        }
-      }
+      normalChatAiCandidates.push({
+        tenant_id: input.tenant_id,
+        customer_id: updatedCustomer.id,
+        customer_display_name: updatedCustomer.display_name,
+        customer_response_mode: updatedCustomer.response_mode,
+        customer_phone: updatedCustomer.phone,
+        customer_email: updatedCustomer.email,
+        customer_address: updatedCustomer.address,
+        text: event.text ?? "",
+        reply_token: event.reply_token ?? null,
+        line_message_id: event.message_id,
+        occurred_at: eventTime
+      });
       customersUpserted += 1;
       messagesInserted += 1;
       continue;
@@ -2236,6 +2243,7 @@ export async function logLineWebhookEvents(
       structuredConsultationAlertsNotificationRequired,
     unsupported_events: unsupportedEvents,
     line_reply_instructions: lineReplyInstructions,
+    normal_chat_ai_candidates: normalChatAiCandidates,
     staff_notification_alerts: staffNotificationAlerts,
     staff_notification_events: staffNotificationEvents
   };

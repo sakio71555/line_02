@@ -19,6 +19,7 @@ import {
   InMemoryMessageRepository,
   ensureOpenUnrepliedCustomerMessageAlert,
   formatCustomerRichMenuTypeLabel,
+  insertBotTextTimelineMessage,
   listCustomerListItems,
   listCustomerTimeline,
   logLineWebhookEvents,
@@ -33,6 +34,7 @@ import {
   type AlertRepository,
   type Customer,
   type CustomerLineStaffNotificationEvent,
+  type CustomerNormalChatAiCandidate,
   type CustomerRichMenuType,
   type CustomerRepository,
   type LineReplyInstruction,
@@ -145,7 +147,9 @@ const defaultCustomerRepository = new InMemoryCustomerRepository();
 const defaultMessageRepository = new InMemoryMessageRepository();
 const defaultLineClient = new MockLineClient();
 const defaultStaffNotifier = new MockStaffNotifier();
-const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository([]);
+const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository(
+  createAmamiHomeKnowledgePages()
+);
 const defaultLineIdTokenVerifier = new FetchLineIdTokenVerifier();
 const PRODUCTION_STAFF_NOTIFICATION_ADMIN_BASE_URL = "https://admin.taiyolabel.site";
 
@@ -1052,16 +1056,26 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       });
       const {
         line_reply_instructions: lineReplyInstructions,
+        normal_chat_ai_candidates: normalChatAiCandidates,
         staff_notification_alerts: staffNotificationAlerts,
         staff_notification_events: staffNotificationEvents,
         ...publicLogging
       } = logging;
       const guideReplies = await replyToCustomerRichMenuGuideEvents(customerLoggingEvents, lineClient);
       const flowReplies = await replyToLineReplyInstructions(lineReplyInstructions, lineClient);
+      const normalChatAiReplies = await replyToNormalChatAiCandidates({
+        tenant_id: tenant.tenantId,
+        candidates: normalChatAiCandidates,
+        aiProvider,
+        knowledgePageRepository,
+        lineClient,
+        messageRepository,
+        alertRepository
+      });
       const lineMenuReplies = combineLineReplyCounts(guideReplies, flowReplies);
       const alertStaffNotifications = await notifySpecificAlertsForProduction({
         env,
-        alerts: staffNotificationAlerts,
+        alerts: [...staffNotificationAlerts, ...normalChatAiReplies.staff_notification_alerts],
         staffNotifier,
         customerRepository,
         adminBaseUrl: staffNotificationAdminBaseUrl,
@@ -1089,7 +1103,25 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         line_menu_replies: lineMenuReplies,
         customer_line_staff_notification_setup: customerLineStaffNotificationSetup,
         staff_notifications: staffNotifications,
-        logging: publicLogging
+        normal_chat_ai: {
+          attempted: normalChatAiReplies.attempted,
+          answered: normalChatAiReplies.answered,
+          handoff_required: normalChatAiReplies.handoff_required,
+          out_of_scope: normalChatAiReplies.out_of_scope,
+          line_replies: normalChatAiReplies.line_replies,
+          raw_prompt_recorded: false,
+          openai_direct_verification_executed: false
+        },
+        logging: {
+          ...publicLogging,
+          messages_inserted:
+            publicLogging.messages_inserted + normalChatAiReplies.messages_logged,
+          alerts_created:
+            publicLogging.alerts_created + normalChatAiReplies.alerts_created,
+          alerts_notification_required:
+            publicLogging.alerts_notification_required +
+            normalChatAiReplies.alerts_notification_required
+        }
       });
     } catch {
       return c.json({ ok: false, error: "malformed_line_webhook_body" }, 400);
@@ -1243,6 +1275,346 @@ async function replyToLineReplyInstructions(
 
   return { sent, failed, skipped };
 }
+
+async function replyToNormalChatAiCandidates(input: {
+  tenant_id: string;
+  candidates: CustomerNormalChatAiCandidate[];
+  aiProvider: AiProvider;
+  knowledgePageRepository: KnowledgePageRepository;
+  lineClient: LineClient;
+  messageRepository: MessageRepository;
+  alertRepository: AlertRepository;
+}): Promise<{
+  attempted: number;
+  answered: number;
+  handoff_required: number;
+  out_of_scope: number;
+  messages_logged: number;
+  alerts_created: number;
+  alerts_notification_required: number;
+  staff_notification_alerts: Alert[];
+  line_replies: { sent: number; failed: number; skipped: number };
+}> {
+  let attempted = 0;
+  let answered = 0;
+  let handoffRequired = 0;
+  let outOfScope = 0;
+  let messagesLogged = 0;
+  let alertsCreated = 0;
+  let alertsNotificationRequired = 0;
+  const staffNotificationAlerts: Alert[] = [];
+  const lineReplies = { sent: 0, failed: 0, skipped: 0 };
+
+  for (const candidate of input.candidates) {
+    attempted += 1;
+    const text = candidate.text.trim();
+
+    if (!text) {
+      lineReplies.skipped += 1;
+      continue;
+    }
+
+    if (candidate.customer_response_mode !== "bot_auto") {
+      const alertResult = await createNormalChatHandoffAlert({
+        candidate,
+        alertRepository: input.alertRepository,
+        message: text
+      });
+      alertsCreated += alertResult.created ? 1 : 0;
+      alertsNotificationRequired += alertResult.notification_required ? 1 : 0;
+      if (alertResult.notification_required && alertResult.alert) {
+        staffNotificationAlerts.push(alertResult.alert);
+      }
+      handoffRequired += 1;
+      lineReplies.skipped += 1;
+      continue;
+    }
+
+    if (requiresStaffForNormalChat(text)) {
+      const replyText = buildNormalChatStaffHandoffReply();
+      const replied = await replyAndLogNormalChatBotMessage({
+        candidate,
+        replyText,
+        lineClient: input.lineClient,
+        messageRepository: input.messageRepository
+      });
+      lineReplies.sent += replied.sent ? 1 : 0;
+      lineReplies.failed += replied.failed ? 1 : 0;
+      lineReplies.skipped += replied.skipped ? 1 : 0;
+      messagesLogged += replied.message_logged ? 1 : 0;
+
+      const alertResult = await createNormalChatHandoffAlert({
+        candidate,
+        alertRepository: input.alertRepository,
+        message: text
+      });
+      alertsCreated += alertResult.created ? 1 : 0;
+      alertsNotificationRequired += alertResult.notification_required ? 1 : 0;
+      if (alertResult.notification_required && alertResult.alert) {
+        staffNotificationAlerts.push(alertResult.alert);
+      }
+      handoffRequired += 1;
+      continue;
+    }
+
+    const results = await searchTenantKnowledge({
+      tenant_id: input.tenant_id,
+      query: text,
+      limit: 3,
+      repository: input.knowledgePageRepository
+    });
+
+    if (results.length > 0) {
+      const replyText = await buildNormalChatKnowledgeReply({
+        tenant_id: input.tenant_id,
+        text,
+        sources: toAiRagAnswerSources(results),
+        aiProvider: input.aiProvider
+      });
+      const replied = await replyAndLogNormalChatBotMessage({
+        candidate,
+        replyText,
+        lineClient: input.lineClient,
+        messageRepository: input.messageRepository
+      });
+      lineReplies.sent += replied.sent ? 1 : 0;
+      lineReplies.failed += replied.failed ? 1 : 0;
+      lineReplies.skipped += replied.skipped ? 1 : 0;
+      messagesLogged += replied.message_logged ? 1 : 0;
+      answered += 1;
+      continue;
+    }
+
+    if (isAmamiHomeRelatedNormalChat(text)) {
+      const replyText = buildNormalChatStaffHandoffReply();
+      const replied = await replyAndLogNormalChatBotMessage({
+        candidate,
+        replyText,
+        lineClient: input.lineClient,
+        messageRepository: input.messageRepository
+      });
+      lineReplies.sent += replied.sent ? 1 : 0;
+      lineReplies.failed += replied.failed ? 1 : 0;
+      lineReplies.skipped += replied.skipped ? 1 : 0;
+      messagesLogged += replied.message_logged ? 1 : 0;
+
+      const alertResult = await createNormalChatHandoffAlert({
+        candidate,
+        alertRepository: input.alertRepository,
+        message: text
+      });
+      alertsCreated += alertResult.created ? 1 : 0;
+      alertsNotificationRequired += alertResult.notification_required ? 1 : 0;
+      if (alertResult.notification_required && alertResult.alert) {
+        staffNotificationAlerts.push(alertResult.alert);
+      }
+      handoffRequired += 1;
+      continue;
+    }
+
+    const replyText = buildNormalChatOutOfScopeReply();
+    const replied = await replyAndLogNormalChatBotMessage({
+      candidate,
+      replyText,
+      lineClient: input.lineClient,
+      messageRepository: input.messageRepository
+    });
+    lineReplies.sent += replied.sent ? 1 : 0;
+    lineReplies.failed += replied.failed ? 1 : 0;
+    lineReplies.skipped += replied.skipped ? 1 : 0;
+    messagesLogged += replied.message_logged ? 1 : 0;
+    outOfScope += 1;
+  }
+
+  return {
+    attempted,
+    answered,
+    handoff_required: handoffRequired,
+    out_of_scope: outOfScope,
+    messages_logged: messagesLogged,
+    alerts_created: alertsCreated,
+    alerts_notification_required: alertsNotificationRequired,
+    staff_notification_alerts: staffNotificationAlerts,
+    line_replies: lineReplies
+  };
+}
+
+async function replyAndLogNormalChatBotMessage(input: {
+  candidate: CustomerNormalChatAiCandidate;
+  replyText: string;
+  lineClient: LineClient;
+  messageRepository: MessageRepository;
+}): Promise<{ sent: boolean; failed: boolean; skipped: boolean; message_logged: boolean }> {
+  if (!input.candidate.reply_token) {
+    return { sent: false, failed: false, skipped: true, message_logged: false };
+  }
+
+  try {
+    await input.lineClient.replyMessage(input.candidate.reply_token, [
+      {
+        type: "text",
+        text: input.replyText
+      }
+    ]);
+  } catch {
+    return { sent: false, failed: true, skipped: false, message_logged: false };
+  }
+
+  await insertBotTextTimelineMessage(input.messageRepository, {
+    tenant_id: input.candidate.tenant_id,
+    customer_id: input.candidate.customer_id,
+    body: input.replyText,
+    created_at: input.candidate.occurred_at
+  });
+
+  return { sent: true, failed: false, skipped: false, message_logged: true };
+}
+
+async function createNormalChatHandoffAlert(input: {
+  candidate: CustomerNormalChatAiCandidate;
+  alertRepository: AlertRepository;
+  message: string;
+}): Promise<{ alert: Alert | null; created: boolean; notification_required: boolean }> {
+  const customer: Customer = {
+    id: input.candidate.customer_id,
+    tenant_id: input.candidate.tenant_id,
+    line_user_id: "",
+    display_name: input.candidate.customer_display_name,
+    picture_url: null,
+    phone: input.candidate.customer_phone,
+    email: input.candidate.customer_email,
+    postal_code: null,
+    address: input.candidate.customer_address,
+    interest_tags: [],
+    response_mode: input.candidate.customer_response_mode,
+    status: "new",
+    last_message_at: input.candidate.occurred_at,
+    last_customer_message_at: input.candidate.occurred_at,
+    last_staff_reply_at: null,
+    created_at: input.candidate.occurred_at,
+    updated_at: input.candidate.occurred_at
+  };
+  const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
+    tenant_id: input.candidate.tenant_id,
+    customer,
+    alertRepository: input.alertRepository,
+    message: input.message,
+    now: () => input.candidate.occurred_at
+  });
+
+  return {
+    alert: alertResult.alert,
+    created: alertResult.created,
+    notification_required: alertResult.notification_required
+  };
+}
+
+async function buildNormalChatKnowledgeReply(input: {
+  tenant_id: string;
+  text: string;
+  sources: AiRagAnswerSource[];
+  aiProvider: AiProvider;
+}): Promise<string> {
+  try {
+    const draft = await input.aiProvider.draftRagAnswer({
+      tenant_id: input.tenant_id,
+      query: input.text,
+      sources: input.sources
+    });
+
+    if (
+      draft.can_answer &&
+      !draft.handoff_required &&
+      draft.recommended_response_mode === "bot_auto" &&
+      draft.answer_body.trim().length > 0
+    ) {
+      return draft.answer_body.trim();
+    }
+  } catch {
+    // Fall back to a deterministic official-site answer when the AI provider is unavailable.
+  }
+
+  const primarySource = input.sources[0];
+
+  if (!primarySource) {
+    return buildNormalChatStaffHandoffReply();
+  }
+
+  return `${primarySource.title}については、公式ページで確認できます。\n${primarySource.url}\n\n個別の確認が必要な内容は、担当者が確認します。`;
+}
+
+function buildNormalChatStaffHandoffReply(): string {
+  return "詳しい確認が必要な内容のため、担当者へおつなぎします。\n相談内容を保存しました。担当者よりご連絡いたします。";
+}
+
+function buildNormalChatOutOfScopeReply(): string {
+  return "アマミホームの家づくり、モデルハウス、施工事例、資料請求などについてお答えできます。\n関係のない内容にはお答えできません。";
+}
+
+function requiresStaffForNormalChat(text: string): boolean {
+  return normalChatStaffRequiredKeywords.some((keyword) => text.includes(keyword));
+}
+
+function isAmamiHomeRelatedNormalChat(text: string): boolean {
+  return normalChatRelatedKeywords.some((keyword) => text.includes(keyword));
+}
+
+const normalChatStaffRequiredKeywords = [
+  "見積",
+  "金額",
+  "価格",
+  "費用",
+  "予算",
+  "ローン",
+  "補助金",
+  "契約",
+  "土地",
+  "保証",
+  "メンテナンス",
+  "修理",
+  "点検",
+  "不具合",
+  "クレーム",
+  "急ぎ",
+  "緊急",
+  "担当者",
+  "相談したい",
+  "相談できますか",
+  "個別相談",
+  "予約変更",
+  "予約を変更",
+  "日時変更",
+  "打合せ",
+  "打ち合わせ",
+  "変更",
+  "キャンセル",
+  "個別",
+  "住所",
+  "電話番号",
+  "連絡先"
+] as const;
+
+const normalChatRelatedKeywords = [
+  "アマミホーム",
+  "家づくり",
+  "家作り",
+  "住宅",
+  "新築",
+  "モデルハウス",
+  "見学",
+  "施工事例",
+  "資料",
+  "カタログ",
+  "営業時間",
+  "会社",
+  "所在地",
+  "アクセス",
+  "来場",
+  "イベント",
+  "ホームページ",
+  "ページ",
+  "URL"
+] as const;
 
 function summarizeStaffLineWebhookEvents(events: NormalizedLineWebhookEvent[]): {
   message_events: number;

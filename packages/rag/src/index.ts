@@ -92,11 +92,44 @@ export async function searchTenantKnowledge(
 }
 
 function tokenizeQuery(query: string): string[] {
-  return query
+  const normalizedQuery = query.trim().toLowerCase();
+  const baseTerms = normalizedQuery
     .trim()
-    .toLowerCase()
-    .split(/\s+/)
+    .split(/[\s、。！？!?・/／]+/)
     .filter((term) => term.length > 0);
+  const knownTerms = [
+    "アマミホーム",
+    "家づくり",
+    "家作り",
+    "住宅",
+    "新築",
+    "モデルハウス",
+    "モデルホーム",
+    "見学",
+    "予約",
+    "施工事例",
+    "資料請求",
+    "資料",
+    "カタログ",
+    "営業時間",
+    "会社",
+    "所在地",
+    "アクセス",
+    "来場",
+    "イベント",
+    "オンライン相談",
+    "保証",
+    "メンテナンス",
+    "アフター",
+    "土地",
+    "建売",
+    "分譲地",
+    "相談",
+    "問い合わせ",
+    "問合せ"
+  ].filter((term) => normalizedQuery.includes(term.toLowerCase()));
+
+  return [...new Set([...baseTerms, ...knownTerms])];
 }
 
 function scoreKnowledgePage(page: KnowledgePage, terms: string[]): KnowledgeSearchResult | null {

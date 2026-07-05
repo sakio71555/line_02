@@ -478,7 +478,7 @@ describe("admin staff reply API", () => {
       expect.objectContaining({ role: "staff", body: "送信失敗テスト" })
     ]);
     expect(updatedCustomer).toMatchObject({
-      response_mode: "human_required",
+      response_mode: "bot_auto",
       last_staff_reply_at: null
     });
   });

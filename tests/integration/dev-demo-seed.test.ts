@@ -103,7 +103,7 @@ describe("development demo seed API", () => {
       tenant_id: "tenant_amamihome",
       customer_ids: ["customer_demo_yamada_taro", "customer_demo_sato_hanako"],
       message_count: 4,
-      knowledge_page_count: 10
+      knowledge_page_count: 13
     });
     expect(customerRepository.list()).toHaveLength(2);
     expect(messageRepository.list()).toHaveLength(4);
