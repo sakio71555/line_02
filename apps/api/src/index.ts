@@ -1316,7 +1316,7 @@ async function replyToNormalChatAiCandidates(input: {
 
     const staffRequired = requiresStaffForNormalChat(text);
 
-    if (shouldDeferNormalChatToStaff(candidate.customer_response_mode, staffRequired)) {
+    if (shouldDeferNormalChatBeforeKnowledgeSearch(candidate.customer_response_mode, staffRequired)) {
       const alertResult = await createNormalChatHandoffAlert({
         candidate,
         alertRepository: input.alertRepository,
@@ -1384,6 +1384,22 @@ async function replyToNormalChatAiCandidates(input: {
       lineReplies.skipped += replied.skipped ? 1 : 0;
       messagesLogged += replied.message_logged ? 1 : 0;
       answered += 1;
+      continue;
+    }
+
+    if (shouldDeferNormalChatWithoutKnowledgeAnswer(candidate.customer_response_mode)) {
+      const alertResult = await createNormalChatHandoffAlert({
+        candidate,
+        alertRepository: input.alertRepository,
+        message: text
+      });
+      alertsCreated += alertResult.created ? 1 : 0;
+      alertsNotificationRequired += alertResult.notification_required ? 1 : 0;
+      if (alertResult.notification_required && alertResult.alert) {
+        staffNotificationAlerts.push(alertResult.alert);
+      }
+      handoffRequired += 1;
+      lineReplies.skipped += 1;
       continue;
     }
 
@@ -1557,7 +1573,7 @@ function requiresStaffForNormalChat(text: string): boolean {
   return normalChatStaffRequiredKeywords.some((keyword) => text.includes(keyword));
 }
 
-function shouldDeferNormalChatToStaff(
+function shouldDeferNormalChatBeforeKnowledgeSearch(
   responseMode: CustomerNormalChatAiCandidate["customer_response_mode"],
   staffRequired: boolean
 ): boolean {
@@ -1569,7 +1585,17 @@ function shouldDeferNormalChatToStaff(
     return staffRequired;
   }
 
+  if (responseMode === "human_active") {
+    return staffRequired;
+  }
+
   return true;
+}
+
+function shouldDeferNormalChatWithoutKnowledgeAnswer(
+  responseMode: CustomerNormalChatAiCandidate["customer_response_mode"]
+): boolean {
+  return responseMode === "human_active" || responseMode === "emergency";
 }
 
 function isAmamiHomeRelatedNormalChat(text: string): boolean {

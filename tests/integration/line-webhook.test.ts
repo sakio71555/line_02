@@ -501,7 +501,7 @@ describe("LINE webhook foundation", () => {
     expect(messages[1]?.body).toContain("会社情報・営業時間");
   });
 
-  it("does not auto reply to normal chat while a staff member is actively handling the customer", async () => {
+  it("replies to safe official-site normal chat while a staff member is actively handling the customer", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
       lineClient
@@ -531,6 +531,60 @@ describe("LINE webhook foundation", () => {
     expect(response.status).toBe(200);
     expect(body.normal_chat_ai).toMatchObject({
       attempted: 1,
+      answered: 1,
+      handoff_required: 0,
+      line_replies: {
+        sent: 1,
+        failed: 0,
+        skipped: 0
+      }
+    });
+    expect(lineClient.replies).toHaveLength(1);
+    expect(lineClient.replies[0]?.messages[0]?.text).toContain("会社情報・営業時間");
+    expect(alertRepository.list()).toHaveLength(0);
+    const messages = messageRepository.list();
+    expect(messages).toHaveLength(2);
+    expect(messages[0]).toMatchObject({
+      role: "customer",
+      body: "営業時間は？"
+    });
+    expect(messages[1]).toMatchObject({
+      role: "bot",
+      message_type: "text"
+    });
+    expect(messages[1]?.body).toContain("会社情報・営業時間");
+  });
+
+  it("does not auto reply to staff-required normal chat while a staff member is actively handling the customer", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const userId = "U_TEST_USER_HUMAN_ACTIVE_STAFF_REQUIRED_NORMAL_CHAT";
+    const customer = {
+      ...buildRegisteredCustomer({
+        id: "customer_human_active_staff_required_normal_chat",
+        lineUserId: userId,
+        displayName: "対応中 見積太郎"
+      }),
+      response_mode: "human_active" as const
+    };
+
+    await customerRepository.save(customer);
+
+    const response = await sendLineText(app, {
+      userId,
+      eventId: "01TESTHUMANACTIVESTAFFREQUIRED",
+      messageId: "test-human-active-staff-required-1",
+      replyToken: "reply_token_human_active_staff_required",
+      text: "見積の金額を確認したいです",
+      timestamp: 1710000005000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.normal_chat_ai).toMatchObject({
+      attempted: 1,
       answered: 0,
       handoff_required: 1,
       line_replies: {
@@ -544,7 +598,7 @@ describe("LINE webhook foundation", () => {
     expect(messageRepository.list()).toHaveLength(1);
     expect(messageRepository.list()[0]).toMatchObject({
       role: "customer",
-      body: "営業時間は？"
+      body: "見積の金額を確認したいです"
     });
   });
 
