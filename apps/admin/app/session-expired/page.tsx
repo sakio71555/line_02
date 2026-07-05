@@ -7,17 +7,16 @@ export default function SessionExpiredPlaceholderPage() {
     <AuthPlaceholderPage
       eyebrow="ログイン期限切れ"
       title="ログインの有効期限が切れました"
-      description="JWT/sessionの期限切れや無効化を検知した場合に表示する安全画面です。"
+      description="ログインの有効期限が切れたため、もう一度ログインが必要です。"
       notes={[
-        "session expirationを検知した場合は、再ログインへ誘導します。",
-        "cookie削除、logout API呼び出し、session storage削除は安全な境界で扱います。",
-        "ログイン画面へ戻り、必要に応じて利用先を選び直します。",
-        "tenant_amamihomeの運用導線へ戻る場合も、認証情報の値は表示しません。"
+        "ログイン画面へ戻って、もう一度ログインしてください。",
+        "必要に応じて会社を選び直してください。",
+        "ログイン情報の値は画面に表示しません。"
       ]}
       links={[
         { href: "/login", label: "ログイン画面へ" },
-        { href: "/customers", label: "顧客一覧へ進む" },
-        { href: "/alerts", label: "未返信アラートへ進む" },
+        { href: "/customers", label: "お客様一覧へ進む" },
+        { href: "/alerts", label: "未対応一覧へ進む" },
         { href: "/", label: "トップへ戻る" }
       ]}
     />

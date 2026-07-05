@@ -1,7 +1,7 @@
 import React from "react";
 
 import { AlertActionPanel } from "./alert-actions";
-import type { AdminApiConfig, AdminAlertListItem } from "../../src/admin-api";
+import type { AdminAlertListItem } from "../../src/admin-api";
 
 export type AlertsPageLoadResult =
   | { status: "ok"; alerts: AdminAlertListItem[] }
@@ -9,49 +9,36 @@ export type AlertsPageLoadResult =
 
 export function AlertsPageView({
   actionPanel,
-  alerts,
-  config
+  alerts
 }: {
   actionPanel?: React.ReactNode;
   alerts: AlertsPageLoadResult;
-  config: AdminApiConfig;
 }) {
   return (
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">未返信アラート</p>
-          <h1>対応が必要な相談を確認する</h1>
-          <p className="meta">
-            利用先: <span className="mono">{config.tenantId}</span>
-          </p>
-          <p className="meta">
-            選択中の利用先:{" "}
-            <span className="mono">{config.selectedTenantId ?? "未選択"}</span>
-          </p>
+          <p className="eyebrow">未対応</p>
+          <h1>返せていない相談を確認する</h1>
+          <p className="meta">対応が必要なお客様を見つける画面です。</p>
         </div>
         <a href="/">トップへ戻る</a>
       </div>
 
       <section className="home-hero">
-        <p className="eyebrow">未返信アラート</p>
-        <h2>未返信のままになっている相談を見つけます</h2>
+        <p className="eyebrow">確認</p>
+        <h2>まだ返せていない相談を見つけます</h2>
         <p className="lead-text">
-          お客様からの相談にまだ担当者返信がないものを、現在の運用データから確認します。
-          まずは「未返信チェックを実行する」を押してください。
+          お客様からの相談にまだ担当者返信がないものを確認します。
+          まずは「未対応を確認する」を押してください。
         </p>
         <div className="status-pill-list" aria-label="alerts page safety labels">
-          <span className="status-pill">本番運用確認</span>
-          <span className="status-pill">手動チェック</span>
-          <span className="status-pill">外部通知なし</span>
-          <span className="status-pill">手動実行</span>
-          <span className="status-pill">通知記録</span>
+          <span className="status-pill">手動確認</span>
+          <span className="status-pill">対応待ちを整理</span>
+          <span className="status-pill">お客様ページへ移動</span>
         </div>
         <p className="meta">
-          LINE、Slack、メールへの外部通知はこの画面から自動送信しません。通知結果は記録として扱います。
-        </p>
-        <p className="meta">
-          選択中の利用先は、保存済みの利用先情報としてAPI側で確認されます。
+          見つかった相談は、お客様ページを開いて内容を確認できます。
         </p>
       </section>
 
@@ -63,45 +50,44 @@ export function AlertsPageView({
           <div className="home-note">
             <h2>対応待ち</h2>
             <p>
-              まだ担当者対応が必要な未返信アラートです。担当者確認の対象になります。
+              まだ担当者の確認や返信が必要な相談です。
             </p>
           </div>
           <div className="home-note">
-            <h2>通知記録済み</h2>
+            <h2>確認済み</h2>
             <p>
-              通知処理を記録した状態です。外部通知は別の承認済み運用で扱います。
+              担当者が確認した記録が残っている状態です。
             </p>
           </div>
           <div className="home-note">
-            <h2>対応済み / 非表示</h2>
+            <h2>対応済み</h2>
             <p>
-              後続Loopで本格運用を設計する状態です。今回は新しい状態は増やしません。
+              返信や確認が終わった相談です。
             </p>
           </div>
         </div>
       </section>
 
       <section className="section">
-        <h2>未返信アラート一覧</h2>
+        <h2>未対応一覧</h2>
         {alerts.status === "error" ? (
           <div className="error">
-            <strong>APIエラー</strong>
+            <strong>読み込みエラー</strong>
             <pre>{alerts.message}</pre>
           </div>
         ) : alerts.alerts.length === 0 ? (
           <p className="empty">
             まだ対応が必要な相談は表示されていません。問い合わせが入ったあと、
-            「未返信チェックを実行する」を押してください。
+            「未対応を確認する」を押してください。
           </p>
         ) : (
-          <ul className="alert-card-list" aria-label="アラートカード">
+          <ul className="alert-card-list" aria-label="未対応カード">
             {alerts.alerts.map((alert) => (
               <li className="alert-card" key={alert.id}>
                 <div className="alert-card-header">
                   <div>
                     <p className="eyebrow">{formatAlertType(alert.type)}</p>
                     <h3 className="alert-card-title">{formatAlertStatus(alert.status)}</h3>
-                    <small className="mono">{alert.id}</small>
                   </div>
                   <span className={getAlertSeverityBadgeClass(alert.severity)}>
                     {formatAlertSeverity(alert.severity)}
@@ -121,9 +107,8 @@ export function AlertsPageView({
                   className="card-action-link"
                   href={`/customers/${encodeURIComponent(alert.customer_id)}`}
                 >
-                  お客様詳細を見る
+                  お客様ページを開く
                 </a>
-                <p className="meta mono">customer_id: {alert.customer_id}</p>
               </li>
             ))}
           </ul>
@@ -165,7 +150,7 @@ export function formatAlertType(type: AdminAlertListItem["type"]): string {
     unreplied_customer_message: "未返信の相談",
     stale: "長時間未対応",
     emergency: "至急対応",
-    ai_risk: "AI確認注意"
+    ai_risk: "確認注意"
   };
 
   return labels[type];

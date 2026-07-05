@@ -8,20 +8,20 @@ describe("admin home page", () => {
   it("renders production operations guidance", () => {
     const html = renderToStaticMarkup(<AdminHomePage />);
 
-    expect(html).toContain("LINE相談の対応状況を管理する画面");
-    expect(html).toContain("顧客一覧を見る");
+    expect(html).toContain("お客様からのLINE相談を確認する画面");
+    expect(html).toContain("お客様一覧を見る");
     expect(html).toContain("href=\"/customers\"");
-    expect(html).toContain("未返信アラートを見る");
+    expect(html).toContain("未対応を見る");
     expect(html).toContain("href=\"/alerts\"");
     expect(html).toContain("運用の流れ");
-    expect(html).toContain("顧客詳細で相談内容を確認する");
-    expect(html).toContain("AI要約・返信文の下書き・ホームページ情報からの回答案を見る");
-    expect(html).toContain("本番運用の入口です");
-    expect(html).toContain("AI補助は担当者確認前提です");
-    expect(html).toContain("対応履歴を残します");
-    expect(html).toContain("ログイン・利用先選択・権限表示");
-    expect(html).toContain("権限が必要な操作");
-    expect(html).toContain("tenant_amamihome");
-    expect(html).toContain("http://localhost:4000");
+    expect(html).toContain("LINEのやり取りを見る");
+    expect(html).toContain("担当者として返信する");
+    expect(html).toContain("実際のお客様対応用");
+    expect(html).toContain("LINE履歴を保存");
+    expect(html).toContain("1通ずつ確認して送信");
+    expect(html).toContain("担当者が確認して返信");
+    expect(html).toContain("困ったとき");
+    expect(html).toContain("会社を選び直す");
+    expect(html).toContain("操作できない場合");
   });
 });

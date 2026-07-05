@@ -8,16 +8,16 @@ describe("admin mobile navigation shell", () => {
   it("renders beginner-friendly primary navigation with an active page", () => {
     const html = renderToStaticMarkup(
       <AdminShellView pathname="/customers/customer_demo_yamada_taro">
-        <main>顧客詳細</main>
+        <main>お客様詳細</main>
       </AdminShellView>
     );
 
-    expect(html).toContain("Amami LINE CRM");
-    expect(html).toContain("本番運用の管理画面");
+    expect(html).toContain("アマミホーム管理画面");
+    expect(html).toContain("LINE相談を確認・返信");
     expect(html).toContain("スマートフォン用メニュー");
-    expect(html).toContain("顧客");
-    expect(html).toContain("アラート");
-    expect(html).toContain("利用先");
+    expect(html).toContain("お客様");
+    expect(html).toContain("未対応");
+    expect(html).toContain("会社選択");
     expect(html).toContain("href=\"/customers\"");
     expect(html).toContain("href=\"/alerts\"");
     expect(html).toContain("href=\"/select-tenant\"");

@@ -63,29 +63,28 @@ export function AlertActionPanelView({
 }) {
   return (
     <section className="section">
-      <h2>次にすること</h2>
+      <h2>未対応を確認する</h2>
       <p className="meta">
-        1つ目のボタンで対応が必要な相談を探し、2つ目のボタンで開いているアラートを
-        通知記録済みにします。外部通知は送信しません。
+        1つ目のボタンで返せていない相談を探します。
+        2つ目のボタンは、開いている相談を確認済みとして記録します。
       </p>
       <RoleVisibilityNote variant="alerts" />
       <div className="action-grid">
         <article className="action-panel">
           <div className="action-card-header">
             <p className="eyebrow">STEP 1</p>
-            <h3>未返信チェックを実行する</h3>
+            <h3>返せていない相談を探す</h3>
           </div>
           <div className="status-pill-list">
-            <span className="status-pill">手動チェック</span>
-            <span className="status-pill">運用データ</span>
-            <span className="status-pill">手動実行</span>
+            <span className="status-pill">手動確認</span>
+            <span className="status-pill">未対応を整理</span>
           </div>
           <p className="meta">
-            お客様からの相談にまだ担当者返信がないものを確認し、未返信アラートを作ります。
+            お客様からの相談にまだ担当者返信がないものを確認します。
           </p>
           <form action={runCheck} className="action-form">
             <button type="submit" disabled={checkPending}>
-              {checkPending ? "確認中..." : "未返信チェックを実行する"}
+              {checkPending ? "確認中..." : "未対応を確認する"}
             </button>
           </form>
           <CheckResult state={checkState} />
@@ -94,20 +93,18 @@ export function AlertActionPanelView({
         <article className="action-panel">
           <div className="action-card-header">
             <p className="eyebrow">STEP 2</p>
-            <h3>開いているアラートを通知記録済みにする</h3>
+            <h3>確認済みにする</h3>
           </div>
           <div className="status-pill-list">
-            <span className="status-pill">通知記録</span>
-            <span className="status-pill">外部通知なし</span>
-            <span className="status-pill">手動確認</span>
+            <span className="status-pill">確認記録</span>
+            <span className="status-pill">手動操作</span>
           </div>
           <p className="meta">
-            開いている未返信アラートを通知記録済みにします。
-            LINE、Slack、メールへの外部通知は送信しません。
+            開いている未対応の相談を、担当者が確認した状態として記録します。
           </p>
           <form action={runNotify} className="action-form">
             <button type="submit" disabled={notifyPending}>
-              {notifyPending ? "通知記録中..." : "開いているアラートを通知記録済みにする"}
+              {notifyPending ? "記録中..." : "確認済みにする"}
             </button>
           </form>
           <NotifyResult state={notifyState} />
@@ -134,9 +131,9 @@ function CheckResult({ state }: { state: CheckUnrepliedActionState }) {
 
   return (
     <div className="action-result">
-      <p className="result-label">未返信チェック結果</p>
+      <p className="result-label">確認結果</p>
       <ResultField label="確認したお客様" value={String(result.checked_customers)} />
-      <ResultField label="作成した未返信アラート" value={String(result.alerts_created)} />
+      <ResultField label="見つかった未対応" value={String(result.alerts_created)} />
     </div>
   );
 }
@@ -158,8 +155,8 @@ function NotifyResult({ state }: { state: NotifyOpenActionState }) {
 
   return (
     <div className="action-result">
-      <p className="result-label">通知記録結果</p>
-      <ResultField label="通知記録済み" value={String(result.notified)} />
+      <p className="result-label">確認済みの記録</p>
+      <ResultField label="確認済み" value={String(result.notified)} />
       <ResultField label="失敗" value={String(result.failed)} />
       <ResultField label="対象外" value={String(result.skipped)} />
     </div>

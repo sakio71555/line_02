@@ -9,11 +9,6 @@ describe("admin customers mobile cards", () => {
   it("renders customers as beginner-friendly cards with the latest message", () => {
     const html = renderToStaticMarkup(
       <CustomersPageView
-        config={{
-          apiBaseUrl: "http://localhost:4000",
-          tenantId: "tenant_amamihome",
-          selectedTenantId: "tenant_amamihome"
-        }}
         result={{
           status: "ok",
           customers: [
@@ -26,29 +21,25 @@ describe("admin customers mobile cards", () => {
       />
     );
 
-    expect(html).toContain("相談中のお客様");
-    expect(html).toContain("顧客一覧カード");
+    expect(html).toContain("お客様一覧");
+    expect(html).toContain("お客様一覧カード");
     expect(html).toContain("山田 太郎");
     expect(html).toContain("平屋とモデルホーム見学について相談したいです");
     expect(html).toContain("担当者の確認が必要");
     expect(html).toContain("担当者返信待ち");
-    expect(html).toContain("詳細を見る");
+    expect(html).toContain("お客様ページを開く");
     expect(html).toContain("href=\"/customers/customer_demo_yamada_taro\"");
   });
 
   it("renders an empty state that points to operational intake", () => {
     const html = renderToStaticMarkup(
       <CustomersPageView
-        config={{
-          apiBaseUrl: "http://localhost:4000",
-          tenantId: "tenant_amamihome"
-        }}
         result={{ status: "ok", customers: [] }}
       />
     );
 
-    expect(html).toContain("まだ顧客データがありません");
-    expect(html).toContain("LINEからの問い合わせや運用データが入ると");
+    expect(html).toContain("まだお客様が表示されていません");
+    expect(html).toContain("LINEから問い合わせや登録が入ると");
   });
 });
 

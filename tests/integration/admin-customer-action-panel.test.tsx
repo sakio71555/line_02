@@ -57,25 +57,25 @@ describe("admin customer action panel", () => {
       />
     );
 
-    expect(html).toContain("AI補助と担当者返信");
-    expect(html).toContain("AI補助を開く");
-    expect(html).toContain("AI下書きと回答案は自動送信されません");
+    expect(html).toContain("返信と下書き");
+    expect(html).toContain("返信に使うメモを作る");
+    expect(html).toContain("下書きや参考回答は自動送信されません");
     expect(html).toContain("相談内容をまとめる");
-    expect(html).toContain("AI要約");
+    expect(html).toContain("相談まとめ");
     expect(html).toContain("返信文の下書きを作る");
     expect(html).toContain("自動送信なし");
     expect(html).toContain("ホームページ情報から回答案を作る");
     expect(html).toContain("登録済み情報だけを参考");
     expect(html).toContain("オンライン相談 / メンテナンス / 新築 / リフォーム");
     expect(html).toContain("担当者として返信する");
-    expect(html).toContain("タイムライン保存");
+    expect(html).toContain("履歴に保存");
     expect(html).toContain("LINE送信なし");
     expect(html).toContain("送信前に確認する");
-    expect(html).toContain("担当者操作の確認範囲");
-    expect(html).toContain("AI補助は担当者確認前提で使い");
+    expect(html).toContain("返信するときの注意");
+    expect(html).toContain("返信文は必ず内容を確認してから保存・送信します。");
     expect(html).toContain("name=\"body\"");
     expect(html).toContain("name=\"query\"");
-    expect(html).not.toContain("LINEメニュー切替");
+    expect(html).not.toContain("お客様のLINEメニューを変える");
   });
 
   it("renders the rich menu switch as an embedded customer detail control", () => {
@@ -91,7 +91,7 @@ describe("admin customer action panel", () => {
     );
 
     expect(html).toContain("class=\"customer-rich-menu-switch\"");
-    expect(html).toContain("LINEメニュー切替");
+    expect(html).toContain("お客様のLINEメニューを変える");
     expect(html).toContain("初期メニューへ切替");
     expect(html).toContain("商談中メニューへ切替");
     expect(html).toContain("アフターメニューへ切替");
@@ -125,9 +125,9 @@ describe("admin customer action panel", () => {
 
     expect(html).toContain("保存前に確認する");
     expect(html).toContain("LINE送信なし");
-    expect(html).toContain("LINE実送信停止中");
-    expect(html).toContain("本番LINEへ1通送信");
-    expect(html).toContain("LINE実送信が有効な時だけ実行できます");
+    expect(html).toContain("LINE送信停止中");
+    expect(html).toContain("LINEへ1通送信");
+    expect(html).toContain("今はLINEへ送信せず、履歴保存だけ使えます。");
     expect(html).not.toContain("name=\"delivery_mode\" value=\"real_line_push\"");
   });
 
@@ -154,9 +154,9 @@ describe("admin customer action panel", () => {
       />
     );
 
-    expect(html).toContain("本番LINEへ1通送信");
-    expect(html).toContain("LINE連携ID未取得");
-    expect(html).toContain("LINE送信用IDがまだ紐づいていません");
+    expect(html).toContain("LINEへ1通送信");
+    expect(html).toContain("LINE未連携");
+    expect(html).toContain("このお客様にはLINE返信先がまだ紐づいていません");
     expect(html).not.toContain("name=\"delivery_mode\" value=\"real_line_push\"");
   });
 
@@ -183,11 +183,11 @@ describe("admin customer action panel", () => {
       />
     );
 
-    expect(html).toContain("本番LINE送信有効");
-    expect(html).toContain("本番LINEへ1通送信");
+    expect(html).toContain("LINE送信できます");
+    expect(html).toContain("LINEへ1通送信");
     expect(html).toContain("再送信禁止");
     expect(html).toContain("一斉送信なし");
-    expect(html).toContain("本番LINEへ1通送信する確認へ進む");
+    expect(html).toContain("LINEへ送る前に確認する");
   });
 
   it("renders the staff reply confirmation card with timeline-save safety wording", () => {
@@ -199,24 +199,21 @@ describe("admin customer action panel", () => {
         onEdit={() => {}}
         pending={false}
         recipientLabel="山田 太郎"
-        tenantId="tenant_amamihome"
       />
     );
 
-    expect(html).toContain("送信前の確認");
-    expect(html).toContain("この内容を保存しますか？");
+    expect(html).toContain("確認");
+    expect(html).toContain("この内容を履歴に保存しますか？");
     expect(html).toContain("宛先");
     expect(html).toContain("山田 太郎");
-    expect(html).toContain("利用先");
-    expect(html).toContain("tenant_amamihome");
     expect(html).toContain("送信内容");
     expect(html).toContain("モデルホーム見学について担当者より確認いたします。");
-    expect(html).toContain("タイムライン保存");
+    expect(html).toContain("履歴に保存");
     expect(html).toContain("担当者返信");
     expect(html).toContain("LINE送信なし");
-    expect(html).toContain("タイムラインにスタッフ返信として保存されます");
+    expect(html).toContain("この内容は履歴に担当者返信として保存されます");
     expect(html).toContain("この内容を確認しました");
-    expect(html).toContain("この内容を保存する");
+    expect(html).toContain("履歴に保存する");
     expect(html).toContain("disabled=\"\"");
   });
 
@@ -231,12 +228,11 @@ describe("admin customer action panel", () => {
         onEdit={() => {}}
         pending={false}
         recipientLabel="山田 太郎"
-        tenantId="tenant_amamihome"
       />
     );
 
-    expect(html).toContain("本番LINEへ1通送信しますか？");
-    expect(html).toContain("本番LINE送信");
+    expect(html).toContain("LINEへ1通送信しますか？");
+    expect(html).toContain("LINEへ送信");
     expect(html).toContain("1通だけ");
     expect(html).toContain("再送信禁止");
     expect(html).toContain("再送信や一斉送信をしないことを確認しました");
@@ -244,6 +240,6 @@ describe("admin customer action panel", () => {
     expect(html).toContain("name=\"line_push_confirmation\"");
     expect(html).toContain("name=\"idempotency_key\" value=\"idem_test_card\"");
     expect(html).toContain("name=\"confirm_single_line_send\"");
-    expect(html).toContain("本番LINEへ1通送信する");
+    expect(html).toContain("LINEへ1通送信する");
   });
 });

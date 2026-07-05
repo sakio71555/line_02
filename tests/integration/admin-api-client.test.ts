@@ -356,16 +356,16 @@ describe("admin read-only API client", () => {
             })
         }
       )
-    ).rejects.toThrow("選択した利用先へアクセスできません");
+    ).rejects.toThrow("選択した会社へアクセスできません");
 
     expect(formatAdminApiKnownError("tenant_selection_required")).toContain(
-      "利用先を選ぶ必要があります"
+      "操作する会社を選ぶ必要があります"
     );
     expect(formatAdminApiKnownError("authenticated_staff_required")).toContain(
       "ログイン確認が必要です"
     );
     expect(formatAdminApiKnownError("invalid_selected_tenant_id")).toContain(
-      "利用先IDの形式が正しくありません"
+      "会社選択の形式が正しくありません"
     );
   });
 

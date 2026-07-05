@@ -4,9 +4,9 @@ import React, { type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 const navItems = [
-  { href: "/customers", label: "顧客" },
-  { href: "/alerts", label: "アラート" },
-  { href: "/select-tenant", label: "利用先" }
+  { href: "/customers", label: "お客様" },
+  { href: "/alerts", label: "未対応" },
+  { href: "/select-tenant", label: "会社選択" }
 ] as const;
 
 const hideChromePaths = new Set(["/login", "/logout", "/line/customer-registration"]);
@@ -41,8 +41,8 @@ function DesktopNavigation({ pathname }: { pathname: string }) {
           A
         </span>
         <span>
-          <strong>Amami LINE CRM</strong>
-          <small>本番運用の管理画面</small>
+          <strong>アマミホーム管理画面</strong>
+          <small>LINE相談を確認・返信</small>
         </span>
       </a>
       <nav className="admin-desktop-nav" aria-label="主要メニュー">

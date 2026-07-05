@@ -138,17 +138,17 @@ export function createClearSelectedTenantCookieValue(): string {
 export function formatAdminApiErrorCodeForUi(errorCode: string): string | null {
   const labels: Record<SelectedTenantErrorCode, string> = {
     authenticated_staff_required:
-      "ログイン確認が必要です。Supabase Auth本接続後はログイン画面から入り直してください。",
+      "ログイン確認が必要です。ログイン画面から入り直してください。",
     dev_tenant_header_not_allowed:
-      "本番モードでは開発用tenant headerは使えません。認証済みスタッフとして操作してください。",
+      "本番モードでは開発用の確認情報は使えません。ログイン済みの担当者として操作してください。",
     invalid_selected_tenant_id:
-      "利用先IDの形式が正しくありません。利用先を選び直してください。",
+      "会社選択の形式が正しくありません。会社を選び直してください。",
     permission_denied: "この操作を行う権限がありません。",
     session_expired: "ログインの有効期限が切れています。再ログインしてください。",
     tenant_membership_denied:
-      "選択した利用先へアクセスできません。所属している利用先を選び直してください。",
+      "選択した会社へアクセスできません。所属している会社を選び直してください。",
     tenant_selection_required:
-      "操作対象の利用先を選ぶ必要があります。利用先選択画面で選んでください。"
+      "操作する会社を選ぶ必要があります。会社選択画面で選んでください。"
   };
 
   return labels[errorCode as SelectedTenantErrorCode] ?? null;

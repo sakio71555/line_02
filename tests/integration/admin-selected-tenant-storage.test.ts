@@ -69,7 +69,7 @@ describe("admin selected tenant storage boundary", () => {
   });
 
   it("maps selected tenant auth errors to safe UI messages", () => {
-    expect(formatAdminApiErrorCodeForUi("tenant_selection_required")).toContain("利用先");
+    expect(formatAdminApiErrorCodeForUi("tenant_selection_required")).toContain("会社");
     expect(formatAdminApiErrorCodeForUi("tenant_membership_denied")).toContain("アクセス");
     expect(formatAdminApiErrorCodeForUi("invalid_selected_tenant_id")).toContain("形式");
     expect(formatAdminApiErrorCodeForUi("authenticated_staff_required")).toContain("ログイン");

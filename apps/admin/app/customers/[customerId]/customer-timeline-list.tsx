@@ -55,7 +55,7 @@ function formatMessageType(type: string): string {
     file: "ファイル",
     form: "フォーム",
     reservation: "予約",
-    alert: "アラート",
+    alert: "通知",
     summary: "要約"
   };
 

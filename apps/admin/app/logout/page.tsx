@@ -17,7 +17,7 @@ export default function LogoutBoundaryPage() {
           ログアウト後に安全にセッションを消すための画面です。
         </p>
         <p className="meta">
-          access tokenは画面表示せず、localStorageやcookieへ独自保存しません。
+          ログイン情報は画面に表示しません。
         </p>
       </div>
 
@@ -25,8 +25,8 @@ export default function LogoutBoundaryPage() {
         <h2>ログアウトの扱い</h2>
         <ul>
           <li>ログアウト後に、ログイン確認情報が残らないことを確認します。</li>
-          <li>利用先の選択情報はログイン情報とは別に扱います。</li>
-          <li>access tokenやsecret値は画面に表示しません。</li>
+          <li>会社の選択情報はログイン情報とは別に扱います。</li>
+          <li>秘密の値は画面に表示しません。</li>
         </ul>
       </section>
 
@@ -34,13 +34,13 @@ export default function LogoutBoundaryPage() {
         <h2>導線</h2>
         <ul className="nav-links">
           <li>
-            <a href="/login">ログイン境界へ戻る</a>
+            <a href="/login">ログイン画面へ戻る</a>
           </li>
           <li>
-            <a href="/select-tenant">利用先を選ぶ</a>
+            <a href="/select-tenant">会社を選ぶ</a>
           </li>
           <li>
-            <a href="/customers">顧客一覧へ進む</a>
+            <a href="/customers">お客様一覧へ進む</a>
           </li>
         </ul>
       </section>

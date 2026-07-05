@@ -73,14 +73,12 @@ export function CustomerActionPanel({
   customerId,
   lineRealSendCustomerAvailable,
   lineRealSendWindowOpen,
-  recipientLabel,
-  tenantId
+  recipientLabel
 }: {
   customerId: string;
   lineRealSendCustomerAvailable: boolean;
   lineRealSendWindowOpen: boolean;
   recipientLabel: string;
-  tenantId: string;
 }) {
   const router = useRouter();
   const [staffReplyState, runStaffReply, staffReplyPending] = useActionState(
@@ -130,7 +128,6 @@ export function CustomerActionPanel({
       staffReplyRecipientLabel={recipientLabel}
       staffReplyPending={staffReplyPending}
       staffReplyState={staffReplyState}
-      staffReplyTenantId={tenantId}
       summaryPending={summaryPending}
       summaryState={summaryState}
     />
@@ -152,7 +149,6 @@ export function CustomerActionPanelView({
   staffReplyRecipientLabel,
   staffReplyPending,
   staffReplyState,
-  staffReplyTenantId,
   summaryPending,
   summaryState
 }: {
@@ -170,37 +166,36 @@ export function CustomerActionPanelView({
   staffReplyRecipientLabel: string;
   staffReplyPending: boolean;
   staffReplyState: StaffReplyActionState;
-  staffReplyTenantId: string;
   summaryPending: boolean;
   summaryState: AiSummaryActionState;
 }) {
   return (
     <section className="section">
-      <h2>AI補助と担当者返信</h2>
+      <h2>返信と下書き</h2>
       <p className="meta">
-        AI下書きと回答案は担当者確認前提です。お客様へ自動送信せず、最後は担当者が内容を見て返信します。
+        返信内容を保存したり、LINEへ送る前に確認できます。
+        自動でお客様へ送信されることはありません。
       </p>
       <RoleVisibilityNote variant="customer-actions" />
 
       <details className="ai-assist-details">
         <summary>
-          <strong>AI補助を開く</strong>
-          <span className="meta">AI下書きと回答案は自動送信されません。</span>
+          <strong>返信に使うメモを作る</strong>
+          <span className="meta">下書きや参考回答は自動送信されません。</span>
         </summary>
         <div className="ai-assist-body">
           <div className="action-grid">
             <article className="action-panel">
               <div className="action-card-header">
-                <p className="result-label">AI補助 1</p>
+                <p className="result-label">補助 1</p>
                 <h3>相談内容をまとめる</h3>
               </div>
               <div className="status-pill-list">
-                <span className="status-pill">AI要約</span>
-                <span className="status-pill">タイムラインに保存</span>
+                <span className="status-pill">相談まとめ</span>
+                <span className="status-pill">履歴に保存</span>
               </div>
               <p className="meta">
-                AIが、これまでの相談内容を短くまとめます。結果はタイムラインに
-                AI要約として保存されます。
+                これまでの相談内容を短くまとめます。結果は履歴に保存されます。
               </p>
               <form action={runSummary} className="action-form">
                 <button type="submit" disabled={summaryPending}>
@@ -212,7 +207,7 @@ export function CustomerActionPanelView({
 
             <article className="action-panel">
               <div className="action-card-header">
-                <p className="result-label">AI補助 2</p>
+                <p className="result-label">補助 2</p>
                 <h3>返信文の下書きを作る</h3>
               </div>
               <div className="status-pill-list">
@@ -220,7 +215,7 @@ export function CustomerActionPanelView({
                 <span className="status-pill">自動送信なし</span>
               </div>
               <p className="meta">
-                お客様への返信文をAIで作ります。この下書きはLINEに自動送信されません。
+                お客様への返信文のたたき台を作ります。この下書きはLINEに自動送信されません。
                 内容を確認してから担当者が返信します。
               </p>
               <form action={runReplyDraft} className="action-form">
@@ -233,12 +228,11 @@ export function CustomerActionPanelView({
 
             <article className="action-panel action-panel-wide">
               <div className="action-card-header">
-                <p className="result-label">AI補助 3</p>
+                <p className="result-label">補助 3</p>
                 <h3>ホームページ情報から回答案を作る</h3>
               </div>
               <div className="status-pill-list">
                 <span className="status-pill">参考情報つき回答案</span>
-                <span className="status-pill">AI補助</span>
                 <span className="status-pill">登録済み情報</span>
               </div>
               <p className="meta">
@@ -246,7 +240,7 @@ export function CustomerActionPanelView({
                 登録済み情報だけを参考にし、お客様へ自動送信しません。
               </p>
               <p className="meta">
-                試しやすいキーワード: {ragExampleKeywords.join(" / ")}
+                入力例: {ragExampleKeywords.join(" / ")}
               </p>
               <form action={runRagAnswer} className="action-form">
                 <label htmlFor="rag-query">質問</label>
@@ -272,13 +266,13 @@ export function CustomerActionPanelView({
           <h3>担当者として返信する</h3>
         </div>
         <div className="status-pill-list">
-          <span className="status-pill">タイムライン保存</span>
+          <span className="status-pill">履歴に保存</span>
           <span className="status-pill">LINE送信なし</span>
-          <span className="status-pill">タイムラインに保存</span>
+          <span className="status-pill">送信前に確認</span>
         </div>
         <p className="meta">
-          入力した内容をスタッフ返信としてタイムラインに保存します。
-          LINE実送信が有効な場合だけ、別の確認操作として本番LINE送信を実行できます。
+          入力した内容を担当者返信として履歴に保存します。
+          LINEへ送る場合は、下の確認欄から1通だけ送れます。
         </p>
         {staffReplyForm ?? (
           <StaffReplyConfirmationForm
@@ -288,7 +282,6 @@ export function CustomerActionPanelView({
             recipientLabel={staffReplyRecipientLabel}
             runStaffReply={runStaffReply}
             state={staffReplyState}
-            tenantId={staffReplyTenantId}
           />
         )}
         <StaffReplyResult state={staffReplyState} />
@@ -349,8 +342,8 @@ export function CustomerRichMenuSwitchPanel({
       }
     >
       <div className="action-card-header">
-        <p className="result-label">LINEメニュー切替</p>
-        <h3>顧客のリッチメニューを切り替える</h3>
+        <p className="result-label">LINEメニュー</p>
+        <h3>お客様のLINEメニューを変える</h3>
       </div>
       <div className="status-pill-list">
         <span className="status-pill">初期</span>
@@ -358,11 +351,10 @@ export function CustomerRichMenuSwitchPanel({
         <span className="status-pill">アフター</span>
       </div>
       <p className="meta">
-        この顧客のLINE上に表示されるメニューだけを切り替えます。LINEメッセージ送信、
-        broadcast、multicastは行いません。
+        このお客様に表示されるLINEメニューだけを変えます。メッセージは送りません。
       </p>
       {!customerAvailable ? (
-        <p className="meta">この顧客はLINE連携ID未取得のため、メニュー切替はまだ使えません。</p>
+        <p className="meta">このお客様はLINEとまだつながっていないため、メニュー変更はまだ使えません。</p>
       ) : null}
       <form action={runRichMenuSwitch} className="action-form">
         <div className="action-grid rich-menu-switch-grid">
@@ -391,8 +383,7 @@ function StaffReplyConfirmationForm({
   pending,
   recipientLabel,
   runStaffReply,
-  state,
-  tenantId
+  state
 }: {
   lineRealSendCustomerAvailable: boolean;
   lineRealSendWindowOpen: boolean;
@@ -400,7 +391,6 @@ function StaffReplyConfirmationForm({
   recipientLabel: string;
   runStaffReply: FormAction;
   state: StaffReplyActionState;
-  tenantId: string;
 }) {
   const [replyText, setReplyText] = useState("");
   const [confirmationMode, setConfirmationMode] = useState<"demo_save" | "real_line_push" | null>(
@@ -412,20 +402,20 @@ function StaffReplyConfirmationForm({
   const isConfirming = confirmationMode !== null;
   const canPrepareRealLinePush = lineRealSendCustomerAvailable && lineRealSendWindowOpen;
   const realLineSendStatusLabel = !lineRealSendCustomerAvailable
-    ? "LINE連携ID未取得"
+    ? "LINE未連携"
     : lineRealSendWindowOpen
-      ? "本番LINE送信有効"
-      : "LINE実送信停止中";
+      ? "LINE送信できます"
+      : "LINE送信停止中";
   const realLineSendDescription = !lineRealSendCustomerAvailable
-    ? "この顧客にはLINE送信用IDがまだ紐づいていません。LINEからの受信で顧客連携された後に本番LINE送信を使えます。"
+    ? "このお客様にはLINE返信先がまだ紐づいていません。LINEから受信後に送信できます。"
     : lineRealSendWindowOpen
-      ? "LINE実送信が有効です。OpenAI、再送信、一斉送信、broadcast、multicastは行いません。"
-      : "本番LINE送信は、LINE実送信が有効な時だけ実行できます。今はLINEへ送信せず、タイムライン保存だけ利用できます。";
+      ? "送信前に確認したうえで、このお客様へ1通だけ送ります。"
+      : "今はLINEへ送信せず、履歴保存だけ使えます。";
   const realLineSendButtonLabel = !lineRealSendCustomerAvailable
-    ? "LINE連携ID未取得"
+    ? "LINE未連携"
     : lineRealSendWindowOpen
-      ? "本番LINEへ1通送信する確認へ進む"
-      : "LINE実送信停止中";
+      ? "LINEへ送る前に確認する"
+      : "LINE送信停止中";
 
   useEffect(() => {
     if (state.status === "success") {
@@ -466,7 +456,6 @@ function StaffReplyConfirmationForm({
             onEdit={handleEdit}
             pending={pending}
             recipientLabel={recipientLabel}
-            tenantId={tenantId}
           />
         </>
       ) : (
@@ -487,10 +476,10 @@ function StaffReplyConfirmationForm({
           >
             保存前に確認する
           </button>
-          <div className="real-send-gate-card" aria-label="本番LINE送信">
+          <div className="real-send-gate-card" aria-label="LINE送信">
             <div className="action-card-header">
               <p className="result-label">{realLineSendStatusLabel}</p>
-              <h4>本番LINEへ1通送信</h4>
+              <h4>LINEへ1通送信</h4>
             </div>
             <div className="status-pill-list">
               <span className="status-pill status-pill-danger">1通だけ</span>
@@ -529,8 +518,7 @@ export function StaffReplyConfirmationCard({
   onConfirmChange,
   onEdit,
   pending,
-  recipientLabel,
-  tenantId
+  recipientLabel
 }: {
   bodyPreview: string;
   deliveryMode?: "demo_save" | "real_line_push";
@@ -540,26 +528,25 @@ export function StaffReplyConfirmationCard({
   onEdit: () => void;
   pending: boolean;
   recipientLabel: string;
-  tenantId: string;
 }) {
   const isRealLinePush = deliveryMode === "real_line_push";
 
   return (
     <div className={isRealLinePush ? "confirmation-card real-send-confirmation-card" : "confirmation-card"}>
       <div className="action-card-header">
-        <p className="result-label">送信前の確認</p>
-        <h4>{isRealLinePush ? "本番LINEへ1通送信しますか？" : "この内容を保存しますか？"}</h4>
+        <p className="result-label">確認</p>
+        <h4>{isRealLinePush ? "LINEへ1通送信しますか？" : "この内容を履歴に保存しますか？"}</h4>
       </div>
       <div className="status-pill-list">
         {isRealLinePush ? (
           <>
-            <span className="status-pill status-pill-danger">本番LINE送信</span>
+            <span className="status-pill status-pill-danger">LINEへ送信</span>
             <span className="status-pill status-pill-danger">1通だけ</span>
             <span className="status-pill status-pill-danger">再送信禁止</span>
           </>
         ) : (
           <>
-            <span className="status-pill">タイムライン保存</span>
+            <span className="status-pill">履歴に保存</span>
             <span className="status-pill">担当者返信</span>
             <span className="status-pill">LINE送信なし</span>
           </>
@@ -579,21 +566,19 @@ export function StaffReplyConfirmationCard({
       <dl className="compact-detail confirmation-detail">
         <dt>宛先</dt>
         <dd>{recipientLabel}</dd>
-        <dt>利用先</dt>
-        <dd>{tenantId}</dd>
         <dt>送信種別</dt>
         <dd>
           {isRealLinePush
-            ? "本番LINEへ1通だけ送信します。retry / broadcast / multicastは禁止です。"
-            : "タイムラインに保存します。LINEには送信されません。"}
+            ? "LINEへ1通だけ送信します。再送信や一斉送信は行いません。"
+            : "履歴に保存します。LINEには送信されません。"}
         </dd>
         <dt>送信内容</dt>
         <dd className="message-body">{bodyPreview}</dd>
         <dt>注意</dt>
         <dd>
           {isRealLinePush
-            ? "本番LINEへ送信されます。再送信や一斉送信は行いません。"
-            : "この内容はタイムラインにスタッフ返信として保存されます。"}
+            ? "LINEへ送信されます。再送信や一斉送信は行いません。"
+            : "この内容は履歴に担当者返信として保存されます。"}
         </dd>
       </dl>
       <label className="confirmation-check">
@@ -606,8 +591,8 @@ export function StaffReplyConfirmationCard({
         />
         <span>
           {isRealLinePush
-            ? "本番LINEへ1通だけ送信すること、再送信や一斉送信をしないことを確認しました。"
-            : "この内容を確認しました。LINEには送信されず、タイムラインに保存されることを理解しました。"}
+            ? "LINEへ1通だけ送信すること、再送信や一斉送信をしないことを確認しました。"
+            : "この内容を確認しました。LINEには送信されず、履歴に保存されることを理解しました。"}
         </span>
       </label>
       <div className="confirmation-actions">
@@ -621,11 +606,11 @@ export function StaffReplyConfirmationCard({
         >
           {isRealLinePush
             ? pending
-              ? "本番LINE送信中..."
-              : "本番LINEへ1通送信する"
+              ? "LINE送信中..."
+              : "LINEへ1通送信する"
             : pending
               ? "保存中..."
-              : "この内容を保存する"}
+              : "履歴に保存する"}
         </button>
       </div>
     </div>
@@ -652,11 +637,11 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
       <p className="result-label">送信結果</p>
       <p>
         {state.deliveryMode === "real_line_push"
-          ? "担当者返信を本番LINEへ1通送信し、タイムラインへ保存しました。"
-          : "担当者返信をタイムラインへ保存しました。"}
+          ? "担当者返信をLINEへ1通送信し、履歴へ保存しました。"
+          : "担当者返信を履歴へ保存しました。"}
       </p>
-      <ResultField label="保存したメッセージID" value={result.message.id} />
-      <ResultField label="対応モード" value={formatResponseMode(result.customer.response_mode)} />
+      <ResultField label="保存番号" value={result.message.id} />
+      <ResultField label="対応状況" value={formatResponseMode(result.customer.response_mode)} />
       <ResultField
         label="最後の担当者返信日時"
         value={result.customer.last_staff_reply_at ?? "-"}
@@ -684,8 +669,8 @@ function RichMenuSwitchResult({ state }: { state: RichMenuSwitchActionState }) {
     <div className="action-result">
       <p className="result-label">切替結果</p>
       <p>{result.menu_label}へ切り替えました。LINEメッセージ送信は行っていません。</p>
-      <ResultField label="保存したメッセージID" value={result.message.id} />
-      <ResultField label="メニュー種別" value={result.menu_type} />
+      <ResultField label="保存番号" value={result.message.id} />
+      <ResultField label="切替後のメニュー" value={result.menu_label} />
     </div>
   );
 }
@@ -712,11 +697,11 @@ function AiSummaryResult({ state }: { state: AiSummaryActionState }) {
       <ResultList label="次に確認すること" items={result.summary.next_actions} />
       <ResultList label="注意点" items={result.summary.risk_flags} />
       <ResultField
-        label="おすすめ対応モード"
+        label="おすすめ対応"
         value={formatResponseMode(result.summary.recommended_response_mode)}
       />
-      <ResultField label="AIの種類" value={formatProvider(result.summary.provider)} />
-      <ResultField label="保存したメッセージID" value={result.message.id} />
+      <ResultField label="作成方法" value={formatProvider(result.summary.provider)} />
+      <ResultField label="保存番号" value={result.message.id} />
     </div>
   );
 }
@@ -743,11 +728,11 @@ function AiReplyDraftResult({ state }: { state: AiReplyDraftActionState }) {
       <ResultList label="次に確認すること" items={result.next_questions} />
       <ResultList label="注意点" items={result.risk_flags} />
       <ResultField
-        label="おすすめ対応モード"
+        label="おすすめ対応"
         value={formatResponseMode(result.recommended_response_mode)}
       />
       <ResultField label="担当者確認が必要か" value={formatBoolean(result.should_handoff)} />
-      <ResultField label="AIの種類" value={formatProvider(result.provider)} />
+      <ResultField label="作成方法" value={formatProvider(result.provider)} />
     </div>
   );
 }
@@ -776,10 +761,10 @@ function RagAnswerDraftResult({ state }: { state: RagAnswerDraftActionState }) {
       <ResultList label="注意点" items={result.risk_flags} />
       <ResultField label="担当者確認が必要か" value={formatBoolean(result.handoff_required)} />
       <ResultField
-        label="おすすめ対応モード"
+        label="おすすめ対応"
         value={formatResponseMode(result.recommended_response_mode)}
       />
-      <ResultField label="AIの種類" value={formatProvider(result.provider)} />
+      <ResultField label="作成方法" value={formatProvider(result.provider)} />
       <div className="source-list">
         <p className="result-label">参考にした情報</p>
         {result.sources.length === 0 ? (
@@ -790,13 +775,13 @@ function RagAnswerDraftResult({ state }: { state: RagAnswerDraftActionState }) {
               <li key={source.id}>
                 <a href={source.url}>{source.title}</a>
                 <dl className="compact-detail">
-                  <dt>カテゴリ</dt>
+                  <dt>分類</dt>
                   <dd>{source.category}</dd>
                   <dt>情報の種類</dt>
                   <dd>{source.source_type}</dd>
-                  <dt>スコア</dt>
+                  <dt>参考度</dt>
                   <dd>{source.score}</dd>
-                  <dt>抜粋</dt>
+                  <dt>該当部分</dt>
                   <dd>{source.excerpt}</dd>
                 </dl>
               </li>
@@ -811,7 +796,7 @@ function RagAnswerDraftResult({ state }: { state: RagAnswerDraftActionState }) {
 function ActionError({ message }: { message: string | undefined }) {
   return (
     <div className="error">
-      <strong>アクションエラー</strong>
+      <strong>操作エラー</strong>
       <pre>{message ?? "Unknown error"}</pre>
     </div>
   );
@@ -849,11 +834,11 @@ function formatBoolean(value: boolean): string {
 
 function formatProvider(provider: string | undefined): string {
   if (provider === "mock") {
-    return "AI補助";
+    return "下書き補助";
   }
 
   if (provider === "openai") {
-    return "外部AI";
+    return "回答作成補助";
   }
 
   return "-";
@@ -861,7 +846,7 @@ function formatProvider(provider: string | undefined): string {
 
 function formatResponseMode(mode: string): string {
   const labels: Record<string, string> = {
-    bot_auto: "自動対応中",
+    bot_auto: "自動返信中",
     human_required: "担当者の確認が必要",
     human_active: "担当者が対応中",
     emergency: "至急対応",

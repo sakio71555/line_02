@@ -34,7 +34,7 @@ export function AuthPlaceholderPage({
       <div className="notice">
         <p>{description}</p>
         <p className="meta">
-          認証情報やsession値を画面に表示せず、管理操作は安全な状態で案内します。
+          ログイン情報を画面に表示せず、安全に案内します。
         </p>
       </div>
 
@@ -50,7 +50,7 @@ export function AuthPlaceholderPage({
       <section className="section">
         <h2>運用導線</h2>
         <p className="meta">
-          顧客一覧、未返信アラート、利用先選択へ戻って、現在の対応状況を確認できます。
+          お客様一覧、未対応一覧、会社選択へ戻って、現在の対応状況を確認できます。
         </p>
         <ul className="auth-page-links">
           {links.map((link) => (

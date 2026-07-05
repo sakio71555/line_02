@@ -15,10 +15,10 @@ export default function LoginPlaceholderPage() {
 
       <div className="notice">
         <p>
-          ログイン情報は画面に表示せず、管理APIへの通信にだけ使う前提で扱います。
+          ログイン情報は画面に表示せず、安全な確認にだけ使います。
         </p>
         <p className="meta">
-          パスワードやaccess tokenは画面に表示せず、localStorageやcookieへ独自保存しません。
+          パスワードやログイン用の値は画面に表示しません。
         </p>
       </div>
 
@@ -56,35 +56,35 @@ export default function LoginPlaceholderPage() {
         <h2>セッションの扱い</h2>
         <ul>
           <li>ログイン後の確認情報は、必要なときだけ安全に読み取ります。</li>
-          <li>管理APIへの通信にだけ使い、画面には表示しません。</li>
-          <li>利用先の選択情報はログイン情報とは別に扱います。</li>
-          <li>ログアウト時はログイン状態を消し、独自token保存は残しません。</li>
+          <li>お客様情報を見るための確認にだけ使い、画面には表示しません。</li>
+          <li>会社の選択情報はログイン情報とは別に扱います。</li>
+          <li>ログアウト時はログイン状態を消します。</li>
         </ul>
       </section>
 
       <section className="section">
         <h2>安全確認の内容</h2>
         <ul>
-          <li>認証情報やaccess tokenを画面に表示しません。</li>
-          <li>refresh timer、password reset、OAuthなどの追加導線は別の安全確認で扱います。</li>
-          <li>実Bearer tokenの値は記録しません。</li>
+          <li>ログイン情報を画面に表示しません。</li>
+          <li>パスワード再設定などは別の安全確認で扱います。</li>
+          <li>秘密の値は記録しません。</li>
         </ul>
       </section>
 
       <section className="section">
         <h2>運用導線</h2>
         <p className="meta">
-          顧客一覧、未返信アラート、利用先選択へ進めます。
+          お客様一覧、未対応一覧、会社選択へ進めます。
         </p>
         <ul className="nav-links">
           <li>
-            <a href="/customers">顧客一覧へ進む</a>
+            <a href="/customers">お客様一覧へ進む</a>
           </li>
           <li>
-            <a href="/alerts">未返信アラートへ進む</a>
+            <a href="/alerts">未対応一覧へ進む</a>
           </li>
           <li>
-            <a href="/select-tenant">利用先を選ぶ</a>
+            <a href="/select-tenant">会社を選ぶ</a>
           </li>
           <li>
             <a href="/logout">ログアウト境界</a>

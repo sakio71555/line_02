@@ -31,47 +31,36 @@ describe("admin alerts page", () => {
             })
           ]
         }}
-        config={{
-          apiBaseUrl: "http://localhost:4000",
-          tenantId: "tenant_amamihome"
-        }}
         actionPanel={createActionPanelView()}
       />
     );
 
-    expect(html).toContain("対応が必要な相談を確認する");
-    expect(html).toContain("未返信のままになっている相談を見つけます");
-    expect(html).toContain("未返信チェックを実行する");
-    expect(html).toContain("本番運用確認");
-    expect(html).toContain("手動チェック");
-    expect(html).toContain("外部通知なし");
-    expect(html).toContain("手動実行");
-    expect(html).toContain("通知記録");
+    expect(html).toContain("返せていない相談を確認する");
+    expect(html).toContain("まだ返せていない相談を見つけます");
+    expect(html).toContain("未対応を確認する");
+    expect(html).toContain("手動確認");
+    expect(html).toContain("対応待ちを整理");
+    expect(html).toContain("お客様ページへ移動");
     expect(html).toContain("状態の見方");
     expect(html).toContain("対応待ち");
-    expect(html).toContain("通知記録済み");
-    expect(html).toContain("未返信アラート一覧");
-    expect(html).toContain("アラートカード");
+    expect(html).toContain("確認済み");
+    expect(html).toContain("未対応一覧");
+    expect(html).toContain("未対応カード");
     expect(html).toContain("未返信の相談");
     expect(html).toContain("href=\"/customers/customer_demo_yamada_taro\"");
-    expect(html).toContain("お客様詳細を見る");
-    expect(html).toContain("LINE、Slack、メールへの外部通知はこの画面から自動送信しません");
+    expect(html).toContain("お客様ページを開く");
   });
 
   it("renders an empty state that points to the first action", () => {
     const html = renderToStaticMarkup(
       <AlertsPageView
         alerts={{ status: "ok", alerts: [] }}
-        config={{
-          apiBaseUrl: "http://localhost:4000",
-          tenantId: "tenant_amamihome"
-        }}
         actionPanel={createActionPanelView()}
       />
     );
 
     expect(html).toContain("まだ対応が必要な相談は表示されていません");
-    expect(html).toContain("未返信チェックを実行する");
+    expect(html).toContain("未対応を確認する");
   });
 
   it("renders beginner-friendly action cards without changing action wiring", () => {
@@ -87,15 +76,15 @@ describe("admin alerts page", () => {
       />
     );
 
-    expect(html).toContain("次にすること");
-    expect(html).toContain("未返信チェックを実行する");
-    expect(html).toContain("お客様からの相談にまだ担当者返信がないものを確認");
-    expect(html).toContain("手動実行");
-    expect(html).toContain("開いているアラートを通知記録済みにする");
-    expect(html).toContain("LINE、Slack、メールへの外部通知は送信しません");
-    expect(html).toContain("通知記録");
-    expect(html).toContain("アラート操作の確認範囲");
-    expect(html).toContain("外部通知や一斉送信は、この画面から自動実行しません");
+    expect(html).toContain("未対応を確認する");
+    expect(html).toContain("1つ目のボタンで返せていない相談を探します");
+    expect(html).toContain("返せていない相談を探す");
+    expect(html).toContain("手動確認");
+    expect(html).toContain("未対応を整理");
+    expect(html).toContain("確認済みにする");
+    expect(html).toContain("確認記録");
+    expect(html).toContain("未対応確認の使い方");
+    expect(html).toContain("一斉送信や自動送信をする画面ではありません");
   });
 
   it("formats alert status severity and type labels", () => {

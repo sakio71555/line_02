@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Amami LINE CRM Admin",
-  description: "AI顧客カルテ付きLINE相談CRMの管理画面"
+  description: "LINE相談を確認して返信する管理画面"
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

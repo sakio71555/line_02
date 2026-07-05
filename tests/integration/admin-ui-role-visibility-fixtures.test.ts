@@ -149,14 +149,12 @@ describe("admin UI role visibility fixtures", () => {
       React.createElement(RoleVisibilityNote, { variant: "alerts" })
     );
 
-    expect(customerActionsHtml).toContain("担当者操作の確認範囲");
-    expect(customerActionsHtml).toContain("管理者、チーム管理者、担当者");
-    expect(customerActionsHtml).toContain("相談内容のまとめ");
-    expect(customerActionsHtml).toContain("返信文の下書き");
-    expect(customerActionsHtml).toContain("ホームページ情報からの回答案");
-    expect(customerActionsHtml).toContain("LINE実送信はruntime gate");
-    expect(alertsHtml).toContain("未返信チェックと通知記録");
-    expect(alertsHtml).toContain("担当者は対応が必要な相談の確認から始めます");
-    expect(alertsHtml).toContain("外部通知や一斉送信は、この画面から自動実行しません");
+    expect(customerActionsHtml).toContain("返信するときの注意");
+    expect(customerActionsHtml).toContain("返信文は必ず内容を確認してから保存・送信します。");
+    expect(customerActionsHtml).toContain("下書きや参考回答は、お客様へ自動送信されません。");
+    expect(customerActionsHtml).toContain("LINEへ送る場合は、1通ずつ確認して送ります。");
+    expect(alertsHtml).toContain("未対応確認の使い方");
+    expect(alertsHtml).toContain("返せていない相談を探して、お客様ページから内容を確認します。");
+    expect(alertsHtml).toContain("一斉送信や自動送信をする画面ではありません。");
   });
 });

@@ -107,7 +107,7 @@ export async function runStaffReplyAction(
   if (deliveryMode === "real_line_push" && !isRealLinePushConfirmed(formData)) {
     return {
       status: "error",
-      error: "本番LINE送信の確認チェックが必要です。"
+      error: "LINE送信の確認チェックが必要です。"
     };
   }
 

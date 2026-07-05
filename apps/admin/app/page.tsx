@@ -1,43 +1,38 @@
 import React from "react";
 
-import { getAdminApiConfig } from "../src/admin-api";
-import { RoleVisibilityNote } from "./role-visibility-note";
-
 export const dynamic = "force-dynamic";
 
 const operationSteps = [
-  "顧客一覧を見る",
-  "顧客詳細で相談内容を確認する",
-  "AI要約・返信文の下書き・ホームページ情報からの回答案を見る",
+  "お客様一覧を開く",
+  "LINEのやり取りを見る",
+  "相談内容を確認する",
   "担当者として返信する",
-  "未返信アラートを確認する"
+  "まだ返せていない相談を見る"
 ] as const;
 
 const operationStatusLabels = [
-  "本番運用",
-  "タイムライン保存",
-  "LINE送信は明示承認制",
-  "AI補助は担当者確認前提"
+  "実際のお客様対応用",
+  "LINE履歴を保存",
+  "1通ずつ確認して送信",
+  "担当者が確認して返信"
 ] as const;
 
 export default function AdminHomePage() {
-  const config = getAdminApiConfig();
-
   return (
     <main>
       <section className="home-hero" aria-labelledby="admin-home-title">
-        <p className="eyebrow">本番管理画面</p>
-        <h1 id="admin-home-title">LINE相談の対応状況を管理する画面</h1>
+        <p className="eyebrow">管理画面</p>
+        <h1 id="admin-home-title">お客様からのLINE相談を確認する画面</h1>
         <p className="lead-text">
-          お客様からの相談を確認し、AI補助と担当者返信を使って対応する入口です。
-          まずは顧客一覧から相談中のお客様を開いて、対応状況を確認します。
+          お客様から届いた内容を見て、必要な対応を進める入口です。
+          まずはお客様一覧から相談中のお客様を開いてください。
         </p>
         <div className="home-actions" aria-label="最初に押す導線">
           <a className="button-link button-link-primary" href="/customers">
-            顧客一覧を見る
+            お客様一覧を見る
           </a>
           <a className="button-link" href="/alerts">
-            未返信アラートを見る
+            未対応を見る
           </a>
         </div>
         <div className="status-pill-list" aria-label="現在の接続状態">
@@ -47,34 +42,28 @@ export default function AdminHomePage() {
             </span>
           ))}
         </div>
-        <p className="meta">
-          利用先ID: <span className="mono">{config.tenantId}</span> / API:{" "}
-          <span className="mono">{config.apiBaseUrl}</span>
-        </p>
       </section>
 
       <section className="home-note-grid" aria-label="本番運用の注意点">
         <article className="home-note">
-          <h2>本番運用の入口です</h2>
+          <h2>お客様ごとに確認できます</h2>
           <p>
-            顧客一覧、会話履歴、未返信アラートから、日々の対応状況を確認します。
+            お客様情報、LINEのやり取り、対応状況を1つの画面で確認できます。
           </p>
         </article>
         <article className="home-note">
-          <h2>AI補助は担当者確認前提です</h2>
+          <h2>返信前に確認できます</h2>
           <p>
-            AI要約、返信文の下書き、ホームページ情報からの回答案は、担当者が確認してから使います。
+            LINEへ送る前に内容を確認してから、担当者として返信できます。
           </p>
         </article>
         <article className="home-note">
-          <h2>対応履歴を残します</h2>
+          <h2>履歴が残ります</h2>
           <p>
-            担当者返信やAI要約は、顧客ごとのタイムラインに保存して後から確認できます。
+            お客様とのやり取りは履歴として残るので、あとから見返せます。
           </p>
         </article>
       </section>
-
-      <RoleVisibilityNote />
 
       <section className="section">
         <h2>運用の流れ</h2>
@@ -92,39 +81,35 @@ export default function AdminHomePage() {
         <h2>よく使う入口</h2>
         <div className="home-link-grid">
           <a className="home-link-card home-link-card-primary" href="/customers">
-            <span>顧客一覧を見る</span>
-            <small>相談内容、タイムライン、AI下書きを確認します。</small>
+            <span>お客様一覧を見る</span>
+            <small>相談内容とLINE履歴を確認します。</small>
           </a>
           <a className="home-link-card" href="/alerts">
-            <span>未返信アラートを見る</span>
-            <small>未返信チェックと担当者への通知記録を確認します。</small>
+            <span>未対応を見る</span>
+            <small>まだ返せていない相談を確認します。</small>
           </a>
         </div>
       </section>
 
       <section className="section">
-        <h2>運用管理の画面</h2>
+        <h2>困ったとき</h2>
         <div className="notice">
           <p>
-            ログイン・利用先選択・権限表示は、管理画面を安全に使うための導線です。
-            現在の運用runtimeで利用できる範囲を表示します。
+            画面に入れない、会社を選び直したい、ログインし直したい場合はこちらから操作します。
           </p>
-        <p className="meta">
-            権限が必要な操作は、Admin API側の確認と画面上の安全ゲートを組み合わせて扱います。
-        </p>
       </div>
         <ul className="nav-links">
           <li>
             <a href="/login">ログイン</a>
           </li>
           <li>
-            <a href="/select-tenant">利用先を選ぶ画面</a>
+            <a href="/select-tenant">会社を選び直す</a>
           </li>
           <li>
-            <a href="/permission-denied">権限がありません</a>
+            <a href="/permission-denied">操作できない場合</a>
           </li>
           <li>
-            <a href="/session-expired">ログインの有効期限切れ</a>
+            <a href="/session-expired">ログインし直す</a>
           </li>
         </ul>
       </section>

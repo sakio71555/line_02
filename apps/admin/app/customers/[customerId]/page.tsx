@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import {
-  getAdminApiConfig,
   getAdminCustomerDetail,
   getAdminCustomerTimeline,
   getAdminLineRealSendCapability,
@@ -27,7 +26,6 @@ export default async function CustomerDetailPage({
 }) {
   const { customerId } = await params;
   const requestOptions = await getServerAdminApiRequestOptions();
-  const config = requestOptions.config ?? getAdminApiConfig();
   const detail = await loadCustomerDetail(customerId, requestOptions);
   const timeline = await loadCustomerTimeline(customerId, requestOptions);
   const timelineMessages =
@@ -38,37 +36,29 @@ export default async function CustomerDetailPage({
     <main>
       <div className="page-header">
         <div>
-          <p className="eyebrow">顧客対応</p>
-          <h1>顧客詳細</h1>
-          <p className="meta">
-            利用先: <span className="mono">{config.tenantId}</span> / お客様ID:{" "}
-            <span className="mono">{customerId}</span>
-          </p>
-          <p className="meta">
-            選択中の利用先:{" "}
-            <span className="mono">{config.selectedTenantId ?? "未選択"}</span>
-          </p>
+          <p className="eyebrow">お客様対応</p>
+          <h1>お客様ページ</h1>
+          <p className="meta">お客様情報、LINE履歴、返信操作を確認します。</p>
         </div>
         <Link href="/customers">一覧へ戻る</Link>
       </div>
 
       <div className="notice">
         <p>
-          この画面では、お客様情報、LINEトーク履歴、AIの下書き、担当者返信をまとめて確認します。
+          この画面では、お客様情報、LINEトーク履歴、担当者返信をまとめて確認します。
         </p>
         <p className="meta">
-          AIでまとめた内容はタイムラインへ保存されます。返信文の下書きとホームページ情報からの回答案は
-          担当者確認用で、LINE送信も保存もしません。
+          LINEトーク履歴には、実機のLINE画面と同じやり取りを新しい順で表示します。
         </p>
         <p className="meta">
-          選択中の利用先は、保存済みの利用先情報としてAPIに渡されます。
+          返信するときは、内容を確認してから保存または送信します。
         </p>
       </div>
 
       {detail.status === "error" ? (
         <section className="section">
           <div className="error">
-            <strong>APIエラー</strong>
+            <strong>読み込みエラー</strong>
             <pre>{detail.message}</pre>
           </div>
         </section>
@@ -79,7 +69,6 @@ export default async function CustomerDetailPage({
               <div>
                 <p className="eyebrow">お客様詳細</p>
                 <h1 id="customer-detail-title">{getCustomerRecipientLabel(detail.customer)}</h1>
-                <p className="meta mono">{detail.customer.id}</p>
               </div>
               <span className={getResponseModeBadgeClass(detail.customer.response_mode)}>
                 {formatResponseMode(detail.customer.response_mode)}
@@ -133,7 +122,7 @@ export default async function CustomerDetailPage({
         </p>
         {timeline.status === "error" ? (
           <div className="error">
-            <strong>APIエラー</strong>
+            <strong>読み込みエラー</strong>
             <pre>{timeline.message}</pre>
           </div>
         ) : timelineMessages.length === 0 ? (
@@ -149,7 +138,6 @@ export default async function CustomerDetailPage({
           lineRealSendCustomerAvailable={Boolean(detail.customer.line_user_id)}
           lineRealSendWindowOpen={lineRealSendCapability.lineRealSendWindowOpen}
           recipientLabel={getCustomerRecipientLabel(detail.customer)}
-          tenantId={config.selectedTenantId ?? config.tenantId}
         />
       )}
     </main>
@@ -204,28 +192,25 @@ async function loadCustomerTimeline(customerId: string, options: AdminApiRequest
 
 function customerDetailEntries(customer: AdminCustomerDetail) {
   return [
-    ["お客様ID", customer.id],
-    ["利用先ID", customer.tenant_id],
     ["情報登録", customer.information_registered ? "登録済み" : "未登録"],
-    ["LINE連携ID", customer.line_user_id],
     ["LINE表示名", customer.line_display_name],
     ["お名前", customer.name],
     ["電話番号", customer.phone],
     ["メール", customer.email],
     ["郵便番号", customer.postal_code],
-    ["顧客状態", formatCustomerStatus(customer.status)],
-    ["対応モード", formatResponseMode(customer.response_mode)],
-    ["担当者ID", customer.assigned_staff_id],
     ["住所エリア", customer.address_area],
     ["計画エリア", customer.planned_area],
     ["土地の有無", customer.has_land],
     ["希望時期", customer.desired_timing],
-    ["温度感スコア", customer.temperature_score],
+    ["対応状況", formatCustomerStatus(customer.status)],
+    ["対応の必要度", formatResponseMode(customer.response_mode)],
+    ["相談の温度感", customer.temperature_score],
     ["タグ", customer.tags],
     ["最後のお客様メッセージ", customer.last_customer_message_at],
     ["最後の担当者返信", customer.last_staff_reply_at],
-    ["作成日時", customer.created_at],
-    ["更新日時", customer.updated_at]
+    ["登録日時", customer.created_at],
+    ["更新日時", customer.updated_at],
+    ["管理番号", customer.id]
   ] as const;
 }
 
@@ -259,7 +244,7 @@ function formatCustomerDetailValue(
 }
 
 function isCustomerDateTimeLabel(label: string): boolean {
-  return ["最後のお客様メッセージ", "最後の担当者返信", "作成日時", "更新日時"].includes(
+  return ["最後のお客様メッセージ", "最後の担当者返信", "登録日時", "更新日時"].includes(
     label
   );
 }
@@ -275,7 +260,7 @@ function formatCustomerStatus(status: string): string {
 
 function formatResponseMode(mode: string): string {
   const labels: Record<string, string> = {
-    bot_auto: "自動対応中",
+    bot_auto: "自動返信中",
     human_required: "担当者の確認が必要",
     human_active: "担当者が対応中",
     emergency: "至急対応",
