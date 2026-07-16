@@ -22,7 +22,7 @@ The release hardening review added four completion requirements:
 - No LINE message is sent during implementation, verification, or release.
 - No OpenAI API call is made.
 - Production database access is limited to applying and verifying the two reviewed migrations.
-- Production runtime access is limited to the existing copy-based API/Admin release procedure and service restart.
+- Production runtime access is limited to a validated API/Admin release-directory cutover and service restart.
 - No Nginx, DNS, HTTPS, certificate, firewall, package, or unrelated VPS setting is changed.
 - Automated tests use in-memory or fake clients only.
 
@@ -36,7 +36,7 @@ The release hardening review added four completion requirements:
 
 ## Result
 
-- Status: complete in the repository.
+- Status: complete in the repository and production.
 - Structured, rich-menu, and normal-chat replies use a hidden pending record and are promoted to a visible LINE timeline message only after delivery succeeds.
 - Structured replies carry the exact pending message ID from insert through delivery confirmation. No reply promotion depends on matching duplicate message text.
 - Delivery failures remove the pending record on a best-effort basis and leave a high-priority staff alert; alert creation does not depend on failure timeline logging.
@@ -44,4 +44,15 @@ The release hardening review added four completion requirements:
 - Official-site refreshes require both the process-local guard and an expiring tenant-scoped database lease. The lease is renewed during long work and rechecked immediately before repository writes.
 - Regression coverage includes identical concurrent replies, delivery failure, failed pending cleanup, failed failure-timeline logging, unavailable attachment storage, attachment storage failure, competing scheduler processes, long refresh renewal, and lease loss before commit.
 - Validation passed: `git diff --check`, lint, typecheck, 1,332 tests with 4 skipped, integration tests, and production build.
-- The private attachment bucket and shared lease migrations are release prerequisites and are applied before the production application cutover.
+- The private attachment bucket and shared lease migrations were applied before the production application cutover.
+
+## Review and production release
+
+- Release commit: `462e72ac703bc102674138e78ed8058e53322805`.
+- The implementation review found one unused import. It was removed before release, and the complete validation suite passed again.
+- No remaining blocking review finding was identified for the four release-hardening requirements.
+- The production attachment bucket is verified as private. The runtime lease table and lease-renewal function are present.
+- API and Admin services are active and listen only on localhost. Nginx remained active and was not restarted or reloaded.
+- Production smoke passed: API health `200`, Admin root `200`, and unauthenticated customer API `401`.
+- The deployed commit matches the release commit. The previous production source is retained for rollback; rollback was not required.
+- No LINE send, OpenAI API call, secret display, raw-log display, or customer-data display was performed during release.
