@@ -25,3 +25,8 @@ export {
   createSupabaseAuthServerClient
 } from "./auth-client";
 export * from "./repositories";
+export {
+  lineAttachmentStorageBucket,
+  SupabaseLineAttachmentStorage,
+  type SupabaseStorageClient
+} from "./line-attachment-storage";

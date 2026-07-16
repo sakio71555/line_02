@@ -102,6 +102,106 @@ describe("Supabase knowledge page repository fake-client hardening", () => {
     });
   });
 
+  it("upserts refreshed official-site knowledge without issuing a network request", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const client = new FakeSupabaseClient();
+    client.setResult("knowledge_pages", "list", { data: null, error: null });
+    const repository = new SupabaseKnowledgePageRepository(client.asRepositoryClient());
+    const page = createKnowledgePage({
+      checksum: "refreshed_checksum",
+      last_crawled_at: "2026-07-16T00:00:00.000Z",
+      updated_at: "2026-07-16T00:00:00.000Z"
+    });
+
+    await repository.upsertMany([page]);
+
+    const { created_at: _createdAt, ...expectedPayload } = page;
+
+    expect(client.operations).toContainEqual({
+      table: "knowledge_pages",
+      action: "upsert",
+      payload: [expectedPayload],
+      options: { onConflict: "id" }
+    });
+    expect(
+      client.operations.find(
+        (operation) => operation.table === "knowledge_pages" && operation.action === "upsert"
+      )
+    ).not.toHaveProperty("payload.0.created_at");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("acquires, renews, and releases the shared refresh lease through sanitized RPC calls", async () => {
+    const client = new FakeSupabaseClient();
+    client.setResult("rpc:try_acquire_runtime_lease", "list", {
+      data: true,
+      error: null
+    });
+    client.setResult("rpc:release_runtime_lease", "list", {
+      data: true,
+      error: null
+    });
+    client.setResult("rpc:renew_runtime_lease", "list", {
+      data: true,
+      error: null
+    });
+    const repository = new SupabaseKnowledgePageRepository(client.asRepositoryClient());
+    const leaseInput = {
+      tenant_id: tenantId,
+      lease_key: "official_site_knowledge_refresh",
+      holder_id: "api_instance_a",
+      expires_at: "2026-07-16T00:30:00.000Z",
+      now: "2026-07-16T00:00:00.000Z"
+    };
+
+    await expect(
+      repository.tryAcquireOfficialSiteKnowledgeRefreshLease(leaseInput)
+    ).resolves.toBe(true);
+    await expect(
+      repository.renewOfficialSiteKnowledgeRefreshLease(leaseInput)
+    ).resolves.toBe(true);
+    await expect(
+      repository.releaseOfficialSiteKnowledgeRefreshLease({
+        tenant_id: tenantId,
+        lease_key: leaseInput.lease_key,
+        holder_id: leaseInput.holder_id
+      })
+    ).resolves.toBeUndefined();
+
+    expect(client.operations).toContainEqual({
+      table: "rpc:try_acquire_runtime_lease",
+      action: "rpc",
+      payload: {
+        p_tenant_id: tenantId,
+        p_lease_key: leaseInput.lease_key,
+        p_holder_id: leaseInput.holder_id,
+        p_expires_at: leaseInput.expires_at,
+        p_now: leaseInput.now
+      }
+    });
+    expect(client.operations).toContainEqual({
+      table: "rpc:renew_runtime_lease",
+      action: "rpc",
+      payload: {
+        p_tenant_id: tenantId,
+        p_lease_key: leaseInput.lease_key,
+        p_holder_id: leaseInput.holder_id,
+        p_expires_at: leaseInput.expires_at,
+        p_now: leaseInput.now
+      }
+    });
+    expect(client.operations).toContainEqual({
+      table: "rpc:release_runtime_lease",
+      action: "rpc",
+      payload: {
+        p_tenant_id: tenantId,
+        p_lease_key: leaseInput.lease_key,
+        p_holder_id: leaseInput.holder_id
+      }
+    });
+  });
+
   it("keeps wrong tenant and disallowed rows out of RAG search results", async () => {
     const client = new FakeSupabaseClient();
     client.setResult("knowledge_pages", "list", {

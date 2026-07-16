@@ -307,8 +307,35 @@ export interface CustomerRepository {
 
 export interface MessageRepository {
   insert(message: Message): Promise<Message>;
+  findByTenantAndLineMessageId(tenantId: string, lineMessageId: string): Promise<Message | null>;
+  updateSentToLineAt(input: {
+    tenant_id: string;
+    message_id: string;
+    sent_to_line_at: string;
+  }): Promise<Message | null>;
+  deleteByIdForTenant(tenantId: string, messageId: string): Promise<boolean>;
   findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>>;
   listByCustomer(tenantId: string, customerId: string): Promise<Message[]>;
+}
+
+export interface LineAttachmentStorage {
+  store(input: {
+    tenant_id: string;
+    customer_id: string;
+    line_message_id: string;
+    message_type: "image" | "video" | "audio" | "file";
+    file_name: string | null;
+    content_type: string | null;
+    data: Uint8Array;
+  }): Promise<{ media_storage_path: string }>;
+  download(input: {
+    tenant_id: string;
+    customer_id: string;
+    media_storage_path: string;
+  }): Promise<{
+    data: Uint8Array;
+    content_type: string | null;
+  }>;
 }
 
 export interface AlertRepository {
@@ -393,6 +420,7 @@ export interface CustomerTimelineMessage {
   body: string | null;
   line_message_id: string | null;
   source_url: string | null;
+  attachment_available: boolean;
   created_at: string;
 }
 
@@ -495,6 +523,9 @@ export interface MessageLoggingLineEvent {
   message_id: string | null;
   message_type: string | null;
   text: string | null;
+  file_name?: string | null;
+  file_size?: number | null;
+  duration?: number | null;
 }
 
 export interface LogLineWebhookEventsInput {
@@ -504,6 +535,13 @@ export interface LogLineWebhookEventsInput {
   messageRepository: MessageRepository;
   alertRepository?: AlertRepository;
   getLineDisplayName?: (lineUserId: string) => Promise<string | null>;
+  storeLineAttachment?: (input: {
+    tenant_id: string;
+    customer_id: string;
+    line_message_id: string;
+    message_type: "image" | "video" | "audio" | "file";
+    file_name: string | null;
+  }) => Promise<{ media_storage_path: string }>;
   createId?: () => string;
   now?: () => string;
 }
@@ -511,6 +549,10 @@ export interface LogLineWebhookEventsInput {
 export interface LogLineWebhookEventsResult {
   customers_upserted: number;
   messages_inserted: number;
+  attachments_logged: number;
+  attachments_stored: number;
+  attachment_storage_failures: number;
+  duplicate_events_skipped: number;
   alerts_created: number;
   alerts_notification_required: number;
   rich_menu_guides_logged: number;
@@ -528,10 +570,14 @@ export interface LogLineWebhookEventsResult {
 }
 
 export interface LineReplyInstruction {
+  customer_id?: string;
+  pending_message_id: string;
   reply_token: string | null;
   text: string;
   quick_reply_texts?: string[];
 }
+
+type LineReplyInstructionDraft = Omit<LineReplyInstruction, "pending_message_id">;
 
 export interface CustomerNormalChatAiCandidate extends TenantScoped {
   customer_id: string;
@@ -1581,6 +1627,47 @@ export async function insertLineTextMessage(
   return repository.insert(message);
 }
 
+export async function insertLineAttachmentTimelineMessage(
+  repository: MessageRepository,
+  input: {
+    tenant_id: string;
+    customer_id: string;
+    line_message_id: string;
+    message_type: "image" | "file";
+    body: string;
+    media_storage_path: string | null;
+    created_at: string;
+  },
+  options: { createId?: () => string } = {}
+): Promise<Message> {
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer_id,
+    line_message_id: input.line_message_id,
+    role: "customer",
+    message_type: input.message_type,
+    body: input.body,
+    media_storage_path: input.media_storage_path
+  });
+  const message: Message = {
+    id: options.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: null,
+    line_message_id: input.line_message_id,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: parsed.media_storage_path ?? null,
+    staff_user_id: null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: null,
+    created_at: input.created_at
+  };
+
+  return repository.insert(message);
+}
+
 export async function insertRichMenuGuideTimelineMessage(
   repository: MessageRepository,
   input: {
@@ -1656,6 +1743,43 @@ async function insertSystemTextTimelineMessage(
   return repository.insert(message);
 }
 
+export async function insertSystemAlertTimelineMessage(
+  repository: MessageRepository,
+  input: {
+    tenant_id: string;
+    customer_id: string;
+    body: string;
+    created_at: string;
+  },
+  options: { createId?: () => string } = {}
+): Promise<Message> {
+  const parsed = messageCreateSchema.parse({
+    tenant_id: input.tenant_id,
+    customer_id: input.customer_id,
+    line_message_id: null,
+    role: "system",
+    message_type: "alert",
+    body: input.body
+  });
+  const message: Message = {
+    id: options.createId?.() ?? createDefaultId(),
+    tenant_id: parsed.tenant_id,
+    customer_id: parsed.customer_id,
+    consultation_id: null,
+    line_message_id: null,
+    role: parsed.role,
+    message_type: parsed.message_type,
+    body: parsed.body ?? null,
+    media_storage_path: null,
+    staff_user_id: null,
+    ai_generated: parsed.ai_generated,
+    sent_to_line_at: null,
+    created_at: input.created_at
+  };
+
+  return repository.insert(message);
+}
+
 export async function insertBotTextTimelineMessage(
   repository: MessageRepository,
   input: {
@@ -1671,7 +1795,7 @@ export async function insertBotTextTimelineMessage(
     customer_id: input.customer_id,
     line_message_id: null,
     role: "bot",
-    message_type: "text",
+    message_type: "summary",
     body: input.body
   });
   const message: Message = {
@@ -1691,6 +1815,41 @@ export async function insertBotTextTimelineMessage(
   };
 
   return repository.insert(message);
+}
+
+async function insertPendingLineReplyMessage(
+  repository: MessageRepository,
+  input: {
+    tenant_id: string;
+    customer_id: string;
+    created_at: string;
+    reply: LineReplyInstructionDraft;
+  },
+  options: { createId?: () => string } = {}
+): Promise<LineReplyInstruction> {
+  const pendingMessage = await insertBotTextTimelineMessage(
+    repository,
+    {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer_id,
+      body: input.reply.text,
+      created_at: input.created_at
+    },
+    options
+  );
+
+  return {
+    ...input.reply,
+    pending_message_id: pendingMessage.id
+  };
+}
+
+export function isPendingLineReplyMessage(message: Message): boolean {
+  return (
+    message.role === "bot" &&
+    message.message_type === "summary" &&
+    message.sent_to_line_at === null
+  );
 }
 
 export async function recordCustomerRichMenuSwitchMessage(
@@ -1891,6 +2050,10 @@ export async function logLineWebhookEvents(
 ): Promise<LogLineWebhookEventsResult> {
   let customersUpserted = 0;
   let messagesInserted = 0;
+  let attachmentsLogged = 0;
+  let attachmentsStored = 0;
+  let attachmentStorageFailures = 0;
+  let duplicateEventsSkipped = 0;
   let alertsCreated = 0;
   let alertsNotificationRequired = 0;
   let richMenuGuidesLogged = 0;
@@ -1910,6 +2073,18 @@ export async function logLineWebhookEvents(
 
   for (const event of input.events) {
     const eventTime = lineEventTimestampToIsoString(event.timestamp, input.now);
+
+    if (event.type === "message" && event.message_id) {
+      const existingMessage = await input.messageRepository.findByTenantAndLineMessageId(
+        input.tenant_id,
+        event.message_id
+      );
+
+      if (existingMessage) {
+        duplicateEventsSkipped += 1;
+        continue;
+      }
+    }
 
     if (event.type === "follow" && event.source_user_id) {
       const displayName = await resolveLineDisplayName(
@@ -1975,15 +2150,21 @@ export async function logLineWebhookEvents(
           },
           serviceOptions
         );
-        await insertBotTextTimelineMessage(
-          input.messageRepository,
-          {
-            tenant_id: input.tenant_id,
-            customer_id: customer.id,
-            body: guideAction.reply_text,
-            created_at: eventTime
-          },
-          serviceOptions
+        lineReplyInstructions.push(
+          await insertPendingLineReplyMessage(
+            input.messageRepository,
+            {
+              tenant_id: input.tenant_id,
+              customer_id: customer.id,
+              created_at: eventTime,
+              reply: {
+                customer_id: customer.id,
+                reply_token: event.reply_token ?? null,
+                text: guideAction.reply_text
+              }
+            },
+            serviceOptions
+          )
         );
         customersUpserted += 1;
         messagesInserted += 3;
@@ -2032,7 +2213,10 @@ export async function logLineWebhookEvents(
           staffNotificationEvents.push(structuredConsultationFlow.staff_notification_event);
         }
         if (structuredConsultationFlow.reply) {
-          lineReplyInstructions.push(structuredConsultationFlow.reply);
+          lineReplyInstructions.push({
+            ...structuredConsultationFlow.reply,
+            customer_id: customer.id
+          });
         }
         continue;
       }
@@ -2068,18 +2252,18 @@ export async function logLineWebhookEvents(
           },
           serviceOptions
         );
-        const reply = {
-          reply_token: event.reply_token ?? null,
-          text: buildContactStaffCategoryPromptReply(),
-          quick_reply_texts: [...customerContactStaffCategories]
-        };
-        await insertBotTextTimelineMessage(
+        const reply = await insertPendingLineReplyMessage(
           input.messageRepository,
           {
             tenant_id: input.tenant_id,
             customer_id: customer.id,
-            body: reply.text,
-            created_at: eventTime
+            created_at: eventTime,
+            reply: {
+              customer_id: customer.id,
+              reply_token: event.reply_token ?? null,
+              text: buildContactStaffCategoryPromptReply(),
+              quick_reply_texts: [...customerContactStaffCategories]
+            }
           },
           serviceOptions
         );
@@ -2134,7 +2318,10 @@ export async function logLineWebhookEvents(
         }
         structuredConsultationFlowsLogged += 1;
         if (structuredConsultationFlow.reply) {
-          lineReplyInstructions.push(structuredConsultationFlow.reply);
+          lineReplyInstructions.push({
+            ...structuredConsultationFlow.reply,
+            customer_id: customer.id
+          });
         }
         continue;
       }
@@ -2170,7 +2357,10 @@ export async function logLineWebhookEvents(
         }
         contactStaffFlowsLogged += 1;
         if (contactStaffFlow.reply) {
-          lineReplyInstructions.push(contactStaffFlow.reply);
+          lineReplyInstructions.push({
+            ...contactStaffFlow.reply,
+            customer_id: customer.id
+          });
         }
         continue;
       }
@@ -2214,12 +2404,102 @@ export async function logLineWebhookEvents(
       continue;
     }
 
+    if (
+      event.type === "message" &&
+      isSupportedLineAttachmentType(event.message_type) &&
+      event.source_user_id &&
+      event.message_id
+    ) {
+      const displayName = await resolveLineDisplayName(
+        input,
+        event.source_user_id,
+        lineDisplayNameCache
+      );
+      const customer = await upsertLineCustomer(
+        input.customerRepository,
+        {
+          tenant_id: input.tenant_id,
+          line_user_id: event.source_user_id,
+          display_name: displayName,
+          last_customer_message_at: eventTime
+        },
+        serviceOptions
+      );
+      const body = buildLineAttachmentTimelineBody(event);
+      let storedAttachment: { media_storage_path: string } | null = null;
+      let attachmentStorageFailed = !input.storeLineAttachment;
+
+      if (!input.storeLineAttachment) {
+        attachmentStorageFailures += 1;
+      }
+
+      if (input.storeLineAttachment) {
+        try {
+          storedAttachment = await input.storeLineAttachment({
+            tenant_id: input.tenant_id,
+            customer_id: customer.id,
+            line_message_id: event.message_id,
+            message_type: event.message_type,
+            file_name: event.file_name ?? null
+          });
+        } catch {
+          attachmentStorageFailed = true;
+          attachmentStorageFailures += 1;
+        }
+      }
+
+      const timelineBody = attachmentStorageFailed
+        ? `${body}\n添付ファイルの保存に失敗しました。担当者の確認が必要です。`
+        : body;
+      await insertLineAttachmentTimelineMessage(
+        input.messageRepository,
+        {
+          tenant_id: input.tenant_id,
+          customer_id: customer.id,
+          line_message_id: event.message_id,
+          message_type: event.message_type === "image" ? "image" : "file",
+          body: timelineBody,
+          media_storage_path: storedAttachment?.media_storage_path ?? null,
+          created_at: eventTime
+        },
+        serviceOptions
+      );
+
+      customersUpserted += 1;
+      messagesInserted += 1;
+      attachmentsLogged += 1;
+      attachmentsStored += storedAttachment ? 1 : 0;
+
+      if (input.alertRepository) {
+        const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
+          tenant_id: input.tenant_id,
+          customer,
+          alertRepository: input.alertRepository,
+          message: timelineBody,
+          severity: attachmentStorageFailed ? "high" : "medium",
+          now: () => eventTime,
+          ...(input.createId ? { createId: input.createId } : {})
+        });
+        alertsCreated += alertResult.created ? 1 : 0;
+        alertsNotificationRequired += alertResult.notification_required ? 1 : 0;
+        if (alertResult.notification_required && alertResult.alert) {
+          staffNotificationAlerts.push(alertResult.alert);
+        }
+      }
+
+      continue;
+    }
+
     unsupportedEvents += 1;
   }
 
   return {
     customers_upserted: customersUpserted,
     messages_inserted: messagesInserted,
+    attachments_logged: attachmentsLogged,
+    attachments_stored: attachmentsStored,
+    attachment_storage_failures: attachmentStorageFailures,
+    duplicate_events_skipped: duplicateEventsSkipped,
     alerts_created: alertsCreated,
     alerts_notification_required: alertsNotificationRequired,
     rich_menu_guides_logged: richMenuGuidesLogged,
@@ -2236,6 +2516,29 @@ export async function logLineWebhookEvents(
     staff_notification_alerts: staffNotificationAlerts,
     staff_notification_events: staffNotificationEvents
   };
+}
+
+function isSupportedLineAttachmentType(
+  messageType: string | null
+): messageType is "image" | "video" | "audio" | "file" {
+  return ["image", "video", "audio", "file"].includes(messageType ?? "");
+}
+
+function buildLineAttachmentTimelineBody(event: MessageLoggingLineEvent): string {
+  if (event.message_type === "image") {
+    return "画像を受信しました。";
+  }
+
+  if (event.message_type === "video") {
+    return "動画を受信しました。";
+  }
+
+  if (event.message_type === "audio") {
+    return "音声を受信しました。";
+  }
+
+  const fileName = event.file_name?.replace(/[\r\n]+/g, " ").trim().slice(0, 255);
+  return fileName ? `ファイルを受信しました: ${fileName}` : "ファイルを受信しました。";
 }
 
 type StructuredConsultationFlowResult = {
@@ -2315,14 +2618,13 @@ async function startStructuredConsultationFlow(input: {
   );
   messagesInserted += 1;
 
-  const reply = buildStructuredConsultationStepReply(input.reply_token, firstStep);
-  await insertBotTextTimelineMessage(
+  const reply = await insertPendingLineReplyMessage(
     input.messageRepository,
     {
       tenant_id: input.tenant_id,
       customer_id: input.customer.id,
-      body: reply.text,
-      created_at: input.event_time
+      created_at: input.event_time,
+      reply: buildStructuredConsultationStepReply(input.reply_token, firstStep)
     },
     input.serviceOptions
   );
@@ -2377,14 +2679,13 @@ async function handleStructuredConsultationFlowMessage(input: {
       );
       messagesInserted += 1;
     }
-    const retryReply = buildStructuredConsultationStepRetryReply(input.reply_token, flowState.step);
-    await insertBotTextTimelineMessage(
+    const retryReply = await insertPendingLineReplyMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: input.customer.id,
-        body: retryReply.text,
-        created_at: input.event_time
+        created_at: input.event_time,
+        reply: buildStructuredConsultationStepRetryReply(input.reply_token, flowState.step)
       },
       input.serviceOptions
     );
@@ -2440,7 +2741,7 @@ async function handleStructuredConsultationFlowMessage(input: {
   const nextStep = nextStepState?.step;
 
   if (nextStep) {
-    const reply = buildStructuredConsultationStepReply(input.reply_token, nextStep);
+    const replyDraft = buildStructuredConsultationStepReply(input.reply_token, nextStep);
     await insertSystemTextTimelineMessage(
       input.messageRepository,
       {
@@ -2452,13 +2753,13 @@ async function handleStructuredConsultationFlowMessage(input: {
       input.serviceOptions
     );
     messagesInserted += 1;
-    await insertBotTextTimelineMessage(
+    const reply = await insertPendingLineReplyMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: input.customer.id,
-        body: reply.text,
-        created_at: input.event_time
+        created_at: input.event_time,
+        reply: replyDraft
       },
       input.serviceOptions
     );
@@ -2509,13 +2810,16 @@ async function handleStructuredConsultationFlowMessage(input: {
   );
   messagesInserted += 1;
   const acceptedReply = buildStructuredConsultationAcceptedReply(flowState.config);
-  await insertBotTextTimelineMessage(
+  const pendingAcceptedReply = await insertPendingLineReplyMessage(
     input.messageRepository,
     {
       tenant_id: input.tenant_id,
       customer_id: updatedCustomer.id,
-      body: acceptedReply,
-      created_at: input.event_time
+      created_at: input.event_time,
+      reply: {
+        reply_token: input.reply_token,
+        text: acceptedReply
+      }
     },
     input.serviceOptions
   );
@@ -2546,10 +2850,7 @@ async function handleStructuredConsultationFlowMessage(input: {
     alert_notification_required: alertNotificationRequired,
     alert,
     staff_notification_event: null,
-    reply: {
-      reply_token: input.reply_token,
-      text: acceptedReply
-    }
+    reply: pendingAcceptedReply
   };
 }
 
@@ -2700,7 +3001,7 @@ function resolveStructuredConsultationStepInput(
 function buildStructuredConsultationStepReply(
   replyToken: string | null,
   step: StructuredConsultationStep
-): LineReplyInstruction {
+): LineReplyInstructionDraft {
   return {
     reply_token: replyToken,
     text: [
@@ -2719,7 +3020,7 @@ function buildStructuredConsultationStepReply(
 function buildStructuredConsultationStepRetryReply(
   replyToken: string | null,
   step: StructuredConsultationStep
-): LineReplyInstruction {
+): LineReplyInstructionDraft {
   return {
     reply_token: replyToken,
     text: [
@@ -3012,18 +3313,17 @@ async function handleContactStaffFlowMessage(input: {
       input.serviceOptions
     );
     messagesInserted += 1;
-    const reply = {
-      reply_token: input.reply_token,
-      text: buildContactStaffPriorityPromptReply(category),
-      quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
-    };
-    await insertBotTextTimelineMessage(
+    const reply = await insertPendingLineReplyMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: input.customer.id,
-        body: reply.text,
-        created_at: input.event_time
+        created_at: input.event_time,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffPriorityPromptReply(category),
+          quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
+        }
       },
       input.serviceOptions
     );
@@ -3057,18 +3357,17 @@ async function handleContactStaffFlowMessage(input: {
         );
         messagesInserted += 1;
       }
-      const reply = {
-        reply_token: input.reply_token,
-        text: buildContactStaffPriorityRetryReply(flowState.category),
-        quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
-      };
-      await insertBotTextTimelineMessage(
+      const reply = await insertPendingLineReplyMessage(
         input.messageRepository,
         {
           tenant_id: input.tenant_id,
           customer_id: input.customer.id,
-          body: reply.text,
-          created_at: input.event_time
+          created_at: input.event_time,
+          reply: {
+            reply_token: input.reply_token,
+            text: buildContactStaffPriorityRetryReply(flowState.category),
+            quick_reply_texts: customerContactStaffPriorityOptions.map((option) => option.label)
+          }
         },
         input.serviceOptions
       );
@@ -3123,17 +3422,16 @@ async function handleContactStaffFlowMessage(input: {
         input.serviceOptions
       );
       messagesInserted += 1;
-      const reply = {
-        reply_token: input.reply_token,
-        text: buildContactStaffContentPromptReply(flowState.category, priority.label)
-      };
-      await insertBotTextTimelineMessage(
+      const reply = await insertPendingLineReplyMessage(
         input.messageRepository,
         {
           tenant_id: input.tenant_id,
           customer_id: input.customer.id,
-          body: reply.text,
-          created_at: input.event_time
+          created_at: input.event_time,
+          reply: {
+            reply_token: input.reply_token,
+            text: buildContactStaffContentPromptReply(flowState.category, priority.label)
+          }
         },
         input.serviceOptions
       );
@@ -3161,17 +3459,16 @@ async function handleContactStaffFlowMessage(input: {
       input.serviceOptions
     );
     messagesInserted += 1;
-    const reply = {
-      reply_token: input.reply_token,
-      text: buildContactStaffContactPromptReply(flowState.category, priority.label)
-    };
-    await insertBotTextTimelineMessage(
+    const reply = await insertPendingLineReplyMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: input.customer.id,
-        body: reply.text,
-        created_at: input.event_time
+        created_at: input.event_time,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffContactPromptReply(flowState.category, priority.label)
+        }
       },
       input.serviceOptions
     );
@@ -3207,17 +3504,19 @@ async function handleContactStaffFlowMessage(input: {
         );
         messagesInserted += 1;
       }
-      const reply = {
-        reply_token: input.reply_token,
-        text: buildContactStaffContactInfoRetryReply(flowState.category, flowState.priority?.label)
-      };
-      await insertBotTextTimelineMessage(
+      const reply = await insertPendingLineReplyMessage(
         input.messageRepository,
         {
           tenant_id: input.tenant_id,
           customer_id: input.customer.id,
-          body: reply.text,
-          created_at: input.event_time
+          created_at: input.event_time,
+          reply: {
+            reply_token: input.reply_token,
+            text: buildContactStaffContactInfoRetryReply(
+              flowState.category,
+              flowState.priority?.label
+            )
+          }
         },
         input.serviceOptions
       );
@@ -3276,17 +3575,19 @@ async function handleContactStaffFlowMessage(input: {
       input.serviceOptions
     );
     messagesInserted += 1;
-    const reply = {
-      reply_token: input.reply_token,
-      text: buildContactStaffContentPromptReply(flowState.category, flowState.priority?.label)
-    };
-    await insertBotTextTimelineMessage(
+    const reply = await insertPendingLineReplyMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: updatedCustomer.id,
-        body: reply.text,
-        created_at: input.event_time
+        created_at: input.event_time,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffContentPromptReply(
+            flowState.category,
+            flowState.priority?.label
+          )
+        }
       },
       input.serviceOptions
     );
@@ -3307,17 +3608,19 @@ async function handleContactStaffFlowMessage(input: {
     const body = input.text?.trim();
 
     if (!body) {
-      const reply = {
-        reply_token: input.reply_token,
-        text: buildContactStaffContentRetryReply(flowState.category, flowState.priority?.label)
-      };
-      await insertBotTextTimelineMessage(
+      const reply = await insertPendingLineReplyMessage(
         input.messageRepository,
         {
           tenant_id: input.tenant_id,
           customer_id: input.customer.id,
-          body: reply.text,
-          created_at: input.event_time
+          created_at: input.event_time,
+          reply: {
+            reply_token: input.reply_token,
+            text: buildContactStaffContentRetryReply(
+              flowState.category,
+              flowState.priority?.label
+            )
+          }
         },
         input.serviceOptions
       );
@@ -3367,17 +3670,16 @@ async function handleContactStaffFlowMessage(input: {
       input.serviceOptions
     );
     messagesInserted += 1;
-    const reply = {
-      reply_token: input.reply_token,
-      text: buildContactStaffAcceptedReply()
-    };
-    await insertBotTextTimelineMessage(
+    const reply = await insertPendingLineReplyMessage(
       input.messageRepository,
       {
         tenant_id: input.tenant_id,
         customer_id: updatedCustomer.id,
-        body: reply.text,
-        created_at: input.event_time
+        created_at: input.event_time,
+        reply: {
+          reply_token: input.reply_token,
+          text: buildContactStaffAcceptedReply()
+        }
       },
       input.serviceOptions
     );
@@ -3753,7 +4055,7 @@ export async function listCustomerTimeline(input: {
 }): Promise<CustomerTimelineMessage[]> {
   const messages = await input.messageRepository.listByCustomer(input.tenant_id, input.customer_id);
 
-  return messages.map(toCustomerTimelineMessage);
+  return messages.filter((message) => !isPendingLineReplyMessage(message)).map(toCustomerTimelineMessage);
 }
 
 function compareCustomerListItems(a: CustomerListItem, b: CustomerListItem): number {
@@ -3791,6 +4093,8 @@ function toCustomerDetail(customer: Customer): CustomerDetail {
 }
 
 function toCustomerTimelineMessage(message: Message): CustomerTimelineMessage {
+  const attachmentAvailable = isPrivateLineAttachmentMessage(message);
+
   return {
     id: message.id,
     tenant_id: message.tenant_id,
@@ -3799,9 +4103,35 @@ function toCustomerTimelineMessage(message: Message): CustomerTimelineMessage {
     message_type: message.message_type,
     body: message.body,
     line_message_id: message.line_message_id,
-    source_url: message.media_storage_path,
+    source_url: attachmentAvailable ? null : message.media_storage_path,
+    attachment_available: attachmentAvailable,
     created_at: message.created_at
   };
+}
+
+export function isPrivateLineAttachmentMessage(
+  message: Pick<Message, "tenant_id" | "customer_id" | "message_type" | "media_storage_path">
+): boolean {
+  if (
+    !message.media_storage_path ||
+    (message.message_type !== "image" && message.message_type !== "file")
+  ) {
+    return false;
+  }
+
+  const tenantId = sanitizeLineAttachmentPathSegment(message.tenant_id);
+  const customerId = sanitizeLineAttachmentPathSegment(message.customer_id);
+  const expectedPrefix = `${tenantId}/${customerId}/`;
+  const objectName = message.media_storage_path.slice(expectedPrefix.length);
+
+  return (
+    message.media_storage_path.startsWith(expectedPrefix) &&
+    /^[A-Za-z0-9_-]+\.(?:jpg|png|gif|webp|mp4|m4a|mp3|wav|pdf|txt|bin)$/u.test(objectName)
+  );
+}
+
+function sanitizeLineAttachmentPathSegment(value: string): string {
+  return value.replace(/[^A-Za-z0-9_-]/gu, "_");
 }
 
 function shouldCreateUnrepliedAlert(customer: Customer, nowTime: number): boolean {
@@ -4363,8 +4693,61 @@ export class InMemoryMessageRepository implements MessageRepository {
   private readonly messagesById = new Map<string, Message>();
 
   async insert(message: Message): Promise<Message> {
+    if (
+      message.line_message_id &&
+      (await this.findByTenantAndLineMessageId(message.tenant_id, message.line_message_id))
+    ) {
+      throw new Error("A LINE message with the same tenant and message id already exists.");
+    }
+
     this.messagesById.set(message.id, message);
     return message;
+  }
+
+  async findByTenantAndLineMessageId(
+    tenantId: string,
+    lineMessageId: string
+  ): Promise<Message | null> {
+    return (
+      this.list().find(
+        (message) =>
+          message.tenant_id === tenantId && message.line_message_id === lineMessageId
+      ) ?? null
+    );
+  }
+
+  async updateSentToLineAt(input: {
+    tenant_id: string;
+    message_id: string;
+    sent_to_line_at: string;
+  }): Promise<Message | null> {
+    const message = this.messagesById.get(input.message_id);
+
+    if (
+      !message ||
+      message.tenant_id !== input.tenant_id ||
+      !isPendingLineReplyMessage(message)
+    ) {
+      return null;
+    }
+
+    const updated = {
+      ...message,
+      message_type: isPendingLineReplyMessage(message) ? ("text" as const) : message.message_type,
+      sent_to_line_at: input.sent_to_line_at
+    };
+    this.messagesById.set(updated.id, updated);
+    return updated;
+  }
+
+  async deleteByIdForTenant(tenantId: string, messageId: string): Promise<boolean> {
+    const message = this.messagesById.get(messageId);
+
+    if (!message || message.tenant_id !== tenantId) {
+      return false;
+    }
+
+    return this.messagesById.delete(messageId);
   }
 
   async findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>> {
@@ -4372,7 +4755,11 @@ export class InMemoryMessageRepository implements MessageRepository {
     const latestByCustomerId = new Map<string, Message>();
 
     for (const message of this.list()) {
-      if (message.tenant_id !== tenantId || !customerIdSet.has(message.customer_id)) {
+      if (
+        message.tenant_id !== tenantId ||
+        !customerIdSet.has(message.customer_id) ||
+        isPendingLineReplyMessage(message)
+      ) {
         continue;
       }
 

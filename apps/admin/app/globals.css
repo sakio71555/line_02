@@ -997,6 +997,44 @@ dl.detail-grid {
   white-space: pre-wrap;
 }
 
+.timeline-attachment {
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  max-width: 100%;
+}
+
+.timeline-attachment-button {
+  min-height: 40px;
+}
+
+.timeline-attachment-image,
+.timeline-attachment-video {
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius-md);
+  display: block;
+  max-height: 480px;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.timeline-attachment-audio {
+  max-width: 100%;
+  width: 420px;
+}
+
+.timeline-attachment-link {
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.timeline-attachment-error {
+  color: var(--admin-danger);
+  margin: 0;
+}
+
 .ai-assist-details {
   background: var(--admin-surface);
   border: 1px solid var(--admin-border);

@@ -220,6 +220,7 @@ describe("admin customer detail and timeline API", () => {
       body: "モデルホームを見学したいです",
       line_message_id: "test-line-message-001",
       source_url: null,
+      attachment_available: false,
       created_at: new Date(1710000001000).toISOString()
     });
     expect(timelineBody.messages[2]).toMatchObject({
@@ -228,8 +229,86 @@ describe("admin customer detail and timeline API", () => {
       role: "bot",
       message_type: "text",
       source_url: null,
+      attachment_available: false,
       created_at: new Date(1710000001000).toISOString()
     });
+  });
+
+  it("hides pending LINE replies until delivery is confirmed", async () => {
+    const customerRepository = new InMemoryCustomerRepository();
+    const messageRepository = new InMemoryMessageRepository();
+    const app = createTestApp({
+      tenantId: "tenant_amamihome",
+      tenantSlug: "amamihome",
+      webhookSecret: "wh_dev_amamihome",
+      customerRepository,
+      messageRepository
+    });
+
+    await app.fetch(signedLineWebhookRequest("wh_dev_amamihome", fixtureBody));
+    const customer = getCustomerForTenant(customerRepository, "tenant_amamihome");
+    const pendingReply = await messageRepository.insert({
+      id: "message_pending_line_reply",
+      tenant_id: "tenant_amamihome",
+      customer_id: customer.id,
+      consultation_id: null,
+      line_message_id: null,
+      role: "bot",
+      message_type: "summary",
+      body: "まだLINEへ届いていない返信",
+      media_storage_path: null,
+      staff_user_id: null,
+      ai_generated: true,
+      sent_to_line_at: null,
+      created_at: new Date(1710000002000).toISOString()
+    });
+
+    const pendingTimelineResponse = await app.fetch(
+      new Request(`http://localhost/api/admin/customers/${customer.id}/timeline`, {
+        headers: { "x-tenant-id": "tenant_amamihome" }
+      })
+    );
+    const pendingTimelineBody = await pendingTimelineResponse.json();
+    const latestBeforeConfirmation = await messageRepository.findLatestByCustomerIds(
+      "tenant_amamihome",
+      [customer.id]
+    );
+
+    expect(pendingTimelineResponse.status).toBe(200);
+    expect(
+      pendingTimelineBody.messages.map((message: { body: string | null }) => message.body)
+    ).not.toContain("まだLINEへ届いていない返信");
+    expect(latestBeforeConfirmation.get(customer.id)?.id).not.toBe(pendingReply.id);
+
+    await messageRepository.updateSentToLineAt({
+      tenant_id: "tenant_amamihome",
+      message_id: pendingReply.id,
+      sent_to_line_at: new Date(1710000002500).toISOString()
+    });
+
+    const confirmedTimelineResponse = await app.fetch(
+      new Request(`http://localhost/api/admin/customers/${customer.id}/timeline`, {
+        headers: { "x-tenant-id": "tenant_amamihome" }
+      })
+    );
+    const confirmedTimelineBody = await confirmedTimelineResponse.json();
+    const latestAfterConfirmation = await messageRepository.findLatestByCustomerIds(
+      "tenant_amamihome",
+      [customer.id]
+    );
+
+    expect(confirmedTimelineResponse.status).toBe(200);
+    expect(confirmedTimelineBody.messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: pendingReply.id,
+          role: "bot",
+          message_type: "text",
+          body: "まだLINEへ届いていない返信"
+        })
+      ])
+    );
+    expect(latestAfterConfirmation.get(customer.id)?.id).toBe(pendingReply.id);
   });
 
   it("returns 404 for another tenant customer detail and timeline", async () => {

@@ -5,23 +5,24 @@ import {
   type AlertRepository,
   type CustomerRepository,
   type KnowledgePage,
+  type LineAttachmentStorage,
   type MessageRepository
 } from "@amami-line-crm/domain";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
   createSupabaseServiceRoleServerClient,
   readSupabaseConfigFromEnv,
-  SupabaseConfigError,
-  type SupabaseEnv,
-  type SupabaseEnvName
-} from "../supabase";
-import {
   SupabaseAlertRepository,
+  SupabaseConfigError,
   SupabaseCustomerRepository,
   SupabaseKnowledgePageRepository,
+  SupabaseLineAttachmentStorage,
   SupabaseMessageRepository,
+  type SupabaseEnv,
+  type SupabaseEnvName,
   type SupabaseRepositoryClient
-} from "../supabase/repositories";
+} from "../supabase";
 
 export const repositoryRuntimeModes = ["in_memory", "supabase"] as const;
 
@@ -33,6 +34,7 @@ export interface CustomerMessageRepositoryBundle {
   messageRepository: MessageRepository;
   alertRepository?: AlertRepository;
   knowledgePageRepository?: KnowledgePageRepositoryRuntime;
+  lineAttachmentStorage?: LineAttachmentStorage;
 }
 
 export interface CustomerMessageAlertRepositoryBundle extends CustomerMessageRepositoryBundle {
@@ -46,13 +48,29 @@ export interface CustomerMessageAlertKnowledgeRepositoryBundle
 
 export interface KnowledgePageRepositoryRuntime {
   listByTenant(tenantId: string): Promise<KnowledgePage[]>;
+  upsertMany(pages: KnowledgePage[]): Promise<void> | void;
+  tryAcquireOfficialSiteKnowledgeRefreshLease?(input: {
+    tenant_id: string;
+    lease_key: string;
+    holder_id: string;
+    expires_at: string;
+    now: string;
+  }): Promise<boolean>;
+  releaseOfficialSiteKnowledgeRefreshLease?(input: {
+    tenant_id: string;
+    lease_key: string;
+    holder_id: string;
+  }): Promise<void>;
 }
 
 export interface CreateCustomerMessageRepositoriesForRuntimeInput {
   mode?: RepositoryRuntimeMode;
   env?: SupabaseEnv;
-  supabaseClient?: SupabaseRepositoryClient;
+  supabaseClient?: SupabaseRuntimeRepositoryClient;
 }
+
+export type SupabaseRuntimeRepositoryClient = SupabaseRepositoryClient &
+  Partial<Pick<SupabaseClient, "storage">>;
 
 export class SupabaseRuntimeNotConfiguredError extends Error {
   readonly code = "supabase_runtime_not_configured";
@@ -90,14 +108,21 @@ export function createInMemoryCustomerMessageRepositories(): CustomerMessageAler
 }
 
 export function createSupabaseCustomerMessageRepositories(input: {
-  client: SupabaseRepositoryClient;
+  client: SupabaseRuntimeRepositoryClient;
 }): CustomerMessageAlertKnowledgeRepositoryBundle {
   return {
     runtime_mode: "supabase",
     customerRepository: new SupabaseCustomerRepository(input.client),
     messageRepository: new SupabaseMessageRepository(input.client),
     alertRepository: new SupabaseAlertRepository(input.client),
-    knowledgePageRepository: new SupabaseKnowledgePageRepository(input.client)
+    knowledgePageRepository: new SupabaseKnowledgePageRepository(input.client),
+    ...(input.client.storage
+      ? {
+          lineAttachmentStorage: new SupabaseLineAttachmentStorage(
+            input.client as Pick<SupabaseClient, "storage">
+          )
+        }
+      : {})
   };
 }
 
@@ -138,7 +163,21 @@ export function createCustomerMessageRepositoriesForRuntime(
 }
 
 class EmptyInMemoryKnowledgePageRepository implements KnowledgePageRepositoryRuntime {
-  async listByTenant(_tenantId: string): Promise<KnowledgePage[]> {
-    return [];
+  private readonly pages: KnowledgePage[] = [];
+
+  async listByTenant(tenantId: string): Promise<KnowledgePage[]> {
+    return this.pages.filter((page) => page.tenant_id === tenantId);
+  }
+
+  upsertMany(pages: KnowledgePage[]): void {
+    for (const page of pages) {
+      const index = this.pages.findIndex((existing) => existing.id === page.id);
+
+      if (index >= 0) {
+        this.pages[index] = page;
+      } else {
+        this.pages.push(page);
+      }
+    }
   }
 }

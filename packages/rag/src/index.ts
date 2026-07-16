@@ -1,14 +1,25 @@
 import type { TenantScoped } from "@amami-line-crm/shared";
 
+export const knowledgeSourceTypes = ["official_site", "faq", "manual", "campaign"] as const;
+
+export type KnowledgeSourceType = (typeof knowledgeSourceTypes)[number];
+
 export interface KnowledgePage extends TenantScoped {
   id: string;
   url: string;
   title: string;
   category: string;
-  source_type: string;
+  source_type: KnowledgeSourceType;
   content: string;
   allowed_for_ai: boolean;
   last_crawled_at?: string | null;
+}
+
+export interface KnowledgePageWrite extends KnowledgePage {
+  checksum: string;
+  created_at: string;
+  updated_at: string;
+  last_crawled_at: string;
 }
 
 export interface KnowledgeSearchInput extends TenantScoped {
@@ -33,6 +44,10 @@ export interface SearchTenantKnowledgeInput extends KnowledgeSearchInput {
 
 export interface KnowledgePageRepository {
   listByTenant(tenantId: string): Promise<KnowledgePage[]>;
+}
+
+export interface WritableKnowledgePageRepository extends KnowledgePageRepository {
+  upsertMany(pages: KnowledgePageWrite[]): Promise<void> | void;
 }
 
 export interface KnowledgeSearchRepository {
@@ -209,3 +224,4 @@ function compareKnowledgeSearchResults(
 }
 
 export * from "./amamihome-knowledge";
+export * from "./official-site-knowledge-sync";

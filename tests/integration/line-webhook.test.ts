@@ -12,6 +12,7 @@ import {
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  type LineAttachmentStorage,
   type Message,
   type StaffNotificationPayload,
   type StaffNotifier
@@ -77,6 +78,9 @@ function createTestContext(
     tenantSlug?: string;
     webhookSecret?: string;
     lineClient?: LineClient;
+    lineAttachmentStorage?: LineAttachmentStorage;
+    customerRepository?: InMemoryCustomerRepository;
+    messageRepository?: InMemoryMessageRepository;
     staffLineClient?: LineClient;
     staffNotifier?: StaffNotifier;
     aiProvider?: AiProvider;
@@ -84,13 +88,14 @@ function createTestContext(
     env?: NodeJS.ProcessEnv;
   } = {}
 ) {
-  const customerRepository = new InMemoryCustomerRepository();
-  const messageRepository = new InMemoryMessageRepository();
+  const customerRepository = input.customerRepository ?? new InMemoryCustomerRepository();
+  const messageRepository = input.messageRepository ?? new InMemoryMessageRepository();
   const alertRepository = new InMemoryAlertRepository();
   const app = createApiApp({
     alertRepository,
     customerRepository,
     messageRepository,
+    ...(input.lineAttachmentStorage ? { lineAttachmentStorage: input.lineAttachmentStorage } : {}),
     ...(input.lineClient ? { lineClient: input.lineClient } : {}),
     ...(input.staffLineClient ? { staffLineClient: input.staffLineClient } : {}),
     ...(input.staffNotifier ? { staffNotifier: input.staffNotifier } : {}),
@@ -120,6 +125,35 @@ class RecordingStaffNotifier implements StaffNotifier {
 
   async notify(payload: StaffNotificationPayload): Promise<void> {
     this.notifications.push(payload);
+  }
+}
+
+class PendingReplyInsertBarrierRepository extends InMemoryMessageRepository {
+  private pendingReplyInsertCount = 0;
+  private releasePendingReplies: (() => void) | undefined;
+  private readonly pendingRepliesInserted = new Promise<void>((resolve) => {
+    this.releasePendingReplies = resolve;
+  });
+
+  override async insert(message: Message): Promise<Message> {
+    const inserted = await super.insert(message);
+
+    if (
+      message.role === "bot" &&
+      message.message_type === "summary" &&
+      message.sent_to_line_at === null &&
+      message.body.includes("モデルハウス見学のご予約はこちら")
+    ) {
+      this.pendingReplyInsertCount += 1;
+
+      if (this.pendingReplyInsertCount === 2) {
+        this.releasePendingReplies?.();
+      }
+
+      await this.pendingRepliesInserted;
+    }
+
+    return inserted;
   }
 }
 
@@ -246,6 +280,55 @@ function lineTextMessageBody(input: {
   });
 }
 
+function lineAttachmentMessagesBody(input: {
+  userId: string;
+  timestamp: number;
+}): string {
+  return JSON.stringify({
+    destination: "U_TEST_DESTINATION",
+    events: [
+      {
+        type: "message",
+        mode: "active",
+        timestamp: input.timestamp,
+        source: {
+          type: "user",
+          userId: input.userId
+        },
+        webhookEventId: "01TESTIMAGEEVENT",
+        deliveryContext: {
+          isRedelivery: false
+        },
+        replyToken: "reply_token_image",
+        message: {
+          id: "test-line-image-001",
+          type: "image"
+        }
+      },
+      {
+        type: "message",
+        mode: "active",
+        timestamp: input.timestamp + 1000,
+        source: {
+          type: "user",
+          userId: input.userId
+        },
+        webhookEventId: "01TESTFILEEVENT",
+        deliveryContext: {
+          isRedelivery: false
+        },
+        replyToken: "reply_token_file",
+        message: {
+          id: "test-line-file-001",
+          type: "file",
+          fileName: "inspection-report.pdf",
+          fileSize: 2048
+        }
+      }
+    ]
+  });
+}
+
 async function sendLineText(
   app: { fetch: (request: Request) => Promise<Response> },
   input: {
@@ -260,6 +343,13 @@ async function sendLineText(
   return app.fetch(
     signedRequest(`/api/line/webhook/${knownWebhookSecret}`, lineTextMessageBody(input))
   );
+}
+
+function expectMinimalCustomerWebhookResponse(body: unknown, eventCount = 1): void {
+  expect(body).toEqual({
+    ok: true,
+    event_count: eventCount
+  });
 }
 
 function buildRegisteredCustomer(input: {
@@ -298,44 +388,9 @@ describe("LINE webhook foundation", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      ok: true,
-      tenant_id: "tenant_amamihome",
-      tenant_slug: "amamihome",
-      destination: "U_TEST_DESTINATION",
-      event_count: 2,
-      logging: {
-        customers_upserted: 2,
-        messages_inserted: 2,
-        alerts_created: 0,
-        unsupported_events: 0
-      },
-      normal_chat_ai: {
-        attempted: 1,
-        answered: 1,
-        handoff_required: 0,
-        out_of_scope: 0,
-        line_replies: {
-          sent: 1,
-          failed: 0,
-          skipped: 0
-        },
-        raw_prompt_recorded: false,
-        openai_direct_verification_executed: false
-      }
-    });
-    expect(body.events[0]).toMatchObject({
-      event_id: "01TESTFOLLOWEVENT",
-      type: "follow",
-      source_user_id: "U_TEST_USER_001"
-    });
-    expect(body.events[1]).toMatchObject({
-      event_id: "01TESTMESSAGEEVENT",
-      type: "message",
-      message_id: "test-line-message-001",
-      message_type: "text",
-      text: "モデルホームを見学したいです"
-    });
+    expectMinimalCustomerWebhookResponse(body, 2);
+    expect(JSON.stringify(body)).not.toContain("U_TEST_USER_001");
+    expect(JSON.stringify(body)).not.toContain("モデルホームを見学したいです");
 
     const customers = customerRepository.list();
     expect(customers).toHaveLength(1);
@@ -366,6 +421,425 @@ describe("LINE webhook foundation", () => {
     expect(messages[1]?.body).toContain("https://amamihome.net/reservation/");
   });
 
+  it("fetches LINE attachments into private storage and records only the private object path", async () => {
+    const lineClient = new MockLineClient();
+    lineClient.messageContents.set("test-line-image-001", {
+      data: new Uint8Array([1, 2, 3]),
+      contentType: "image/png"
+    });
+    lineClient.messageContents.set("test-line-file-001", {
+      data: new Uint8Array([4, 5, 6]),
+      contentType: "application/pdf"
+    });
+    const storedAttachments: Array<Parameters<LineAttachmentStorage["store"]>[0]> = [];
+    const lineAttachmentStorage: LineAttachmentStorage = {
+      async store(input) {
+        storedAttachments.push(input);
+        return {
+          media_storage_path: `private/${input.line_message_id}`
+        };
+      },
+      async download() {
+        throw new Error("Attachment download is not used by this webhook test.");
+      }
+    };
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient,
+      lineAttachmentStorage,
+      staffNotifier,
+      env: {
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const rawBody = lineAttachmentMessagesBody({
+      userId: "U_TEST_USER_ATTACHMENTS",
+      timestamp: 1710000001000
+    });
+    const response = await app.fetch(
+      signedRequest(`/api/line/webhook/${knownWebhookSecret}`, rawBody)
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(body, 2);
+    expect(customerRepository.list()).toHaveLength(1);
+    expect(messageRepository.list()).toHaveLength(2);
+    expect(messageRepository.list()[0]).toMatchObject({
+      role: "customer",
+      message_type: "image",
+      body: "画像を受信しました。",
+      line_message_id: "test-line-image-001",
+      media_storage_path: "private/test-line-image-001"
+    });
+    expect(messageRepository.list()[1]).toMatchObject({
+      role: "customer",
+      message_type: "file",
+      body: "ファイルを受信しました: inspection-report.pdf",
+      line_message_id: "test-line-file-001",
+      media_storage_path: "private/test-line-file-001"
+    });
+    expect(storedAttachments).toHaveLength(2);
+    expect(storedAttachments[0]).toMatchObject({
+      line_message_id: "test-line-image-001",
+      message_type: "image",
+      content_type: "image/png",
+      file_name: null
+    });
+    expect(storedAttachments[0]?.data).toEqual(new Uint8Array([1, 2, 3]));
+    expect(storedAttachments[1]).toMatchObject({
+      line_message_id: "test-line-file-001",
+      message_type: "file",
+      content_type: "application/pdf",
+      file_name: "inspection-report.pdf"
+    });
+    expect(storedAttachments[1]?.data).toEqual(new Uint8Array([4, 5, 6]));
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "ファイルを受信しました: inspection-report.pdf"
+    );
+    expect(JSON.stringify(body)).not.toContain("U_TEST_USER_ATTACHMENTS");
+    expect(JSON.stringify(body)).not.toContain("inspection-report.pdf");
+  });
+
+  it("keeps attachment receipts and creates a high-priority alert when private storage fails", async () => {
+    const lineClient = new MockLineClient();
+    lineClient.messageContents.set("test-line-image-001", {
+      data: new Uint8Array([1, 2, 3]),
+      contentType: "image/png"
+    });
+    lineClient.messageContents.set("test-line-file-001", {
+      data: new Uint8Array([4, 5, 6]),
+      contentType: "application/pdf"
+    });
+    const lineAttachmentStorage: LineAttachmentStorage = {
+      async store() {
+        throw new Error("simulated sensitive storage response");
+      },
+      async download() {
+        throw new Error("Attachment download is not used by this webhook test.");
+      }
+    };
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository, messageRepository } = createTestContext({
+      lineClient,
+      lineAttachmentStorage,
+      staffNotifier,
+      env: {
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const response = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineAttachmentMessagesBody({
+          userId: "U_TEST_USER_ATTACHMENT_STORAGE_FAILURE",
+          timestamp: 1710000001000
+        })
+      )
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(body, 2);
+    expect(messageRepository.list()).toHaveLength(2);
+    expect(messageRepository.list()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: "customer",
+          message_type: "image",
+          media_storage_path: null,
+          body: expect.stringContaining("添付ファイルの保存に失敗しました。")
+        }),
+        expect.objectContaining({
+          role: "customer",
+          message_type: "file",
+          media_storage_path: null,
+          body: expect.stringContaining("添付ファイルの保存に失敗しました。")
+        })
+      ])
+    );
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      severity: "high",
+      status: "notified"
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "添付ファイルの保存に失敗しました。担当者の確認が必要です。"
+    );
+    expect(JSON.stringify(messageRepository.list())).not.toContain(
+      "simulated sensitive storage response"
+    );
+    expect(JSON.stringify(body)).not.toContain("U_TEST_USER_ATTACHMENT_STORAGE_FAILURE");
+  });
+
+  it("fails closed when LINE attachment storage is unavailable", async () => {
+    const lineClient = new MockLineClient();
+    lineClient.messageContents.set("test-line-image-001", {
+      data: new Uint8Array([1, 2, 3]),
+      contentType: "image/png"
+    });
+    lineClient.messageContents.set("test-line-file-001", {
+      data: new Uint8Array([4, 5, 6]),
+      contentType: "application/pdf"
+    });
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository, messageRepository } = createTestContext({
+      lineClient,
+      staffNotifier,
+      env: {
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const response = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        lineAttachmentMessagesBody({
+          userId: "U_TEST_USER_ATTACHMENT_STORAGE_UNAVAILABLE",
+          timestamp: 1710000001000
+        })
+      )
+    );
+
+    expect(response.status).toBe(200);
+    expect(messageRepository.list()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: "customer",
+          message_type: "image",
+          media_storage_path: null,
+          body: expect.stringContaining("添付ファイルの保存に失敗しました。")
+        }),
+        expect.objectContaining({
+          role: "customer",
+          message_type: "file",
+          media_storage_path: null,
+          body: expect.stringContaining("添付ファイルの保存に失敗しました。")
+        })
+      ])
+    );
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      severity: "high",
+      status: "notified"
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+  });
+
+  it("skips a redelivered LINE message without duplicating the timeline or reply", async () => {
+    const lineClient = new MockLineClient();
+    const { app, messageRepository } = createTestContext({ lineClient });
+    const input = {
+      userId: "U_TEST_USER_REDELIVERY",
+      eventId: "01TESTREDELIVERY",
+      messageId: "test-redelivery-1",
+      replyToken: "reply_token_redelivery",
+      text: "今日の天気を教えて",
+      timestamp: 1710000001000
+    };
+
+    const firstResponse = await sendLineText(app, input);
+    const secondResponse = await sendLineText(app, input);
+
+    expect(firstResponse.status).toBe(200);
+    expect(secondResponse.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(await firstResponse.json());
+    expectMinimalCustomerWebhookResponse(await secondResponse.json());
+    expect(messageRepository.list()).toHaveLength(2);
+    expect(lineClient.replies).toHaveLength(1);
+  });
+
+  it("returns 500 for a valid webhook whose processing fails", async () => {
+    class FailingInsertMessageRepository extends InMemoryMessageRepository {
+      override async insert(): Promise<Message> {
+        throw new Error("sensitive processing detail");
+      }
+    }
+
+    const { app } = createTestContext({
+      messageRepository: new FailingInsertMessageRepository()
+    });
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_PROCESSING_FAILURE",
+      eventId: "01TESTPROCESSINGFAILURE",
+      messageId: "test-processing-failure-1",
+      replyToken: "reply_token_processing_failure",
+      text: "今日の天気を教えて",
+      timestamp: 1710000001000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ ok: false, error: "line_webhook_processing_failed" });
+    expect(JSON.stringify(body)).not.toContain("sensitive processing detail");
+    expect(JSON.stringify(body)).not.toContain("U_TEST_USER_PROCESSING_FAILURE");
+  });
+
+  it("creates a high-priority handoff when an automatic LINE reply fails", async () => {
+    class FailingReplyLineClient extends MockLineClient {
+      override async replyMessage(): Promise<void> {
+        throw new Error("simulated sensitive LINE response");
+      }
+    }
+
+    const lineClient = new FailingReplyLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository, messageRepository } = createTestContext({
+      lineClient,
+      staffNotifier,
+      env: {
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_REPLY_FAILURE",
+      eventId: "01TESTREPLYFAILURE",
+      messageId: "test-reply-failure-1",
+      replyToken: "reply_token_failure",
+      text: "今日の天気を教えて",
+      timestamp: 1710000001000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(body);
+    expect(messageRepository.list()).toHaveLength(2);
+    expect(messageRepository.list()[0]).toMatchObject({
+      role: "customer",
+      body: "今日の天気を教えて"
+    });
+    expect(messageRepository.list()[1]).toMatchObject({
+      role: "system",
+      message_type: "alert",
+      body: "自動応答のLINE送信に失敗しました。担当者の確認が必要です。"
+    });
+    expect(messageRepository.list()[1]?.body).not.toContain("simulated sensitive LINE response");
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      severity: "high",
+      status: "notified"
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "自動応答のLINE送信に失敗しました。担当者の確認が必要です。"
+    );
+  });
+
+  it("still escalates an automatic LINE reply failure when pending cleanup fails", async () => {
+    class FailingReplyLineClient extends MockLineClient {
+      override async replyMessage(): Promise<void> {
+        throw new Error("simulated sensitive LINE response");
+      }
+    }
+
+    class FailingCleanupMessageRepository extends InMemoryMessageRepository {
+      override async deleteByIdForTenant(): Promise<boolean> {
+        throw new Error("simulated sensitive repository response");
+      }
+    }
+
+    const staffNotifier = new RecordingStaffNotifier();
+    const messageRepository = new FailingCleanupMessageRepository();
+    const { app, alertRepository } = createTestContext({
+      lineClient: new FailingReplyLineClient(),
+      messageRepository,
+      staffNotifier,
+      env: {
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_REPLY_FAILURE_CLEANUP",
+      eventId: "01TESTREPLYFAILURECLEANUP",
+      messageId: "test-reply-failure-cleanup-1",
+      replyToken: "reply_token_failure_cleanup",
+      text: "今日の天気を教えて",
+      timestamp: 1710000001000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(body);
+    expect(messageRepository.list()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: "bot",
+          sent_to_line_at: null
+        }),
+        expect.objectContaining({
+          role: "system",
+          message_type: "alert",
+          body: "自動応答のLINE送信に失敗しました。担当者の確認が必要です。"
+        })
+      ])
+    );
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      severity: "high",
+      status: "notified"
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(JSON.stringify(body)).not.toContain("simulated sensitive");
+  });
+
+  it("keeps the staff alert when the failure timeline entry cannot be written", async () => {
+    class FailingReplyLineClient extends MockLineClient {
+      override async replyMessage(): Promise<void> {
+        throw new Error("simulated sensitive LINE response");
+      }
+    }
+
+    class FailingSystemAlertMessageRepository extends InMemoryMessageRepository {
+      override async insert(message: Message): Promise<Message> {
+        if (message.role === "system" && message.message_type === "alert") {
+          throw new Error("simulated sensitive timeline response");
+        }
+
+        return super.insert(message);
+      }
+    }
+
+    const staffNotifier = new RecordingStaffNotifier();
+    const messageRepository = new FailingSystemAlertMessageRepository();
+    const { app, alertRepository } = createTestContext({
+      lineClient: new FailingReplyLineClient(),
+      messageRepository,
+      staffNotifier,
+      env: {
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_REPLY_FAILURE_TIMELINE",
+      eventId: "01TESTREPLYFAILURETIMELINE",
+      messageId: "test-reply-failure-timeline-1",
+      replyToken: "reply_token_failure_timeline",
+      text: "今日の天気を教えて",
+      timestamp: 1710000001000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(body);
+    expect(messageRepository.list()).toHaveLength(1);
+    expect(messageRepository.list()[0]).toMatchObject({
+      role: "customer",
+      body: "今日の天気を教えて"
+    });
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      severity: "high",
+      status: "notified"
+    });
+    expect(staffNotifier.notifications).toHaveLength(1);
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "自動応答のLINE送信に失敗しました。担当者の確認が必要です。"
+    );
+    expect(JSON.stringify(body)).not.toContain("simulated sensitive");
+  });
+
   it("creates one open staff follow-up alert for a customer LINE update", async () => {
     const { app, alertRepository, customerRepository } = createTestContext();
     const firstResponse = await sendLineText(app, {
@@ -390,8 +864,8 @@ describe("LINE webhook foundation", () => {
 
     expect(firstResponse.status).toBe(200);
     expect(secondResponse.status).toBe(200);
-    expect(firstBody.logging.alerts_created).toBe(1);
-    expect(secondBody.logging.alerts_created).toBe(0);
+    expectMinimalCustomerWebhookResponse(firstBody);
+    expectMinimalCustomerWebhookResponse(secondBody);
     expect(alertRepository.list()).toHaveLength(1);
     expect(alertRepository.list()[0]).toMatchObject({
       tenant_id: "tenant_amamihome",
@@ -417,20 +891,7 @@ describe("LINE webhook foundation", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.logging.alerts_created).toBe(0);
-    expect(body.normal_chat_ai).toMatchObject({
-      attempted: 1,
-      answered: 0,
-      handoff_required: 0,
-      out_of_scope: 1,
-      line_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      },
-      raw_prompt_recorded: false,
-      openai_direct_verification_executed: false
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(alertRepository.list()).toHaveLength(0);
 
     const messages = messageRepository.list();
@@ -443,10 +904,11 @@ describe("LINE webhook foundation", () => {
       role: "bot",
       message_type: "text"
     });
+    expect(messages[1]?.sent_to_line_at).not.toBeNull();
     expect(messages[1]?.body).toContain("関係のない内容にはお答えできません。");
   });
 
-  it("replies to safe official-site normal chat while a staff follow-up is pending", async () => {
+  it("does not auto reply while a staff follow-up is pending", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
       lineClient
@@ -474,37 +936,19 @@ describe("LINE webhook foundation", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.logging.alerts_created).toBe(0);
-    expect(body.normal_chat_ai).toMatchObject({
-      attempted: 1,
-      answered: 1,
-      handoff_required: 0,
-      out_of_scope: 0,
-      line_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      }
-    });
-    expect(alertRepository.list()).toHaveLength(0);
-    expect(lineClient.replies).toHaveLength(1);
-    expect(lineClient.replies[0]?.messages[0]?.text).toContain("会社情報・営業時間");
-    expect(lineClient.replies[0]?.messages[0]?.text).toContain("https://amamihome.net/");
+    expectMinimalCustomerWebhookResponse(body);
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(lineClient.replies).toHaveLength(0);
 
     const messages = messageRepository.list();
-    expect(messages).toHaveLength(2);
+    expect(messages).toHaveLength(1);
     expect(messages[0]).toMatchObject({
       role: "customer",
       body: "営業時間は？"
     });
-    expect(messages[1]).toMatchObject({
-      role: "bot",
-      message_type: "text"
-    });
-    expect(messages[1]?.body).toContain("会社情報・営業時間");
   });
 
-  it("replies to safe official-site normal chat while a staff member is actively handling the customer", async () => {
+  it("does not auto reply while a staff member is actively handling the customer", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
       lineClient
@@ -532,33 +976,56 @@ describe("LINE webhook foundation", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.normal_chat_ai).toMatchObject({
-      attempted: 1,
-      answered: 1,
-      handoff_required: 0,
-      line_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      }
-    });
-    expect(lineClient.replies).toHaveLength(1);
-    expect(lineClient.replies[0]?.messages[0]?.text).toContain("会社情報・営業時間");
-    expect(alertRepository.list()).toHaveLength(0);
+    expectMinimalCustomerWebhookResponse(body);
+    expect(lineClient.replies).toHaveLength(0);
+    expect(alertRepository.list()).toHaveLength(1);
     const messages = messageRepository.list();
-    expect(messages).toHaveLength(2);
+    expect(messages).toHaveLength(1);
     expect(messages[0]).toMatchObject({
       role: "customer",
       body: "営業時間は？"
     });
-    expect(messages[1]).toMatchObject({
-      role: "bot",
-      message_type: "text"
-    });
-    expect(messages[1]?.body).toContain("会社情報・営業時間");
   });
 
-  it("replies to safe official-site normal chat with static fallback when stored knowledge is empty", async () => {
+  it("does not auto reply while the customer is in emergency handling mode", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
+      lineClient
+    });
+    const userId = "U_TEST_USER_EMERGENCY_NORMAL_CHAT";
+    const customer = {
+      ...buildRegisteredCustomer({
+        id: "customer_emergency_normal_chat",
+        lineUserId: userId,
+        displayName: "緊急対応 太郎"
+      }),
+      response_mode: "emergency" as const
+    };
+
+    await customerRepository.save(customer);
+
+    const response = await sendLineText(app, {
+      userId,
+      eventId: "01TESTEMERGENCYNORMALCHAT",
+      messageId: "test-emergency-normal-chat-1",
+      replyToken: "reply_token_emergency_normal_chat",
+      text: "営業時間は？",
+      timestamp: 1710000005000
+    });
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(await response.json());
+    expect(lineClient.replies).toHaveLength(0);
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(messageRepository.list()).toEqual([
+      expect.objectContaining({
+        role: "customer",
+        body: "営業時間は？"
+      })
+    ]);
+  });
+
+  it("hands freshness-sensitive normal chat to staff when stored knowledge is empty", async () => {
     const lineClient = new MockLineClient();
     const { app, alertRepository, customerRepository, messageRepository } = createTestContext({
       lineClient,
@@ -571,7 +1038,7 @@ describe("LINE webhook foundation", () => {
         lineUserId: userId,
         displayName: "知識空 太郎"
       }),
-      response_mode: "human_active" as const
+      response_mode: "bot_auto" as const
     };
 
     await customerRepository.save(customer);
@@ -587,20 +1054,10 @@ describe("LINE webhook foundation", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.normal_chat_ai).toMatchObject({
-      attempted: 1,
-      answered: 1,
-      handoff_required: 0,
-      line_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      }
-    });
-    expect(alertRepository.list()).toHaveLength(0);
+    expectMinimalCustomerWebhookResponse(body);
+    expect(alertRepository.list()).toHaveLength(1);
     expect(lineClient.replies).toHaveLength(1);
-    expect(lineClient.replies[0]?.messages[0]?.text).toContain("会社情報・営業時間");
-    expect(lineClient.replies[0]?.messages[0]?.text).toContain("https://amamihome.net/");
+    expect(lineClient.replies[0]?.messages[0]?.text).toContain("担当者へおつなぎします");
 
     const messages = messageRepository.list();
     expect(messages).toHaveLength(2);
@@ -612,7 +1069,43 @@ describe("LINE webhook foundation", () => {
       role: "bot",
       message_type: "text"
     });
-    expect(messages[1]?.body).toContain("会社情報・営業時間");
+    expect(messages[1]?.body).toContain("担当者へおつなぎします");
+  });
+
+  it("does not treat a future knowledge crawl timestamp as fresh", async () => {
+    const lineClient = new MockLineClient();
+    const { app, alertRepository, messageRepository } = createTestContext({
+      lineClient,
+      knowledgePageRepository: new InMemoryKnowledgePageRepository([
+        {
+          id: "knowledge_future_crawl",
+          tenant_id: "tenant_amamihome",
+          url: "https://amamihome.net/",
+          title: "営業時間",
+          category: "company",
+          source_type: "official_site",
+          content: "営業時間についての保存済み情報です。",
+          allowed_for_ai: true,
+          last_crawled_at: "2099-01-01T00:00:00.000Z"
+        }
+      ])
+    });
+
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_FUTURE_KNOWLEDGE",
+      eventId: "01TESTFUTUREKNOWLEDGE",
+      messageId: "test-future-knowledge-1",
+      replyToken: "reply_token_future_knowledge",
+      text: "営業時間は？",
+      timestamp: 1710000004600
+    });
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(await response.json());
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(lineClient.replies).toHaveLength(1);
+    expect(lineClient.replies[0]?.messages[0]?.text).toContain("担当者へおつなぎします");
+    expect(messageRepository.list()[1]?.sent_to_line_at).not.toBeNull();
   });
 
   it("does not auto reply to staff-required normal chat while a staff member is actively handling the customer", async () => {
@@ -643,16 +1136,7 @@ describe("LINE webhook foundation", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.normal_chat_ai).toMatchObject({
-      attempted: 1,
-      answered: 0,
-      handoff_required: 1,
-      line_replies: {
-        sent: 0,
-        failed: 0,
-        skipped: 1
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(lineClient.replies).toHaveLength(0);
     expect(alertRepository.list()).toHaveLength(1);
     expect(messageRepository.list()).toHaveLength(1);
@@ -684,13 +1168,7 @@ describe("LINE webhook foundation", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.logging.alerts_created).toBe(1);
-    expect(body.staff_notifications).toEqual({
-      attempted: true,
-      notified: 1,
-      failed: 0,
-      skipped: 0
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(staffNotifier.notifications).toHaveLength(1);
     expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
     expect(staffNotifier.notifications[0]?.message).toContain("ローンについて個別相談したいです");
@@ -731,38 +1209,7 @@ describe("LINE webhook foundation", () => {
       const body = await response.json();
 
       expect(response.status).toBe(200);
-      expect(body).toMatchObject({
-        ok: true,
-        customer_line_staff_notification_setup: {
-          enabled: true,
-          attempted: true,
-          setup_trigger_events: 1,
-          customer_event_logging_skipped: true,
-          notification_target_capture: {
-            attempted: true,
-            captured: true,
-            source_type: "user",
-            runtime_file_persistence: {
-              attempted: true,
-              written: true
-            },
-            target_id_value_output: false,
-            raw_event_content_recorded: false
-          },
-          setup_reply: {
-            attempted: true,
-            sent: 1,
-            failed: 0,
-            target_id_value_output: false
-          }
-        },
-        logging: {
-          customers_upserted: 0,
-          messages_inserted: 0,
-          alerts_created: 0,
-          unsupported_events: 0
-        }
-      });
+      expectMinimalCustomerWebhookResponse(body);
       expect(lineClient.replies).toHaveLength(1);
       expect(lineClient.replies[0]).toMatchObject({
         replyToken: "reply_token_customer_channel_staff_target",
@@ -874,27 +1321,7 @@ describe("LINE webhook foundation", () => {
     const messages = messageRepository.list();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      ok: true,
-      line_menu_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      },
-      staff_notifications: {
-        attempted: true,
-        notified: 1,
-        failed: 0,
-        skipped: 0
-      },
-      logging: {
-        customers_upserted: 1,
-        messages_inserted: 3,
-        alerts_created: 0,
-        rich_menu_guides_logged: 1,
-        unsupported_events: 0
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(lineClient.replies).toEqual([
       {
         replyToken: "reply_token_model_house",
@@ -936,6 +1363,135 @@ describe("LINE webhook foundation", () => {
       eventTime,
       lineUserId: "U_TEST_USER_MENU"
     });
+  });
+
+  it("confirms each matching concurrent rich-menu reply by its exact pending message id", async () => {
+    const lineClient = new MockLineClient();
+    const customerRepository = new InMemoryCustomerRepository();
+    const messageRepository = new PendingReplyInsertBarrierRepository();
+    await customerRepository.save(
+      buildRegisteredCustomer({
+        id: "customer_concurrent_menu_reply",
+        lineUserId: "U_TEST_USER_CONCURRENT_MENU"
+      })
+    );
+    const { app } = createTestContext({
+      customerRepository,
+      lineClient,
+      messageRepository,
+      env: {
+        APP_ENV: "production"
+      }
+    });
+
+    const responses = await Promise.all([
+      sendLineText(app, {
+        userId: "U_TEST_USER_CONCURRENT_MENU",
+        eventId: "01TESTCONCURRENTMENUREPLYA",
+        messageId: "test-concurrent-menu-reply-a",
+        replyToken: "reply_token_concurrent_menu_a",
+        text: "モデルハウス見学予約",
+        timestamp: 1710000002000
+      }),
+      sendLineText(app, {
+        userId: "U_TEST_USER_CONCURRENT_MENU",
+        eventId: "01TESTCONCURRENTMENUREPLYB",
+        messageId: "test-concurrent-menu-reply-b",
+        replyToken: "reply_token_concurrent_menu_b",
+        text: "モデルハウス見学予約",
+        timestamp: 1710000003000
+      })
+    ]);
+    const matchingReplies = messageRepository
+      .list()
+      .filter(
+        (message) =>
+          message.role === "bot" &&
+          message.body.includes("モデルハウス見学のご予約はこちら")
+      );
+
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    expect(lineClient.replies).toHaveLength(2);
+    expect([...new Set(matchingReplies.map((message) => message.id))]).toHaveLength(2);
+    expect(matchingReplies).toHaveLength(2);
+    expect(matchingReplies).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          message_type: "text",
+          sent_to_line_at: expect.any(String)
+        }),
+        expect.objectContaining({
+          message_type: "text",
+          sent_to_line_at: expect.any(String)
+        })
+      ])
+    );
+  });
+
+  it("does not expose an unsent rich-menu reply and alerts staff when delivery fails", async () => {
+    class FailingReplyLineClient extends MockLineClient {
+      override async replyMessage(): Promise<void> {
+        throw new Error("simulated sensitive LINE response");
+      }
+    }
+
+    const staffNotifier = new RecordingStaffNotifier();
+    const { app, alertRepository, messageRepository } = createTestContext({
+      lineClient: new FailingReplyLineClient(),
+      staffNotifier,
+      env: {
+        APP_ENV: "production",
+        STAFF_LINE_CHANNEL_ACCESS_TOKEN: "test_staff_line_access_token"
+      }
+    });
+    const response = await sendLineText(app, {
+      userId: "U_TEST_USER_MENU_DELIVERY_FAILURE",
+      eventId: "01TESTMENUGUIDEDELIVERYFAILURE",
+      messageId: "test-menu-guide-delivery-failure-1",
+      replyToken: "reply_token_menu_guide_delivery_failure",
+      text: "モデルハウス見学予約",
+      timestamp: 1710000002000
+    });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expectMinimalCustomerWebhookResponse(body);
+    expect(messageRepository.list()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: "customer",
+          body: "モデルハウス見学予約"
+        }),
+        expect.objectContaining({
+          role: "system",
+          body: "モデルハウス見学予約ページ案内済み"
+        }),
+        expect.objectContaining({
+          role: "system",
+          message_type: "alert",
+          body: "LINE自動返信の送信に失敗しました。担当者の確認が必要です。"
+        })
+      ])
+    );
+    expect(messageRepository.list()).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          role: "bot",
+          sent_to_line_at: null
+        })
+      ])
+    );
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]).toMatchObject({
+      severity: "high",
+      status: "notified"
+    });
+    expect(staffNotifier.notifications.some((notification) =>
+      notification.message.includes(
+        "LINE自動返信の送信に失敗しました。担当者の確認が必要です。"
+      )
+    )).toBe(true);
+    expect(JSON.stringify(body)).not.toContain("simulated sensitive");
   });
 
   it("replies with the home building consultation guide and notifies staff without an alert", async () => {
@@ -982,27 +1538,7 @@ describe("LINE webhook foundation", () => {
     const messages = messageRepository.list();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      ok: true,
-      line_menu_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      },
-      staff_notifications: {
-        attempted: true,
-        notified: 1,
-        failed: 0,
-        skipped: 0
-      },
-      logging: {
-        customers_upserted: 1,
-        messages_inserted: 3,
-        alerts_created: 0,
-        rich_menu_guides_logged: 1,
-        unsupported_events: 0
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(lineClient.replies).toEqual([
       {
         replyToken: "reply_token_home_building_consultation",
@@ -1090,27 +1626,7 @@ describe("LINE webhook foundation", () => {
     const messages = messageRepository.list();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      ok: true,
-      line_menu_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      },
-      staff_notifications: {
-        attempted: true,
-        notified: 1,
-        failed: 0,
-        skipped: 0
-      },
-      logging: {
-        customers_upserted: 1,
-        messages_inserted: 3,
-        alerts_created: 0,
-        rich_menu_guides_logged: 1,
-        unsupported_events: 0
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(lineClient.replies).toEqual([
       {
         replyToken: "reply_token_works",
@@ -1198,27 +1714,7 @@ describe("LINE webhook foundation", () => {
     const messages = messageRepository.list();
 
     expect(response.status).toBe(200);
-    expect(body).toMatchObject({
-      ok: true,
-      line_menu_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      },
-      staff_notifications: {
-        attempted: true,
-        notified: 1,
-        failed: 0,
-        skipped: 0
-      },
-      logging: {
-        customers_upserted: 1,
-        messages_inserted: 3,
-        alerts_created: 0,
-        rich_menu_guides_logged: 1,
-        unsupported_events: 0
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(lineClient.replies).toEqual([
       {
         replyToken: "reply_token_catalog_request",
@@ -1343,22 +1839,7 @@ describe("LINE webhook foundation", () => {
     expect(contactResponse.status).toBe(200);
     expect(contactInfoResponse.status).toBe(200);
     expect(bodyResponse.status).toBe(200);
-    expect(body).toMatchObject({
-      ok: true,
-      line_menu_replies: {
-        sent: 1,
-        failed: 0,
-        skipped: 0
-      },
-      logging: {
-        customers_upserted: 1,
-        messages_inserted: 3,
-        alerts_created: 1,
-        contact_staff_flows_logged: 1,
-        contact_staff_alerts_created: 1,
-        unsupported_events: 0
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(lineClient.replies).toHaveLength(5);
     expect(lineClient.replies[0]).toMatchObject({
       replyToken: "reply_token_contact_staff_trigger",
@@ -1531,10 +2012,7 @@ describe("LINE webhook foundation", () => {
     const categoryBody = await categoryResponse.json();
 
     expect(categoryResponse.status).toBe(200);
-    expect(categoryBody.logging).toMatchObject({
-      messages_inserted: 4,
-      contact_staff_flows_logged: 1
-    });
+    expectMinimalCustomerWebhookResponse(categoryBody);
     expect(lineClient.replies[3]?.messages[0]?.text).toContain(
       "カテゴリ「モデルハウス見学について」で受け付けます。"
     );
@@ -1632,17 +2110,7 @@ describe("LINE webhook foundation", () => {
     const body = await bodyResponse.json();
 
     expect(bodyResponse.status).toBe(200);
-    expect(body).toMatchObject({
-      staff_notifications: {
-        attempted: true,
-        notified: 1,
-        failed: 0
-      },
-      logging: {
-        alerts_created: 1,
-        contact_staff_alerts_created: 1
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(staffNotifier.notifications).toHaveLength(1);
     expect(staffNotifier.notifications[0]?.message).toContain("新しい相談が届きました。");
     expect(staffNotifier.notifications[0]?.message).toContain(
@@ -1767,19 +2235,7 @@ describe("LINE webhook foundation", () => {
     const body = await bodyResponse.json();
 
     expect(bodyResponse.status).toBe(200);
-    expect(body).toMatchObject({
-      staff_notifications: {
-        attempted: true,
-        notified: 1,
-        failed: 0
-      },
-      logging: {
-        alerts_created: 0,
-        alerts_notification_required: 1,
-        contact_staff_alerts_created: 0,
-        contact_staff_alerts_notification_required: 1
-      }
-    });
+    expectMinimalCustomerWebhookResponse(body);
     expect(staffNotifier.notifications).toHaveLength(1);
     expect(staffNotifier.notifications[0]?.message).toContain("LINEの更新が届きました。");
     expect(staffNotifier.notifications[0]?.message).toContain(
@@ -1890,22 +2346,8 @@ describe("LINE webhook foundation", () => {
     const messages = messageRepository.list();
     const customer = customerRepository.list()[0];
 
-    expect(categoryBody).toMatchObject({
-      logging: {
-        messages_inserted: 4,
-        alerts_created: 0,
-        contact_staff_flows_logged: 1,
-        contact_staff_alerts_created: 0
-      }
-    });
-    expect(priorityBody).toMatchObject({
-      logging: {
-        messages_inserted: 4,
-        alerts_created: 0,
-        contact_staff_flows_logged: 1,
-        contact_staff_alerts_created: 0
-      }
-    });
+    expectMinimalCustomerWebhookResponse(categoryBody);
+    expectMinimalCustomerWebhookResponse(priorityBody);
     expect(lineClient.replies[1]?.messages[0]?.text).toContain("返信の優先度");
     expect(lineClient.replies[2]?.messages[0]?.text).not.toContain("お名前と電話番号");
     expect(lineClient.replies[2]?.messages[0]?.text).toContain("相談内容をこのままLINEで");
@@ -1980,18 +2422,7 @@ describe("LINE webhook foundation", () => {
       expect(response.status).toBe(200);
     }
 
-    expect(finalBody).toMatchObject({
-      staff_notifications: {
-        attempted: true,
-        notified: 1,
-        failed: 0
-      },
-      logging: {
-        alerts_created: 1,
-        structured_consultation_alerts_created: 1,
-        structured_consultation_alerts_notification_required: 1
-      }
-    });
+    expectMinimalCustomerWebhookResponse(finalBody);
     expect(lineClient.replies.at(0)?.messages[0]?.text).toContain("用件を次から選んで");
     expect(lineClient.replies.at(-1)?.messages[0]?.text).toContain(
       "打合せ予約・変更の内容を受け付けました。"
@@ -2108,18 +2539,7 @@ describe("LINE webhook foundation", () => {
 
       expect(lineClient.replies[1]?.messages[0]?.text).toContain(testCase.nextPrompt);
       expect(lineClient.replies[1]?.messages[0]?.text).not.toContain("希望方法");
-      expect(finalBody).toMatchObject({
-        staff_notifications: {
-          attempted: true,
-          notified: 1,
-          failed: 0
-        },
-        logging: {
-          alerts_created: 1,
-          structured_consultation_alerts_created: 1,
-          structured_consultation_alerts_notification_required: 1
-        }
-      });
+      expectMinimalCustomerWebhookResponse(finalBody);
 
       const alertMessage = alertRepository.list()[0]?.message ?? "";
       for (const snippet of testCase.alertSnippets) {
@@ -2331,18 +2751,7 @@ describe("LINE webhook foundation", () => {
       expect(lineClient.replies[1]?.messages[0]?.text).not.toContain(
         testCase.nextPromptNotContains
       );
-      expect(finalBody).toMatchObject({
-        staff_notifications: {
-          attempted: true,
-          notified: 1,
-          failed: 0
-        },
-        logging: {
-          alerts_created: 1,
-          structured_consultation_alerts_created: 1,
-          structured_consultation_alerts_notification_required: 1
-        }
-      });
+      expectMinimalCustomerWebhookResponse(finalBody);
 
       const alertMessage = alertRepository.list()[0]?.message ?? "";
       for (const snippet of testCase.alertSnippets) {
@@ -2513,18 +2922,7 @@ describe("LINE webhook foundation", () => {
         expect(response.status).toBe(200);
       }
 
-      expect(finalBody).toMatchObject({
-        staff_notifications: {
-          attempted: true,
-          notified: 1,
-          failed: 0
-        },
-        logging: {
-          alerts_created: 1,
-          structured_consultation_alerts_created: 1,
-          structured_consultation_alerts_notification_required: 1
-        }
-      });
+      expectMinimalCustomerWebhookResponse(finalBody);
 
       const alertMessage = alertRepository.list()[0]?.message ?? "";
       for (const snippet of testCase.alertSnippets) {
@@ -2706,18 +3104,7 @@ describe("LINE webhook foundation", () => {
         expect(response.status).toBe(200);
       }
 
-      expect(finalBody).toMatchObject({
-        staff_notifications: {
-          attempted: true,
-          notified: 1,
-          failed: 0
-        },
-        logging: {
-          alerts_created: 1,
-          structured_consultation_alerts_created: 1,
-          structured_consultation_alerts_notification_required: 1
-        }
-      });
+      expectMinimalCustomerWebhookResponse(finalBody);
 
       const alertMessage = alertRepository.list()[0]?.message ?? "";
       for (const snippet of testCase.alertSnippets) {
@@ -2770,7 +3157,15 @@ describe("LINE webhook foundation", () => {
       line_user_id: "U_TEST_USER_001",
       display_name: null
     });
-    expect(messageRepository.list()).toHaveLength(1);
+    expect(messageRepository.list()).toHaveLength(2);
+    expect(messageRepository.list()[0]).toMatchObject({
+      role: "customer",
+      body: "モデルホームを見学したいです"
+    });
+    expect(messageRepository.list()[1]).toMatchObject({
+      role: "system",
+      message_type: "alert"
+    });
   });
 
   it("returns 401 when the raw-body signature is invalid", async () => {

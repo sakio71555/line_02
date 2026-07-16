@@ -4,6 +4,7 @@ import {
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
   adminApiFetch,
   adminCustomerDetailPath,
+  adminCustomerMessageAttachmentPath,
   adminCustomerRichMenuPath,
   adminLineRealSendCapabilityPath,
   checkUnrepliedAlerts,
@@ -16,6 +17,7 @@ import {
   DEFAULT_TENANT_ID,
   formatAdminApiKnownError,
   getAdminApiConfig,
+  getAdminCustomerMessageAttachment,
   getAdminLineRealSendCapability,
   listAlerts,
   notifyOpenAlerts,
@@ -87,6 +89,12 @@ describe("admin read-only API client", () => {
 
   it("builds encoded customer detail paths", () => {
     expect(adminCustomerDetailPath("customer 1/2")).toBe("/api/admin/customers/customer%201%2F2");
+  });
+
+  it("builds encoded customer attachment paths", () => {
+    expect(adminCustomerMessageAttachmentPath("customer 1/2", "message 3/4")).toBe(
+      "/api/admin/customers/customer%201%2F2/messages/message%203%2F4/attachment"
+    );
   });
 
   it("builds encoded customer rich menu paths", () => {
@@ -182,6 +190,41 @@ describe("admin read-only API client", () => {
     expect(headers.get("authorization")).toBe("Bearer private-admin-token");
     expect(headers.get("x-selected-tenant-id")).toBe("tenant_amamihome");
     expect(headers.get("x-tenant-id")).toBe("tenant_amamihome");
+  });
+
+  it("downloads private customer attachments with admin auth and tenant scope", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const expectedBytes = new Uint8Array([1, 2, 3, 4]);
+
+    const attachment = await getAdminCustomerMessageAttachment("customer 1/2", "message 3/4", {
+      config: {
+        apiBaseUrl: "http://localhost:4000",
+        tenantId: "tenant_amamihome",
+        selectedTenantId: "tenant_amamihome"
+      },
+      accessTokenProvider: () => "private-admin-token",
+      fetchFn: async (input, init) => {
+        calls.push({ input, init });
+        return new Response(expectedBytes, {
+          status: 200,
+          headers: {
+            "content-disposition": 'inline; filename="line-image.png"',
+            "content-type": "image/png"
+          }
+        });
+      }
+    });
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(calls[0]?.input).toBe(
+      "http://localhost:4000/api/admin/customers/customer%201%2F2/messages/message%203%2F4/attachment"
+    );
+    expect(headers.get("accept")).toBe("*/*");
+    expect(headers.get("authorization")).toBe("Bearer private-admin-token");
+    expect(headers.get("x-selected-tenant-id")).toBe("tenant_amamihome");
+    expect(new Uint8Array(attachment.data)).toEqual(expectedBytes);
+    expect(attachment.contentDisposition).toBe('inline; filename="line-image.png"');
+    expect(attachment.contentType).toBe("image/png");
   });
 
   it("does not attach Authorization when the access token provider is absent or blank", async () => {

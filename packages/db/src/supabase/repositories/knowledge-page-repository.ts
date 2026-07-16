@@ -39,6 +39,85 @@ export class SupabaseKnowledgePageRepository {
       .sort(compareKnowledgePageRowsByTitleAsc)
       .map(toKnowledgePage);
   }
+
+  async upsertMany(pages: KnowledgePage[]): Promise<void> {
+    if (pages.length === 0) {
+      return;
+    }
+
+    for (const page of pages) {
+      assertTenantId(page.tenant_id);
+    }
+
+    const result = (await this.client.from("knowledge_pages").upsert(
+      pages.map(toKnowledgePageWriteRow),
+      { onConflict: "id" }
+    )) as SupabaseRepositoryResult<null>;
+    unwrapSupabaseResult(result, "knowledge_pages", "upsertMany");
+  }
+
+  async tryAcquireOfficialSiteKnowledgeRefreshLease(input: {
+    tenant_id: string;
+    lease_key: string;
+    holder_id: string;
+    expires_at: string;
+    now: string;
+  }): Promise<boolean> {
+    assertTenantId(input.tenant_id);
+
+    const result = (await this.client.rpc("try_acquire_runtime_lease", {
+      p_tenant_id: input.tenant_id,
+      p_lease_key: input.lease_key,
+      p_holder_id: input.holder_id,
+      p_expires_at: input.expires_at,
+      p_now: input.now
+    })) as SupabaseRepositoryResult<boolean>;
+
+    return Boolean(
+      unwrapSupabaseResult(result, "runtime_leases", "tryAcquireOfficialSiteKnowledgeRefreshLease")
+    );
+  }
+
+  async renewOfficialSiteKnowledgeRefreshLease(input: {
+    tenant_id: string;
+    lease_key: string;
+    holder_id: string;
+    expires_at: string;
+    now: string;
+  }): Promise<boolean> {
+    assertTenantId(input.tenant_id);
+
+    const result = (await this.client.rpc("renew_runtime_lease", {
+      p_tenant_id: input.tenant_id,
+      p_lease_key: input.lease_key,
+      p_holder_id: input.holder_id,
+      p_expires_at: input.expires_at,
+      p_now: input.now
+    })) as SupabaseRepositoryResult<boolean>;
+
+    return Boolean(
+      unwrapSupabaseResult(result, "runtime_leases", "renewOfficialSiteKnowledgeRefreshLease")
+    );
+  }
+
+  async releaseOfficialSiteKnowledgeRefreshLease(input: {
+    tenant_id: string;
+    lease_key: string;
+    holder_id: string;
+  }): Promise<void> {
+    assertTenantId(input.tenant_id);
+
+    const result = (await this.client.rpc("release_runtime_lease", {
+      p_tenant_id: input.tenant_id,
+      p_lease_key: input.lease_key,
+      p_holder_id: input.holder_id
+    })) as SupabaseRepositoryResult<boolean>;
+    unwrapSupabaseResult(
+      result,
+      "runtime_leases",
+      "releaseOfficialSiteKnowledgeRefreshLease"
+    );
+  }
 }
 
 function toKnowledgePage(row: SupabaseKnowledgePageRow): KnowledgePage {
@@ -55,6 +134,24 @@ function toKnowledgePage(row: SupabaseKnowledgePageRow): KnowledgePage {
     last_crawled_at: row.last_crawled_at,
     created_at: row.created_at,
     updated_at: row.updated_at
+  };
+}
+
+function toKnowledgePageWriteRow(
+  page: KnowledgePage
+): Omit<SupabaseKnowledgePageRow, "created_at"> {
+  return {
+    id: page.id,
+    tenant_id: page.tenant_id,
+    url: page.url,
+    category: page.category,
+    source_type: page.source_type,
+    title: page.title,
+    content: page.content,
+    checksum: page.checksum,
+    allowed_for_ai: page.allowed_for_ai,
+    last_crawled_at: page.last_crawled_at,
+    updated_at: page.updated_at
   };
 }
 

@@ -43,6 +43,9 @@ export interface NormalizedLineWebhookEvent {
   message_id: string | null;
   message_type: string | null;
   text: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  duration: number | null;
 }
 
 export function parseLineWebhookPayload(rawBody: string): LineWebhookPayload {
@@ -84,7 +87,10 @@ function normalizeLineWebhookEvent(event: unknown): NormalizedLineWebhookEvent {
     source_room_id: readString(source.roomId),
     message_id: readString(message.id),
     message_type: readString(message.type),
-    text: readString(message.text)
+    text: readString(message.text),
+    file_name: readString(message.fileName),
+    file_size: readNumber(message.fileSize),
+    duration: readNumber(message.duration)
   };
 }
 
@@ -139,6 +145,11 @@ export interface LineUserProfile {
   language: string | null;
 }
 
+export interface LineMessageContent {
+  data: Uint8Array;
+  contentType: string | null;
+}
+
 export interface LineIdTokenIdentity {
   userId: string;
   displayName: string | null;
@@ -170,6 +181,7 @@ export interface LineClient {
   pushMessage(to: string, messages: LineReplyMessage[]): Promise<void>;
   linkRichMenuToUser?(userId: string, richMenuId: string): Promise<void>;
   getProfile?(userId: string): Promise<LineUserProfile | null>;
+  getMessageContent?(messageId: string): Promise<LineMessageContent>;
 }
 
 export interface LineMessagingPushRequest {
@@ -199,22 +211,35 @@ export interface LineMessagingRichMenuLinkRequest {
   richMenuId: string;
 }
 
+export interface LineMessagingContentRequest {
+  channelAccessToken: string;
+  endpoint: string;
+  messageId: string;
+}
+
 export interface LineMessagingTransport {
   pushMessage(request: LineMessagingPushRequest): Promise<void>;
   replyMessage?(request: LineMessagingReplyRequest): Promise<void>;
   getProfile?(request: LineMessagingProfileRequest): Promise<LineUserProfile>;
   linkRichMenuToUser?(request: LineMessagingRichMenuLinkRequest): Promise<void>;
+  getMessageContent?(request: LineMessagingContentRequest): Promise<LineMessageContent>;
 }
 
 export interface LineMessagingFetchResponse {
   ok: boolean;
   text(): Promise<string>;
+  arrayBuffer?(): Promise<ArrayBuffer>;
+  headers?: {
+    get(name: string): string | null;
+  };
 }
 
 export type LineMessagingFetch = (
   input: string,
   init: RequestInit
 ) => Promise<LineMessagingFetchResponse>;
+
+export const MAX_LINE_MESSAGE_CONTENT_BYTES = 50 * 1024 * 1024;
 
 export interface RealLineClientConfig {
   channelAccessToken: string;
@@ -223,6 +248,7 @@ export interface RealLineClientConfig {
   replyEndpoint?: string;
   profileEndpointBase?: string;
   richMenuEndpointBase?: string;
+  contentEndpointBase?: string;
 }
 
 export class LineMessagingApiError extends Error {
@@ -318,6 +344,43 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
     await this.postWithoutBody(request.endpoint, request.channelAccessToken);
   }
 
+  async getMessageContent(request: LineMessagingContentRequest): Promise<LineMessageContent> {
+    const response = await this.fetchImplementation(request.endpoint, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${request.channelAccessToken}`
+      }
+    });
+
+    if (!response.ok || !response.arrayBuffer) {
+      throw new LineMessagingApiError("LINE message content request failed.", readStatus(response));
+    }
+
+    const declaredContentLength = readContentLength(response);
+
+    if (
+      declaredContentLength !== null &&
+      declaredContentLength > MAX_LINE_MESSAGE_CONTENT_BYTES
+    ) {
+      throw new LineMessagingApiError("LINE message content exceeds the allowed size.");
+    }
+
+    const data = new Uint8Array(await response.arrayBuffer());
+
+    if (data.byteLength === 0) {
+      throw new LineMessagingApiError("LINE message content response was empty.");
+    }
+
+    if (data.byteLength > MAX_LINE_MESSAGE_CONTENT_BYTES) {
+      throw new LineMessagingApiError("LINE message content exceeds the allowed size.");
+    }
+
+    return {
+      data,
+      contentType: response.headers?.get("content-type")?.split(";", 1)[0]?.trim() || null
+    };
+  }
+
   private async postJson(
     endpoint: string,
     channelAccessToken: string,
@@ -357,12 +420,25 @@ function readStatus(response: LineMessagingFetchResponse): number | null {
   return typeof status === "number" && Number.isFinite(status) ? status : null;
 }
 
+function readContentLength(response: LineMessagingFetchResponse): number | null {
+  const value = response.headers?.get("content-length")?.trim();
+
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isSafeInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
 export class RealLineClient implements LineClient {
   private readonly channelAccessToken: string;
   private readonly pushEndpoint: string;
   private readonly replyEndpoint: string;
   private readonly profileEndpointBase: string;
   private readonly richMenuEndpointBase: string;
+  private readonly contentEndpointBase: string;
   private readonly transport: LineMessagingTransport;
 
   constructor(config: RealLineClientConfig) {
@@ -380,6 +456,9 @@ export class RealLineClient implements LineClient {
       config.profileEndpointBase?.replace(/\/+$/u, "") ?? "https://api.line.me/v2/bot/profile";
     this.richMenuEndpointBase =
       config.richMenuEndpointBase?.replace(/\/+$/u, "") ?? "https://api.line.me/v2/bot/user";
+    this.contentEndpointBase =
+      config.contentEndpointBase?.replace(/\/+$/u, "") ??
+      "https://api-data.line.me/v2/bot/message";
   }
 
   async replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void> {
@@ -475,6 +554,32 @@ export class RealLineClient implements LineClient {
       throw new LineMessagingApiError();
     }
   }
+
+  async getMessageContent(messageId: string): Promise<LineMessageContent> {
+    const normalizedMessageId = messageId.trim();
+
+    if (!normalizedMessageId) {
+      throw new LineMessagingApiError("LINE message id is required.");
+    }
+
+    if (!this.transport.getMessageContent) {
+      throw new LineMessagingApiError("LINE message content transport is not configured.");
+    }
+
+    try {
+      return await this.transport.getMessageContent({
+        channelAccessToken: this.channelAccessToken,
+        endpoint: `${this.contentEndpointBase}/${encodeURIComponent(normalizedMessageId)}/content`,
+        messageId: normalizedMessageId
+      });
+    } catch (error) {
+      if (error instanceof LineMessagingApiError) {
+        throw error;
+      }
+
+      throw new LineMessagingApiError();
+    }
+  }
 }
 
 export class MockLineClient implements LineClient {
@@ -482,6 +587,7 @@ export class MockLineClient implements LineClient {
   readonly pushes: Array<{ to: string; messages: LineReplyMessage[] }> = [];
   readonly richMenuLinks: Array<{ userId: string; richMenuId: string }> = [];
   readonly profiles = new Map<string, LineUserProfile>();
+  readonly messageContents = new Map<string, LineMessageContent>();
 
   async replyMessage(replyToken: string, messages: LineReplyMessage[]): Promise<void> {
     this.replies.push({ replyToken, messages });
@@ -497,6 +603,16 @@ export class MockLineClient implements LineClient {
 
   async getProfile(userId: string): Promise<LineUserProfile | null> {
     return this.profiles.get(userId) ?? null;
+  }
+
+  async getMessageContent(messageId: string): Promise<LineMessageContent> {
+    const content = this.messageContents.get(messageId);
+
+    if (!content) {
+      throw new LineMessagingApiError("Mock LINE message content is not configured.");
+    }
+
+    return content;
   }
 }
 

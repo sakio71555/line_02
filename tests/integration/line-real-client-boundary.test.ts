@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   FetchLineMessagingTransport,
   LineMessagingApiError,
+  MAX_LINE_MESSAGE_CONTENT_BYTES,
   RealLineClient,
+  type LineMessageContent,
+  type LineMessagingContentRequest,
   type LineMessagingProfileRequest,
   type LineMessagingPushRequest,
   type LineMessagingRichMenuLinkRequest,
@@ -73,6 +76,27 @@ describe("Loop 102 RealLineClient boundary", () => {
         endpoint: "https://line.example.invalid/user/U%20TEST%2FLINE/richmenu/richmenu-test-id",
         userId: "U TEST/LINE",
         richMenuId: "richmenu-test-id"
+      }
+    ]);
+  });
+
+  it("builds LINE message content requests through an injected transport", async () => {
+    const transport = new RecordingLineMessagingTransport();
+    const client = new RealLineClient({
+      channelAccessToken: "test-channel-access-token",
+      contentEndpointBase: "https://line.example.invalid/content/",
+      transport
+    });
+
+    await expect(client.getMessageContent("message id/1")).resolves.toEqual({
+      data: new Uint8Array([1, 2, 3]),
+      contentType: "application/octet-stream"
+    });
+    expect(transport.messageContents).toEqual([
+      {
+        channelAccessToken: "test-channel-access-token",
+        endpoint: "https://line.example.invalid/content/message%20id%2F1/content",
+        messageId: "message id/1"
       }
     ]);
   });
@@ -147,6 +171,78 @@ describe("Loop 102 RealLineClient boundary", () => {
     ).resolves.toBeUndefined();
   });
 
+  it("downloads LINE message content through the fetch transport", async () => {
+    const transport = new FetchLineMessagingTransport({
+      async fetch(input, init) {
+        expect(input).toBe("https://line.example.invalid/content/message-1/content");
+        expect(init.method).toBe("GET");
+        expect(init.headers).toMatchObject({
+          authorization: "Bearer test-channel-access-token"
+        });
+
+        return {
+          ok: true,
+          async text() {
+            return "";
+          },
+          async arrayBuffer() {
+            return new Uint8Array([4, 5, 6]).buffer;
+          },
+          headers: {
+            get(name: string) {
+              return name.toLowerCase() === "content-type" ? "image/png" : null;
+            }
+          }
+        };
+      }
+    });
+
+    await expect(
+      transport.getMessageContent({
+        channelAccessToken: "test-channel-access-token",
+        endpoint: "https://line.example.invalid/content/message-1/content",
+        messageId: "message-1"
+      })
+    ).resolves.toEqual({
+      data: new Uint8Array([4, 5, 6]),
+      contentType: "image/png"
+    });
+  });
+
+  it("rejects oversized LINE message content before reading the response body", async () => {
+    let bodyRead = false;
+    const transport = new FetchLineMessagingTransport({
+      async fetch() {
+        return {
+          ok: true,
+          async text() {
+            return "";
+          },
+          async arrayBuffer() {
+            bodyRead = true;
+            return new Uint8Array([1]).buffer;
+          },
+          headers: {
+            get(name: string) {
+              return name.toLowerCase() === "content-length"
+                ? String(MAX_LINE_MESSAGE_CONTENT_BYTES + 1)
+                : null;
+            }
+          }
+        };
+      }
+    });
+
+    await expect(
+      transport.getMessageContent({
+        channelAccessToken: "test-channel-access-token",
+        endpoint: "https://line.example.invalid/content/message-too-large/content",
+        messageId: "message-too-large"
+      })
+    ).rejects.toThrow("LINE message content exceeds the allowed size.");
+    expect(bodyRead).toBe(false);
+  });
+
   it("redacts transport error details from RealLineClient errors", async () => {
     const client = new RealLineClient({
       channelAccessToken: "test-channel-access-token",
@@ -171,6 +267,7 @@ class RecordingLineMessagingTransport implements LineMessagingTransport {
   readonly pushes: LineMessagingPushRequest[] = [];
   readonly profiles: LineMessagingProfileRequest[] = [];
   readonly richMenuLinks: LineMessagingRichMenuLinkRequest[] = [];
+  readonly messageContents: LineMessagingContentRequest[] = [];
 
   async pushMessage(request: LineMessagingPushRequest): Promise<void> {
     this.pushes.push(request);
@@ -190,5 +287,13 @@ class RecordingLineMessagingTransport implements LineMessagingTransport {
 
   async linkRichMenuToUser(request: LineMessagingRichMenuLinkRequest): Promise<void> {
     this.richMenuLinks.push(request);
+  }
+
+  async getMessageContent(request: LineMessagingContentRequest): Promise<LineMessageContent> {
+    this.messageContents.push(request);
+    return {
+      data: new Uint8Array([1, 2, 3]),
+      contentType: "application/octet-stream"
+    };
   }
 }

@@ -1,13 +1,17 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import type { AdminCustomerTimelineResponse } from "../../../src/admin-api";
 import { formatAdminDateTime } from "../../../src/customer-timeline-display";
 
 type AdminTimelineMessage = AdminCustomerTimelineResponse["messages"][number];
 
 export function CustomerTimelineList({
+  customerId,
   messages
 }: {
+  customerId: string;
   messages: AdminTimelineMessage[];
 }) {
   return (
@@ -27,14 +31,159 @@ export function CustomerTimelineList({
             <span className="meta">{formatAdminDateTime(message.created_at)}</span>
           </div>
           <p className="timeline-body">{message.body ?? ""}</p>
+          {message.attachment_available ? (
+            <PrivateTimelineAttachment
+              customerId={customerId}
+              messageId={message.id}
+              messageType={message.message_type}
+            />
+          ) : null}
           {message.source_url ? (
             <div className="timeline-meta">
-              <a href={message.source_url}>参考URL</a>
+              <a href={message.source_url} rel="noreferrer" target="_blank">
+                参考URL
+              </a>
             </div>
           ) : null}
         </li>
       ))}
     </ol>
+  );
+}
+
+function PrivateTimelineAttachment({
+  customerId,
+  messageId,
+  messageType
+}: {
+  customerId: string;
+  messageId: string;
+  messageType: string;
+}) {
+  const [attachment, setAttachment] = useState<{
+    objectUrl: string;
+    contentType: string;
+  } | null>(null);
+  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+
+  useEffect(() => {
+    return () => {
+      if (attachment) {
+        URL.revokeObjectURL(attachment.objectUrl);
+      }
+    };
+  }, [attachment]);
+
+  async function loadAttachment() {
+    setStatus("loading");
+
+    try {
+      const response = await fetch(
+        `/api/customers/${encodeURIComponent(customerId)}/messages/${encodeURIComponent(messageId)}/attachment`,
+        {
+          cache: "no-store",
+          headers: {
+            accept: "*/*"
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("attachment_fetch_failed");
+      }
+
+      const blob = await response.blob();
+      setAttachment({
+        contentType: response.headers.get("content-type") ?? blob.type,
+        objectUrl: URL.createObjectURL(blob)
+      });
+      setStatus("idle");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  if (attachment) {
+    return (
+      <div className="timeline-attachment">
+        <TimelineAttachmentPreview
+          contentType={attachment.contentType}
+          messageType={messageType}
+          objectUrl={attachment.objectUrl}
+        />
+        <button
+          className="button-link timeline-attachment-button"
+          onClick={() => setAttachment(null)}
+          type="button"
+        >
+          閉じる
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="timeline-attachment">
+      <button
+        className="button-link timeline-attachment-button"
+        disabled={status === "loading"}
+        onClick={loadAttachment}
+        type="button"
+      >
+        {status === "loading"
+          ? "読み込み中..."
+          : messageType === "image"
+            ? "画像を表示"
+            : "添付ファイルを表示"}
+      </button>
+      {status === "error" ? (
+        <p className="timeline-attachment-error" role="alert">
+          添付を表示できませんでした。
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function TimelineAttachmentPreview({
+  contentType,
+  messageType,
+  objectUrl
+}: {
+  contentType: string;
+  messageType: string;
+  objectUrl: string;
+}) {
+  if (contentType.startsWith("image/") || messageType === "image") {
+    return (
+      <img
+        alt="LINEで受信した画像"
+        className="timeline-attachment-image"
+        src={objectUrl}
+      />
+    );
+  }
+
+  if (contentType.startsWith("video/")) {
+    return (
+      <video className="timeline-attachment-video" controls preload="metadata">
+        <source src={objectUrl} type={contentType} />
+      </video>
+    );
+  }
+
+  if (contentType.startsWith("audio/")) {
+    return (
+      <audio className="timeline-attachment-audio" controls preload="metadata">
+        <source src={objectUrl} type={contentType} />
+      </audio>
+    );
+  }
+
+  return (
+    <a className="timeline-attachment-link" download href={objectUrl}>
+      添付ファイルを開く
+    </a>
   );
 }
 

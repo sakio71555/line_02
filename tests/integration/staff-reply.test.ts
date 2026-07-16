@@ -457,6 +457,7 @@ describe("admin staff reply API", () => {
 
     await app.fetch(signedLineWebhookRequest("wh_dev_amamihome", fixtureBody));
     const customer = getCustomerForTenant(customerRepository, "tenant_amamihome");
+    const messagesBeforeStaffReply = messageRepository.list();
 
     const response = await app.fetch(
       new Request(`http://localhost/api/admin/customers/${customer.id}/reply`, {
@@ -473,10 +474,10 @@ describe("admin staff reply API", () => {
     expect(response.status).toBe(502);
     expect(await response.json()).toEqual({ ok: false, error: "line_send_failed" });
     expect(lineClient.pushes).toHaveLength(1);
-    expect(messageRepository.list()).toHaveLength(1);
-    expect(messageRepository.list()).not.toEqual([
+    expect(messageRepository.list()).toHaveLength(messagesBeforeStaffReply.length);
+    expect(messageRepository.list()).not.toContainEqual(
       expect.objectContaining({ role: "staff", body: "送信失敗テスト" })
-    ]);
+    );
     expect(updatedCustomer).toMatchObject({
       response_mode: "bot_auto",
       last_staff_reply_at: null

@@ -32,6 +32,12 @@ export class FakeSupabaseClient {
     return new FakeSupabaseQueryBuilder(this, table);
   }
 
+  rpc(functionName: string, payload: unknown): Promise<FakeSupabaseResult> {
+    const operationKey = `rpc:${functionName}`;
+    this.push({ table: operationKey, action: "rpc", payload });
+    return Promise.resolve(this.getResult(operationKey, "list"));
+  }
+
   setResult(table: string, terminal: FakeSupabaseTerminal, result: FakeSupabaseResult): void {
     this.results.set(`${table}:${terminal}`, result);
   }
@@ -62,6 +68,11 @@ export class FakeSupabaseQueryBuilder implements PromiseLike<FakeSupabaseResult>
 
   eq(column: string, value: unknown): this {
     this.client.push({ table: this.table, action: "eq", column, value });
+    return this;
+  }
+
+  is(column: string, value: unknown): this {
+    this.client.push({ table: this.table, action: "is", column, value });
     return this;
   }
 
@@ -97,6 +108,11 @@ export class FakeSupabaseQueryBuilder implements PromiseLike<FakeSupabaseResult>
 
   update(payload: unknown): this {
     this.client.push({ table: this.table, action: "update", payload });
+    return this;
+  }
+
+  delete(): this {
+    this.client.push({ table: this.table, action: "delete" });
     return this;
   }
 

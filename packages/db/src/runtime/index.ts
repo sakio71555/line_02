@@ -10,5 +10,6 @@ export {
   type CustomerMessageAlertRepositoryBundle,
   type CustomerMessageRepositoryBundle,
   type KnowledgePageRepositoryRuntime,
-  type RepositoryRuntimeMode
+  type RepositoryRuntimeMode,
+  type SupabaseRuntimeRepositoryClient
 } from "./customer-message-repositories";

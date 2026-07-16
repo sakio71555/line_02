@@ -218,6 +218,16 @@ export async function adminApiFetch<T>(
   init: RequestInit = {},
   options: AdminApiRequestOptions = {}
 ): Promise<T> {
+  const response = await adminApiFetchResponse(path, init, options);
+
+  return response.json() as Promise<T>;
+}
+
+export async function adminApiFetchResponse(
+  path: string,
+  init: RequestInit = {},
+  options: AdminApiRequestOptions = {}
+): Promise<Response> {
   const config = options.config ?? getAdminApiConfig();
   const fetchFn = options.fetchFn ?? fetch;
   const headers = new Headers(init.headers);
@@ -268,7 +278,7 @@ export async function adminApiFetch<T>(
     );
   }
 
-  return response.json() as Promise<T>;
+  return response;
 }
 
 export function extractAdminApiErrorCode(responseBody: string): string | null {
@@ -307,6 +317,13 @@ export function adminCustomerDetailPath(customerId: string): string {
 
 export function adminCustomerTimelinePath(customerId: string): string {
   return `/api/admin/customers/${encodeURIComponent(customerId)}/timeline`;
+}
+
+export function adminCustomerMessageAttachmentPath(
+  customerId: string,
+  messageId: string
+): string {
+  return `/api/admin/customers/${encodeURIComponent(customerId)}/messages/${encodeURIComponent(messageId)}/attachment`;
 }
 
 export function adminCustomerAiSummaryPath(customerId: string): string {
@@ -355,6 +372,32 @@ export async function getAdminCustomerTimeline(
     {},
     options
   );
+}
+
+export async function getAdminCustomerMessageAttachment(
+  customerId: string,
+  messageId: string,
+  options: AdminApiRequestOptions = {}
+): Promise<{
+  data: ArrayBuffer;
+  contentDisposition: string | null;
+  contentType: string | null;
+}> {
+  const response = await adminApiFetchResponse(
+    adminCustomerMessageAttachmentPath(customerId, messageId),
+    {
+      headers: {
+        accept: "*/*"
+      }
+    },
+    options
+  );
+
+  return {
+    data: await response.arrayBuffer(),
+    contentDisposition: response.headers.get("content-disposition"),
+    contentType: response.headers.get("content-type")
+  };
 }
 
 export async function getAdminLineRealSendCapability(

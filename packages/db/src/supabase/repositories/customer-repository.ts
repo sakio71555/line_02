@@ -3,7 +3,7 @@ import type { Customer, CustomerRepository } from "@amami-line-crm/domain";
 
 import { unwrapSupabaseResult, type SupabaseRepositoryResult } from "./errors";
 
-export type SupabaseRepositoryClient = Pick<SupabaseClient, "from">;
+export type SupabaseRepositoryClient = Pick<SupabaseClient, "from" | "rpc">;
 
 interface SupabaseCustomerRow {
   id: string;

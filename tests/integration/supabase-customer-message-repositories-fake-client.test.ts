@@ -134,6 +134,98 @@ describe("Supabase customer/message repositories with fake client", () => {
     );
   });
 
+  it("finds a LINE message id within the requested tenant scope", async () => {
+    const client = new FakeSupabaseClient();
+    const message = createMessage({ line_message_id: "line_message_1" });
+    client.setResult("messages", "maybeSingle", { data: message, error: null });
+    const repository = new SupabaseMessageRepository(client.asRepositoryClient());
+
+    await expect(
+      repository.findByTenantAndLineMessageId(tenantId, "line_message_1")
+    ).resolves.toEqual(message);
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "eq",
+      column: "tenant_id",
+      value: tenantId
+    });
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "eq",
+      column: "line_message_id",
+      value: "line_message_1"
+    });
+  });
+
+  it("marks a pending LINE reply as sent within the requested tenant scope", async () => {
+    const client = new FakeSupabaseClient();
+    const sentAt = "2026-06-15T00:05:00.000Z";
+    const message = createMessage({ sent_to_line_at: sentAt });
+    client.setResult("messages", "maybeSingle", { data: message, error: null });
+    const repository = new SupabaseMessageRepository(client.asRepositoryClient());
+
+    await expect(
+      repository.updateSentToLineAt({
+        tenant_id: tenantId,
+        message_id: "message_1",
+        sent_to_line_at: sentAt
+      })
+    ).resolves.toEqual(message);
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "update",
+      payload: { message_type: "text", sent_to_line_at: sentAt }
+    });
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "eq",
+      column: "tenant_id",
+      value: tenantId
+    });
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "eq",
+      column: "id",
+      value: "message_1"
+    });
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "eq",
+      column: "message_type",
+      value: "summary"
+    });
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "is",
+      column: "sent_to_line_at",
+      value: null
+    });
+  });
+
+  it("deletes an unsent LINE reply within the requested tenant scope", async () => {
+    const client = new FakeSupabaseClient();
+    client.setResult("messages", "maybeSingle", {
+      data: { id: "message_1" },
+      error: null
+    });
+    const repository = new SupabaseMessageRepository(client.asRepositoryClient());
+
+    await expect(repository.deleteByIdForTenant(tenantId, "message_1")).resolves.toBe(true);
+    expect(client.operations).toContainEqual({ table: "messages", action: "delete" });
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "eq",
+      column: "tenant_id",
+      value: tenantId
+    });
+    expect(client.operations).toContainEqual({
+      table: "messages",
+      action: "eq",
+      column: "id",
+      value: "message_1"
+    });
+  });
+
   it("lists timeline messages by tenant and customer with created_at ascending order", async () => {
     const client = new FakeSupabaseClient();
     client.setResult("messages", "list", {

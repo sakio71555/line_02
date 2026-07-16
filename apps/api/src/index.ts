@@ -20,6 +20,8 @@ import {
   ensureOpenUnrepliedCustomerMessageAlert,
   formatCustomerRichMenuTypeLabel,
   insertBotTextTimelineMessage,
+  insertSystemAlertTimelineMessage,
+  isPrivateLineAttachmentMessage,
   listCustomerListItems,
   listCustomerTimeline,
   logLineWebhookEvents,
@@ -28,9 +30,9 @@ import {
   recordCustomerRichMenuSwitchMessage,
   recordAiSummaryMessage,
   recordStaffTextReply,
-  resolveCustomerRichMenuGuideAction,
   type AdminAction,
   type Alert,
+  type AlertSeverity,
   type AlertRepository,
   type Customer,
   type CustomerLineStaffNotificationEvent,
@@ -38,6 +40,7 @@ import {
   type CustomerRichMenuType,
   type CustomerRepository,
   type LineReplyInstruction,
+  type LineAttachmentStorage,
   type Message,
   type MessageRepository,
   type StaffAuthLookup,
@@ -63,7 +66,10 @@ import {
   AMAMI_HOME_TENANT_ID,
   createAmamiHomeKnowledgePages,
   InMemoryKnowledgePageRepository,
+  isOfficialSiteKnowledgeRefreshLeaseRepository,
+  isWritableKnowledgePageRepository,
   searchTenantKnowledge,
+  startOfficialSiteKnowledgeRefreshScheduler,
   type KnowledgePage,
   type KnowledgePageRepository
 } from "@amami-line-crm/rag";
@@ -128,6 +134,8 @@ export interface ApiAppDependencies {
   lineClientMode?: LineClientMode;
   linePushIdempotencyStore?: LinePushIdempotencyStore;
   lineIdTokenVerifier?: LineIdTokenVerifier;
+  lineAttachmentStorage?: LineAttachmentStorage;
+  startOfficialSiteKnowledgeSync?: boolean;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
 }
@@ -140,6 +148,7 @@ export interface CustomerMessageRepositoryRuntimeBundle {
   messageRepository: MessageRepository;
   alertRepository?: AlertRepository;
   knowledgePageRepository?: KnowledgePageRepository;
+  lineAttachmentStorage?: LineAttachmentStorage;
 }
 
 const defaultAlertRepository = new InMemoryAlertRepository();
@@ -196,6 +205,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     dependencies.messageRepository ??
     runtimeRepositories?.messageRepository ??
     defaultMessageRepository;
+  const lineAttachmentStorage =
+    dependencies.lineAttachmentStorage ?? runtimeRepositories?.lineAttachmentStorage;
   const lineClient = dependencies.lineClient ?? runtimeLineClient?.lineClient ?? defaultLineClient;
   const staffLineClient = dependencies.staffLineClient ?? createRuntimeStaffLineClient(env);
   const staffNotifier =
@@ -232,6 +243,28 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     env,
     config.urls.appBaseUrl
   );
+
+  if (
+    dependencies.startOfficialSiteKnowledgeSync === true &&
+    env.OFFICIAL_SITE_KNOWLEDGE_SYNC_ENABLED !== "false" &&
+    isWritableKnowledgePageRepository(knowledgePageRepository) &&
+    isOfficialSiteKnowledgeRefreshLeaseRepository(knowledgePageRepository)
+  ) {
+    startOfficialSiteKnowledgeRefreshScheduler({
+      tenant_id: AMAMI_HOME_TENANT_ID,
+      sources: createAmamiHomeKnowledgePages(),
+      repository: knowledgePageRepository,
+      leaseRepository: knowledgePageRepository,
+      onResult(result) {
+        console.info(
+          `[official-site-knowledge-sync] requested=${result.requested} refreshed=${result.refreshed} failed=${result.failed}`
+        );
+      },
+      onError() {
+        console.error("[official-site-knowledge-sync] refresh_failed");
+      }
+    });
+  }
 
   api.get("/health", (c) => {
     return c.json({
@@ -486,6 +519,68 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       customer_id: customerId,
       messages
     });
+  });
+
+  api.get("/api/admin/customers/:customerId/messages/:messageId/attachment", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.getCustomerTimeline,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    if (!lineAttachmentStorage) {
+      return c.json({ ok: false, error: "attachment_storage_unavailable" }, 503);
+    }
+
+    const customerId = c.req.param("customerId");
+    const customer = await getCustomerDetail({
+      tenant_id: tenant.tenantId,
+      customer_id: customerId,
+      customerRepository
+    });
+
+    if (!customer) {
+      return c.json({ ok: false, error: "attachment_not_found" }, 404);
+    }
+
+    const messages = await messageRepository.listByCustomer(tenant.tenantId, customerId);
+    const message = messages.find((item) => item.id === c.req.param("messageId"));
+
+    if (!message || !isPrivateLineAttachmentMessage(message) || !message.media_storage_path) {
+      return c.json({ ok: false, error: "attachment_not_found" }, 404);
+    }
+
+    try {
+      const attachment = await lineAttachmentStorage.download({
+        tenant_id: tenant.tenantId,
+        customer_id: customerId,
+        media_storage_path: message.media_storage_path
+      });
+      const contentType = resolveSafeAttachmentContentType(attachment.content_type);
+      const disposition = isInlineAttachmentContentType(contentType) ? "inline" : "attachment";
+      const fileName = buildSafeAttachmentFileName(message, message.media_storage_path);
+
+      return new Response(Uint8Array.from(attachment.data).buffer, {
+        status: 200,
+        headers: {
+          "cache-control": "private, no-store",
+          "content-disposition": `${disposition}; filename="${fileName}"`,
+          "content-length": String(attachment.data.byteLength),
+          "content-type": contentType,
+          "x-content-type-options": "nosniff"
+        }
+      });
+    } catch {
+      return c.json({ ok: false, error: "attachment_not_found" }, 404);
+    }
   });
 
   api.get("/api/admin/runtime/line-real-send-capability", async (c) => {
@@ -1038,8 +1133,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "invalid_line_signature" }, 401);
     }
 
+    let payload: ReturnType<typeof parseLineWebhookPayload>;
+
     try {
-      const payload = parseLineWebhookPayload(rawBody);
+      payload = parseLineWebhookPayload(rawBody);
+    } catch {
+      return c.json({ ok: false, error: "malformed_line_webhook_body" }, 400);
+    }
+
+    try {
       const customerLineStaffNotificationSetup =
         await setupStaffLineNotificationTargetFromCustomerLine({
           events: payload.events,
@@ -1055,17 +1157,42 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         customerRepository,
         messageRepository,
         alertRepository,
-        getLineDisplayName: (lineUserId) => getLineDisplayNameFromLineProfile(lineClient, lineUserId)
+        getLineDisplayName: (lineUserId) =>
+          getLineDisplayNameFromLineProfile(lineClient, lineUserId),
+        ...(lineClient.getMessageContent && lineAttachmentStorage
+          ? {
+              storeLineAttachment: async (attachment: {
+                tenant_id: string;
+                customer_id: string;
+                line_message_id: string;
+                message_type: "image" | "video" | "audio" | "file";
+                file_name: string | null;
+              }) => {
+                const content = await lineClient.getMessageContent!(attachment.line_message_id);
+                return lineAttachmentStorage.store({
+                  ...attachment,
+                  content_type: content.contentType,
+                  data: content.data
+                });
+              }
+            }
+          : {})
       });
       const {
         line_reply_instructions: lineReplyInstructions,
         normal_chat_ai_candidates: normalChatAiCandidates,
         staff_notification_alerts: staffNotificationAlerts,
-        staff_notification_events: staffNotificationEvents,
-        ...publicLogging
+        staff_notification_events: staffNotificationEvents
       } = logging;
-      const guideReplies = await replyToCustomerRichMenuGuideEvents(customerLoggingEvents, lineClient);
-      const flowReplies = await replyToLineReplyInstructions(lineReplyInstructions, lineClient);
+      const structuredLineReplies = await replyToLineReplyInstructions({
+        tenant_id: tenant.tenantId,
+        instructions: lineReplyInstructions,
+        lineClient,
+        customerRepository,
+        messageRepository,
+        alertRepository,
+        ...(now ? { now } : {})
+      });
       const normalChatAiReplies = await replyToNormalChatAiCandidates({
         tenant_id: tenant.tenantId,
         candidates: normalChatAiCandidates,
@@ -1075,59 +1202,32 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         messageRepository,
         alertRepository
       });
-      const lineMenuReplies = combineLineReplyCounts(guideReplies, flowReplies);
-      const alertStaffNotifications = await notifySpecificAlertsForProduction({
+      await notifySpecificAlertsForProduction({
         env,
-        alerts: [...staffNotificationAlerts, ...normalChatAiReplies.staff_notification_alerts],
+        alerts: [
+          ...staffNotificationAlerts,
+          ...structuredLineReplies.staff_notification_alerts,
+          ...normalChatAiReplies.staff_notification_alerts
+        ],
         staffNotifier,
         customerRepository,
         adminBaseUrl: staffNotificationAdminBaseUrl,
         alertRepository,
         ...(now ? { now } : {})
       });
-      const activityStaffNotifications = await notifyCustomerActivitiesForProduction({
+      await notifyCustomerActivitiesForProduction({
         env,
         events: staffNotificationEvents,
         staffNotifier,
         adminBaseUrl: staffNotificationAdminBaseUrl
       });
-      const staffNotifications = combineStaffNotificationCounts(
-        alertStaffNotifications,
-        activityStaffNotifications
-      );
 
       return c.json({
         ok: true,
-        tenant_id: tenant.tenantId,
-        tenant_slug: tenant.tenantSlug,
-        destination: payload.destination,
-        event_count: payload.events.length,
-        events: payload.events,
-        line_menu_replies: lineMenuReplies,
-        customer_line_staff_notification_setup: customerLineStaffNotificationSetup,
-        staff_notifications: staffNotifications,
-        normal_chat_ai: {
-          attempted: normalChatAiReplies.attempted,
-          answered: normalChatAiReplies.answered,
-          handoff_required: normalChatAiReplies.handoff_required,
-          out_of_scope: normalChatAiReplies.out_of_scope,
-          line_replies: normalChatAiReplies.line_replies,
-          raw_prompt_recorded: false,
-          openai_direct_verification_executed: false
-        },
-        logging: {
-          ...publicLogging,
-          messages_inserted:
-            publicLogging.messages_inserted + normalChatAiReplies.messages_logged,
-          alerts_created:
-            publicLogging.alerts_created + normalChatAiReplies.alerts_created,
-          alerts_notification_required:
-            publicLogging.alerts_notification_required +
-            normalChatAiReplies.alerts_notification_required
-        }
+        event_count: payload.events.length
       });
     } catch {
-      return c.json({ ok: false, error: "malformed_line_webhook_body" }, 400);
+      return c.json({ ok: false, error: "line_webhook_processing_failed" }, 500);
     }
   });
 
@@ -1155,8 +1255,15 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "invalid_staff_line_signature" }, 401);
     }
 
+    let payload: ReturnType<typeof parseLineWebhookPayload>;
+
     try {
-      const payload = parseLineWebhookPayload(rawBody);
+      payload = parseLineWebhookPayload(rawBody);
+    } catch {
+      return c.json({ ok: false, error: "malformed_staff_line_webhook_body" }, 400);
+    }
+
+    try {
       const sanitizedSummary = summarizeStaffLineWebhookEvents(payload.events);
       const customerChannelFallbackEnabled =
         isStaffLineCustomerChannelNotificationFallbackEnabled(env);
@@ -1192,65 +1299,69 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         staff_notification_send_executed: false
       });
     } catch {
-      return c.json({ ok: false, error: "malformed_staff_line_webhook_body" }, 400);
+      return c.json({ ok: false, error: "staff_line_webhook_processing_failed" }, 500);
     }
   });
 
   return api;
 }
 
-async function replyToCustomerRichMenuGuideEvents(
-  events: NormalizedLineWebhookEvent[],
-  lineClient: LineClient
-): Promise<{ sent: number; failed: number; skipped: number }> {
+async function replyToLineReplyInstructions(input: {
+  tenant_id: string;
+  instructions: LineReplyInstruction[];
+  lineClient: LineClient;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+  alertRepository: AlertRepository;
+  now?: () => string;
+}): Promise<{
+  sent: number;
+  failed: number;
+  skipped: number;
+  confirmation_failed: number;
+  staff_notification_alerts: Alert[];
+}> {
   let sent = 0;
   let failed = 0;
   let skipped = 0;
+  let confirmationFailed = 0;
+  const staffNotificationAlerts: Alert[] = [];
 
-  for (const event of events) {
-    const guideAction = resolveCustomerRichMenuGuideAction(event.text);
+  for (const instruction of input.instructions) {
+    if (!instruction.customer_id || !instruction.reply_token) {
+      if (instruction.pending_message_id) {
+        await deletePendingLineReplyMessage(
+          input.messageRepository,
+          input.tenant_id,
+          instruction.pending_message_id
+        );
+      }
 
-    if (!guideAction) {
-      continue;
-    }
-
-    if (!event.reply_token) {
-      skipped += 1;
-      continue;
-    }
-
-    try {
-      await lineClient.replyMessage(event.reply_token, [
-        {
-          type: "text",
-          text: guideAction.reply_text
+      if (instruction.customer_id) {
+        const failure = await recordLineReplyDeliveryFailure({
+          tenant_id: input.tenant_id,
+          customer_id: instruction.customer_id,
+          body: "LINE自動返信を送信できませんでした。担当者の確認が必要です。",
+          customerRepository: input.customerRepository,
+          messageRepository: input.messageRepository,
+          alertRepository: input.alertRepository,
+          ...(input.now ? { now: input.now } : {})
+        });
+        if (failure.notification_required && failure.alert) {
+          staffNotificationAlerts.push(failure.alert);
         }
-      ]);
-      sent += 1;
-    } catch {
-      failed += 1;
-    }
-  }
+      }
 
-  return { sent, failed, skipped };
-}
-
-async function replyToLineReplyInstructions(
-  instructions: LineReplyInstruction[],
-  lineClient: LineClient
-): Promise<{ sent: number; failed: number; skipped: number }> {
-  let sent = 0;
-  let failed = 0;
-  let skipped = 0;
-
-  for (const instruction of instructions) {
-    if (!instruction.reply_token) {
-      skipped += 1;
+      if (!instruction.reply_token) {
+        skipped += 1;
+      } else {
+        failed += 1;
+      }
       continue;
     }
 
     try {
-      await lineClient.replyMessage(instruction.reply_token, [
+      await input.lineClient.replyMessage(instruction.reply_token, [
         {
           type: "text",
           text: instruction.text,
@@ -1270,13 +1381,122 @@ async function replyToLineReplyInstructions(
             : {})
         }
       ]);
+    } catch {
+      await deletePendingLineReplyMessage(
+        input.messageRepository,
+        input.tenant_id,
+        instruction.pending_message_id
+      );
+      const failure = await recordLineReplyDeliveryFailure({
+        tenant_id: input.tenant_id,
+        customer_id: instruction.customer_id,
+        body: "LINE自動返信の送信に失敗しました。担当者の確認が必要です。",
+        customerRepository: input.customerRepository,
+        messageRepository: input.messageRepository,
+        alertRepository: input.alertRepository,
+        ...(input.now ? { now: input.now } : {})
+      });
+      if (failure.notification_required && failure.alert) {
+        staffNotificationAlerts.push(failure.alert);
+      }
+      failed += 1;
+      continue;
+    }
+
+    try {
+      const confirmedMessage = await input.messageRepository.updateSentToLineAt({
+        tenant_id: input.tenant_id,
+        message_id: instruction.pending_message_id,
+        sent_to_line_at: input.now?.() ?? new Date().toISOString()
+      });
+
+      if (!confirmedMessage) {
+        throw new Error("line_reply_delivery_confirmation_missing");
+      }
       sent += 1;
     } catch {
-      failed += 1;
+      const failure = await recordLineReplyDeliveryFailure({
+        tenant_id: input.tenant_id,
+        customer_id: instruction.customer_id,
+        body:
+          "LINE自動返信は送信されましたが、送信記録の更新に失敗しました。再送せず担当者が確認してください。",
+        customerRepository: input.customerRepository,
+        messageRepository: input.messageRepository,
+        alertRepository: input.alertRepository,
+        ...(input.now ? { now: input.now } : {})
+      });
+      if (failure.notification_required && failure.alert) {
+        staffNotificationAlerts.push(failure.alert);
+      }
+      confirmationFailed += 1;
     }
   }
 
-  return { sent, failed, skipped };
+  return {
+    sent,
+    failed,
+    skipped,
+    confirmation_failed: confirmationFailed,
+    staff_notification_alerts: staffNotificationAlerts
+  };
+}
+
+async function deletePendingLineReplyMessage(
+  messageRepository: MessageRepository,
+  tenantId: string,
+  messageId: string
+): Promise<void> {
+  try {
+    await messageRepository.deleteByIdForTenant(tenantId, messageId);
+  } catch {
+    // Pending LINE replies remain hidden from Admin even when cleanup is unavailable.
+  }
+}
+
+async function recordLineReplyDeliveryFailure(input: {
+  tenant_id: string;
+  customer_id: string;
+  body: string;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+  alertRepository: AlertRepository;
+  now?: () => string;
+}): Promise<{ alert: Alert | null; created: boolean; notification_required: boolean }> {
+  const customer = await input.customerRepository.findByIdForTenant(
+    input.tenant_id,
+    input.customer_id
+  );
+
+  if (!customer) {
+    return { alert: null, created: false, notification_required: false };
+  }
+
+  const occurredAt = input.now?.() ?? new Date().toISOString();
+  const alertResult = await ensureOpenUnrepliedCustomerMessageAlert({
+    tenant_id: input.tenant_id,
+    customer,
+    alertRepository: input.alertRepository,
+    message: input.body,
+    severity: "high",
+    now: () => occurredAt
+  });
+
+  try {
+    await insertSystemAlertTimelineMessage(input.messageRepository, {
+      tenant_id: input.tenant_id,
+      customer_id: input.customer_id,
+      body: input.body,
+      created_at: occurredAt
+    });
+  } catch {
+    // The durable staff alert is the primary escalation path.
+  }
+
+  return {
+    alert: alertResult.alert,
+    created: alertResult.created,
+    notification_required: alertResult.notification_required
+  };
 }
 
 async function replyToNormalChatAiCandidates(input: {
@@ -1319,7 +1539,7 @@ async function replyToNormalChatAiCandidates(input: {
 
     const staffRequired = requiresStaffForNormalChat(text);
 
-    if (shouldDeferNormalChatBeforeKnowledgeSearch(candidate.customer_response_mode, staffRequired)) {
+    if (shouldDeferNormalChatBeforeKnowledgeSearch(candidate.customer_response_mode)) {
       const alertResult = await createNormalChatHandoffAlert({
         candidate,
         alertRepository: input.alertRepository,
@@ -1347,6 +1567,23 @@ async function replyToNormalChatAiCandidates(input: {
       lineReplies.failed += replied.failed ? 1 : 0;
       lineReplies.skipped += replied.skipped ? 1 : 0;
       messagesLogged += replied.message_logged ? 1 : 0;
+
+      if (replied.failed) {
+        const failureResult = await recordNormalChatReplyFailure({
+          candidate,
+          messageRepository: input.messageRepository,
+          alertRepository: input.alertRepository,
+          ...(replied.failure_message ? { message: replied.failure_message } : {})
+        });
+        messagesLogged += failureResult.message_logged ? 1 : 0;
+        alertsCreated += failureResult.created ? 1 : 0;
+        alertsNotificationRequired += failureResult.notification_required ? 1 : 0;
+        if (failureResult.notification_required && failureResult.alert) {
+          staffNotificationAlerts.push(failureResult.alert);
+        }
+        handoffRequired += 1;
+        continue;
+      }
 
       const alertResult = await createNormalChatHandoffAlert({
         candidate,
@@ -1386,23 +1623,23 @@ async function replyToNormalChatAiCandidates(input: {
       lineReplies.failed += replied.failed ? 1 : 0;
       lineReplies.skipped += replied.skipped ? 1 : 0;
       messagesLogged += replied.message_logged ? 1 : 0;
-      answered += 1;
-      continue;
-    }
-
-    if (shouldDeferNormalChatWithoutKnowledgeAnswer(candidate.customer_response_mode)) {
-      const alertResult = await createNormalChatHandoffAlert({
-        candidate,
-        alertRepository: input.alertRepository,
-        message: text
-      });
-      alertsCreated += alertResult.created ? 1 : 0;
-      alertsNotificationRequired += alertResult.notification_required ? 1 : 0;
-      if (alertResult.notification_required && alertResult.alert) {
-        staffNotificationAlerts.push(alertResult.alert);
+      if (replied.failed) {
+        const failureResult = await recordNormalChatReplyFailure({
+          candidate,
+          messageRepository: input.messageRepository,
+          alertRepository: input.alertRepository,
+          ...(replied.failure_message ? { message: replied.failure_message } : {})
+        });
+        messagesLogged += failureResult.message_logged ? 1 : 0;
+        alertsCreated += failureResult.created ? 1 : 0;
+        alertsNotificationRequired += failureResult.notification_required ? 1 : 0;
+        if (failureResult.notification_required && failureResult.alert) {
+          staffNotificationAlerts.push(failureResult.alert);
+        }
+        handoffRequired += 1;
+        continue;
       }
-      handoffRequired += 1;
-      lineReplies.skipped += 1;
+      answered += replied.sent ? 1 : 0;
       continue;
     }
 
@@ -1418,6 +1655,23 @@ async function replyToNormalChatAiCandidates(input: {
       lineReplies.failed += replied.failed ? 1 : 0;
       lineReplies.skipped += replied.skipped ? 1 : 0;
       messagesLogged += replied.message_logged ? 1 : 0;
+
+      if (replied.failed) {
+        const failureResult = await recordNormalChatReplyFailure({
+          candidate,
+          messageRepository: input.messageRepository,
+          alertRepository: input.alertRepository,
+          ...(replied.failure_message ? { message: replied.failure_message } : {})
+        });
+        messagesLogged += failureResult.message_logged ? 1 : 0;
+        alertsCreated += failureResult.created ? 1 : 0;
+        alertsNotificationRequired += failureResult.notification_required ? 1 : 0;
+        if (failureResult.notification_required && failureResult.alert) {
+          staffNotificationAlerts.push(failureResult.alert);
+        }
+        handoffRequired += 1;
+        continue;
+      }
 
       const alertResult = await createNormalChatHandoffAlert({
         candidate,
@@ -1445,6 +1699,21 @@ async function replyToNormalChatAiCandidates(input: {
     lineReplies.skipped += replied.skipped ? 1 : 0;
     messagesLogged += replied.message_logged ? 1 : 0;
     outOfScope += 1;
+    if (replied.failed) {
+      const failureResult = await recordNormalChatReplyFailure({
+        candidate,
+        messageRepository: input.messageRepository,
+        alertRepository: input.alertRepository,
+        ...(replied.failure_message ? { message: replied.failure_message } : {})
+      });
+      messagesLogged += failureResult.message_logged ? 1 : 0;
+      alertsCreated += failureResult.created ? 1 : 0;
+      alertsNotificationRequired += failureResult.notification_required ? 1 : 0;
+      if (failureResult.notification_required && failureResult.alert) {
+        staffNotificationAlerts.push(failureResult.alert);
+      }
+      handoffRequired += 1;
+    }
   }
 
   return {
@@ -1468,6 +1737,10 @@ async function searchTenantKnowledgeWithStaticFallback(input: {
 }) {
   const results = await searchTenantKnowledge(input);
 
+  if (isFreshnessSensitiveNormalChat(input.query)) {
+    return results.filter(isRecentlyCrawledKnowledgeResult);
+  }
+
   if (results.length > 0 || input.tenant_id !== AMAMI_HOME_TENANT_ID) {
     return results;
   }
@@ -1483,9 +1756,34 @@ async function replyAndLogNormalChatBotMessage(input: {
   replyText: string;
   lineClient: LineClient;
   messageRepository: MessageRepository;
-}): Promise<{ sent: boolean; failed: boolean; skipped: boolean; message_logged: boolean }> {
+}): Promise<{
+  sent: boolean;
+  failed: boolean;
+  skipped: boolean;
+  message_logged: boolean;
+  failure_message?: string;
+}> {
   if (!input.candidate.reply_token) {
     return { sent: false, failed: false, skipped: true, message_logged: false };
+  }
+
+  let pendingMessage: Message;
+
+  try {
+    pendingMessage = await insertBotTextTimelineMessage(input.messageRepository, {
+      tenant_id: input.candidate.tenant_id,
+      customer_id: input.candidate.customer_id,
+      body: input.replyText,
+      created_at: input.candidate.occurred_at
+    });
+  } catch {
+    return {
+      sent: false,
+      failed: true,
+      skipped: false,
+      message_logged: false,
+      failure_message: "自動応答の送信準備に失敗しました。担当者の確認が必要です。"
+    };
   }
 
   try {
@@ -1496,15 +1794,44 @@ async function replyAndLogNormalChatBotMessage(input: {
       }
     ]);
   } catch {
-    return { sent: false, failed: true, skipped: false, message_logged: false };
+    try {
+      await input.messageRepository.deleteByIdForTenant(
+        input.candidate.tenant_id,
+        pendingMessage.id
+      );
+    } catch {
+      // Failure escalation must continue even when pending-message cleanup is unavailable.
+    }
+
+    return {
+      sent: false,
+      failed: true,
+      skipped: false,
+      message_logged: false,
+      failure_message: "自動応答のLINE送信に失敗しました。担当者の確認が必要です。"
+    };
   }
 
-  await insertBotTextTimelineMessage(input.messageRepository, {
-    tenant_id: input.candidate.tenant_id,
-    customer_id: input.candidate.customer_id,
-    body: input.replyText,
-    created_at: input.candidate.occurred_at
-  });
+  try {
+    const sentMessage = await input.messageRepository.updateSentToLineAt({
+      tenant_id: input.candidate.tenant_id,
+      message_id: pendingMessage.id,
+      sent_to_line_at: new Date().toISOString()
+    });
+
+    if (!sentMessage) {
+      throw new Error("line_reply_delivery_confirmation_missing");
+    }
+  } catch {
+    return {
+      sent: false,
+      failed: true,
+      skipped: false,
+      message_logged: false,
+      failure_message:
+        "自動応答はLINEへ送信されましたが、送信記録の更新に失敗しました。再送せず担当者が確認してください。"
+    };
+  }
 
   return { sent: true, failed: false, skipped: false, message_logged: true };
 }
@@ -1513,6 +1840,7 @@ async function createNormalChatHandoffAlert(input: {
   candidate: CustomerNormalChatAiCandidate;
   alertRepository: AlertRepository;
   message: string;
+  severity?: AlertSeverity;
 }): Promise<{ alert: Alert | null; created: boolean; notification_required: boolean }> {
   const customer: Customer = {
     id: input.candidate.customer_id,
@@ -1538,6 +1866,7 @@ async function createNormalChatHandoffAlert(input: {
     customer,
     alertRepository: input.alertRepository,
     message: input.message,
+    ...(input.severity ? { severity: input.severity } : {}),
     now: () => input.candidate.occurred_at
   });
 
@@ -1546,6 +1875,43 @@ async function createNormalChatHandoffAlert(input: {
     created: alertResult.created,
     notification_required: alertResult.notification_required
   };
+}
+
+async function recordNormalChatReplyFailure(input: {
+  candidate: CustomerNormalChatAiCandidate;
+  messageRepository: MessageRepository;
+  alertRepository: AlertRepository;
+  message?: string;
+}): Promise<{
+  alert: Alert | null;
+  created: boolean;
+  notification_required: boolean;
+  message_logged: boolean;
+}> {
+  const message =
+    input.message ?? "自動応答のLINE送信に失敗しました。担当者の確認が必要です。";
+  const alertResult = await createNormalChatHandoffAlert({
+    candidate: input.candidate,
+    alertRepository: input.alertRepository,
+    message,
+    severity: "high"
+  });
+
+  let messageLogged = false;
+
+  try {
+    await insertSystemAlertTimelineMessage(input.messageRepository, {
+      tenant_id: input.candidate.tenant_id,
+      customer_id: input.candidate.customer_id,
+      body: message,
+      created_at: input.candidate.occurred_at
+    });
+    messageLogged = true;
+  } catch {
+    // The alert is created first so staff escalation survives timeline failures.
+  }
+
+  return { ...alertResult, message_logged: messageLogged };
 }
 
 async function buildNormalChatKnowledgeReply(input: {
@@ -1595,33 +1961,43 @@ function requiresStaffForNormalChat(text: string): boolean {
 }
 
 function shouldDeferNormalChatBeforeKnowledgeSearch(
-  responseMode: CustomerNormalChatAiCandidate["customer_response_mode"],
-  staffRequired: boolean
-): boolean {
-  if (responseMode === "bot_auto") {
-    return false;
-  }
-
-  if (responseMode === "human_required") {
-    return staffRequired;
-  }
-
-  if (responseMode === "human_active") {
-    return staffRequired;
-  }
-
-  return true;
-}
-
-function shouldDeferNormalChatWithoutKnowledgeAnswer(
   responseMode: CustomerNormalChatAiCandidate["customer_response_mode"]
 ): boolean {
-  return responseMode === "human_active" || responseMode === "emergency";
+  return responseMode !== "bot_auto";
 }
 
 function isAmamiHomeRelatedNormalChat(text: string): boolean {
   return normalChatRelatedKeywords.some((keyword) => text.includes(keyword));
 }
+
+function isFreshnessSensitiveNormalChat(text: string): boolean {
+  return normalChatFreshnessSensitiveKeywords.some((keyword) => text.includes(keyword));
+}
+
+function isRecentlyCrawledKnowledgeResult(result: {
+  last_crawled_at: string | null;
+}): boolean {
+  if (!result.last_crawled_at) {
+    return false;
+  }
+
+  const crawledAt = Date.parse(result.last_crawled_at);
+  const age = Date.now() - crawledAt;
+  return Number.isFinite(crawledAt) && age >= 0 && age <= 7 * 24 * 60 * 60 * 1000;
+}
+
+const normalChatFreshnessSensitiveKeywords = [
+  "営業時間",
+  "営業日",
+  "定休日",
+  "休業",
+  "住所",
+  "所在地",
+  "電話",
+  "連絡先",
+  "イベント",
+  "空き状況"
+];
 
 const normalChatStaffRequiredKeywords = [
   "見積",
@@ -2234,17 +2610,6 @@ function logStaffLineWebhookProcessingResult(input: {
   );
 }
 
-function combineLineReplyCounts(
-  first: { sent: number; failed: number; skipped: number },
-  second: { sent: number; failed: number; skipped: number }
-): { sent: number; failed: number; skipped: number } {
-  return {
-    sent: first.sent + second.sent,
-    failed: first.failed + second.failed,
-    skipped: first.skipped + second.skipped
-  };
-}
-
 export interface ApiServerListenOptions {
   port: number;
   hostname?: string;
@@ -2530,35 +2895,6 @@ async function notifyCustomerActivitiesForProduction(input: {
   };
 }
 
-function combineStaffNotificationCounts(
-  ...results: Array<{
-    attempted: boolean;
-    notified: number;
-    failed: number;
-    skipped: number;
-  }>
-): {
-  attempted: boolean;
-  notified: number;
-  failed: number;
-  skipped: number;
-} {
-  return results.reduce(
-    (accumulator, result) => ({
-      attempted: accumulator.attempted || result.attempted,
-      notified: accumulator.notified + result.notified,
-      failed: accumulator.failed + result.failed,
-      skipped: accumulator.skipped + result.skipped
-    }),
-    {
-      attempted: false,
-      notified: 0,
-      failed: 0,
-      skipped: 0
-    }
-  );
-}
-
 function shouldAttemptStaffLineAlertNotification(env: NodeJS.ProcessEnv): boolean {
   return isProductionRuntime(env) || isStaffLineRuntimeConfigured(env);
 }
@@ -2728,7 +3064,7 @@ interface DemoSeedResult {
 }
 
 interface SeedableKnowledgePageRepository extends KnowledgePageRepository {
-  upsertMany(pages: KnowledgePage[]): void;
+  upsertMany(pages: KnowledgePage[]): Promise<void> | void;
 }
 
 async function seedDemoData(input: {
@@ -2754,7 +3090,7 @@ async function seedDemoData(input: {
     isSeedableKnowledgePageRepository(input.knowledgePageRepository)
   ) {
     knowledgePages = createAmamiHomeKnowledgePages();
-    input.knowledgePageRepository.upsertMany(knowledgePages);
+    await input.knowledgePageRepository.upsertMany(knowledgePages);
   }
 
   return {
@@ -3399,8 +3735,11 @@ function toAdminTimelineMessage(message: Message): {
   body: string | null;
   line_message_id: string | null;
   source_url: string | null;
+  attachment_available: boolean;
   created_at: string;
 } {
+  const attachmentAvailable = isPrivateLineAttachmentMessage(message);
+
   return {
     id: message.id,
     tenant_id: message.tenant_id,
@@ -3409,9 +3748,44 @@ function toAdminTimelineMessage(message: Message): {
     message_type: message.message_type,
     body: message.body,
     line_message_id: message.line_message_id,
-    source_url: message.media_storage_path,
+    source_url: attachmentAvailable ? null : message.media_storage_path,
+    attachment_available: attachmentAvailable,
     created_at: message.created_at
   };
+}
+
+function resolveSafeAttachmentContentType(contentType: string | null): string {
+  const normalized = contentType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+  const allowed = new Set([
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "video/mp4",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/wav",
+    "audio/x-wav",
+    "application/pdf",
+    "text/plain"
+  ]);
+
+  return allowed.has(normalized) ? normalized : "application/octet-stream";
+}
+
+function isInlineAttachmentContentType(contentType: string): boolean {
+  return (
+    contentType.startsWith("image/") ||
+    contentType.startsWith("video/") ||
+    contentType.startsWith("audio/")
+  );
+}
+
+function buildSafeAttachmentFileName(message: Message, mediaStoragePath: string): string {
+  const safeMessageId = message.id.replace(/[^A-Za-z0-9_-]/gu, "_").slice(0, 80) || "message";
+  const extension = mediaStoragePath.match(/\.(jpg|png|gif|webp|mp4|m4a|mp3|wav|pdf|txt|bin)$/u)?.[1] ?? "bin";
+
+  return `line-attachment-${safeMessageId}.${extension}`;
 }
 
 function toAiRagAnswerSources(
@@ -3512,7 +3886,9 @@ function resolveStaffLineWebhook(
   };
 }
 
-export const app = createApiApp();
+export const app = createApiApp({
+  startOfficialSiteKnowledgeSync: isProductionRuntime(process.env)
+});
 
 if (process.env.NODE_ENV !== "test") {
   const listenOptions = resolveApiServerListenOptions(process.env);

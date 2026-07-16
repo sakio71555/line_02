@@ -128,7 +128,7 @@ export default async function CustomerDetailPage({
         ) : timelineMessages.length === 0 ? (
           <p className="empty">表示できるメッセージはまだありません。</p>
         ) : (
-          <CustomerTimelineList messages={timelineMessages} />
+          <CustomerTimelineList customerId={customerId} messages={timelineMessages} />
         )}
       </section>
 

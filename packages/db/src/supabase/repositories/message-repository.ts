@@ -1,5 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Message, MessageRepository } from "@amami-line-crm/domain";
+import {
+  isPendingLineReplyMessage,
+  type Message,
+  type MessageRepository
+} from "@amami-line-crm/domain";
 
 import { assertTenantId, type SupabaseRepositoryClient } from "./customer-repository";
 import { unwrapSupabaseResult, type SupabaseRepositoryResult } from "./errors";
@@ -42,6 +46,79 @@ export class SupabaseMessageRepository implements MessageRepository {
     return toMessage(row);
   }
 
+  async findByTenantAndLineMessageId(
+    tenantId: string,
+    lineMessageId: string
+  ): Promise<Message | null> {
+    assertTenantId(tenantId);
+
+    const result = (await this.client
+      .from("messages")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("line_message_id", lineMessageId)
+      .maybeSingle()) as SupabaseRepositoryResult<SupabaseMessageRow>;
+    const row = unwrapSupabaseResult(result, "messages", "findByTenantAndLineMessageId");
+
+    if (!row) {
+      return null;
+    }
+
+    if (row.tenant_id !== tenantId || row.line_message_id !== lineMessageId) {
+      throw new Error(
+        "Supabase messages.findByTenantAndLineMessageId returned a row outside the requested scope."
+      );
+    }
+
+    return toMessage(row);
+  }
+
+  async updateSentToLineAt(input: {
+    tenant_id: string;
+    message_id: string;
+    sent_to_line_at: string;
+  }): Promise<Message | null> {
+    assertTenantId(input.tenant_id);
+
+    const result = (await this.client
+      .from("messages")
+      .update({ message_type: "text", sent_to_line_at: input.sent_to_line_at })
+      .eq("tenant_id", input.tenant_id)
+      .eq("id", input.message_id)
+      .eq("message_type", "summary")
+      .is("sent_to_line_at", null)
+      .select("*")
+      .maybeSingle()) as SupabaseRepositoryResult<SupabaseMessageRow>;
+    const row = unwrapSupabaseResult(result, "messages", "updateSentToLineAt");
+
+    if (!row) {
+      return null;
+    }
+
+    if (row.tenant_id !== input.tenant_id || row.id !== input.message_id) {
+      throw new Error(
+        "Supabase messages.updateSentToLineAt returned a row outside the requested scope."
+      );
+    }
+
+    return toMessage(row);
+  }
+
+  async deleteByIdForTenant(tenantId: string, messageId: string): Promise<boolean> {
+    assertTenantId(tenantId);
+
+    const result = (await this.client
+      .from("messages")
+      .delete()
+      .eq("tenant_id", tenantId)
+      .eq("id", messageId)
+      .select("id")
+      .maybeSingle()) as SupabaseRepositoryResult<{ id: string }>;
+    const row = unwrapSupabaseResult(result, "messages", "deleteByIdForTenant");
+
+    return row?.id === messageId;
+  }
+
   async findLatestByCustomerIds(
     tenantId: string,
     customerIds: string[]
@@ -65,8 +142,14 @@ export class SupabaseMessageRepository implements MessageRepository {
     for (const row of rows
       .filter((item) => item.tenant_id === tenantId && customerIdSet.has(item.customer_id))
       .sort(compareMessageRowsByCreatedAtDesc)) {
+      const message = toMessage(row);
+
+      if (isPendingLineReplyMessage(message)) {
+        continue;
+      }
+
       if (!latestByCustomerId.has(row.customer_id)) {
-        latestByCustomerId.set(row.customer_id, toMessage(row));
+        latestByCustomerId.set(row.customer_id, message);
       }
     }
 
