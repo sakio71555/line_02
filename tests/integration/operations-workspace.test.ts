@@ -24,6 +24,14 @@ const lineExperienceMigrationSql = readFileSync(
   "utf8"
 );
 
+const localizedLineMenuNamesMigrationSql = readFileSync(
+  new URL(
+    "../../packages/db/migrations/20260717142247_localize_line_menu_names.sql",
+    import.meta.url
+  ),
+  "utf8"
+);
+
 const migrationSql = readFileSync(
   new URL(
     "../../packages/db/migrations/20260717070610_operations_workspace_v1.sql",
@@ -217,6 +225,11 @@ describe("operations workspace", () => {
     const definition = buildLineRichMenuDefinition(settings, "initial");
 
     expect(settings.menus).toHaveLength(3);
+    expect(settings.menus.map((menu) => menu.name)).toEqual([
+      "初期メニュー",
+      "商談中メニュー",
+      "アフターメニュー"
+    ]);
     expect(settings.menus.every((menu) => menu.items.length === 6)).toBe(true);
     expect(definition.size).toEqual({ width: 2500, height: 1686 });
     expect(definition.areas).toHaveLength(6);
@@ -313,6 +326,19 @@ describe("operations workspace", () => {
       /add column if not exists line_experience jsonb not null default '\{\}'::jsonb/i
     );
     expect(lineExperienceMigrationSql).not.toMatch(/grant\s+[^;]*line_experience/i);
+  });
+
+  it("localizes only the legacy default LINE menu names", () => {
+    expect(localizedLineMenuNamesMigrationSql).toContain("Amami Home Initial Menu");
+    expect(localizedLineMenuNamesMigrationSql).toContain("Amami Home Negotiation Menu");
+    expect(localizedLineMenuNamesMigrationSql).toContain("Amami Home Aftercare Menu");
+    expect(localizedLineMenuNamesMigrationSql).toContain("初期メニュー");
+    expect(localizedLineMenuNamesMigrationSql).toContain("商談中メニュー");
+    expect(localizedLineMenuNamesMigrationSql).toContain("アフターメニュー");
+    expect(localizedLineMenuNamesMigrationSql).toMatch(
+      /update public\.tenant_workspace_settings/i
+    );
+    expect(localizedLineMenuNamesMigrationSql).not.toMatch(/update public\.(?!tenant_workspace_settings)/i);
   });
 
   it("keeps operations tables protected by private tenant membership checks", () => {

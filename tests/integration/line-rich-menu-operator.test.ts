@@ -231,9 +231,9 @@ describe("LINE rich menu operator", () => {
       .filter((call) => call.input === "https://api.line.me/v2/bot/richmenu")
       .map((call) => JSON.parse(String(call.init.body ?? "{}")) as { name: string });
     expect(createBodies.map((body) => body.name)).toEqual([
-      "Amami Home Initial Menu",
-      "Amami Home Negotiation Menu",
-      "Amami Home Aftercare Menu"
+      "初期メニュー",
+      "商談中メニュー",
+      "アフターメニュー"
     ]);
   });
 

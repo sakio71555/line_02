@@ -100,7 +100,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
       tenant_id: "tenant_amamihome",
       customer_id: "customer_amami",
       menu_type: "negotiation",
-      menu_label: "Amami Home Negotiation Menu",
+      menu_label: "商談中メニュー",
       rich_menu_linked: true,
       line_message_sent: false,
       rich_menu_id_recorded: false,
@@ -123,7 +123,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
         tenant_id: "tenant_amamihome",
         customer_id: "customer_amami",
         role: "system",
-        body: "LINEリッチメニューをAmami Home Negotiation Menuへ切り替えました。"
+        body: "LINEリッチメニューを商談中メニューへ切り替えました。"
       })
     ]);
   });

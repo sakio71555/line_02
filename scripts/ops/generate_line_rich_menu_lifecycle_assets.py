@@ -44,7 +44,7 @@ class LifecycleMenu:
 MENUS = [
     LifecycleMenu(
         slug="initial",
-        name="Amami Home Initial Menu",
+        name="初期メニュー",
         heading="アマミホーム 初期メニュー",
         chat_bar_text="メニュー",
         items=(
@@ -100,7 +100,7 @@ MENUS = [
     ),
     LifecycleMenu(
         slug="negotiation",
-        name="Amami Home Negotiation Menu",
+        name="商談中メニュー",
         heading="アマミホーム 商談中メニュー",
         chat_bar_text="商談メニュー",
         items=(
@@ -114,7 +114,7 @@ MENUS = [
     ),
     LifecycleMenu(
         slug="aftercare",
-        name="Amami Home Aftercare Menu",
+        name="アフターメニュー",
         heading="アマミホーム アフターメニュー",
         chat_bar_text="アフター",
         items=(

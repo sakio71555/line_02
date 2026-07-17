@@ -319,7 +319,7 @@ const amamiHomeLineExperienceDefaults: LineExperienceSettings = {
   menus: [
     {
       menu_type: "initial",
-      name: "Amami Home Initial Menu",
+      name: "初期メニュー",
       chat_bar_text: "メニュー",
       items: [
         {
@@ -384,7 +384,7 @@ const amamiHomeLineExperienceDefaults: LineExperienceSettings = {
     },
     {
       menu_type: "negotiation",
-      name: "Amami Home Negotiation Menu",
+      name: "商談中メニュー",
       chat_bar_text: "商談メニュー",
       items: [
         {
@@ -445,7 +445,7 @@ const amamiHomeLineExperienceDefaults: LineExperienceSettings = {
     },
     {
       menu_type: "aftercare",
-      name: "Amami Home Aftercare Menu",
+      name: "アフターメニュー",
       chat_bar_text: "アフター",
       items: [
         {
