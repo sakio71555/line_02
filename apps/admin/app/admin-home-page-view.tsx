@@ -5,11 +5,13 @@ import { EmptyState, Metric, PageTitle, SectionHeader, StatusBadge } from "./_co
 import type { AdminAlertListItem, AdminCustomerListItem } from "../src/admin-api";
 import {
   formatCompactDateTime,
+  getAlertPresentation,
   getAlertPriorityLabel,
   getAlertTone,
   getCustomerDisplayName,
   getCustomerResponseLabel,
-  getCustomerResponseTone
+  getCustomerResponseTone,
+  isLikelyTestAlert
 } from "../src/admin-display";
 
 export interface DashboardData {
@@ -19,7 +21,10 @@ export interface DashboardData {
 }
 
 export function AdminHomePageView({ data }: { data: DashboardData }) {
-  const openAlerts = data.alerts.filter((alert) => alert.status === "open");
+  const customerMap = new Map(data.customers.map((customer) => [customer.id, customer]));
+  const openAlerts = data.alerts.filter(
+    (alert) => alert.status === "open" && !isLikelyTestAlert(alert)
+  );
   const activeCustomers = data.customers.filter((customer) => customer.status !== "archived");
   const humanRequired = data.customers.filter((customer) =>
     ["human_required", "emergency"].includes(customer.response_mode)
@@ -56,15 +61,29 @@ export function AdminHomePageView({ data }: { data: DashboardData }) {
             <EmptyState title="未対応の相談はありません"><p>新しい相談が入ると、ここに表示されます。</p></EmptyState>
           ) : (
             <ul className="work-list">
-              {openAlerts.slice(0, 6).map((alert) => (
-                <li key={alert.id}>
-                  <a href={`/customers/${encodeURIComponent(alert.customer_id)}`}>
-                    <span className="work-list-icon work-list-icon-alert"><MessageSquareText aria-hidden="true" size={18} /></span>
-                    <span className="work-list-content"><strong>{alert.message}</strong><small>{formatCompactDateTime(alert.created_at)}</small></span>
-                    <StatusBadge tone={getAlertTone(alert.severity)}>{getAlertPriorityLabel(alert.severity)}</StatusBadge>
-                  </a>
-                </li>
-              ))}
+              {openAlerts.slice(0, 6).map((alert) => {
+                const presentation = getAlertPresentation(
+                  alert,
+                  customerMap.get(alert.customer_id)
+                );
+                return (
+                  <li key={alert.id}>
+                    <a href={`/customers/${encodeURIComponent(alert.customer_id)}`}>
+                      <span className="work-list-icon work-list-icon-alert">
+                        <MessageSquareText aria-hidden="true" size={18} />
+                      </span>
+                      <span className="work-list-content">
+                        <strong>{presentation.title}</strong>
+                        <small className="truncate-text">{presentation.detail}</small>
+                        <small>受付 {formatCompactDateTime(alert.created_at)}</small>
+                      </span>
+                      <StatusBadge tone={getAlertTone(alert.severity)}>
+                        {getAlertPriorityLabel(alert.severity)}
+                      </StatusBadge>
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>

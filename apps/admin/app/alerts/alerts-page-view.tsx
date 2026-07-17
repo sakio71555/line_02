@@ -3,11 +3,13 @@ import React from "react";
 
 import { EmptyState, PageTitle, StatusBadge } from "../_components/ui";
 import { AlertActionPanel } from "./alert-actions";
-import type { AdminAlertListItem } from "../../src/admin-api";
+import type { AdminAlertListItem, AdminCustomerListItem } from "../../src/admin-api";
 import {
   formatCompactDateTime,
+  getAlertPresentation,
   getAlertPriorityLabel,
-  getAlertTone
+  getAlertTone,
+  isLikelyTestAlert
 } from "../../src/admin-display";
 
 export type AlertsPageLoadResult =
@@ -16,12 +18,17 @@ export type AlertsPageLoadResult =
 
 export function AlertsPageView({
   actionPanel,
-  alerts
+  alerts,
+  customers = []
 }: {
   actionPanel?: React.ReactNode;
   alerts: AlertsPageLoadResult;
+  customers?: AdminCustomerListItem[];
 }) {
-  const alertItems = alerts.status === "ok" ? alerts.alerts : [];
+  const allAlertItems = alerts.status === "ok" ? alerts.alerts : [];
+  const alertItems = allAlertItems.filter((alert) => !isLikelyTestAlert(alert));
+  const testAlertItems = allAlertItems.filter(isLikelyTestAlert);
+  const customerMap = new Map(customers.map((customer) => [customer.id, customer]));
   const openCount = alertItems.filter((alert) => alert.status === "open").length;
 
   return (
@@ -52,32 +59,61 @@ export function AlertsPageView({
           <p>新しい相談が入ると、自動でここに表示されます。</p>
         </EmptyState>
       ) : (
-        <ul className="alert-card-list inbox-list" aria-label="未対応カード">
-          {alertItems.map((alert) => (
-            <li className="alert-card" key={alert.id}>
-              <a href={`/customers/${encodeURIComponent(alert.customer_id)}`}>
-                <span className="inbox-icon" aria-hidden="true">
-                  <BellRing size={19} />
-                </span>
-                <span className="inbox-main">
-                  <span className="inbox-title-row">
-                    <strong>{formatAlertType(alert.type)}</strong>
-                    <StatusBadge tone={getAlertTone(alert.severity)}>
-                      {getAlertPriorityLabel(alert.severity)}
-                    </StatusBadge>
-                  </span>
-                  <span className="inbox-message">{alert.message}</span>
-                  <small>{formatCompactDateTime(alert.created_at)}</small>
-                </span>
-                <span className="inbox-state">{formatAlertStatus(alert.status)}</span>
-                <ArrowRight aria-hidden="true" className="row-arrow" size={18} />
-                <span className="sr-only">お客様ページを開く</span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        <AlertCardList alerts={alertItems} customerMap={customerMap} />
       )}
+
+      {testAlertItems.length > 0 ? (
+        <details className="completed-details task-test-details">
+          <summary>確認用データ ({testAlertItems.length})</summary>
+          <div className="task-test-note">
+            動作確認で作られた通知です。実際の対応件数には含めていません。
+          </div>
+          <AlertCardList alerts={testAlertItems} customerMap={customerMap} />
+        </details>
+      ) : null}
     </main>
+  );
+}
+
+function AlertCardList({
+  alerts,
+  customerMap
+}: {
+  alerts: AdminAlertListItem[];
+  customerMap: Map<string, AdminCustomerListItem>;
+}) {
+  return (
+    <ul className="alert-card-list inbox-list" aria-label="未対応カード">
+      {alerts.map((alert) => {
+        const presentation = getAlertPresentation(alert, customerMap.get(alert.customer_id));
+        return (
+          <li className="alert-card" key={alert.id}>
+            <a href={`/customers/${encodeURIComponent(alert.customer_id)}`}>
+              <span className="inbox-icon" aria-hidden="true">
+                <BellRing size={19} />
+              </span>
+              <span className="inbox-main">
+                <span className="inbox-kind">{formatAlertType(alert.type)}</span>
+                <span className="inbox-title-row">
+                  <strong>{presentation.title}</strong>
+                  <StatusBadge tone={getAlertTone(alert.severity)}>
+                    {getAlertPriorityLabel(alert.severity)}
+                  </StatusBadge>
+                </span>
+                <span className="inbox-message">{presentation.detail}</span>
+                <small>受付 {formatCompactDateTime(alert.created_at)}</small>
+              </span>
+              <span className="inbox-state">
+                <strong>{presentation.actionLabel}</strong>
+                <small>{formatAlertStatus(alert.status)}</small>
+              </span>
+              <ArrowRight aria-hidden="true" className="row-arrow" size={18} />
+              <span className="sr-only">お客様ページを開く</span>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 

@@ -9,7 +9,14 @@ import {
   formatAlertStatus,
   formatAlertType
 } from "../../apps/admin/app/alerts/alerts-page-view";
-import type { AdminAlertListItem } from "../../apps/admin/src/admin-api";
+import type {
+  AdminAlertListItem,
+  AdminCustomerListItem
+} from "../../apps/admin/src/admin-api";
+import {
+  getAlertPresentation,
+  isLikelyTestAlert
+} from "../../apps/admin/src/admin-display";
 
 describe("admin alerts page", () => {
   it("renders production alerts page guidance and status labels", () => {
@@ -87,11 +94,49 @@ describe("admin alerts page", () => {
     expect(formatAlertStatus("notified")).toBe("確認済み");
     expect(formatAlertStatus("resolved")).toBe("対応済み");
     expect(formatAlertStatus("dismissed")).toBe("非表示");
-    expect(formatAlertSeverity("low")).toBe("低");
+    expect(formatAlertSeverity("low")).toBe("急ぎではない");
     expect(formatAlertSeverity("medium")).toBe("通常");
-    expect(formatAlertSeverity("high")).toBe("高");
+    expect(formatAlertSeverity("high")).toBe("早め");
     expect(formatAlertSeverity("critical")).toBe("至急");
     expect(formatAlertType("unreplied_customer_message")).toBe("未返信の相談");
+  });
+
+  it("turns structured alert metadata into a clear customer action", () => {
+    const presentation = getAlertPresentation(
+      createAlert({
+        message: [
+          "structured_consultation_flow=negotiation.meeting_schedule",
+          "title=打合せ予約・変更",
+          "classification_tree=商談中メニュー > 打合せ予約・変更 > キャンセル",
+          "sub_category_label=キャンセルしたい",
+          "cancel_meeting_datetime_label=15日"
+        ].join("\n")
+      }),
+      createCustomer()
+    );
+
+    expect(presentation.title).toBe("山田太郎の「打合せ予約・変更」を確認する");
+    expect(presentation.detail).toContain("キャンセル");
+    expect(presentation.detail).toContain("対象日時: 15日");
+    expect(presentation.detail).not.toContain("structured_consultation_flow");
+  });
+
+  it("separates smoke and test alerts from production work", () => {
+    expect(
+      isLikelyTestAlert(
+        createAlert({ customer_id: "customer_smoke_alert_20260717", message: "raw" })
+      )
+    ).toBe(true);
+    expect(isLikelyTestAlert(createAlert())).toBe(false);
+    expect(
+      isLikelyTestAlert(
+        createAlert({
+          id: "alert_customer_question",
+          customer_id: "customer_real",
+          message: "testという商品の相談をしたい"
+        })
+      )
+    ).toBe(false);
   });
 });
 
@@ -108,6 +153,23 @@ function createAlert(overrides: Partial<AdminAlertListItem> = {}): AdminAlertLis
     resolved_at: null,
     created_at: "2026-06-15T10:00:00.000Z",
     ...overrides
+  };
+}
+
+function createCustomer(): AdminCustomerListItem {
+  return {
+    id: "customer_demo_yamada_taro",
+    tenant_id: "tenant_amamihome",
+    line_user_id: null,
+    display_name: "LINE表示名",
+    name: "山田太郎",
+    response_mode: "human_required",
+    status: "active",
+    last_message_body: "打合せをキャンセルしたいです",
+    last_message_at: "2026-06-15T10:00:00.000Z",
+    last_customer_message_at: "2026-06-15T10:00:00.000Z",
+    created_at: "2026-06-15T09:00:00.000Z",
+    updated_at: "2026-06-15T10:00:00.000Z"
   };
 }
 
