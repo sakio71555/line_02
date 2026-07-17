@@ -7,6 +7,16 @@ import {
 } from "@amami-line-crm/shared";
 import { z } from "zod";
 
+import {
+  createDefaultLineExperienceSettings,
+  findLineMenuItemByTrigger,
+  lineExperienceSettingsSchema,
+  type LineConsultationFlowSettings,
+  type LineExperienceSettings,
+  type LineFlowConditionSettings,
+  type LineMenuItemSettings
+} from "./operations";
+
 export * from "./auth-context";
 export * from "./admin-permissions";
 
@@ -554,6 +564,7 @@ export interface MessageLoggingLineEvent {
 
 export interface LogLineWebhookEventsInput {
   tenant_id: string;
+  line_experience?: LineExperienceSettings;
   events: MessageLoggingLineEvent[];
   customerRepository: CustomerRepository;
   messageRepository: MessageRepository;
@@ -723,6 +734,36 @@ export function resolveCustomerRichMenuGuideAction(
   );
 }
 
+function resolveConfiguredRichMenuGuideAction(
+  settings: LineExperienceSettings,
+  text: string | null
+): CustomerRichMenuGuideAction | null {
+  const item = findLineMenuItemByTrigger(settings, text);
+
+  if (!item || item.behavior !== "guide") {
+    return null;
+  }
+
+  const replyText = appendTargetUrl(item.reply_text, item.target_url);
+
+  return {
+    action_key: item.action_key,
+    trigger_text: item.trigger_text,
+    timeline_body: item.timeline_label || item.label,
+    reply_text: replyText,
+    target_url: item.target_url,
+    message_type: item.action_key === "initial.model_house_reservation" ? "reservation" : "text"
+  };
+}
+
+function appendTargetUrl(replyText: string, targetUrl: string): string {
+  if (!targetUrl || replyText.includes(targetUrl)) {
+    return replyText;
+  }
+
+  return [replyText, targetUrl].filter(Boolean).join("\n\n");
+}
+
 export const customerContactStaffTriggerText = "担当者に相談";
 export const customerContactStaffCategories = [
   "家づくりについて",
@@ -761,6 +802,7 @@ type StructuredConsultationStepBase = {
   value_timeline_prefix: string;
   prompt_reply: string;
   retry_reply: string;
+  condition?: LineFlowConditionSettings;
   is_applicable?: (values: StructuredConsultationValues) => boolean;
 };
 
@@ -872,6 +914,11 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "打合せ予約・変更 希望方法: ",
         prompt_reply: "希望方法を次から選んで送ってください。",
         retry_reply: "希望方法を次から選んで送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "in",
+          values: ["新しく打合せを予約したい", "日時を変更したい"]
+        },
         is_applicable: isMeetingScheduleBookingRequest,
         options: [
           { label: "来店", value: "office" },
@@ -891,6 +938,11 @@ const structuredConsultationFlowConfigs = [
           "第1希望・第2希望・第3希望があれば、まとめて送ってください。"
         ].join("\n"),
         retry_reply: "希望日時を入力して送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "in",
+          values: ["新しく打合せを予約したい", "日時を変更したい"]
+        },
         is_applicable: isMeetingScheduleBookingRequest
       },
       {
@@ -900,6 +952,11 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "打合せ予約・変更 キャンセル対象日時: ",
         prompt_reply: "キャンセルしたい打合せの日時を入力してください。分かる範囲で大丈夫です。",
         retry_reply: "キャンセルしたい打合せの日時を入力して送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "equals",
+          values: ["キャンセルしたい"]
+        },
         is_applicable: isMeetingScheduleCancelRequest
       },
       {
@@ -909,6 +966,11 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "打合せ予約・変更 確認対象: ",
         prompt_reply: "確認したい打合せの日時や内容を入力してください。分かる範囲で大丈夫です。",
         retry_reply: "確認したい打合せの日時や内容を入力して送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "equals",
+          values: ["打合せ内容を確認したい"]
+        },
         is_applicable: isMeetingScheduleConfirmRequest
       },
       {
@@ -918,6 +980,11 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "打合せ予約・変更 打合せ内容: ",
         prompt_reply: "打合せしたい内容を次から選んで送ってください。",
         retry_reply: "打合せしたい内容を次から選んで送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "in",
+          values: ["新しく打合せを予約したい", "日時を変更したい"]
+        },
         is_applicable: isMeetingScheduleBookingRequest,
         options: [
           { label: "プラン", value: "plan" },
@@ -976,6 +1043,11 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "プラン・間取り相談 対象場所: ",
         prompt_reply: "対象の場所を次から選んで送ってください。",
         retry_reply: "対象の場所を次から選んで送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "not_in",
+          values: ["外観デザインについて", "その他"]
+        },
         is_applicable: isPlanConsultationInteriorTargetRequest,
         options: [
           { label: "LDK", value: "ldk" },
@@ -997,6 +1069,11 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "プラン・間取り相談 外観対象: ",
         prompt_reply: "外観で相談したい箇所を次から選んで送ってください。",
         retry_reply: "外観で相談したい箇所を次から選んで送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "equals",
+          values: ["外観デザインについて"]
+        },
         is_applicable: isPlanConsultationExteriorTargetRequest,
         options: [
           { label: "外観全体", value: "overall_exterior" },
@@ -1140,6 +1217,17 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "土地・敷地の相談 土地状況: ",
         prompt_reply: "土地の状況を次から選んで送ってください。",
         retry_reply: "土地の状況を次から選んで送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "not_in",
+          values: [
+            "土地を探している",
+            "候補地について相談したい",
+            "所有地について相談したい",
+            "敷地調査をお願いしたい",
+            "造成・外構について相談したい"
+          ]
+        },
         is_applicable: isLandStatusQuestionNeeded,
         options: [
           { label: "まだ土地なし", value: "no_land" },
@@ -1207,6 +1295,11 @@ const structuredConsultationFlowConfigs = [
         value_timeline_prefix: "必要書類・確認事項 現在段階: ",
         prompt_reply: "現在の段階を次から選んで送ってください。",
         retry_reply: "現在の段階を次から選んで送ってください。",
+        condition: {
+          field_key: "sub_category",
+          operator: "not_equals",
+          values: ["契約前の確認"]
+        },
         is_applicable: isDocumentStageQuestionNeeded,
         options: [
           { label: "初回相談", value: "first_consultation" },
@@ -1488,18 +1581,170 @@ function resolveCustomerContactStaffPriority(
   return customerContactStaffPriorityOptions.find((option) => option.label === normalized) ?? null;
 }
 
-function resolveStructuredConsultationFlowTrigger(
+function matchesStructuredConsultationCondition(
+  condition: LineFlowConditionSettings,
+  values: StructuredConsultationValues
+): boolean {
+  const currentValue = values[condition.field_key];
+  const includesValue = currentValue ? condition.values.includes(currentValue) : false;
+
+  switch (condition.operator) {
+    case "equals":
+    case "in":
+      return includesValue;
+    case "not_equals":
+    case "not_in":
+      return Boolean(currentValue) && !includesValue;
+  }
+}
+
+function createStructuredConsultationFlowFromSettings(
+  item: LineMenuItemSettings,
+  flow: LineConsultationFlowSettings
+): StructuredConsultationFlowConfig {
+  return {
+    flow_key: item.action_key,
+    trigger_text: item.trigger_text,
+    title: item.label,
+    start_activity_label: item.timeline_label || `${item.label}を開始`,
+    category: flow.category,
+    assigned_role: flow.assigned_role,
+    ...(flow.secondary_role ? { secondary_role: flow.secondary_role } : {}),
+    default_severity: flow.default_severity,
+    default_priority: flow.default_priority,
+    ai_auto_reply: flow.ai_auto_reply,
+    requires_staff_confirmation: flow.requires_staff_confirmation,
+    steps: flow.steps.map((step) => ({
+      key: step.key,
+      kind: step.kind,
+      prompt_timeline_body: step.prompt_timeline_body,
+      value_timeline_prefix: step.value_timeline_prefix,
+      prompt_reply: step.prompt_reply,
+      retry_reply: step.retry_reply,
+      ...(step.condition
+        ? {
+            condition: step.condition,
+            is_applicable: (values: StructuredConsultationValues) =>
+              matchesStructuredConsultationCondition(step.condition!, values)
+          }
+        : {}),
+      ...(step.kind === "choice"
+        ? { options: step.options.map((option) => ({ ...option })) }
+        : {})
+    })) as readonly StructuredConsultationStep[]
+  };
+}
+
+function createLineConsultationFlowSettings(
+  config: StructuredConsultationFlowConfig,
+  firstReplyOverride = ""
+): LineConsultationFlowSettings {
+  return {
+    category: config.category,
+    assigned_role: config.assigned_role,
+    ...(config.secondary_role ? { secondary_role: config.secondary_role } : {}),
+    default_severity: config.default_severity,
+    default_priority: config.default_priority,
+    ai_auto_reply: config.ai_auto_reply,
+    requires_staff_confirmation: config.requires_staff_confirmation,
+    steps: config.steps.map((step, index) => ({
+      key: step.key,
+      kind: step.kind,
+      prompt_timeline_body: step.prompt_timeline_body,
+      value_timeline_prefix: step.value_timeline_prefix,
+      prompt_reply: index === 0 && firstReplyOverride ? firstReplyOverride : step.prompt_reply,
+      retry_reply: step.retry_reply,
+      options: step.kind === "choice" ? step.options.map((option) => ({ ...option })) : [],
+      ...(step.condition ? { condition: { ...step.condition } } : {})
+    }))
+  };
+}
+
+export function hydrateLineExperienceSettingsWithBuiltInFlows(
+  settings: LineExperienceSettings
+): LineExperienceSettings {
+  const hydrated = {
+    menus: settings.menus.map((menu) => ({
+      ...menu,
+      items: menu.items.map((item) => {
+        if (item.behavior !== "consultation" || item.flow) {
+          return item;
+        }
+
+        const config = structuredConsultationFlowConfigs.find(
+          (candidate) => candidate.flow_key === item.action_key
+        );
+        return config
+          ? {
+              ...item,
+              flow: createLineConsultationFlowSettings(config, item.reply_text)
+            }
+          : item;
+      })
+    }))
+  };
+  const parsed = lineExperienceSettingsSchema.safeParse(hydrated);
+  return parsed.success ? parsed.data : settings;
+}
+
+function resolveConfiguredStructuredConsultationFlows(
+  settings: LineExperienceSettings
+): StructuredConsultationFlowConfig[] {
+  return settings.menus.flatMap((menu) =>
+    menu.items.flatMap((item) => {
+      if (item.behavior !== "consultation") {
+        return [];
+      }
+
+      if (item.flow) {
+        return [createStructuredConsultationFlowFromSettings(item, item.flow)];
+      }
+
+      const baseConfig = structuredConsultationFlowConfigs.find(
+        (config) => config.flow_key === item.action_key
+      );
+      if (!baseConfig) {
+        return [];
+      }
+
+      return [
+        {
+          ...baseConfig,
+          trigger_text: item.trigger_text,
+          title: item.label,
+          start_activity_label: item.timeline_label || baseConfig.start_activity_label,
+          steps: baseConfig.steps.map((step, index) =>
+            index === 0 && item.reply_text ? { ...step, prompt_reply: item.reply_text } : step
+          )
+        }
+      ];
+    })
+  );
+}
+
+function resolveConfiguredStructuredConsultationFlowTrigger(
+  settings: LineExperienceSettings,
   text: string | null
 ): StructuredConsultationFlowConfig | null {
-  const normalized = text?.trim();
+  const item = findLineMenuItemByTrigger(settings, text);
 
-  if (!normalized) {
+  if (!item || item.behavior !== "consultation") {
     return null;
   }
 
   return (
-    structuredConsultationFlowConfigs.find((config) => config.trigger_text === normalized) ?? null
+    resolveConfiguredStructuredConsultationFlows(settings).find(
+      (config) => config.flow_key === item.action_key
+    ) ?? null
   );
+}
+
+function resolveConfiguredStaffHandoffItem(
+  settings: LineExperienceSettings,
+  text: string | null
+): LineMenuItemSettings | null {
+  const item = findLineMenuItemByTrigger(settings, text);
+  return item?.behavior === "staff_handoff" ? item : null;
 }
 
 function resolveStructuredConsultationOption(
@@ -1881,7 +2126,8 @@ export async function recordCustomerRichMenuSwitchMessage(
   input: {
     tenant_id: string;
     customer_id: string;
-    menu_type: CustomerRichMenuType;
+    menu_type: string;
+    menu_label?: string;
     created_at: string;
   },
   options: { createId?: () => string } = {}
@@ -1891,9 +2137,12 @@ export async function recordCustomerRichMenuSwitchMessage(
     {
       tenant_id: input.tenant_id,
       customer_id: input.customer_id,
-      body: `LINEリッチメニューを${formatCustomerRichMenuTypeLabel(
-        input.menu_type
-      )}へ切り替えました。`,
+      body: `LINEリッチメニューを${
+        input.menu_label ??
+        (isCustomerRichMenuType(input.menu_type)
+          ? formatCustomerRichMenuTypeLabel(input.menu_type)
+          : input.menu_type)
+      }へ切り替えました。`,
       created_at: input.created_at
     },
     options
@@ -2093,6 +2342,7 @@ export async function logLineWebhookEvents(
   const staffNotificationAlerts: Alert[] = [];
   const staffNotificationEvents: CustomerLineStaffNotificationEvent[] = [];
   const serviceOptions = createMessageLoggingServiceOptions(input);
+  const lineExperience = input.line_experience ?? createDefaultLineExperienceSettings();
   const lineDisplayNameCache = new Map<string, string | null>();
 
   for (const event of input.events) {
@@ -2141,7 +2391,7 @@ export async function logLineWebhookEvents(
         event.source_user_id,
         lineDisplayNameCache
       );
-      const guideAction = resolveCustomerRichMenuGuideAction(event.text);
+      const guideAction = resolveConfiguredRichMenuGuideAction(lineExperience, event.text);
 
       if (guideAction) {
         const customer = await upsertLineCustomer(
@@ -2206,7 +2456,10 @@ export async function logLineWebhookEvents(
         continue;
       }
 
-      const structuredConsultationTrigger = resolveStructuredConsultationFlowTrigger(event.text);
+      const structuredConsultationTrigger = resolveConfiguredStructuredConsultationFlowTrigger(
+        lineExperience,
+        event.text
+      );
 
       if (structuredConsultationTrigger) {
         const customer = await upsertLineCustomer(
@@ -2245,7 +2498,9 @@ export async function logLineWebhookEvents(
         continue;
       }
 
-      if (event.text?.trim() === customerContactStaffTriggerText) {
+      const staffHandoffItem = resolveConfiguredStaffHandoffItem(lineExperience, event.text);
+
+      if (staffHandoffItem) {
         const customer = await upsertLineCustomer(
           input.customerRepository,
           {
@@ -2285,7 +2540,7 @@ export async function logLineWebhookEvents(
             reply: {
               customer_id: customer.id,
               reply_token: event.reply_token ?? null,
-              text: buildContactStaffCategoryPromptReply(),
+              text: staffHandoffItem.reply_text || buildContactStaffCategoryPromptReply(),
               quick_reply_texts: [...customerContactStaffCategories]
             }
           },
@@ -2309,6 +2564,7 @@ export async function logLineWebhookEvents(
       );
       const structuredConsultationFlow = await handleStructuredConsultationFlowMessage({
         tenant_id: input.tenant_id,
+        line_experience: lineExperience,
         customer,
         text: event.text,
         line_message_id: event.message_id,
@@ -2667,6 +2923,7 @@ async function startStructuredConsultationFlow(input: {
 
 async function handleStructuredConsultationFlowMessage(input: {
   tenant_id: string;
+  line_experience: LineExperienceSettings;
   customer: Customer;
   text: string | null;
   line_message_id: string | null;
@@ -2679,7 +2936,7 @@ async function handleStructuredConsultationFlowMessage(input: {
   serviceOptions: { createId?: () => string; now?: () => string };
 }): Promise<StructuredConsultationFlowResult> {
   const timeline = await input.messageRepository.listByCustomer(input.tenant_id, input.customer.id);
-  const flowState = resolveStructuredConsultationFlowState(timeline);
+  const flowState = resolveStructuredConsultationFlowState(timeline, input.line_experience);
 
   if (flowState.stage === "none") {
     return createUnhandledStructuredConsultationFlowResult();
@@ -2902,7 +3159,10 @@ function buildStructuredConsultationAcceptedTimelineBody(
   return `${structuredConsultationAcceptedTimelinePrefix}${config.flow_key}`;
 }
 
-function resolveStructuredConsultationFlowState(messages: Message[]): StructuredConsultationFlowState {
+function resolveStructuredConsultationFlowState(
+  messages: Message[],
+  settings: LineExperienceSettings
+): StructuredConsultationFlowState {
   let latest:
     | {
         start_index: number;
@@ -2913,7 +3173,7 @@ function resolveStructuredConsultationFlowState(messages: Message[]): Structured
       }
     | null = null;
 
-  for (const config of structuredConsultationFlowConfigs) {
+  for (const config of resolveConfiguredStructuredConsultationFlows(settings)) {
     const lastAcceptedIndex = findLastMessageIndex(
       messages,
       (message) =>
@@ -4418,10 +4678,27 @@ function parseStructuredConsultationAlertDetail(message: string):
     fields[line.slice(0, separatorIndex)] = line.slice(separatorIndex + 1);
   }
 
+  const builtInConfig = structuredConsultationFlowConfigs.find(
+    (candidate) => candidate.flow_key === fields.structured_consultation_flow
+  );
   const config =
-    structuredConsultationFlowConfigs.find(
-      (candidate) => candidate.flow_key === fields.structured_consultation_flow
-    ) ?? null;
+    builtInConfig ??
+    (fields.structured_consultation_flow && fields.title && fields.category
+      ? {
+          flow_key: fields.structured_consultation_flow,
+          trigger_text: "",
+          title: fields.title,
+          start_activity_label: fields.title,
+          category: fields.category,
+          assigned_role: fields.assigned_role || "staff",
+          ...(fields.secondary_role ? { secondary_role: fields.secondary_role } : {}),
+          default_severity: "medium" as const,
+          default_priority: fields.priority === "high" ? ("high" as const) : ("normal" as const),
+          ai_auto_reply: fields.ai_auto_reply === "true",
+          requires_staff_confirmation: fields.requires_staff_confirmation !== "false",
+          steps: []
+        }
+      : null);
 
   return config ? { config, fields } : null;
 }
@@ -4535,7 +4812,16 @@ function formatStructuredConsultationDetailLines(input: {
         ...bodyLines
       ];
     default:
-      return [...classificationLines, ...bodyLines];
+      return [
+        ...classificationLines,
+        ...Object.entries(input.fields)
+          .filter(
+            ([key, value]) =>
+              key.endsWith("_label") && key !== "body_label" && Boolean(value.trim())
+          )
+          .map(([, value]) => `回答：${value.trim()}`),
+        ...bodyLines
+      ];
   }
 }
 

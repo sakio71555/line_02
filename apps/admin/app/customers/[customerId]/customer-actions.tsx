@@ -3,11 +3,10 @@
 import React, { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { ReplyTemplate } from "@amami-line-crm/domain";
+import type { LineMenuSettings, ReplyTemplate } from "@amami-line-crm/domain";
 
 import {
-  ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
-  type AdminCustomerRichMenuType
+  ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE
 } from "../../../src/admin-api";
 import {
   runAiReplyDraftAction,
@@ -53,27 +52,37 @@ const initialCustomerArchiveState: CustomerArchiveActionState = {
 
 const ragExampleKeywords = ["オンライン相談", "メンテナンス", "新築", "リフォーム"] as const;
 
-const customerRichMenuSwitchOptions = [
-  {
-    menuType: "initial",
-    label: "初期メニュー",
-    description: "新規相談・未登録のお客様向け"
-  },
-  {
-    menuType: "negotiation",
-    label: "商談中メニュー",
-    description: "面談中・見積中・プラン相談中のお客様向け"
-  },
-  {
-    menuType: "aftercare",
-    label: "アフターメニュー",
-    description: "契約後・引き渡し後・OBのお客様向け"
-  }
-] as const satisfies ReadonlyArray<{
-  menuType: AdminCustomerRichMenuType;
-  label: string;
+type CustomerRichMenuOption = Pick<
+  LineMenuSettings,
+  "menu_type" | "name" | "line_rich_menu_id"
+> & {
   description: string;
-}>;
+  switch_available: boolean;
+};
+
+const defaultCustomerRichMenuOptions: CustomerRichMenuOption[] = [
+  {
+    menu_type: "initial",
+    name: "初期メニュー",
+    line_rich_menu_id: undefined,
+    description: "新規相談・未登録のお客様向け",
+    switch_available: true
+  },
+  {
+    menu_type: "negotiation",
+    name: "商談中メニュー",
+    line_rich_menu_id: undefined,
+    description: "面談中・見積中・プラン相談中のお客様向け",
+    switch_available: true
+  },
+  {
+    menu_type: "aftercare",
+    name: "アフターメニュー",
+    line_rich_menu_id: undefined,
+    description: "契約後・引き渡し後のお客様向け",
+    switch_available: true
+  }
+];
 
 type FormAction = (formData: FormData) => void;
 
@@ -306,10 +315,12 @@ export function CustomerActionPanelView({
 
 export function CustomerRichMenuSwitch({
   customerAvailable,
-  customerId
+  customerId,
+  menus
 }: {
   customerAvailable: boolean;
   customerId: string;
+  menus: CustomerRichMenuOption[];
 }) {
   const router = useRouter();
   const [richMenuSwitchState, runRichMenuSwitch, richMenuSwitchPending] = useActionState(
@@ -326,6 +337,7 @@ export function CustomerRichMenuSwitch({
   return (
     <CustomerRichMenuSwitchPanel
       customerAvailable={customerAvailable}
+      menus={menus}
       pending={richMenuSwitchPending}
       runRichMenuSwitch={runRichMenuSwitch}
       state={richMenuSwitchState}
@@ -336,12 +348,14 @@ export function CustomerRichMenuSwitch({
 
 export function CustomerRichMenuSwitchPanel({
   customerAvailable,
+  menus = defaultCustomerRichMenuOptions,
   pending,
   runRichMenuSwitch,
   state,
   variant = "standalone"
 }: {
   customerAvailable: boolean;
+  menus?: CustomerRichMenuOption[];
   pending: boolean;
   runRichMenuSwitch: FormAction;
   state: RichMenuSwitchActionState;
@@ -360,9 +374,9 @@ export function CustomerRichMenuSwitchPanel({
         <h3>お客様のLINEメニューを変える</h3>
       </div>
       <div className="status-pill-list">
-        <span className="status-pill">初期</span>
-        <span className="status-pill">商談中</span>
-        <span className="status-pill">アフター</span>
+        {menus.map((menu) => (
+          <span className="status-pill" key={menu.menu_type}>{menu.name}</span>
+        ))}
       </div>
       <p className="meta">
         このお客様に表示されるLINEメニューだけを変えます。メッセージは送りません。
@@ -372,16 +386,18 @@ export function CustomerRichMenuSwitchPanel({
       ) : null}
       <form action={runRichMenuSwitch} className="action-form">
         <div className="action-grid rich-menu-switch-grid">
-          {customerRichMenuSwitchOptions.map((option) => (
+          {menus.map((option) => (
             <button
-              key={option.menuType}
+              key={option.menu_type}
               name="menu_type"
               type="submit"
-              value={option.menuType}
-              disabled={!customerAvailable || pending}
+              value={option.menu_type}
+              disabled={!customerAvailable || !option.switch_available || pending}
             >
-              {pending ? "切替中..." : `${option.label}へ切替`}
-              <span className="button-subtext">{option.description}</span>
+              {pending ? "切替中..." : `${option.name}へ切替`}
+              <span className="button-subtext">
+                {option.switch_available ? option.description : "LINE公開IDを設定してください"}
+              </span>
             </button>
           ))}
         </div>

@@ -162,6 +162,8 @@
 - Loop 324 customer channel staff notification temporary fallback: `11_codex_tasks/324_customer_channel_staff_notification_temporary_fallback.md`
 - Loop 325 customer rich menu switching: `11_codex_tasks/325_customer_rich_menu_switching.md`
 - Loop 326 contact staff priority selection: `11_codex_tasks/326_contact_staff_priority_selection.md`
+- Task 334 tenant LINE experience settings: `11_codex_tasks/334_tenant_line_experience_settings.md`
+- Task 335 dynamic tenant rich menu flow builder: `11_codex_tasks/335_dynamic_tenant_rich_menu_flow_builder.md`
 - Production operations hardening package runbook: `15_runbooks/production_operations_hardening_package.md`
 - Production read-only smoke script: `../scripts/ops/production_readonly_smoke.sh`
 - LINE canary operator window helper: `../scripts/ops/line_canary_window_operator.sh`

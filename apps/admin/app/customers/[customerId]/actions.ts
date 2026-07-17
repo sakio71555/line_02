@@ -58,7 +58,7 @@ export async function runCustomerStageAction(
   _previousState: CustomerOperationsActionState,
   formData: FormData
 ): Promise<CustomerOperationsActionState> {
-  const stage = readCustomerRichMenuType(formData);
+  const stage = readCustomerStage(formData);
   if (!stage) return { status: "error", error: "顧客段階を選択してください。" };
 
   try {
@@ -324,6 +324,12 @@ function isRealLinePushConfirmed(formData: FormData): boolean {
 }
 
 function readCustomerRichMenuType(formData: FormData): AdminCustomerRichMenuType | null {
+  const value = readTrimmedFormValue(formData, "menu_type");
+
+  return /^[a-z0-9][a-z0-9_-]{1,63}$/.test(value) ? value : null;
+}
+
+function readCustomerStage(formData: FormData): "initial" | "negotiation" | "aftercare" | null {
   const value = readTrimmedFormValue(formData, "menu_type");
 
   switch (value) {

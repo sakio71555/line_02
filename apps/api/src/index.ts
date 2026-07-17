@@ -19,7 +19,6 @@ import {
   InMemoryMessageRepository,
   InMemoryOperationsRepository,
   ensureOpenUnrepliedCustomerMessageAlert,
-  formatCustomerRichMenuTypeLabel,
   insertBotTextTimelineMessage,
   insertSystemAlertTimelineMessage,
   isPrivateLineAttachmentMessage,
@@ -57,6 +56,9 @@ import {
   internalNoteInputSchema,
   replyTemplateInputSchema,
   workspaceSettingsInputSchema,
+  lineExperienceSettingsSchema,
+  createDefaultLineExperienceSettings,
+  hydrateLineExperienceSettingsWithBuiltInFlows,
   type StaffAuthLookup,
   type StaffNotificationPayload,
   type StaffNotifier,
@@ -927,7 +929,22 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "cannot_switch_rich_menu_without_line_user_id" }, 409);
     }
 
-    const richMenuId = readCustomerRichMenuIdFromEnv(env, switchRequest.menuType);
+    const settings = resolveWorkspaceSettings(
+      await operationsRepository.getWorkspaceSettings(tenant.tenantId),
+      tenant.tenantId,
+      config.tenant.slug
+    );
+    const configuredMenu = settings.line_experience.menus.find(
+      (menu) => menu.menu_type === switchRequest.menuType
+    );
+
+    if (!configuredMenu) {
+      return c.json({ ok: false, error: "rich_menu_not_configured" }, 404);
+    }
+
+    const richMenuId =
+      readNonEmptyEnvValue(configuredMenu.line_rich_menu_id) ??
+      readCustomerRichMenuIdFromEnv(env, switchRequest.menuType);
 
     if (!richMenuId) {
       return c.json({ ok: false, error: "rich_menu_id_not_configured" }, 409);
@@ -947,6 +964,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: tenant.tenantId,
       customer_id: customer.id,
       menu_type: switchRequest.menuType,
+      menu_label: configuredMenu.name,
       created_at: now?.() ?? new Date().toISOString()
     });
 
@@ -955,7 +973,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: tenant.tenantId,
       customer_id: customer.id,
       menu_type: switchRequest.menuType,
-      menu_label: formatCustomerRichMenuTypeLabel(switchRequest.menuType),
+      menu_label: configuredMenu.name,
       rich_menu_linked: true,
       line_message_sent: false,
       rich_menu_id_recorded: false,
@@ -1408,8 +1426,11 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       operationsRepository.listStaffMembers(tenant.tenantId),
       operationsRepository.getWorkspaceSettings(tenant.tenantId)
     ]);
-    const settings =
-      savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const settings = resolveWorkspaceSettings(
+      savedSettings,
+      tenant.tenantId,
+      config.tenant.slug
+    );
     const customersById = new Map(customers.map((customer) => [customer.id, customer]));
     const nowTimestamp = now?.() ?? new Date().toISOString();
 
@@ -1858,9 +1879,11 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.body, tenant.status);
     }
 
-    const settings =
-      (await operationsRepository.getWorkspaceSettings(tenant.tenantId)) ??
-      createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const settings = resolveWorkspaceSettings(
+      await operationsRepository.getWorkspaceSettings(tenant.tenantId),
+      tenant.tenantId,
+      config.tenant.slug
+    );
     return c.json({ ok: true, tenant_id: tenant.tenantId, settings });
   });
 
@@ -1950,8 +1973,11 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       operationsRepository.listReservations(tenant.tenantId),
       operationsRepository.getWorkspaceSettings(tenant.tenantId)
     ]);
-    const settings =
-      savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const settings = resolveWorkspaceSettings(
+      savedSettings,
+      tenant.tenantId,
+      config.tenant.slug
+    );
     return c.json({
       ok: true,
       tenant_id: tenant.tenantId,
@@ -1993,9 +2019,11 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "customer_not_found" }, 404);
     }
 
-    const settings =
-      (await operationsRepository.getWorkspaceSettings(tenant.tenantId)) ??
-      createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const settings = resolveWorkspaceSettings(
+      await operationsRepository.getWorkspaceSettings(tenant.tenantId),
+      tenant.tenantId,
+      config.tenant.slug
+    );
     const shouldLinkRichMenu = input.apply_rich_menu && settings.rich_menu_auto_switch_enabled;
     const lineUserId = shouldLinkRichMenu ? customer.line_user_id?.trim() : null;
     const richMenuId = shouldLinkRichMenu ? readCustomerRichMenuIdFromEnv(env, input.stage) : null;
@@ -2081,9 +2109,11 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "customer_line_target_not_found" }, 404);
     }
 
-    const settings =
-      (await operationsRepository.getWorkspaceSettings(tenant.tenantId)) ??
-      createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const settings = resolveWorkspaceSettings(
+      await operationsRepository.getWorkspaceSettings(tenant.tenantId),
+      tenant.tenantId,
+      config.tenant.slug
+    );
     if (!settings.customer_status_notifications_enabled) {
       return c.json({ ok: false, error: "customer_status_notifications_disabled" }, 409);
     }
@@ -2198,8 +2228,14 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       const customerLoggingEvents = customerLineStaffNotificationSetup.enabled
         ? payload.events.filter((event) => !isStaffLineSetupTriggerEvent(event))
         : payload.events;
+      const workspaceSettings = resolveWorkspaceSettings(
+        await operationsRepository.getWorkspaceSettings(tenant.tenantId),
+        tenant.tenantId,
+        config.tenant.slug
+      );
       const logging = await logLineWebhookEvents({
         tenant_id: tenant.tenantId,
+        line_experience: workspaceSettings.line_experience,
         events: customerLoggingEvents,
         customerRepository,
         messageRepository,
@@ -4712,7 +4748,7 @@ async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushR
 
 async function readCustomerRichMenuSwitchBody(
   request: Request
-): Promise<{ menuType: CustomerRichMenuType } | null> {
+): Promise<{ menuType: string } | null> {
   let parsed: unknown;
 
   try {
@@ -4727,7 +4763,7 @@ async function readCustomerRichMenuSwitchBody(
 
   const menuType = parsed.menu_type.trim();
 
-  if (!isCustomerRichMenuType(menuType)) {
+  if (!/^[a-z0-9][a-z0-9_-]{1,63}$/.test(menuType)) {
     return null;
   }
 
@@ -4736,7 +4772,7 @@ async function readCustomerRichMenuSwitchBody(
 
 function readCustomerRichMenuIdFromEnv(
   env: NodeJS.ProcessEnv,
-  menuType: CustomerRichMenuType
+  menuType: string
 ): string | undefined {
   switch (menuType) {
     case "initial":
@@ -4756,6 +4792,8 @@ function readCustomerRichMenuIdFromEnv(
         readNonEmptyEnvValue(env.LINE_RICH_MENU_AFTERCARE_ID) ??
         readNonEmptyEnvValue(env.AMAMIHOME_LINE_RICH_MENU_AFTERCARE_ID)
       );
+    default:
+      return undefined;
   }
 }
 
@@ -4862,9 +4900,37 @@ function createDefaultWorkspaceSettings(tenantId: string, tenantSlug: string): W
     sla_minutes: 240,
     rich_menu_auto_switch_enabled: false,
     customer_status_notifications_enabled: false,
+    line_experience: hydrateLineExperienceSettingsWithBuiltInFlows(
+      createDefaultLineExperienceSettings()
+    ),
     setup_completed: false,
     created_at: timestamp,
     updated_at: timestamp
+  };
+}
+
+function resolveWorkspaceSettings(
+  savedSettings: WorkspaceSettings | null,
+  tenantId: string,
+  tenantSlug: string
+): WorkspaceSettings {
+  const defaults = createDefaultWorkspaceSettings(tenantId, tenantSlug);
+
+  if (!savedSettings) {
+    return defaults;
+  }
+
+  const parsedLineExperience = lineExperienceSettingsSchema.safeParse(
+    (savedSettings as Partial<WorkspaceSettings>).line_experience
+  );
+
+  return {
+    ...defaults,
+    ...savedSettings,
+    tenant_id: tenantId,
+    line_experience: parsedLineExperience.success
+      ? hydrateLineExperienceSettingsWithBuiltInFlows(parsedLineExperience.data)
+      : defaults.line_experience
   };
 }
 

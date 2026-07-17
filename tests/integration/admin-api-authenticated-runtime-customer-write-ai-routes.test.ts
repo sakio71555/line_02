@@ -8,10 +8,13 @@ import {
   type AiSummaryInput
 } from "@amami-line-crm/ai";
 import {
+  createDefaultLineExperienceSettings,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  InMemoryOperationsRepository,
   type AuthUserIdentity,
   type Customer,
+  type LineMenuSettings,
   type Message,
   type StaffAuthLookup,
   type StaffRole,
@@ -97,7 +100,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
       tenant_id: "tenant_amamihome",
       customer_id: "customer_amami",
       menu_type: "negotiation",
-      menu_label: "商談中メニュー",
+      menu_label: "Amami Home Negotiation Menu",
       rich_menu_linked: true,
       line_message_sent: false,
       rich_menu_id_recorded: false,
@@ -120,7 +123,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
         tenant_id: "tenant_amamihome",
         customer_id: "customer_amami",
         role: "system",
-        body: "LINEリッチメニューを商談中メニューへ切り替えました。"
+        body: "LINEリッチメニューをAmami Home Negotiation Menuへ切り替えました。"
       })
     ]);
   });
@@ -156,7 +159,7 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
     await seedCustomerWriteAiData(customerRepository);
 
     const response = await app.fetch(
-      richMenuSwitchRequest("customer_amami", "unknown", {
+      richMenuSwitchRequest("customer_amami", "Invalid Menu!", {
         authorization: "Bearer fake-valid-owner"
       })
     );
@@ -167,6 +170,59 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
       error: "invalid_rich_menu_switch_body"
     });
     expect(lineClient.richMenuLinks).toEqual([]);
+  });
+
+  it("switches to an added tenant menu using its configured LINE rich menu id", async () => {
+    const { app, customerRepository, messageRepository, lineClient, operationsRepository } =
+      createCustomerWriteAiApp({ includeAuthRuntime: true });
+    await seedCustomerWriteAiData(customerRepository);
+    const lineExperience = createDefaultLineExperienceSettings();
+    lineExperience.menus.push(createCustomSwitchableMenu());
+    await operationsRepository.saveWorkspaceSettings({
+      tenant_id: "tenant_amamihome",
+      company_name: "Example Housing",
+      product_name: "Example LINE CRM",
+      accent_preset: "forest",
+      sla_minutes: 240,
+      rich_menu_auto_switch_enabled: false,
+      customer_status_notifications_enabled: false,
+      line_experience: lineExperience,
+      setup_completed: true,
+      created_at: now,
+      updated_at: now
+    });
+
+    const response = await app.fetch(
+      richMenuSwitchRequest("customer_amami", "service", {
+        authorization: "Bearer fake-valid-owner"
+      })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({
+      ok: true,
+      tenant_id: "tenant_amamihome",
+      customer_id: "customer_amami",
+      menu_type: "service",
+      menu_label: "アフターサービスメニュー",
+      rich_menu_linked: true,
+      line_message_sent: false
+    });
+    expect(lineClient.richMenuLinks).toEqual([
+      {
+        userId: "U_AMAMI_CUSTOMER",
+        richMenuId: "richmenu-service-test"
+      }
+    ]);
+    expect(messageRepository.insertCalls).toEqual([
+      expect.objectContaining({
+        tenant_id: "tenant_amamihome",
+        customer_id: "customer_amami",
+        role: "system",
+        body: "LINEリッチメニューをアフターサービスメニューへ切り替えました。"
+      })
+    ]);
   });
 
   it("requires selectedTenantId for a multi-tenant staff reply request", async () => {
@@ -581,6 +637,7 @@ function createCustomerWriteAiApp(input: CustomerWriteAiAppInput = {}) {
   const messageRepository = new SpyMessageRepository();
   const lineClient = new RecordingLineClient();
   const aiProvider = new RecordingMockAiProvider();
+  const operationsRepository = new InMemoryOperationsRepository();
   const sessionVerifier = new FakeAuthSessionVerifier({
     "fake-valid-owner": { authUserId: "auth_owner", email: "owner@example.test" },
     "fake-valid-staff": { authUserId: "auth_staff", email: "staff@example.test" },
@@ -593,6 +650,7 @@ function createCustomerWriteAiApp(input: CustomerWriteAiAppInput = {}) {
     messageRepository,
     lineClient,
     aiProvider,
+    operationsRepository,
     now: () => now,
     ...(input.includeAuthRuntime
       ? {
@@ -619,7 +677,26 @@ function createCustomerWriteAiApp(input: CustomerWriteAiAppInput = {}) {
     messageRepository,
     lineClient,
     aiProvider,
+    operationsRepository,
     sessionVerifier
+  };
+}
+
+function createCustomSwitchableMenu(): LineMenuSettings {
+  return {
+    menu_type: "service",
+    name: "アフターサービスメニュー",
+    chat_bar_text: "アフターサービス",
+    line_rich_menu_id: "richmenu-service-test",
+    items: Array.from({ length: 6 }, (_, index) => ({
+      action_key: `service.guide_${index + 1}`,
+      label: `案内${index + 1}`,
+      behavior: "guide" as const,
+      trigger_text: `アフター案内${index + 1}`,
+      target_url: "",
+      reply_text: `アフターサービス案内${index + 1}です。`,
+      timeline_label: `アフター案内${index + 1}`
+    }))
   };
 }
 

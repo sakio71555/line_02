@@ -8,11 +8,14 @@ import { createApiApp } from "../../apps/api/src/index";
 import type { AiProvider } from "@amami-line-crm/ai";
 import {
   type Alert,
+  createDefaultLineExperienceSettings,
   type Customer,
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  InMemoryOperationsRepository,
   type LineAttachmentStorage,
+  type LineMenuSettings,
   type Message,
   type StaffNotificationPayload,
   type StaffNotifier
@@ -37,6 +40,66 @@ const fixtureBody = readFileSync(
   new URL("../fixtures/line-webhook-follow-and-message.json", import.meta.url),
   "utf8"
 );
+
+function createCustomServiceMenu(): LineMenuSettings {
+  return {
+    menu_type: "service",
+    name: "アフターサービスメニュー",
+    chat_bar_text: "アフターサービス",
+    line_rich_menu_id: "richmenu-service-test",
+    items: [
+      {
+        action_key: "service.repair",
+        label: "修理相談",
+        behavior: "consultation",
+        trigger_text: "修理について相談",
+        target_url: "",
+        reply_text: "修理について確認します。",
+        timeline_label: "修理相談を開始",
+        flow: {
+          category: "repair",
+          assigned_role: "support",
+          default_severity: "medium",
+          default_priority: "normal",
+          ai_auto_reply: false,
+          requires_staff_confirmation: true,
+          steps: [
+            {
+              key: "repair_area",
+              kind: "choice",
+              prompt_timeline_body: "修理箇所を確認",
+              value_timeline_prefix: "修理箇所：",
+              prompt_reply: "修理が必要な場所を選んでください。",
+              retry_reply: "表示された場所から選んでください。",
+              options: [
+                { label: "水まわり", value: "water" },
+                { label: "電気", value: "electric" }
+              ]
+            },
+            {
+              key: "details",
+              kind: "text",
+              prompt_timeline_body: "詳しい状況を確認",
+              value_timeline_prefix: "詳しい状況：",
+              prompt_reply: "詳しい状況を入力してください。",
+              retry_reply: "詳しい状況を入力してください。",
+              options: []
+            }
+          ]
+        }
+      },
+      ...Array.from({ length: 5 }, (_, index) => ({
+        action_key: `service.guide_${index + 1}`,
+        label: `案内${index + 1}`,
+        behavior: "guide" as const,
+        trigger_text: `アフター案内${index + 1}`,
+        target_url: "",
+        reply_text: `アフターサービス案内${index + 1}です。`,
+        timeline_label: `アフター案内${index + 1}`
+      }))
+    ]
+  };
+}
 
 function signedRequest(path: string, body: string, signature = signBody(body)): Request {
   return new Request(`http://localhost${path}`, {
@@ -81,6 +144,7 @@ function createTestContext(
     lineAttachmentStorage?: LineAttachmentStorage;
     customerRepository?: InMemoryCustomerRepository;
     messageRepository?: InMemoryMessageRepository;
+    operationsRepository?: InMemoryOperationsRepository;
     staffLineClient?: LineClient;
     staffNotifier?: StaffNotifier;
     aiProvider?: AiProvider;
@@ -95,6 +159,7 @@ function createTestContext(
     alertRepository,
     customerRepository,
     messageRepository,
+    ...(input.operationsRepository ? { operationsRepository: input.operationsRepository } : {}),
     ...(input.lineAttachmentStorage ? { lineAttachmentStorage: input.lineAttachmentStorage } : {}),
     ...(input.lineClient ? { lineClient: input.lineClient } : {}),
     ...(input.staffLineClient ? { staffLineClient: input.staffLineClient } : {}),
@@ -1363,6 +1428,159 @@ describe("LINE webhook foundation", () => {
       eventTime,
       lineUserId: "U_TEST_USER_MENU"
     });
+  });
+
+  it("uses the saved tenant LINE menu trigger, reply, URL and timeline label", async () => {
+    const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
+    const operationsRepository = new InMemoryOperationsRepository();
+    const lineExperience = createDefaultLineExperienceSettings();
+    const reservationItem = lineExperience.menus
+      .find((menu) => menu.menu_type === "initial")!
+      .items.find((item) => item.action_key === "initial.model_house_reservation")!;
+
+    reservationItem.label = "来場予約";
+    reservationItem.trigger_text = "来場予約をする";
+    reservationItem.reply_text = "見学予約ページをご案内します。";
+    reservationItem.target_url = "https://example.test/visit/";
+    reservationItem.timeline_label = "来場予約ページを案内";
+
+    await operationsRepository.saveWorkspaceSettings({
+      tenant_id: "tenant_amamihome",
+      company_name: "Example Housing",
+      product_name: "Example LINE CRM",
+      accent_preset: "forest",
+      sla_minutes: 240,
+      rich_menu_auto_switch_enabled: false,
+      customer_status_notifications_enabled: false,
+      line_experience: lineExperience,
+      setup_completed: true,
+      created_at: "2026-07-17T00:00:00.000Z",
+      updated_at: "2026-07-17T00:00:00.000Z"
+    });
+
+    const { app, messageRepository } = createTestContext({
+      lineClient,
+      operationsRepository,
+      staffNotifier,
+      env: { APP_ENV: "production" }
+    });
+    const response = await app.fetch(
+      signedRequest(
+        `/api/line/webhook/${knownWebhookSecret}`,
+        JSON.stringify({
+          destination: "U_TEST_DESTINATION",
+          events: [
+            {
+              type: "message",
+              mode: "active",
+              timestamp: 1710000002500,
+              source: { type: "user", userId: "U_TEST_TENANT_MENU" },
+              webhookEventId: "01TESTTENANTMENUGUIDE",
+              deliveryContext: { isRedelivery: false },
+              replyToken: "reply_token_tenant_menu",
+              message: {
+                id: "test-line-message-tenant-menu-001",
+                type: "text",
+                text: "来場予約をする"
+              }
+            }
+          ]
+        })
+      )
+    );
+
+    expect(response.status).toBe(200);
+    expect(lineClient.replies).toEqual([
+      {
+        replyToken: "reply_token_tenant_menu",
+        messages: [
+          {
+            type: "text",
+            text: "見学予約ページをご案内します。\n\nhttps://example.test/visit/"
+          }
+        ]
+      }
+    ]);
+    expect(messageRepository.list().map((message) => message.body)).toContain(
+      "来場予約ページを案内"
+    );
+    expect(staffNotifier.notifications[0]?.message).toContain(
+      "種別：LINEメニュー操作（来場予約ページを案内）"
+    );
+  });
+
+  it("runs a tenant-defined consultation flow from an added rich menu", async () => {
+    const lineClient = new MockLineClient();
+    const staffNotifier = new RecordingStaffNotifier();
+    const operationsRepository = new InMemoryOperationsRepository();
+    const lineExperience = createDefaultLineExperienceSettings();
+    lineExperience.menus.push(createCustomServiceMenu());
+
+    await operationsRepository.saveWorkspaceSettings({
+      tenant_id: "tenant_amamihome",
+      company_name: "Example Housing",
+      product_name: "Example LINE CRM",
+      accent_preset: "forest",
+      sla_minutes: 240,
+      rich_menu_auto_switch_enabled: false,
+      customer_status_notifications_enabled: false,
+      line_experience: lineExperience,
+      setup_completed: true,
+      created_at: "2026-07-17T00:00:00.000Z",
+      updated_at: "2026-07-17T00:00:00.000Z"
+    });
+
+    const { app, alertRepository, messageRepository } = createTestContext({
+      lineClient,
+      operationsRepository,
+      staffNotifier,
+      env: { APP_ENV: "production" }
+    });
+    const texts = ["修理について相談", "水まわり", "蛇口から水が漏れています。"];
+
+    for (const [index, text] of texts.entries()) {
+      const response = await sendLineText(app, {
+        userId: "U_TEST_CUSTOM_SERVICE_FLOW",
+        eventId: `01TESTCUSTOMSERVICE${index}`,
+        messageId: `test-custom-service-${index}`,
+        replyToken: `reply_token_custom_service_${index}`,
+        text,
+        timestamp: 1710000003000 + index * 1000
+      });
+      expect(response.status).toBe(200);
+    }
+
+    expect(lineClient.replies.at(0)?.messages[0]).toMatchObject({
+      type: "text",
+      text: "修理が必要な場所を選んでください。\n\n・水まわり\n・電気"
+    });
+    expect(lineClient.replies.at(1)?.messages[0]?.text).toBe(
+      "詳しい状況を入力してください。"
+    );
+    expect(lineClient.replies.at(-1)?.messages[0]?.text).toContain(
+      "修理相談の内容を受け付けました。"
+    );
+    expect(messageRepository.list().map((message) => message.body)).toEqual(
+      expect.arrayContaining([
+        "修理箇所：水まわり",
+        "詳しい状況：蛇口から水が漏れています。"
+      ])
+    );
+    expect(alertRepository.list()).toHaveLength(1);
+    expect(alertRepository.list()[0]?.message).toContain(
+      "structured_consultation_flow=service.repair"
+    );
+    expect(alertRepository.list()[0]?.message).toContain("category=repair");
+    expect(alertRepository.list()[0]?.message).toContain("assigned_role=support");
+    expect(alertRepository.list()[0]?.message).toContain("repair_area=water");
+    expect(alertRepository.list()[0]?.message).toContain(
+      "details_label=蛇口から水が漏れています。"
+    );
+    expect(staffNotifier.notifications.at(-1)?.message).toContain(
+      "修理相談の相談が届きました。"
+    );
+    expect(staffNotifier.notifications.at(-1)?.message).toContain("回答：水まわり");
   });
 
   it("confirms each matching concurrent rich-menu reply by its exact pending message id", async () => {
@@ -3025,7 +3243,7 @@ describe("LINE webhook foundation", () => {
           "sub_category=fixtures",
           "urgency=soon",
           "photo_video_guidance=sent",
-          "classification_tree=アフターメニュー > 不具合相談 > 建具 > 中"
+          "classification_tree=アフターメニュー > 不具合を相談 > 建具 > 中"
         ],
         notificationSnippets: [
           "不具合相談の相談が届きました。",

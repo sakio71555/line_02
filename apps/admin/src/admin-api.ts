@@ -178,7 +178,8 @@ export interface AdminCustomerStatusNotificationResponse {
   retry_allowed: false;
 }
 
-export type AdminCustomerRichMenuType = CustomerRichMenuType;
+export type AdminCustomerRichMenuType = string;
+export type AdminCustomerStage = CustomerRichMenuType;
 
 export interface AdminCustomerRichMenuSwitchResponse {
   ok: true;
@@ -943,13 +944,13 @@ export async function getAdminOperationsReport(
 
 export async function updateAdminCustomerStage(
   customerId: string,
-  input: { stage: AdminCustomerRichMenuType; apply_rich_menu: boolean },
+  input: { stage: AdminCustomerStage; apply_rich_menu: boolean },
   options: AdminApiRequestOptions = {}
 ): Promise<{
   ok: true;
   tenant_id: string;
   customer_id: string;
-  stage: AdminCustomerRichMenuType;
+  stage: AdminCustomerStage;
   rich_menu_linked: boolean;
   customer: Customer;
 }> {

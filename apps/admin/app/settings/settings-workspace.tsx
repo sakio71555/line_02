@@ -8,6 +8,7 @@ import type { AuditEvent, ReplyTemplate, WorkspaceSettings } from "@amami-line-c
 import { accentPresets, saveTenantBrandProfile, TENANT_BRAND_UPDATED_EVENT, type TenantAccentPreset } from "../../src/tenant-brand";
 import { formatCompactDateTime } from "../../src/admin-display";
 import { saveReplyTemplateAction, saveWorkspaceSettingsAction, type SettingsActionState } from "./actions";
+import { LineExperienceEditor } from "./line-experience-editor";
 
 const initialState: SettingsActionState = { status: "idle" };
 
@@ -25,12 +26,20 @@ export function SettingsWorkspace({ auditEvents, initialSettings, templates }: {
   return <div className="settings-form">
     <form action={settingsAction} className="settings-section">
       <header><p className="eyebrow">会社の基本設定</p><h2>表示と対応ルール</h2><p>この会社で使う名称、色、標準の返信期限を設定します。</p></header>
+      <input name="line_experience" type="hidden" value={JSON.stringify(settings.line_experience)} />
       <div className="settings-fields settings-fields-two">
         <label><span>会社名</span><input maxLength={120} name="company_name" onChange={(event) => setSettings({ ...settings, company_name: event.target.value })} value={settings.company_name} /></label>
         <label><span>画面名</span><input maxLength={120} name="product_name" onChange={(event) => setSettings({ ...settings, product_name: event.target.value })} value={settings.product_name} /></label>
       </div>
       <fieldset className="color-choice"><legend>画面の色</legend><div>{(Object.entries(accentPresets) as Array<[TenantAccentPreset, (typeof accentPresets)[TenantAccentPreset]]>).map(([key, preset]) => <label className="color-choice-item" key={key}><input checked={settings.accent_preset === key} name="accent_preset" onChange={() => setSettings({ ...settings, accent_preset: key })} type="radio" value={key} /><span className="color-swatch" style={{ backgroundColor: preset.accent }} /><span>{preset.label}</span>{settings.accent_preset === key ? <Check size={17} /> : <Circle size={17} />}</label>)}</div></fieldset>
       <div className="settings-fields settings-fields-two"><label><span>標準の返信期限</span><select name="sla_minutes" onChange={(event) => setSettings({ ...settings, sla_minutes: Number(event.target.value) })} value={settings.sla_minutes}><option value="60">1時間</option><option value="180">3時間</option><option value="360">6時間</option><option value="720">12時間</option><option value="1440">24時間</option><option value="2880">2日</option></select></label></div>
+      <div className="settings-subsection">
+        <header><p className="eyebrow">お客様のLINE</p><h3>メニューと受付フロー</h3><p>会社ごとにLINEメニューを追加し、各6枠のリンク・案内・質問内容を設定します。</p></header>
+        <LineExperienceEditor
+          onChange={(lineExperience) => setSettings({ ...settings, line_experience: lineExperience })}
+          value={settings.line_experience}
+        />
+      </div>
       <div className="settings-toggle-list">
         <label><input checked={settings.rich_menu_auto_switch_enabled} name="rich_menu_auto_switch_enabled" onChange={(event) => setSettings({ ...settings, rich_menu_auto_switch_enabled: event.target.checked })} type="checkbox" /><span><strong>顧客段階に合わせてLINEメニューを切り替える</strong><small>顧客詳細で段階を変更した時に適用します。</small></span></label>
         <label><input checked={settings.customer_status_notifications_enabled} name="customer_status_notifications_enabled" onChange={(event) => setSettings({ ...settings, customer_status_notifications_enabled: event.target.checked })} type="checkbox" /><span><strong>お客様への状況通知を利用する</strong><small>送信前の明示確認は常に必要です。</small></span></label>

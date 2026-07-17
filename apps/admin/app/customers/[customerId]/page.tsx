@@ -13,7 +13,10 @@ import {
   type AdminCustomerDetailResponse,
   type AdminOperationsBoardResponse
 } from "../../../src/admin-api";
-import type { WorkspaceSettings } from "@amami-line-crm/domain";
+import {
+  createDefaultLineExperienceSettings,
+  type WorkspaceSettings
+} from "@amami-line-crm/domain";
 import {
   formatAdminDateTime,
   toLineConversationTimelineMessages
@@ -164,6 +167,18 @@ export default async function CustomerDetailPage({
                   <CustomerRichMenuSwitch
                     customerAvailable={Boolean(detail.customer.line_user_id)}
                     customerId={customerId}
+                    menus={operations.settings.line_experience.menus.map((menu) => ({
+                      menu_type: menu.menu_type,
+                      name: menu.name,
+                      line_rich_menu_id: menu.line_rich_menu_id,
+                      description: `${menu.items
+                        .slice(0, 2)
+                        .map((item) => item.label)
+                        .join("・")} など6つのメニュー`,
+                      switch_available:
+                        Boolean(menu.line_rich_menu_id?.trim()) ||
+                        ["initial", "negotiation", "aftercare"].includes(menu.menu_type)
+                    }))}
                   />
                 </section>
               ) : null}
@@ -227,6 +242,7 @@ function defaultWorkspaceSettings(): WorkspaceSettings {
     sla_minutes: 1440,
     rich_menu_auto_switch_enabled: false,
     customer_status_notifications_enabled: false,
+    line_experience: createDefaultLineExperienceSettings(),
     setup_completed: false,
     created_at: "",
     updated_at: ""
