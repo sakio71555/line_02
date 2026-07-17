@@ -3,6 +3,7 @@
 import {
   BriefcaseBusiness,
   CheckSquare2,
+  ChevronRight,
   House,
   Inbox,
   LogOut,
@@ -29,6 +30,21 @@ const navItems = [
   { href: "/broadcast", icon: SendHorizontal, label: "一斉送信" },
   { href: "/deals", icon: BriefcaseBusiness, label: "案件" },
   { href: "/settings", icon: Settings, label: "設定" }
+] as const;
+
+const navGroups = [
+  {
+    label: "対応",
+    items: navItems.filter((item) => ["/", "/inbox", "/tasks"].includes(item.href))
+  },
+  {
+    label: "顧客管理",
+    items: navItems.filter((item) => ["/customers", "/deals", "/broadcast"].includes(item.href))
+  },
+  {
+    label: "運用設定",
+    items: navItems.filter((item) => item.href === "/settings")
+  }
 ] as const;
 
 const mobileNavItems = navItems.filter((item) =>
@@ -75,6 +91,7 @@ export function AdminShellView({
     <div className="admin-app-shell" style={style}>
       <DesktopNavigation brand={brand} pathname={pathname} />
       <div className="admin-main-column">
+        <DesktopTopbar brand={brand} pathname={pathname} />
         <MobileHeader brand={brand} />
         {children}
       </div>
@@ -104,20 +121,25 @@ function DesktopNavigation({ brand, pathname }: { brand: TenantBrandProfile; pat
         <BrandLockup brand={brand} />
       </a>
       <nav className="admin-desktop-nav" aria-label="主要メニュー">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <a
-              aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
-              className="admin-nav-link"
-              href={item.href}
-              key={item.href}
-            >
-              <Icon aria-hidden="true" size={19} strokeWidth={2} />
-              <span>{item.label}</span>
-            </a>
-          );
-        })}
+        {navGroups.map((group) => (
+          <div className="admin-nav-group" key={group.label}>
+            <p className="admin-nav-group-title">{group.label}</p>
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <a
+                  aria-current={isActivePath(pathname, item.href) ? "page" : undefined}
+                  className="admin-nav-link"
+                  href={item.href}
+                  key={item.href}
+                >
+                  <Icon aria-hidden="true" size={19} strokeWidth={2} />
+                  <span>{item.label}</span>
+                </a>
+              );
+            })}
+          </div>
+        ))}
       </nav>
       <div className="admin-sidebar-footer">
         <a className="admin-logout-link" href="/logout">
@@ -126,6 +148,29 @@ function DesktopNavigation({ brand, pathname }: { brand: TenantBrandProfile; pat
         </a>
       </div>
     </aside>
+  );
+}
+
+function DesktopTopbar({ brand, pathname }: { brand: TenantBrandProfile; pathname: string }) {
+  const currentItem = navItems.find((item) => isActivePath(pathname, item.href)) ?? navItems[0];
+
+  return (
+    <header className="admin-desktop-topbar">
+      <div className="admin-desktop-context" aria-label="現在位置">
+        <span>{brand.productName}</span>
+        <ChevronRight aria-hidden="true" size={15} />
+        <strong>{currentItem.label}</strong>
+      </div>
+      <nav className="admin-topbar-actions" aria-label="すぐに使う操作">
+        <a href="/inbox">
+          <Inbox aria-hidden="true" size={18} />
+          <span>受信トレイ</span>
+        </a>
+        <a href="/settings" aria-label="設定を開く" title="設定">
+          <Settings aria-hidden="true" size={19} />
+        </a>
+      </nav>
+    </header>
   );
 }
 

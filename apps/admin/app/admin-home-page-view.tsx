@@ -1,4 +1,12 @@
-import { ArrowRight, Clock3, MessageSquareText, UserRoundCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  BellRing,
+  Clock3,
+  MessageSquareText,
+  UserRoundCheck,
+  UsersRound
+} from "lucide-react";
 import React from "react";
 
 import { EmptyState, Metric, PageTitle, SectionHeader, StatusBadge } from "./_components/ui";
@@ -48,10 +56,10 @@ export function AdminHomePageView({ data }: { data: DashboardData }) {
       {data.error ? <div className="inline-error">一部の情報を読み込めませんでした。</div> : null}
 
       <section className="metric-grid" aria-label="対応状況">
-        <Metric label="未対応" tone={openAlerts.length > 0 ? "attention" : "success"} value={openAlerts.length} />
-        <Metric label="要確認のお客様" tone={humanRequired.length > 0 ? "danger" : "default"} value={humanRequired.length} />
-        <Metric label="対応中" value={inProgress.length} />
-        <Metric label="運用中のお客様" value={activeCustomers.length} />
+        <Metric icon={<BellRing aria-hidden="true" size={24} />} label="未対応" tone={openAlerts.length > 0 ? "attention" : "success"} value={openAlerts.length} />
+        <Metric icon={<AlertTriangle aria-hidden="true" size={24} />} label="要確認のお客様" tone={humanRequired.length > 0 ? "danger" : "default"} value={humanRequired.length} />
+        <Metric icon={<Clock3 aria-hidden="true" size={24} />} label="対応中" value={inProgress.length} />
+        <Metric icon={<UsersRound aria-hidden="true" size={24} />} label="運用中のお客様" tone="success" value={activeCustomers.length} />
       </section>
 
       <div className="dashboard-grid">

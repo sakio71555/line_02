@@ -44,18 +44,23 @@ export function SectionHeader({
 }
 
 export function Metric({
+  icon,
   label,
   tone = "default",
   value
 }: {
+  icon?: ReactNode;
   label: string;
   tone?: "default" | "attention" | "danger" | "success";
   value: number | string;
 }) {
   return (
     <div className={`metric metric-${tone}`}>
-      <strong>{value}</strong>
-      <span>{label}</span>
+      {icon ? <span className="metric-icon">{icon}</span> : null}
+      <span className="metric-copy">
+        <span>{label}</span>
+        <strong>{value}</strong>
+      </span>
     </div>
   );
 }
