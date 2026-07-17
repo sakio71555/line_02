@@ -79,6 +79,7 @@ function createWorkspaceSettingsBody() {
   lineExperience.menus.push(createCustomServiceMenu());
 
   return {
+    expected_updated_at: null,
     company_name: "Example Company",
     product_name: "LINE相談CRM",
     accent_preset: "ocean" as const,
@@ -129,6 +130,7 @@ describe("workspace settings API", () => {
     const putBody = await putResponse.json();
 
     expect(putResponse.status).toBe(200);
+    expect(putBody.settings_version).toEqual(expect.any(String));
     expect(putBody).toMatchObject({
       ok: true,
       tenant_id: tenantId,
@@ -152,7 +154,9 @@ describe("workspace settings API", () => {
     expect(putBody.settings.line_experience.menus[3]).toMatchObject({
       menu_type: "service",
       name: "アフターサービスメニュー",
-      line_rich_menu_id: "richmenu-service-test"
+      line_rich_menu_id: "richmenu-service-test",
+      publication_status: "draft",
+      published_snapshot: null
     });
     expect(putBody.settings.line_experience.menus[3].items[0]).toMatchObject({
       action_key: "service.repair",
@@ -172,6 +176,7 @@ describe("workspace settings API", () => {
     const getBody = await getResponse.json();
 
     expect(getResponse.status).toBe(200);
+    expect(getBody.settings_version).toBe(putBody.settings_version);
     expect(getBody).toMatchObject({
       ok: true,
       tenant_id: tenantId,
@@ -209,5 +214,159 @@ describe("workspace settings API", () => {
       error: "invalid_workspace_settings_body"
     });
     await expect(repository.getWorkspaceSettings(tenantId)).resolves.toBeNull();
+  });
+
+  it("rejects stale workspace settings updates with optimistic concurrency", async () => {
+    const repository = new InMemoryOperationsRepository();
+    const app = createTestApp(repository);
+    const createResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", createWorkspaceSettingsBody())
+    );
+    const created = await createResponse.json();
+    const originalVersion = created.settings_version as string;
+
+    const firstUpdateResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", {
+        ...createWorkspaceSettingsBody(),
+        expected_updated_at: originalVersion,
+        company_name: "First Editor"
+      })
+    );
+    const firstUpdate = await firstUpdateResponse.json();
+
+    expect(firstUpdateResponse.status).toBe(200);
+    expect(firstUpdate.settings_version).not.toBe(originalVersion);
+
+    const staleResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", {
+        ...createWorkspaceSettingsBody(),
+        expected_updated_at: originalVersion,
+        company_name: "Stale Editor"
+      })
+    );
+
+    expect(staleResponse.status).toBe(409);
+    expect(await staleResponse.json()).toEqual({
+      ok: false,
+      error: "workspace_settings_conflict"
+    });
+    await expect(repository.getWorkspaceSettings(tenantId)).resolves.toMatchObject({
+      company_name: "First Editor"
+    });
+  });
+
+  it("protects published menus from deletion", async () => {
+    const repository = new InMemoryOperationsRepository();
+    const app = createTestApp(repository);
+    const createResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", createWorkspaceSettingsBody())
+    );
+    const created = await createResponse.json();
+    const baseDeleteBody = createWorkspaceSettingsBody();
+    const deleteBody = {
+      ...baseDeleteBody,
+      expected_updated_at: created.settings_version as string,
+      line_experience: {
+        ...baseDeleteBody.line_experience,
+        menus: baseDeleteBody.line_experience.menus.filter(
+          (menu) => menu.menu_type !== "initial"
+        )
+      }
+    };
+
+    const deleteResponse = await app.fetch(workspaceSettingsRequest("PUT", deleteBody));
+
+    expect(deleteResponse.status).toBe(409);
+    expect(await deleteResponse.json()).toEqual({
+      ok: false,
+      error: "published_line_menu_delete_forbidden"
+    });
+  });
+
+  it("forces newly added menus to remain draft even when a client requests publication", async () => {
+    const repository = new InMemoryOperationsRepository();
+    const app = createTestApp(repository);
+    const requestBody = createWorkspaceSettingsBody();
+    const customMenu = requestBody.line_experience.menus.at(-1)!;
+    customMenu.publication_status = "published";
+    customMenu.published_snapshot = {
+      name: customMenu.name,
+      chat_bar_text: customMenu.chat_bar_text,
+      line_rich_menu_id: customMenu.line_rich_menu_id,
+      items: customMenu.items
+    };
+
+    const response = await app.fetch(workspaceSettingsRequest("PUT", requestBody));
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.settings.line_experience.menus.at(-1)).toMatchObject({
+      menu_type: "service",
+      publication_status: "draft",
+      published_snapshot: null
+    });
+  });
+
+  it("rejects published snapshot removal and published-to-draft rollback", async () => {
+    const repository = new InMemoryOperationsRepository();
+    const app = createTestApp(repository);
+    const createResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", createWorkspaceSettingsBody())
+    );
+    const created = await createResponse.json();
+    const removalBody = createWorkspaceSettingsBody();
+    removalBody.expected_updated_at = created.settings_version as string;
+    removalBody.line_experience.menus[0]!.published_snapshot = null;
+
+    const removalResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", removalBody)
+    );
+
+    expect(removalResponse.status).toBe(409);
+    expect(await removalResponse.json()).toEqual({
+      ok: false,
+      error: "invalid_line_menu_publication_state"
+    });
+
+    const rollbackBody = createWorkspaceSettingsBody();
+    rollbackBody.expected_updated_at = created.settings_version as string;
+    rollbackBody.line_experience.menus[0]!.publication_status = "draft";
+
+    const rollbackResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", rollbackBody)
+    );
+
+    expect(rollbackResponse.status).toBe(409);
+    expect(await rollbackResponse.json()).toEqual({
+      ok: false,
+      error: "invalid_line_menu_publication_state"
+    });
+  });
+
+  it("requires a LINE rich menu ID for the first publication", async () => {
+    const repository = new InMemoryOperationsRepository();
+    const app = createTestApp(repository);
+    const createResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", createWorkspaceSettingsBody())
+    );
+    const created = await createResponse.json();
+    const publishBody = createWorkspaceSettingsBody();
+    publishBody.expected_updated_at = created.settings_version as string;
+    const customMenu = publishBody.line_experience.menus.at(-1)!;
+    customMenu.line_rich_menu_id = undefined;
+    customMenu.publication_status = "published";
+    customMenu.published_snapshot = {
+      name: customMenu.name,
+      chat_bar_text: customMenu.chat_bar_text,
+      items: customMenu.items
+    };
+
+    const response = await app.fetch(workspaceSettingsRequest("PUT", publishBody));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "invalid_line_menu_publication_state"
+    });
   });
 });

@@ -166,12 +166,26 @@ export const lineMenuItemSettingsSchema = z.object({
 
 export type LineMenuItemSettings = z.infer<typeof lineMenuItemSettingsSchema>;
 
+export const lineMenuPublicationStatuses = ["draft", "published", "retired"] as const;
+export type LineMenuPublicationStatus = (typeof lineMenuPublicationStatuses)[number];
+
+export const lineMenuPublishedSnapshotSchema = z.object({
+  name: z.string().trim().min(1).max(300),
+  chat_bar_text: z.string().trim().min(1).max(14),
+  line_rich_menu_id: z.string().trim().max(160).optional(),
+  items: z.array(lineMenuItemSettingsSchema).length(6)
+});
+
+export type LineMenuPublishedSnapshot = z.infer<typeof lineMenuPublishedSnapshotSchema>;
+
 export const lineMenuSettingsSchema = z.object({
   menu_type: z.string().trim().regex(/^[a-z0-9][a-z0-9_-]{1,63}$/),
   name: z.string().trim().min(1).max(300),
   chat_bar_text: z.string().trim().min(1).max(14),
   line_rich_menu_id: z.string().trim().max(160).optional(),
-  items: z.array(lineMenuItemSettingsSchema).length(6)
+  items: z.array(lineMenuItemSettingsSchema).length(6),
+  publication_status: z.enum(lineMenuPublicationStatuses).optional(),
+  published_snapshot: lineMenuPublishedSnapshotSchema.nullable().optional()
 });
 
 export type LineMenuSettings = z.infer<typeof lineMenuSettingsSchema>;
@@ -510,7 +524,79 @@ const amamiHomeLineExperienceDefaults: LineExperienceSettings = {
 };
 
 export function createDefaultLineExperienceSettings(): LineExperienceSettings {
-  return JSON.parse(JSON.stringify(amamiHomeLineExperienceDefaults)) as LineExperienceSettings;
+  return hydrateLineExperiencePublicationState(
+    JSON.parse(JSON.stringify(amamiHomeLineExperienceDefaults)) as LineExperienceSettings
+  );
+}
+
+export function createLineMenuPublishedSnapshot(
+  menu: LineMenuSettings
+): LineMenuPublishedSnapshot {
+  return {
+    name: menu.name,
+    chat_bar_text: menu.chat_bar_text,
+    ...(menu.line_rich_menu_id ? { line_rich_menu_id: menu.line_rich_menu_id } : {}),
+    items: JSON.parse(JSON.stringify(menu.items)) as LineMenuItemSettings[]
+  };
+}
+
+export function resolveLineMenuPublicationStatus(
+  menu: LineMenuSettings
+): LineMenuPublicationStatus {
+  return menu.publication_status ?? "published";
+}
+
+export function hydrateLineExperiencePublicationState(
+  settings: LineExperienceSettings
+): LineExperienceSettings {
+  return {
+    menus: settings.menus.map((menu) => {
+      const publicationStatus = resolveLineMenuPublicationStatus(menu);
+      const publishedSnapshot =
+        menu.published_snapshot ??
+        (publicationStatus === "draft" ? null : createLineMenuPublishedSnapshot(menu));
+
+      return {
+        ...menu,
+        publication_status: publicationStatus,
+        published_snapshot: publishedSnapshot
+      };
+    })
+  };
+}
+
+export function resolveRuntimeLineMenus(
+  settings: LineExperienceSettings,
+  options: { includeRetired?: boolean } = {}
+): LineMenuSettings[] {
+  const includeRetired = options.includeRetired ?? true;
+  return hydrateLineExperiencePublicationState(settings).menus.flatMap((menu) => {
+    const status = resolveLineMenuPublicationStatus(menu);
+    const snapshot = menu.published_snapshot;
+    if (!snapshot || status === "draft" || (status === "retired" && !includeRetired)) {
+      return [];
+    }
+
+    return [
+      {
+        menu_type: menu.menu_type,
+        ...snapshot,
+        publication_status: status,
+        published_snapshot: snapshot
+      }
+    ];
+  });
+}
+
+export function resolvePublishedLineMenu(
+  settings: LineExperienceSettings,
+  menuType: LineMenuType
+): LineMenuSettings | null {
+  return (
+    resolveRuntimeLineMenus(settings, { includeRetired: false }).find(
+      (menu) => menu.menu_type === menuType
+    ) ?? null
+  );
 }
 
 export function findLineMenuItemByTrigger(
@@ -524,7 +610,7 @@ export function findLineMenuItemByTrigger(
   }
 
   return (
-    settings.menus
+    resolveRuntimeLineMenus(settings)
       .flatMap((menu) => menu.items)
       .find((item) => item.behavior !== "link" && item.trigger_text === normalized) ?? null
   );
@@ -546,11 +632,19 @@ export function buildLineRichMenuDefinition(
   }>;
 } {
   const parsed = lineExperienceSettingsSchema.parse(settings);
-  const menu = parsed.menus.find((candidate) => candidate.menu_type === menuType);
+  const menu = resolvePublishedLineMenu(parsed, menuType);
 
   if (!menu) {
-    throw new Error(`line menu settings not found: ${menuType}`);
+    throw new Error(`published line menu settings not found: ${menuType}`);
   }
+
+  return buildLineRichMenuDefinitionForMenu(menu);
+}
+
+export function buildLineRichMenuDefinitionForMenu(
+  menu: LineMenuSettings
+): ReturnType<typeof buildLineRichMenuDefinition> {
+  const parsedMenu = lineMenuSettingsSchema.parse(menu);
 
   const columns = [
     { x: 0, width: 833 },
@@ -561,9 +655,9 @@ export function buildLineRichMenuDefinition(
   return {
     size: { width: 2500, height: 1686 },
     selected: true,
-    name: menu.name,
-    chatBarText: menu.chat_bar_text,
-    areas: menu.items.map((item, index) => {
+    name: parsedMenu.name,
+    chatBarText: parsedMenu.chat_bar_text,
+    areas: parsedMenu.items.map((item, index) => {
       const column = columns[index % 3]!;
       const row = Math.floor(index / 3);
       return {
@@ -657,6 +751,10 @@ export interface OperationsRepository {
   saveReservation(reservation: Reservation): Promise<Reservation>;
   getWorkspaceSettings(tenantId: string): Promise<WorkspaceSettings | null>;
   saveWorkspaceSettings(settings: WorkspaceSettings): Promise<WorkspaceSettings>;
+  compareAndSaveWorkspaceSettings(
+    settings: WorkspaceSettings,
+    expectedUpdatedAt: string | null
+  ): Promise<WorkspaceSettings | null>;
   listAuditEvents(tenantId: string, limit?: number): Promise<AuditEvent[]>;
   recordAuditEvent(event: AuditEvent): Promise<AuditEvent>;
 }
@@ -742,6 +840,18 @@ export class InMemoryOperationsRepository implements OperationsRepository {
   }
 
   async saveWorkspaceSettings(settings: WorkspaceSettings): Promise<WorkspaceSettings> {
+    this.settings.set(settings.tenant_id, settings);
+    return settings;
+  }
+
+  async compareAndSaveWorkspaceSettings(
+    settings: WorkspaceSettings,
+    expectedUpdatedAt: string | null
+  ): Promise<WorkspaceSettings | null> {
+    const current = this.settings.get(settings.tenant_id);
+    if ((current?.updated_at ?? null) !== expectedUpdatedAt) {
+      return null;
+    }
     this.settings.set(settings.tenant_id, settings);
     return settings;
   }

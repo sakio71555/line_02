@@ -13,6 +13,7 @@ export default async function SettingsPage() {
     getAdminWorkspaceSettings(options), getAdminReplyTemplates(options), getAdminAuditEvents(30, options)
   ]);
   const settings = settingsResult.status === "fulfilled" ? settingsResult.value.settings : null;
+  const settingsVersion = settingsResult.status === "fulfilled" ? settingsResult.value.settings_version : null;
   const templates = templatesResult.status === "fulfilled" ? templatesResult.value.templates : [];
   const auditEvents = auditResult.status === "fulfilled" ? auditResult.value.events : [];
 
@@ -22,6 +23,6 @@ export default async function SettingsPage() {
       <div><Building2 size={20} /><span><strong>会社追加</strong><small>準備状況を確認</small></span></div>
       <div><ShieldCheck size={20} /><span><strong>安全</strong><small>操作履歴を記録</small></span></div>
     </section>
-    {!settings ? <div className="inline-error">保存済み設定を読み込めませんでした。</div> : <SettingsWorkspace auditEvents={auditEvents} initialSettings={settings} templates={templates} />}
+    {!settings ? <div className="inline-error">保存済み設定を読み込めませんでした。</div> : <SettingsWorkspace auditEvents={auditEvents} initialSettings={settings} settingsVersion={settingsVersion} templates={templates} />}
   </main>;
 }

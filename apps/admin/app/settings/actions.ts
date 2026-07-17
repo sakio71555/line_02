@@ -11,11 +11,16 @@ import {
 import { saveAdminReplyTemplate, saveAdminWorkspaceSettings } from "../../src/admin-api";
 import { getServerAdminApiRequestOptions } from "../admin-api-request-options";
 
-export interface SettingsActionState { status: "idle" | "success" | "error"; error?: string }
+export interface SettingsActionState {
+  status: "idle" | "success" | "error";
+  error?: string;
+  settingsVersion?: string | null;
+}
 
 export async function saveWorkspaceSettingsAction(_state: SettingsActionState, formData: FormData): Promise<SettingsActionState> {
   try {
-    await saveAdminWorkspaceSettings({
+    const saved = await saveAdminWorkspaceSettings({
+      expected_updated_at: read(formData, "expected_updated_at") || null,
       company_name: read(formData, "company_name"),
       product_name: read(formData, "product_name"),
       accent_preset: read(formData, "accent_preset") as WorkspaceAccentPreset,
@@ -26,7 +31,7 @@ export async function saveWorkspaceSettingsAction(_state: SettingsActionState, f
       setup_completed: formData.get("setup_completed") === "on"
     }, await getServerAdminApiRequestOptions());
     revalidatePath("/settings");
-    return { status: "success" };
+    return { status: "success", settingsVersion: saved.settings_version };
   } catch (error) {
     return { status: "error", error: error instanceof Error ? error.message : String(error) };
   }

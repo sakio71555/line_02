@@ -5,8 +5,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildLineRichMenuDefinition,
   createDefaultLineExperienceSettings,
+  findLineMenuItemByTrigger,
+  hydrateLineExperienceSettingsWithBuiltInFlows,
   InMemoryOperationsRepository,
   internalNoteInputSchema,
+  resolveRuntimeLineMenus,
   workspaceSettingsInputSchema,
   type AuditEvent,
   type InternalNote,
@@ -319,6 +322,50 @@ describe("operations workspace", () => {
       line_experience: ambiguousTriggerSettings,
       setup_completed: true
     }).success).toBe(false);
+  });
+
+  it("keeps published runtime behavior on the saved snapshot until republished", () => {
+    const settings = createDefaultLineExperienceSettings();
+    const originalTrigger = settings.menus[0]!.items[1]!.trigger_text;
+    settings.menus[0]!.items[1]!.trigger_text = "編集途中の見学予約";
+    settings.menus[0]!.items[1]!.reply_text = "編集途中の返答";
+
+    expect(findLineMenuItemByTrigger(settings, originalTrigger)).toMatchObject({
+      action_key: "initial.model_house_reservation"
+    });
+    expect(findLineMenuItemByTrigger(settings, "編集途中の見学予約")).toBeNull();
+  });
+
+  it("excludes draft menus from runtime behavior", () => {
+    const settings = createDefaultLineExperienceSettings();
+    settings.menus.push({
+      ...createCustomServiceMenu(),
+      publication_status: "draft",
+      published_snapshot: null
+    });
+
+    expect(resolveRuntimeLineMenus(settings).map((menu) => menu.menu_type)).toEqual([
+      "initial",
+      "negotiation",
+      "aftercare"
+    ]);
+    expect(findLineMenuItemByTrigger(settings, "修理について相談")).toBeNull();
+  });
+
+  it("normalizes legacy condition labels to stable option values", () => {
+    const hydrated = hydrateLineExperienceSettingsWithBuiltInFlows(
+      createDefaultLineExperienceSettings()
+    );
+    const meetingFlow = resolveRuntimeLineMenus(hydrated)
+      .flatMap((menu) => menu.items)
+      .find((item) => item.action_key === "negotiation.meeting_schedule")?.flow;
+    const methodCondition = meetingFlow?.steps.find((step) => step.key === "method")?.condition;
+
+    expect(methodCondition).toEqual({
+      field_key: "sub_category",
+      operator: "in",
+      values: ["new_schedule", "reschedule"]
+    });
   });
 
   it("adds tenant LINE experience settings without exposing them publicly", () => {

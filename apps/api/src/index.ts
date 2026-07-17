@@ -58,7 +58,10 @@ import {
   workspaceSettingsInputSchema,
   lineExperienceSettingsSchema,
   createDefaultLineExperienceSettings,
+  hydrateLineExperiencePublicationState,
   hydrateLineExperienceSettingsWithBuiltInFlows,
+  resolveLineMenuPublicationStatus,
+  resolvePublishedLineMenu,
   type StaffAuthLookup,
   type StaffNotificationPayload,
   type StaffNotifier,
@@ -934,8 +937,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant.tenantId,
       config.tenant.slug
     );
-    const configuredMenu = settings.line_experience.menus.find(
-      (menu) => menu.menu_type === switchRequest.menuType
+    const configuredMenu = resolvePublishedLineMenu(
+      settings.line_experience,
+      switchRequest.menuType
     );
 
     if (!configuredMenu) {
@@ -1879,12 +1883,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.body, tenant.status);
     }
 
+    const storedSettings = await operationsRepository.getWorkspaceSettings(tenant.tenantId);
     const settings = resolveWorkspaceSettings(
-      await operationsRepository.getWorkspaceSettings(tenant.tenantId),
+      storedSettings,
       tenant.tenantId,
       config.tenant.slug
     );
-    return c.json({ ok: true, tenant_id: tenant.tenantId, settings });
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      settings,
+      settings_version: storedSettings?.updated_at ?? null
+    });
   });
 
   api.put("/api/admin/workspace-settings", async (c) => {
@@ -1902,20 +1912,120 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.body, tenant.status);
     }
 
-    const parsed = workspaceSettingsInputSchema.safeParse(await readJsonBody(c.req.raw));
-    if (!parsed.success) {
+    const rawBody = await readJsonBody(c.req.raw);
+    const expectedUpdatedAt = isRecord(rawBody) ? rawBody.expected_updated_at : undefined;
+    const expectedVersionValid =
+      expectedUpdatedAt === null ||
+      (typeof expectedUpdatedAt === "string" && Number.isFinite(Date.parse(expectedUpdatedAt)));
+    const parsed = workspaceSettingsInputSchema.safeParse(rawBody);
+    if (!parsed.success || !expectedVersionValid) {
       return c.json({ ok: false, error: "invalid_workspace_settings_body" }, 400);
     }
+    const expectedVersion = expectedUpdatedAt === null ? null : String(expectedUpdatedAt);
 
-    const timestamp = now?.() ?? new Date().toISOString();
     const existing = await operationsRepository.getWorkspaceSettings(tenant.tenantId);
+    const existingResolved = resolveWorkspaceSettings(
+      existing,
+      tenant.tenantId,
+      config.tenant.slug
+    );
+
+    for (const existingMenu of existingResolved.line_experience.menus) {
+      const incomingMenu = parsed.data.line_experience.menus.find(
+        (menu) => menu.menu_type === existingMenu.menu_type
+      );
+      const existingStatus = resolveLineMenuPublicationStatus(existingMenu);
+      const isProtected = existingStatus !== "draft" || Boolean(existingMenu.published_snapshot);
+
+      if (isProtected && !incomingMenu) {
+        return c.json({ ok: false, error: "published_line_menu_delete_forbidden" }, 409);
+      }
+
+      if (existingMenu.published_snapshot && incomingMenu?.published_snapshot === null) {
+        return c.json({ ok: false, error: "invalid_line_menu_publication_state" }, 409);
+      }
+
+      const requestedStatus = incomingMenu?.publication_status ?? existingStatus;
+      if (existingStatus !== "draft" && requestedStatus === "draft") {
+        return c.json({ ok: false, error: "invalid_line_menu_publication_state" }, 409);
+      }
+    }
+
+    const lineExperienceWithNewMenusAsDraft = {
+      ...parsed.data.line_experience,
+      menus: parsed.data.line_experience.menus.map((menu) => {
+        const existingMenu = existingResolved.line_experience.menus.find(
+          (candidate) => candidate.menu_type === menu.menu_type
+        );
+        if (!existingMenu) {
+          return {
+            ...menu,
+            publication_status: "draft" as const,
+            published_snapshot: null
+          };
+        }
+
+        return {
+          ...menu,
+          publication_status:
+            menu.publication_status ?? resolveLineMenuPublicationStatus(existingMenu),
+          published_snapshot:
+            menu.published_snapshot === undefined
+              ? existingMenu.published_snapshot ?? null
+              : menu.published_snapshot
+        };
+      })
+    };
+    const incomingLineExperience = hydrateLineExperienceSettingsWithBuiltInFlows(
+      hydrateLineExperiencePublicationState(lineExperienceWithNewMenusAsDraft)
+    );
+
+    const invalidPublicationState = incomingLineExperience.menus.some((menu) => {
+      const status = resolveLineMenuPublicationStatus(menu);
+      if (status !== "draft" && !menu.published_snapshot) {
+        return true;
+      }
+
+      const existingMenu = existingResolved.line_experience.menus.find(
+        (candidate) => candidate.menu_type === menu.menu_type
+      );
+      const isFirstPublication =
+        existingMenu &&
+        resolveLineMenuPublicationStatus(existingMenu) === "draft" &&
+        !existingMenu.published_snapshot &&
+        status === "published";
+
+      return Boolean(
+        isFirstPublication && !menu.published_snapshot?.line_rich_menu_id?.trim()
+      );
+    });
+    if (invalidPublicationState) {
+      return c.json({ ok: false, error: "invalid_line_menu_publication_state" }, 409);
+    }
+
+    const timestampCandidate = now?.() ?? new Date().toISOString();
+    const existingTimestamp = existing ? Date.parse(existing.updated_at) : Number.NaN;
+    const candidateTimestamp = Date.parse(timestampCandidate);
+    const timestamp =
+      Number.isFinite(existingTimestamp) &&
+      Number.isFinite(candidateTimestamp) &&
+      candidateTimestamp <= existingTimestamp
+        ? new Date(existingTimestamp + 1).toISOString()
+        : timestampCandidate;
     const settings: WorkspaceSettings = {
       tenant_id: tenant.tenantId,
       ...parsed.data,
+      line_experience: incomingLineExperience,
       created_at: existing?.created_at ?? timestamp,
       updated_at: timestamp
     };
-    const saved = await operationsRepository.saveWorkspaceSettings(settings);
+    const saved = await operationsRepository.compareAndSaveWorkspaceSettings(
+      settings,
+      expectedVersion
+    );
+    if (!saved) {
+      return c.json({ ok: false, error: "workspace_settings_conflict" }, 409);
+    }
     await recordOperationsAudit(operationsRepository, {
       tenant,
       action: "workspace_settings_updated",
@@ -1926,7 +2036,12 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       timestamp
     });
 
-    return c.json({ ok: true, tenant_id: tenant.tenantId, settings: saved });
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      settings: saved,
+      settings_version: saved.updated_at
+    });
   });
 
   api.get("/api/admin/audit-events", async (c) => {
@@ -2026,9 +2141,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     );
     const shouldLinkRichMenu = input.apply_rich_menu && settings.rich_menu_auto_switch_enabled;
     const lineUserId = shouldLinkRichMenu ? customer.line_user_id?.trim() : null;
-    const richMenuId = shouldLinkRichMenu ? readCustomerRichMenuIdFromEnv(env, input.stage) : null;
+    const configuredMenu = shouldLinkRichMenu
+      ? resolvePublishedLineMenu(settings.line_experience, input.stage)
+      : null;
+    const richMenuId = shouldLinkRichMenu
+      ? readNonEmptyEnvValue(configuredMenu?.line_rich_menu_id) ??
+        readCustomerRichMenuIdFromEnv(env, input.stage)
+      : null;
 
-    if (shouldLinkRichMenu && (!lineUserId || !richMenuId || !lineClient.linkRichMenuToUser)) {
+    if (
+      shouldLinkRichMenu &&
+      (!configuredMenu || !lineUserId || !richMenuId || !lineClient.linkRichMenuToUser)
+    ) {
       return c.json({ ok: false, error: "rich_menu_auto_switch_unavailable" }, 409);
     }
 
@@ -2057,6 +2181,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         tenant_id: tenant.tenantId,
         customer_id: customer.id,
         menu_type: input.stage,
+        ...(configuredMenu ? { menu_label: configuredMenu.name } : {}),
         created_at: timestamp
       });
     }
@@ -4929,7 +5054,9 @@ function resolveWorkspaceSettings(
     ...savedSettings,
     tenant_id: tenantId,
     line_experience: parsedLineExperience.success
-      ? hydrateLineExperienceSettingsWithBuiltInFlows(parsedLineExperience.data)
+      ? hydrateLineExperienceSettingsWithBuiltInFlows(
+          hydrateLineExperiencePublicationState(parsedLineExperience.data)
+        )
       : defaults.line_experience
   };
 }

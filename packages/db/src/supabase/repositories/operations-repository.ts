@@ -123,6 +123,46 @@ export class SupabaseOperationsRepository implements OperationsRepository {
     return this.upsertSingle("tenant_workspace_settings", settings, "saveWorkspaceSettings");
   }
 
+  async compareAndSaveWorkspaceSettings(
+    settings: WorkspaceSettings,
+    expectedUpdatedAt: string | null
+  ): Promise<WorkspaceSettings | null> {
+    assertTenantId(settings.tenant_id);
+
+    if (expectedUpdatedAt === null) {
+      const result = (await this.client
+        .from("tenant_workspace_settings")
+        .insert(settings)
+        .select("*")
+        .maybeSingle()) as SupabaseRepositoryResult<SettingsRow>;
+
+      if (result.error?.code === "23505") {
+        return null;
+      }
+
+      const row = unwrapSupabaseResult(
+        result,
+        "tenant_workspace_settings",
+        "compareAndSaveWorkspaceSettings.insert"
+      );
+      return row?.tenant_id === settings.tenant_id ? row : null;
+    }
+
+    const result = (await this.client
+      .from("tenant_workspace_settings")
+      .update(settings)
+      .eq("tenant_id", settings.tenant_id)
+      .eq("updated_at", expectedUpdatedAt)
+      .select("*")
+      .maybeSingle()) as SupabaseRepositoryResult<SettingsRow>;
+    const row = unwrapSupabaseResult(
+      result,
+      "tenant_workspace_settings",
+      "compareAndSaveWorkspaceSettings.update"
+    );
+    return row?.tenant_id === settings.tenant_id ? row : null;
+  }
+
   async listAuditEvents(tenantId: string, limit = 100): Promise<AuditEvent[]> {
     assertTenantId(tenantId);
     const safeLimit = Math.min(Math.max(limit, 1), 500);

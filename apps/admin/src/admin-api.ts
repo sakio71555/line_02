@@ -278,6 +278,7 @@ export interface AdminWorkspaceSettingsResponse {
   ok: true;
   tenant_id: string;
   settings: WorkspaceSettings;
+  settings_version: string | null;
 }
 
 export interface AdminAuditEventsResponse {
@@ -915,7 +916,9 @@ export async function getAdminWorkspaceSettings(
 }
 
 export async function saveAdminWorkspaceSettings(
-  input: Omit<WorkspaceSettings, "tenant_id" | "created_at" | "updated_at">,
+  input: Omit<WorkspaceSettings, "tenant_id" | "created_at" | "updated_at"> & {
+    expected_updated_at: string | null;
+  },
   options: AdminApiRequestOptions = {}
 ): Promise<AdminWorkspaceSettingsResponse> {
   return adminApiFetch(

@@ -10,7 +10,9 @@ import { z } from "zod";
 import {
   createDefaultLineExperienceSettings,
   findLineMenuItemByTrigger,
+  hydrateLineExperiencePublicationState,
   lineExperienceSettingsSchema,
+  resolveRuntimeLineMenus,
   type LineConsultationFlowSettings,
   type LineExperienceSettings,
   type LineFlowConditionSettings,
@@ -1583,10 +1585,27 @@ function resolveCustomerContactStaffPriority(
 
 function matchesStructuredConsultationCondition(
   condition: LineFlowConditionSettings,
-  values: StructuredConsultationValues
+  values: StructuredConsultationValues,
+  steps: LineConsultationFlowSettings["steps"]
 ): boolean {
+  const sourceStep = steps.find((step) => step.key === condition.field_key);
+  const normalizeValue = (value: string): string => {
+    if (sourceStep?.kind !== "choice") {
+      return value;
+    }
+
+    return (
+      sourceStep.options.find(
+        (option) => option.value === value || option.label === value
+      )?.value ?? value
+    );
+  };
   const currentValue = values[condition.field_key];
-  const includesValue = currentValue ? condition.values.includes(currentValue) : false;
+  const normalizedCurrentValue = currentValue ? normalizeValue(currentValue) : null;
+  const normalizedConditionValues = condition.values.map(normalizeValue);
+  const includesValue = normalizedCurrentValue
+    ? normalizedConditionValues.includes(normalizedCurrentValue)
+    : false;
 
   switch (condition.operator) {
     case "equals":
@@ -1625,7 +1644,7 @@ function createStructuredConsultationFlowFromSettings(
         ? {
             condition: step.condition,
             is_applicable: (values: StructuredConsultationValues) =>
-              matchesStructuredConsultationCondition(step.condition!, values)
+              matchesStructuredConsultationCondition(step.condition!, values, flow.steps)
           }
         : {}),
       ...(step.kind === "choice"
@@ -1663,34 +1682,82 @@ function createLineConsultationFlowSettings(
 export function hydrateLineExperienceSettingsWithBuiltInFlows(
   settings: LineExperienceSettings
 ): LineExperienceSettings {
-  const hydrated = {
-    menus: settings.menus.map((menu) => ({
-      ...menu,
-      items: menu.items.map((item) => {
-        if (item.behavior !== "consultation" || item.flow) {
-          return item;
-        }
+  const hydrateItems = (items: LineMenuItemSettings[]): LineMenuItemSettings[] =>
+    items.map((item) => {
+      let hydratedItem = item;
 
+      if (item.behavior === "consultation" && !item.flow) {
         const config = structuredConsultationFlowConfigs.find(
           (candidate) => candidate.flow_key === item.action_key
         );
-        return config
+        hydratedItem = config
           ? {
               ...item,
               flow: createLineConsultationFlowSettings(config, item.reply_text)
             }
           : item;
-      })
+      }
+
+      if (hydratedItem.behavior !== "consultation" || !hydratedItem.flow) {
+        return hydratedItem;
+      }
+
+      const steps = hydratedItem.flow.steps;
+      return {
+        ...hydratedItem,
+        flow: {
+          ...hydratedItem.flow,
+          steps: steps.map((step) => {
+            if (!step.condition) {
+              return step;
+            }
+
+            const sourceStep = steps.find(
+              (candidate) => candidate.key === step.condition?.field_key
+            );
+            if (sourceStep?.kind !== "choice") {
+              return step;
+            }
+
+            return {
+              ...step,
+              condition: {
+                ...step.condition,
+                values: step.condition.values.map(
+                  (value) =>
+                    sourceStep.options.find(
+                      (option) => option.value === value || option.label === value
+                    )?.value ?? value
+                )
+              }
+            };
+          })
+        }
+      };
+    });
+
+  const hydrated = {
+    menus: settings.menus.map((menu) => ({
+      ...menu,
+      items: hydrateItems(menu.items),
+      ...(menu.published_snapshot
+        ? {
+            published_snapshot: {
+              ...menu.published_snapshot,
+              items: hydrateItems(menu.published_snapshot.items)
+            }
+          }
+        : {})
     }))
   };
   const parsed = lineExperienceSettingsSchema.safeParse(hydrated);
-  return parsed.success ? parsed.data : settings;
+  return hydrateLineExperiencePublicationState(parsed.success ? parsed.data : settings);
 }
 
 function resolveConfiguredStructuredConsultationFlows(
   settings: LineExperienceSettings
 ): StructuredConsultationFlowConfig[] {
-  return settings.menus.flatMap((menu) =>
+  return resolveRuntimeLineMenus(settings).flatMap((menu) =>
     menu.items.flatMap((item) => {
       if (item.behavior !== "consultation") {
         return [];

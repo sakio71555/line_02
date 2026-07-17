@@ -9,6 +9,7 @@ import {
 } from "@amami-line-crm/ai";
 import {
   createDefaultLineExperienceSettings,
+  createLineMenuPublishedSnapshot,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
   InMemoryOperationsRepository,
@@ -223,6 +224,111 @@ describe("authenticated_staff runtime customer write and AI routes", () => {
         body: "LINEリッチメニューをアフターサービスメニューへ切り替えました。"
       })
     ]);
+  });
+
+  it("uses the published tenant menu snapshot for automatic stage switching", async () => {
+    const { app, customerRepository, messageRepository, lineClient, operationsRepository } =
+      createCustomerWriteAiApp({
+        includeAuthRuntime: true,
+        env: {
+          LINE_RICH_MENU_NEGOTIATION_ID: "richmenu-legacy-env"
+        }
+      });
+    await seedCustomerWriteAiData(customerRepository);
+    const lineExperience = createDefaultLineExperienceSettings();
+    const negotiationMenu = lineExperience.menus.find(
+      (menu) => menu.menu_type === "negotiation"
+    );
+    if (!negotiationMenu) {
+      throw new Error("negotiation menu fixture is missing");
+    }
+    negotiationMenu.name = "商談フォローメニュー";
+    negotiationMenu.line_rich_menu_id = "richmenu-tenant-published";
+    negotiationMenu.publication_status = "published";
+    negotiationMenu.published_snapshot = createLineMenuPublishedSnapshot(negotiationMenu);
+    await operationsRepository.saveWorkspaceSettings({
+      tenant_id: "tenant_amamihome",
+      company_name: "Example Housing",
+      product_name: "Example LINE CRM",
+      accent_preset: "forest",
+      sla_minutes: 240,
+      rich_menu_auto_switch_enabled: true,
+      customer_status_notifications_enabled: false,
+      line_experience: lineExperience,
+      setup_completed: true,
+      created_at: now,
+      updated_at: now
+    });
+
+    const response = await app.fetch(
+      customerStageRequest("customer_amami", "negotiation", true, {
+        authorization: "Bearer fake-valid-owner"
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      ok: true,
+      customer_id: "customer_amami",
+      stage: "negotiation",
+      rich_menu_linked: true
+    });
+    expect(lineClient.richMenuLinks).toEqual([
+      {
+        userId: "U_AMAMI_CUSTOMER",
+        richMenuId: "richmenu-tenant-published"
+      }
+    ]);
+    expect(messageRepository.insertCalls).toEqual([
+      expect.objectContaining({
+        body: "LINEリッチメニューを商談フォローメニューへ切り替えました。"
+      })
+    ]);
+  });
+
+  it("blocks automatic stage switching when the tenant menu is retired", async () => {
+    const { app, customerRepository, lineClient, operationsRepository } =
+      createCustomerWriteAiApp({
+        includeAuthRuntime: true,
+        env: {
+          LINE_RICH_MENU_NEGOTIATION_ID: "richmenu-legacy-env"
+        }
+      });
+    await seedCustomerWriteAiData(customerRepository);
+    const lineExperience = createDefaultLineExperienceSettings();
+    const negotiationMenu = lineExperience.menus.find(
+      (menu) => menu.menu_type === "negotiation"
+    );
+    if (!negotiationMenu) {
+      throw new Error("negotiation menu fixture is missing");
+    }
+    negotiationMenu.publication_status = "retired";
+    await operationsRepository.saveWorkspaceSettings({
+      tenant_id: "tenant_amamihome",
+      company_name: "Example Housing",
+      product_name: "Example LINE CRM",
+      accent_preset: "forest",
+      sla_minutes: 240,
+      rich_menu_auto_switch_enabled: true,
+      customer_status_notifications_enabled: false,
+      line_experience: lineExperience,
+      setup_completed: true,
+      created_at: now,
+      updated_at: now
+    });
+
+    const response = await app.fetch(
+      customerStageRequest("customer_amami", "negotiation", true, {
+        authorization: "Bearer fake-valid-owner"
+      })
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "rich_menu_auto_switch_unavailable"
+    });
+    expect(lineClient.richMenuLinks).toEqual([]);
   });
 
   it("requires selectedTenantId for a multi-tenant staff reply request", async () => {
@@ -786,6 +892,25 @@ function richMenuSwitchRequest(
     },
     body: JSON.stringify({
       menu_type: menuType
+    })
+  });
+}
+
+function customerStageRequest(
+  customerId: string,
+  stage: "initial" | "negotiation" | "aftercare",
+  applyRichMenu: boolean,
+  headers: HeadersInit = {}
+): Request {
+  return new Request(`http://localhost/api/admin/customers/${customerId}/stage`, {
+    method: "PATCH",
+    headers: {
+      "content-type": "application/json",
+      ...headers
+    },
+    body: JSON.stringify({
+      stage,
+      apply_rich_menu: applyRichMenu
     })
   });
 }

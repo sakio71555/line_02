@@ -3,6 +3,7 @@
 import {
   ArrowDown,
   ArrowUp,
+  Download,
   ExternalLink,
   MessageCircleReply,
   MessagesSquare,
@@ -21,6 +22,11 @@ import type {
   LineMenuItemBehavior,
   LineMenuItemSettings,
   LineMenuSettings
+} from "@amami-line-crm/domain";
+import {
+  buildLineRichMenuDefinitionForMenu,
+  createLineMenuPublishedSnapshot,
+  resolveLineMenuPublicationStatus
 } from "@amami-line-crm/domain";
 
 const behaviorOptions: Array<{ value: LineMenuItemBehavior; label: string }> = [
@@ -115,11 +121,11 @@ function createMenuItem(menuType: string, index: number): LineMenuItemSettings {
   return {
     action_key: `${menuType}.item_${index}`,
     label,
-    behavior: "guide",
+    behavior: "staff_handoff",
     trigger_text: label,
-    target_url: "https://example.jp/",
-    reply_text: `${label}をご案内します。`,
-    timeline_label: `${label}を案内`,
+    target_url: "",
+    reply_text: "担当者への相談を受け付けます。詳しい内容を入力してください。",
+    timeline_label: label,
     flow: null
   };
 }
@@ -130,7 +136,9 @@ function createMenu(menuNumber: number): LineMenuSettings {
     menu_type: menuType,
     name: `追加メニュー ${menuNumber}`,
     chat_bar_text: "メニュー",
-    items: Array.from({ length: 6 }, (_, index) => createMenuItem(menuType, index + 1))
+    items: Array.from({ length: 6 }, (_, index) => createMenuItem(menuType, index + 1)),
+    publication_status: "draft",
+    published_snapshot: null
   };
 }
 
@@ -151,6 +159,7 @@ export function LineExperienceEditor({
   onChange: (value: LineExperienceSettings) => void;
 }) {
   const [activeMenuType, setActiveMenuType] = useState(value.menus[0]?.menu_type ?? "initial");
+  const [publicationMessage, setPublicationMessage] = useState<string | null>(null);
   const activeMenu =
     value.menus.find((menu) => menu.menu_type === activeMenuType) ?? value.menus[0];
 
@@ -161,6 +170,13 @@ export function LineExperienceEditor({
   }, [activeMenuType, value.menus]);
 
   if (!activeMenu) return null;
+
+  const publicationStatus = resolveLineMenuPublicationStatus(activeMenu);
+  const canDeleteMenu = value.menus.length > 1 && publicationStatus === "draft" && !activeMenu.published_snapshot;
+  const draftSnapshot = createLineMenuPublishedSnapshot(activeMenu);
+  const hasUnpublishedChanges = activeMenu.published_snapshot
+    ? JSON.stringify(activeMenu.published_snapshot) !== JSON.stringify(draftSnapshot)
+    : true;
 
   const updateMenu = (patch: Partial<LineMenuSettings>) => {
     onChange({
@@ -185,10 +201,46 @@ export function LineExperienceEditor({
   };
 
   const deleteMenu = () => {
-    if (value.menus.length <= 1) return;
+    if (!canDeleteMenu) return;
     const nextMenus = value.menus.filter((menu) => menu.menu_type !== activeMenu.menu_type);
     onChange({ menus: nextMenus });
     setActiveMenuType(nextMenus[0]?.menu_type ?? "initial");
+  };
+
+  const confirmPublication = () => {
+    if (!activeMenu.published_snapshot && !activeMenu.line_rich_menu_id?.trim()) {
+      setPublicationMessage("先に公開用JSONを出力してLINEへ登録し、発行されたLINE公開IDを入力してください。");
+      return;
+    }
+    updateMenu({
+      publication_status: "published",
+      published_snapshot: draftSnapshot
+    });
+    setPublicationMessage("公開内容を確定しました。最後に「会社設定を保存」を押すと反映されます。");
+  };
+
+  const retirePublication = () => {
+    if (!activeMenu.published_snapshot) return;
+    updateMenu({ publication_status: "retired" });
+    setPublicationMessage("公開終了を選びました。最後に「会社設定を保存」を押すと切り替え対象から外れます。");
+  };
+
+  const downloadPublicationDefinition = () => {
+    try {
+      const definition = buildLineRichMenuDefinitionForMenu(activeMenu);
+      const blob = new Blob([`${JSON.stringify(definition, null, 2)}\n`], {
+        type: "application/json"
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "rich-menu.json";
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setPublicationMessage("公開用JSONを出力しました。同じフォルダーに rich-menu.png を用意して管理者が公開します。");
+    } catch {
+      setPublicationMessage("公開用JSONを作れませんでした。リンクURLや6つの項目を確認してください。");
+    }
   };
 
   return (
@@ -242,6 +294,22 @@ export function LineExperienceEditor({
         </label>
       </div>
 
+      <section className="line-menu-publication" aria-label="LINEメニューの公開管理">
+        <div>
+          <span className={`line-menu-publication-status is-${publicationStatus}`}>
+            {publicationStatus === "draft" ? "下書き" : publicationStatus === "published" ? "公開中" : "公開終了"}
+          </span>
+          <strong>{publicationStatus === "published" && hasUnpublishedChanges ? "公開中の内容とは別に、未反映の編集があります" : publicationStatus === "draft" ? "まだお客様には表示されません" : publicationStatus === "retired" ? "新しい切り替え対象から外れています" : "公開内容と編集内容は同じです"}</strong>
+          <small>編集だけでは本番LINEは変わりません。公開内容を確定してから会社設定を保存します。</small>
+        </div>
+        <div className="line-menu-publication-actions">
+          <button onClick={downloadPublicationDefinition} type="button"><Download size={16} />公開用JSON</button>
+          <button onClick={confirmPublication} type="button">{publicationStatus === "published" ? "編集内容を公開" : "公開内容を確定"}</button>
+          {publicationStatus === "published" ? <button className="is-danger" onClick={retirePublication} type="button">公開を終了</button> : null}
+        </div>
+      </section>
+      {publicationMessage ? <p className="line-menu-publication-message">{publicationMessage}</p> : null}
+
       <section aria-label={`${activeMenu.name}の6枠プレビュー`} className="line-menu-preview">
         <header>
           <div>
@@ -275,16 +343,16 @@ export function LineExperienceEditor({
       <div className="line-menu-danger-zone">
         <div>
           <strong>このメニューを削除</strong>
-          <small>最低1つのメニューは必要です。削除後は元に戻せません。</small>
+          <small>{canDeleteMenu ? "未公開の下書きだけ削除できます。削除後は元に戻せません。" : "公開履歴を守るため、公開済み・公開終了のメニューは削除できません。"}</small>
         </div>
-        <button disabled={value.menus.length <= 1} onClick={deleteMenu} type="button">
+        <button disabled={!canDeleteMenu} onClick={deleteMenu} type="button">
           <Trash2 size={16} />削除
         </button>
       </div>
 
       <div className="line-menu-note">
-        <p>保存すると、各会社のLINE案内と質問フローに反映されます。現在のアマミホームの3メニューと質問内容は初期値として保持されています。</p>
-        <p>メニュー画像の作成とLINEへの公開は管理者作業です。ここでは、6枠の動きと質問内容を会社ごとに管理します。</p>
+        <p>「会社設定を保存」だけでは、公開中のLINEメニューは変わりません。「公開内容を確定」した内容だけが案内と質問フローに使われます。</p>
+        <p>メニュー画像とLINEへの登録は管理者作業です。公開用JSONと同じフォルダーに rich-menu.png を用意して、安全な公開ツールで登録します。</p>
       </div>
     </div>
   );

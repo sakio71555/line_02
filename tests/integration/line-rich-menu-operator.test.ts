@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  applyCustomRichMenu,
   applyDefaultRichMenu,
   applyLifecycleRichMenus,
   buildRichMenuDefinitionForApply,
   CUSTOMER_REGISTRATION_ENDPOINT,
+  formatCustomLineRichMenuApplyResult,
   formatLineRichMenuDryRunResult,
   formatLineRichMenuLifecycleApplyResult,
   formatLineRichMenuRemoveDefaultResult,
   removeDefaultRichMenu,
+  runCustomLineRichMenuDryRun,
   runLineRichMenuDryRun,
   validateRichMenuDefinition
 } from "../../scripts/ops/line_rich_menu_operator";
@@ -234,6 +237,116 @@ describe("LINE rich menu operator", () => {
       "初期メニュー",
       "商談中メニュー",
       "アフターメニュー"
+    ]);
+  });
+
+  it("validates a repository-contained custom rich menu without calling LINE", async () => {
+    const result = await runCustomLineRichMenuDryRun(
+      process.cwd(),
+      "deploy/line/rich-menu/amamihome-initial"
+    );
+    const output = formatLineRichMenuDryRunResult(result);
+
+    expect(result.menuType).toBe("custom");
+    expect(result.validationPassed).toBe(true);
+    expect(result.definitionAvailable).toBe(true);
+    expect(result.imageAvailable).toBe(true);
+    expect(result.areaCount).toBe(6);
+    expect(result.lineApiCalled).toBe(false);
+    expect(output).toContain("menu_type=custom");
+    expect(output).toContain("line_api_called=false");
+  });
+
+  it("rejects custom rich menu asset paths outside the repository", async () => {
+    await expect(runCustomLineRichMenuDryRun(process.cwd(), "../outside-assets")).rejects.toThrow(
+      "rich_menu_asset_directory_outside_repo"
+    );
+    await expect(runCustomLineRichMenuDryRun(process.cwd(), "/absolute/assets")).rejects.toThrow(
+      "rich_menu_asset_directory_invalid"
+    );
+  });
+
+  it("applies a custom rich menu without changing the default unless explicitly requested", async () => {
+    const calls: Array<{ input: string; init: RequestInit }> = [];
+    const result = await applyCustomRichMenu({
+      assetDirectory: "deploy/line/rich-menu/amamihome-initial",
+      channelAccessToken: "test-channel-access-token",
+      async fetchImplementation(input, init) {
+        calls.push({ input: String(input), init });
+
+        if (String(input).endsWith("/v2/bot/richmenu")) {
+          return new Response(JSON.stringify({ richMenuId: "richmenu-custom-id" }), {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          });
+        }
+
+        return new Response("{}", { status: 200 });
+      }
+    });
+    const output = formatCustomLineRichMenuApplyResult(result);
+
+    expect(result).toEqual({
+      createRichMenuStatus: "success",
+      uploadImageStatus: "success",
+      setDefaultStatus: "skipped",
+      assetDirectoryValidated: true,
+      richMenuIdRecorded: false,
+      lineSendAttempted: false,
+      secretRecorded: false
+    });
+    expect(calls.map((call) => call.input)).toEqual([
+      "https://api.line.me/v2/bot/richmenu",
+      "https://api-data.line.me/v2/bot/richmenu/richmenu-custom-id/content"
+    ]);
+    expect(output).toContain("set_default_rich_menu_status=skipped");
+    expect(output).not.toContain("richmenu-custom-id");
+    expect(output).not.toContain("test-channel-access-token");
+  });
+
+  it("blocks custom rich menu apply before any LINE API call when preflight fails", async () => {
+    const calls: string[] = [];
+
+    await expect(
+      applyCustomRichMenu({
+        assetDirectory: "tests/fixtures/line-rich-menu-invalid",
+        channelAccessToken: "test-channel-access-token",
+        async fetchImplementation(input) {
+          calls.push(String(input));
+          return new Response("{}", { status: 200 });
+        }
+      })
+    ).rejects.toThrow("rich_menu_custom_preflight_failed");
+
+    expect(calls).toEqual([]);
+  });
+
+  it("changes the default custom rich menu only with the explicit option", async () => {
+    const calls: string[] = [];
+    const result = await applyCustomRichMenu({
+      assetDirectory: "deploy/line/rich-menu/amamihome-initial",
+      channelAccessToken: "test-channel-access-token",
+      setDefault: true,
+      async fetchImplementation(input) {
+        const requestUrl = String(input);
+        calls.push(requestUrl);
+
+        if (requestUrl.endsWith("/v2/bot/richmenu")) {
+          return new Response(JSON.stringify({ richMenuId: "richmenu-custom-default-id" }), {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          });
+        }
+
+        return new Response("{}", { status: 200 });
+      }
+    });
+
+    expect(result.setDefaultStatus).toBe("success");
+    expect(calls).toEqual([
+      "https://api.line.me/v2/bot/richmenu",
+      "https://api-data.line.me/v2/bot/richmenu/richmenu-custom-default-id/content",
+      "https://api.line.me/v2/bot/user/all/richmenu/richmenu-custom-default-id"
     ]);
   });
 

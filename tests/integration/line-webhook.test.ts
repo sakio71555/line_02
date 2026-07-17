@@ -9,6 +9,7 @@ import type { AiProvider } from "@amami-line-crm/ai";
 import {
   type Alert,
   createDefaultLineExperienceSettings,
+  createLineMenuPublishedSnapshot,
   type Customer,
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
@@ -1444,6 +1445,8 @@ describe("LINE webhook foundation", () => {
     reservationItem.reply_text = "見学予約ページをご案内します。";
     reservationItem.target_url = "https://example.test/visit/";
     reservationItem.timeline_label = "来場予約ページを案内";
+    const initialMenu = lineExperience.menus.find((menu) => menu.menu_type === "initial")!;
+    initialMenu.published_snapshot = createLineMenuPublishedSnapshot(initialMenu);
 
     await operationsRepository.saveWorkspaceSettings({
       tenant_id: "tenant_amamihome",

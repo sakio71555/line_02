@@ -12,21 +12,24 @@ import { LineExperienceEditor } from "./line-experience-editor";
 
 const initialState: SettingsActionState = { status: "idle" };
 
-export function SettingsWorkspace({ auditEvents, initialSettings, templates }: { auditEvents: AuditEvent[]; initialSettings: WorkspaceSettings; templates: ReplyTemplate[] }) {
+export function SettingsWorkspace({ auditEvents, initialSettings, settingsVersion, templates }: { auditEvents: AuditEvent[]; initialSettings: WorkspaceSettings; settingsVersion: string | null; templates: ReplyTemplate[] }) {
   const [settings, setSettings] = useState(initialSettings);
+  const [currentSettingsVersion, setCurrentSettingsVersion] = useState(settingsVersion);
   const [settingsState, settingsAction, settingsPending] = useActionState(saveWorkspaceSettingsAction, initialState);
   const [templateState, templateAction, templatePending] = useActionState(saveReplyTemplateAction, initialState);
 
   useEffect(() => {
     if (settingsState.status !== "success") return;
+    setCurrentSettingsVersion(settingsState.settingsVersion ?? null);
     saveTenantBrandProfile(window.localStorage, { companyName: settings.company_name || settings.product_name, productName: settings.product_name, accentPreset: settings.accent_preset as TenantAccentPreset });
     window.dispatchEvent(new Event(TENANT_BRAND_UPDATED_EVENT));
-  }, [settings, settingsState.status]);
+  }, [settings, settingsState.settingsVersion, settingsState.status]);
 
   return <div className="settings-form">
     <form action={settingsAction} className="settings-section">
       <header><p className="eyebrow">会社の基本設定</p><h2>表示と対応ルール</h2><p>この会社で使う名称、色、標準の返信期限を設定します。</p></header>
       <input name="line_experience" type="hidden" value={JSON.stringify(settings.line_experience)} />
+      <input name="expected_updated_at" type="hidden" value={currentSettingsVersion ?? ""} />
       <div className="settings-fields settings-fields-two">
         <label><span>会社名</span><input maxLength={120} name="company_name" onChange={(event) => setSettings({ ...settings, company_name: event.target.value })} value={settings.company_name} /></label>
         <label><span>画面名</span><input maxLength={120} name="product_name" onChange={(event) => setSettings({ ...settings, product_name: event.target.value })} value={settings.product_name} /></label>

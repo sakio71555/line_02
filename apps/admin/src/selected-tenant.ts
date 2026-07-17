@@ -136,6 +136,21 @@ export function createClearSelectedTenantCookieValue(): string {
 }
 
 export function formatAdminApiErrorCodeForUi(errorCode: string): string | null {
+  const workspaceLabels: Record<string, string> = {
+    invalid_line_menu_publication_state:
+      "LINEメニューの公開状態が正しくありません。画面を再読み込みして確認してください。",
+    published_line_menu_delete_forbidden:
+      "公開したLINEメニューは削除できません。利用を終える場合はメニュー編集画面で公開を終了してください。",
+    rich_menu_not_configured:
+      "このLINEメニューはまだ公開されていません。設定画面で公開内容を確定してください。",
+    workspace_settings_conflict:
+      "ほかの担当者が先に設定を更新しました。画面を再読み込みしてから、もう一度変更してください。"
+  };
+
+  if (workspaceLabels[errorCode]) {
+    return workspaceLabels[errorCode];
+  }
+
   const labels: Record<SelectedTenantErrorCode, string> = {
     authenticated_staff_required:
       "ログイン確認が必要です。ログイン画面から入り直してください。",

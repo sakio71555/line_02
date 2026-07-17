@@ -3731,6 +3731,86 @@ dl.detail-grid {
   line-height: 1.45;
 }
 
+.line-menu-publication {
+  align-items: center;
+  background: #f7f9fa;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.line-menu-publication > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.line-menu-publication small,
+.line-menu-publication-message {
+  color: var(--admin-text-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.line-menu-publication-status {
+  border: 1px solid var(--admin-border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  justify-self: start;
+  padding: 3px 8px;
+}
+
+.line-menu-publication-status.is-published {
+  background: #edf8f2;
+  border-color: #add8bf;
+  color: #17643a;
+}
+
+.line-menu-publication-status.is-draft {
+  background: #fff8df;
+  border-color: #e8d18a;
+  color: #775d00;
+}
+
+.line-menu-publication-status.is-retired {
+  background: #f0f2f3;
+  color: #59666e;
+}
+
+.line-menu-publication-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: flex-end;
+}
+
+.line-menu-publication-actions button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--admin-border);
+  border-radius: 5px;
+  color: var(--admin-accent);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  gap: 5px;
+  min-height: 36px;
+  padding: 7px 10px;
+}
+
+.line-menu-publication-actions button.is-danger {
+  color: #a43b3b;
+}
+
+.line-menu-publication-message {
+  margin: -8px 0 0;
+}
+
 .line-menu-preview {
   border: 1px solid var(--admin-border);
   border-radius: 6px;
@@ -4369,6 +4449,15 @@ dl.detail-grid {
   .line-menu-toolbar {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .line-menu-publication {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .line-menu-publication-actions {
+    justify-content: flex-start;
   }
 
   .line-menu-tabs button,
