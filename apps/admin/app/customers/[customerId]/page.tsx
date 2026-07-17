@@ -1,3 +1,4 @@
+import { ArrowLeft, Mail, MapPin, Phone, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import {
@@ -12,6 +13,7 @@ import {
   toLineConversationTimelineMessages
 } from "../../../src/customer-timeline-display";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
+import { PageTitle, SectionHeader, StatusBadge } from "../../_components/ui";
 import { CustomerActionPanel, CustomerRichMenuSwitch } from "./customer-actions";
 import { CustomerTimelineList } from "./customer-timeline-list";
 
@@ -34,111 +36,95 @@ export default async function CustomerDetailPage({
 
   return (
     <main>
-      <div className="page-header">
-        <div>
-          <p className="eyebrow">お客様対応</p>
-          <h1>お客様ページ</h1>
-          <p className="meta">お客様情報、LINE履歴、返信操作を確認します。</p>
-        </div>
-        <Link href="/customers">一覧へ戻る</Link>
-      </div>
-
-      <div className="notice">
-        <p>
-          この画面では、お客様情報、LINEトーク履歴、担当者返信をまとめて確認します。
-        </p>
-        <p className="meta">
-          LINEトーク履歴には、実機のLINE画面と同じやり取りを新しい順で表示します。
-        </p>
-        <p className="meta">
-          返信するときは、内容を確認してから保存または送信します。
-        </p>
-      </div>
-
       {detail.status === "error" ? (
-        <section className="section">
-          <div className="error">
-            <strong>読み込みエラー</strong>
-            <pre>{detail.message}</pre>
-          </div>
-        </section>
+        <>
+          <PageTitle
+            eyebrow="お客様対応"
+            title="お客様を読み込めませんでした"
+            actions={<Link className="button-link" href="/customers"><ArrowLeft size={17} />顧客一覧</Link>}
+          />
+          <div className="inline-error">時間を置いて再度お試しください。</div>
+        </>
       ) : (
         <>
-          <section className="customer-hero" aria-labelledby="customer-detail-title">
-            <div className="customer-hero-title">
-              <div>
-                <p className="eyebrow">お客様詳細</p>
-                <h1 id="customer-detail-title">{getCustomerRecipientLabel(detail.customer)}</h1>
-              </div>
-              <span className={getResponseModeBadgeClass(detail.customer.response_mode)}>
+          <PageTitle
+            eyebrow="お客様対応"
+            title={getCustomerRecipientLabel(detail.customer)}
+            description={`最終更新 ${formatAdminDateTime(detail.customer.updated_at)}`}
+            actions={<Link className="button-link" href="/customers"><ArrowLeft size={17} />顧客一覧</Link>}
+          />
+
+          <div className="customer-overview" aria-label="お客様の対応状況">
+            <div className="customer-overview-avatar"><UserRound aria-hidden="true" size={26} /></div>
+            <div className="customer-overview-state">
+              <StatusBadge tone={getResponseModeTone(detail.customer.response_mode)}>
                 {formatResponseMode(detail.customer.response_mode)}
-              </span>
+              </StatusBadge>
+              <span>{formatCustomerStatus(detail.customer.status)}</span>
             </div>
-            <div className="detail-chip-list" aria-label="お客様の状態">
-              <span className="status-pill">{formatCustomerStatus(detail.customer.status)}</span>
-              <span className="status-pill status-pill-muted">
-                最終お客様発言 {formatAdminDateTime(detail.customer.last_customer_message_at)}
-              </span>
-              <span className="status-pill status-pill-muted">
-                最終担当者返信 {formatAdminDateTime(detail.customer.last_staff_reply_at)}
-              </span>
+            <div className="customer-overview-times">
+              <span><small>お客様から</small>{formatAdminDateTime(detail.customer.last_customer_message_at)}</span>
+              <span><small>担当者返信</small>{formatAdminDateTime(detail.customer.last_staff_reply_at)}</span>
             </div>
-            <div className="detail-chip-list" aria-label="タグ">
-              {detail.customer.tags.length > 0 ? (
-                detail.customer.tags.map((tag) => (
-                  <span className="status-pill status-pill-muted" key={tag}>
-                    {tag}
-                  </span>
-                ))
-              ) : (
-                <span className="status-pill status-pill-muted">タグなし</span>
-              )}
-            </div>
-            <CustomerRichMenuSwitch
-              customerAvailable={Boolean(detail.customer.line_user_id)}
-              customerId={customerId}
-            />
-          </section>
-
-          <section className="section">
-            <h2>お客様情報</h2>
-            <div className="customer-key-grid">
-              {customerDetailEntries(detail.customer).map(([label, value]) => (
-                <dl className="admin-card customer-key-card" key={label}>
-                  <dt>{label}</dt>
-                  <dd>{formatCustomerDetailValue(label, value)}</dd>
-                </dl>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-
-      <section className="section">
-        <h2>LINEトーク履歴</h2>
-        <p className="meta">
-          実機のLINE画面に表示されるお客様発言・自動応答・担当者返信だけを、新しいものが上になる順で表示します。
-          分類ツリーや受付済みなどのCRM内部記録はこの枠には表示しません。
-        </p>
-        {timeline.status === "error" ? (
-          <div className="error">
-            <strong>読み込みエラー</strong>
-            <pre>{timeline.message}</pre>
           </div>
-        ) : timelineMessages.length === 0 ? (
-          <p className="empty">表示できるメッセージはまだありません。</p>
-        ) : (
-          <CustomerTimelineList customerId={customerId} messages={timelineMessages} />
-        )}
-      </section>
 
-      {detail.status === "error" ? null : (
-        <CustomerActionPanel
-          customerId={customerId}
-          lineRealSendCustomerAvailable={Boolean(detail.customer.line_user_id)}
-          lineRealSendWindowOpen={lineRealSendCapability.lineRealSendWindowOpen}
-          recipientLabel={getCustomerRecipientLabel(detail.customer)}
-        />
+          <div className="customer-workspace">
+            <div className="customer-conversation-column">
+              <section className="workspace-section customer-conversation">
+                <SectionHeader
+                  title="LINEトーク"
+                  description="実機のLINEと同じ会話だけを、新しい順で表示します。"
+                />
+                {timeline.status === "error" ? (
+                  <div className="inline-error">LINEトークを読み込めませんでした。</div>
+                ) : timelineMessages.length === 0 ? (
+                  <p className="empty">表示できるメッセージはまだありません。</p>
+                ) : (
+                  <CustomerTimelineList customerId={customerId} messages={timelineMessages} />
+                )}
+              </section>
+
+              <CustomerActionPanel
+                customerId={customerId}
+                lineRealSendCustomerAvailable={Boolean(detail.customer.line_user_id)}
+                lineRealSendWindowOpen={lineRealSendCapability.lineRealSendWindowOpen}
+                recipientLabel={getCustomerRecipientLabel(detail.customer)}
+              />
+            </div>
+
+            <aside className="customer-sidebar">
+              <section className="workspace-section customer-contact-section">
+                <SectionHeader title="お客様情報" />
+                <dl className="customer-contact-list">
+                  <div><dt><Phone aria-hidden="true" size={17} />電話</dt><dd>{formatDetailValue(detail.customer.phone)}</dd></div>
+                  <div><dt><Mail aria-hidden="true" size={17} />メール</dt><dd>{formatDetailValue(detail.customer.email)}</dd></div>
+                  <div><dt><MapPin aria-hidden="true" size={17} />住所・エリア</dt><dd>{formatDetailValue(detail.customer.address_area || detail.customer.planned_area)}</dd></div>
+                </dl>
+                {detail.customer.tags.length > 0 ? (
+                  <div className="detail-chip-list" aria-label="お客様タグ">
+                    {detail.customer.tags.map((tag) => <span className="status-pill status-pill-muted" key={tag}>{tag}</span>)}
+                  </div>
+                ) : null}
+              </section>
+
+              <section className="workspace-section customer-menu-section">
+                <CustomerRichMenuSwitch
+                  customerAvailable={Boolean(detail.customer.line_user_id)}
+                  customerId={customerId}
+                />
+              </section>
+
+              <details className="customer-all-details">
+                <summary>すべてのお客様情報</summary>
+                <dl>
+                  {customerDetailEntries(detail.customer).map(([label, value]) => (
+                    <div key={label}><dt>{label}</dt><dd>{formatCustomerDetailValue(label, value)}</dd></div>
+                  ))}
+                </dl>
+              </details>
+            </aside>
+          </div>
+        </>
       )}
     </main>
   );
@@ -270,18 +256,12 @@ function formatResponseMode(mode: string): string {
   return labels[mode] ?? mode;
 }
 
-function getResponseModeBadgeClass(mode: string): string {
-  if (mode === "human_required" || mode === "human_active") {
-    return "status-pill status-pill-warning";
-  }
-
-  if (mode === "emergency") {
-    return "status-pill status-pill-danger";
-  }
-
-  if (mode === "closed") {
-    return "status-pill status-pill-muted";
-  }
-
-  return "status-pill";
+function getResponseModeTone(
+  mode: string
+): "neutral" | "info" | "attention" | "danger" | "success" {
+  if (mode === "emergency") return "danger";
+  if (mode === "human_required") return "attention";
+  if (mode === "human_active") return "info";
+  if (mode === "closed") return "neutral";
+  return "success";
 }

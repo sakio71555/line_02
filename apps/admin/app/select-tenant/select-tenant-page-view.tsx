@@ -1,5 +1,8 @@
 import React from "react";
 
+import { Building2, ShieldCheck, UsersRound } from "lucide-react";
+
+import { PageTitle } from "../_components/ui";
 import { SelectedTenantForm } from "./selected-tenant-form";
 
 export function SelectTenantPageView({
@@ -9,27 +12,32 @@ export function SelectTenantPageView({
 }) {
   return (
     <main>
-      <div className="page-header">
+      <PageTitle
+        eyebrow="利用する会社"
+        title="会社を選ぶ"
+        description="担当者が見るお客様と対応情報を、会社ごとに切り替えます。"
+        actions={<a className="secondary-action" href="/settings">初期設定へ戻る</a>}
+      />
+
+      <section className="settings-intro" aria-label="会社選択の安全性">
         <div>
-          <p className="eyebrow">会社選択</p>
-          <h1>会社を選ぶ</h1>
-          <p className="meta">担当者が見る会社・店舗を切り替えるための画面です。</p>
+          <Building2 aria-hidden="true" size={20} />
+          <span><strong>登録済み会社</strong><small>運用対象だけを選択</small></span>
         </div>
-        <a href="/">トップへ戻る</a>
-      </div>
+        <div>
+          <UsersRound aria-hidden="true" size={20} />
+          <span><strong>担当者ごと</strong><small>所属権限を確認</small></span>
+        </div>
+        <div>
+          <ShieldCheck aria-hidden="true" size={20} />
+          <span><strong>安全</strong><small>秘密情報は保存しません</small></span>
+        </div>
+      </section>
 
-      <div className="notice">
-        <p>
-          スタッフが複数の会社に所属する場合に、操作する会社を選びます。
-          アマミホームを選ぶと、お客様一覧や未対応一覧に反映されます。
-        </p>
-        <p className="meta">
-          保存するのは会社の選択情報だけです。ログイン情報やパスワードは保存しません。
-        </p>
-      </div>
-
-      <section className="section">
-        <h2>会社候補</h2>
+      <section className="workspace-section">
+        <header className="section-header">
+          <div><p className="eyebrow">操作対象</p><h2>登録済みの会社</h2></div>
+        </header>
         <div className="action-grid">
           <div className="tenant-card">
             <h3>アマミホーム</h3>
@@ -53,48 +61,10 @@ export function SelectTenantPageView({
         </div>
       </section>
 
-      <section className="section">
-        <h2>保存ルール</h2>
-        <ul>
-          <li>
-            保存するのは会社の選択情報だけです。
-          </li>
-          <li>ログイン情報や秘密の値は保存・表示しません。</li>
-          <li>
-            画面表示と返信操作で、同じ会社を使います。
-          </li>
-          <li>
-            会社の選択は権限そのものではありません。操作権限は別に確認します。
-          </li>
-          <li>ログイン情報は画面に表示せず、会社選択とは分けて扱います。</li>
-        </ul>
-      </section>
-
-      <section className="section">
-        <h2>運用導線</h2>
-        <p className="meta">
-          お客様一覧、未対応一覧、ログイン関連画面へ進めます。
-        </p>
-        <ul className="nav-links">
-          <li>
-            <a href="/login">ログイン画面</a>
-          </li>
-          <li>
-            <a href="/customers">お客様一覧へ進む</a>
-          </li>
-          <li>
-            <a href="/alerts">未対応一覧へ進む</a>
-          </li>
-          <li>
-            <a href="/permission-denied">権限不足画面</a>
-          </li>
-          <li>
-            <a href="/session-expired">ログイン期限切れ画面</a>
-          </li>
-          <li>
-            <a href="/">トップへ戻る</a>
-          </li>
-        </ul>
+      <section className="workspace-section compact-guidance">
+        <h2>選択後にできること</h2>
+        <p>ホーム、受信トレイ、顧客一覧、返信操作が同じ会社へ切り替わります。所属していない会社はAPI側でも表示・操作できません。</p>
+        <a className="secondary-action" href="/">ホームへ戻る</a>
       </section>
     </main>
   );

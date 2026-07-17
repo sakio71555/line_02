@@ -11,20 +11,22 @@ import {
 } from "../../apps/admin/app/customers/[customerId]/customer-actions";
 
 describe("admin customer action panel", () => {
-  it("mounts the rich menu switch inside the customer detail hero card", () => {
+  it("keeps conversation primary and the rich-menu switch in the customer sidebar", () => {
     const pageSource = readFileSync(
       join(process.cwd(), "apps/admin/app/customers/[customerId]/page.tsx"),
       "utf8"
     );
-    const heroStart = pageSource.indexOf('<section className="customer-hero"');
-    const richMenuSwitch = pageSource.indexOf("<CustomerRichMenuSwitch", heroStart);
-    const heroEnd = pageSource.indexOf("</section>", heroStart);
-    const actionPanel = pageSource.indexOf("<CustomerActionPanel", heroEnd);
+    const workspace = pageSource.indexOf('<div className="customer-workspace"');
+    const conversation = pageSource.indexOf('title="LINEトーク"', workspace);
+    const actionPanel = pageSource.indexOf("<CustomerActionPanel", conversation);
+    const sidebar = pageSource.indexOf('<aside className="customer-sidebar">', actionPanel);
+    const richMenuSwitch = pageSource.indexOf("<CustomerRichMenuSwitch", sidebar);
 
-    expect(heroStart).toBeGreaterThanOrEqual(0);
-    expect(richMenuSwitch).toBeGreaterThan(heroStart);
-    expect(richMenuSwitch).toBeLessThan(heroEnd);
-    expect(actionPanel).toBeGreaterThan(heroEnd);
+    expect(workspace).toBeGreaterThanOrEqual(0);
+    expect(conversation).toBeGreaterThan(workspace);
+    expect(actionPanel).toBeGreaterThan(conversation);
+    expect(sidebar).toBeGreaterThan(actionPanel);
+    expect(richMenuSwitch).toBeGreaterThan(sidebar);
   });
 
   it("renders production action cards without changing action wiring", () => {

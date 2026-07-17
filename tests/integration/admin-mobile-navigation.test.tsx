@@ -12,15 +12,17 @@ describe("admin mobile navigation shell", () => {
       </AdminShellView>
     );
 
-    expect(html).toContain("アマミホーム管理画面");
-    expect(html).toContain("LINE相談を確認・返信");
+    expect(html).toContain("アマミホーム");
+    expect(html).toContain("顧客対応デスク");
     expect(html).toContain("スマートフォン用メニュー");
-    expect(html).toContain("お客様");
-    expect(html).toContain("未対応");
-    expect(html).toContain("会社選択");
+    expect(html).toContain("受信トレイ");
+    expect(html).toContain("顧客");
+    expect(html).toContain("タスク");
+    expect(html).toContain("案件");
     expect(html).toContain("href=\"/customers\"");
-    expect(html).toContain("href=\"/alerts\"");
-    expect(html).toContain("href=\"/select-tenant\"");
+    expect(html).toContain("href=\"/inbox\"");
+    expect(html).toContain("href=\"/tasks\"");
+    expect(html).toContain("href=\"/deals\"");
     expect(html).toContain("aria-current=\"page\"");
   });
 

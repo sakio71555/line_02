@@ -56,12 +56,11 @@ describe("admin auth placeholder pages", () => {
     expect(html).toContain("選択を解除する");
     expect(html).not.toContain("x-tenant-id");
     expect(html).toContain("ログイン情報や秘密の値は保存も表示もしません");
-    expect(html).toContain("会社の選択は権限そのものではありません");
-    expect(html).toContain("お客様一覧、未対応一覧、ログイン関連画面へ進めます");
-    expect(html).toContain("ログイン情報は画面に表示せず");
-    expect(html).toContain("ログイン");
-    expect(html).toContain("お客様一覧へ進む");
-    expect(html).toContain("未対応一覧へ進む");
+    expect(html).toContain("登録済み会社");
+    expect(html).toContain("所属権限を確認");
+    expect(html).toContain("所属していない会社はAPI側でも表示・操作できません");
+    expect(html).toContain("初期設定へ戻る");
+    expect(html).toContain("ホームへ戻る");
     expect(html).not.toContain("Authorization");
   });
 

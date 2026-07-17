@@ -74,11 +74,9 @@ export function SelectedTenantForm() {
         <p className="result-label">会社選択</p>
         <h3>操作する会社を保存する</h3>
       </div>
-      <p className="meta">
-        保存するのは会社の選択情報だけです。ログイン情報や秘密の値は保存も表示もしません。
-      </p>
+      <p className="meta">管理者から案内された登録済み会社を選びます。</p>
       <form className="action-form" onSubmit={handleSave}>
-        <label htmlFor="selected-tenant-id">会社</label>
+        <label htmlFor="selected-tenant-id">登録済み会社コード</label>
         <input
           id="selected-tenant-id"
           name="selectedTenantId"
@@ -86,6 +84,7 @@ export function SelectedTenantForm() {
           placeholder={DEFAULT_TENANT_ID}
           value={inputValue}
         />
+        <small className="field-help">会社コードが分からない場合は、システム管理者へ確認してください。</small>
         <div className="confirmation-actions">
           <button type="submit">この会社を保存する</button>
           <button type="button" onClick={handleClear}>

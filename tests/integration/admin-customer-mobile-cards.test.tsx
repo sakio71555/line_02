@@ -21,12 +21,11 @@ describe("admin customers mobile cards", () => {
       />
     );
 
-    expect(html).toContain("お客様一覧");
+    expect(html).toContain("顧客管理");
     expect(html).toContain("お客様一覧カード");
     expect(html).toContain("山田 太郎");
     expect(html).toContain("平屋とモデルホーム見学について相談したいです");
-    expect(html).toContain("担当者の確認が必要");
-    expect(html).toContain("担当者返信待ち");
+    expect(html).toContain("要対応");
     expect(html).toContain("お客様ページを開く");
     expect(html).toContain("href=\"/customers/customer_demo_yamada_taro\"");
   });

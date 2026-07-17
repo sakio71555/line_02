@@ -35,16 +35,11 @@ describe("admin alerts page", () => {
       />
     );
 
-    expect(html).toContain("返せていない相談を確認する");
-    expect(html).toContain("まだ返せていない相談を見つけます");
-    expect(html).toContain("未対応を確認する");
-    expect(html).toContain("手動確認");
-    expect(html).toContain("対応待ちを整理");
-    expect(html).toContain("お客様ページへ移動");
-    expect(html).toContain("状態の見方");
-    expect(html).toContain("対応待ち");
+    expect(html).toContain("受信トレイ");
+    expect(html).toContain("1件の相談が対応を待っています");
+    expect(html).toContain("受信状況を更新");
+    expect(html).toContain("未対応");
     expect(html).toContain("確認済み");
-    expect(html).toContain("未対応一覧");
     expect(html).toContain("未対応カード");
     expect(html).toContain("未返信の相談");
     expect(html).toContain("href=\"/customers/customer_demo_yamada_taro\"");
@@ -59,8 +54,8 @@ describe("admin alerts page", () => {
       />
     );
 
-    expect(html).toContain("まだ対応が必要な相談は表示されていません");
-    expect(html).toContain("未対応を確認する");
+    expect(html).toContain("まだ対応が必要な相談はありません");
+    expect(html).toContain("新しい相談が入ると、自動でここに表示されます");
   });
 
   it("renders beginner-friendly action cards without changing action wiring", () => {
@@ -88,12 +83,12 @@ describe("admin alerts page", () => {
   });
 
   it("formats alert status severity and type labels", () => {
-    expect(formatAlertStatus("open")).toBe("対応待ち");
-    expect(formatAlertStatus("notified")).toBe("通知記録済み");
+    expect(formatAlertStatus("open")).toBe("未対応");
+    expect(formatAlertStatus("notified")).toBe("確認済み");
     expect(formatAlertStatus("resolved")).toBe("対応済み");
     expect(formatAlertStatus("dismissed")).toBe("非表示");
     expect(formatAlertSeverity("low")).toBe("低");
-    expect(formatAlertSeverity("medium")).toBe("中");
+    expect(formatAlertSeverity("medium")).toBe("通常");
     expect(formatAlertSeverity("high")).toBe("高");
     expect(formatAlertSeverity("critical")).toBe("至急");
     expect(formatAlertType("unreplied_customer_message")).toBe("未返信の相談");

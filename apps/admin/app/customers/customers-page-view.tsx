@@ -1,85 +1,113 @@
-import React from "react";
+"use client";
 
+import { ArrowRight, Search, UserRound } from "lucide-react";
+import React, { useMemo, useState } from "react";
+
+import { EmptyState, PageTitle, StatusBadge } from "../_components/ui";
 import type { AdminCustomerListItem } from "../../src/admin-api";
+import {
+  formatCompactDateTime,
+  getCustomerDisplayName,
+  getCustomerResponseLabel,
+  getCustomerResponseTone
+} from "../../src/admin-display";
 
 export type CustomersPageLoadResult =
   | { status: "ok"; customers: AdminCustomerListItem[] }
   | { status: "error"; message: string };
 
+type CustomerFilter = "all" | "needs_action" | "in_progress" | "closed";
+
+const customerFilters: Array<{ label: string; value: CustomerFilter }> = [
+  { label: "すべて", value: "all" },
+  { label: "要対応", value: "needs_action" },
+  { label: "対応中", value: "in_progress" },
+  { label: "完了", value: "closed" }
+];
+
 export function CustomersPageView({ result }: { result: CustomersPageLoadResult }) {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<CustomerFilter>("all");
+  const customers = result.status === "ok" ? result.customers : [];
+  const visibleCustomers = useMemo(
+    () => customers.filter((customer) => matchesCustomer(customer, query, filter)),
+    [customers, filter, query]
+  );
+
   return (
     <main>
-      <div className="page-header">
-        <div>
-          <p className="eyebrow">お客様一覧</p>
-          <h1>対応するお客様を選ぶ</h1>
-          <p className="meta">新しい相談や登録が入ると、この一覧に表示されます。</p>
-        </div>
-        <a href="/">トップへ戻る</a>
-      </div>
+      <PageTitle
+        eyebrow="顧客管理"
+        title="顧客"
+        description="名前やLINEの内容から、対応するお客様を探せます。"
+      />
 
-      <div className="notice">
-        <p>
-          お客様の名前、最新のLINE内容、対応状況をカードで表示します。
-          詳しく見る場合は「お客様ページを開く」を押してください。
-        </p>
-        <p className="meta">
-          LINEへ返信する時は、お客様ページで内容を確認してから1通ずつ送ります。
-        </p>
+      <div className="list-toolbar">
+        <label className="search-field">
+          <Search aria-hidden="true" size={18} />
+          <span className="sr-only">顧客を検索</span>
+          <input
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="名前・LINE内容で検索"
+            type="search"
+            value={query}
+          />
+        </label>
+        <div className="segmented-control" aria-label="顧客の絞り込み">
+          {customerFilters.map((item) => (
+            <button
+              aria-pressed={filter === item.value}
+              className="segment-button"
+              key={item.value}
+              onClick={() => setFilter(item.value)}
+              type="button"
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {result.status === "error" ? (
-        <div className="error">
-          <strong>読み込みエラー</strong>
-          <pre>{result.message}</pre>
+        <div className="inline-error">
+          <strong>顧客を読み込めませんでした。</strong>
+          <span>時間を置いて再度お試しください。</span>
         </div>
-      ) : result.customers.length === 0 ? (
-        <div className="empty">
-          <strong>まだお客様が表示されていません</strong>
-          <p>
-            LINEから問い合わせや登録が入ると、ここに表示されます。
-          </p>
-        </div>
+      ) : customers.length === 0 ? (
+        <EmptyState title="まだお客様が表示されていません">
+          <p>LINEから問い合わせや登録が入ると、ここに表示されます。</p>
+        </EmptyState>
+      ) : visibleCustomers.length === 0 ? (
+        <EmptyState title="条件に合うお客様がいません">
+          <p>検索語や絞り込みを変更してください。</p>
+        </EmptyState>
       ) : (
-        <ul className="customer-card-list" aria-label="お客様一覧カード">
-          {result.customers.map((customer) => (
+        <ul className="customer-card-list customer-directory" aria-label="お客様一覧カード">
+          {visibleCustomers.map((customer) => (
             <li className="customer-card" key={customer.id}>
-              <div className="customer-card-header">
-                <div>
-                  <p className="eyebrow">{formatCustomerStatus(customer.status)}</p>
-                  <h2 className="customer-card-title">{getCustomerName(customer)}</h2>
-                </div>
-                <span className={getResponseModeBadgeClass(customer.response_mode)}>
-                  {formatResponseMode(customer.response_mode)}
+              <a href={`/customers/${encodeURIComponent(customer.id)}`}>
+                <span className="customer-avatar" aria-hidden="true">
+                  <UserRound size={21} />
                 </span>
-              </div>
-              <p className="customer-card-message">
-                {formatValue(customer.last_message_body) === "-"
-                  ? "最新メッセージはまだありません。"
-                  : formatValue(customer.last_message_body)}
-              </p>
-              <div className="customer-card-meta">
-                <span className="status-pill status-pill-muted">
-                  最終更新 {formatValue(customer.last_message_at)}
-                </span>
-                <span className="status-pill status-pill-muted">
-                  お客様発言 {formatValue(customer.last_customer_message_at)}
-                </span>
-              </div>
-              <div className="detail-chip-list">
-                {customer.last_staff_reply_at ? (
-                  <span className="status-pill">担当者返信あり</span>
-                ) : (
-                  <span className="status-pill status-pill-warning">担当者返信待ち</span>
-                )}
-                {customer.display_name ? (
-                  <span className="status-pill status-pill-muted">
-                    LINE名 {customer.display_name}
+                <span className="customer-directory-main">
+                  <span className="customer-directory-title">
+                    <strong>{getCustomerDisplayName(customer)}</strong>
+                    {customer.display_name && customer.display_name !== customer.name ? (
+                      <small>LINE: {customer.display_name}</small>
+                    ) : null}
                   </span>
-                ) : null}
-              </div>
-              <a className="card-action-link" href={`/customers/${encodeURIComponent(customer.id)}`}>
-                お客様ページを開く
+                  <span className="customer-directory-message">
+                    {customer.last_message_body || "メッセージはまだありません"}
+                  </span>
+                </span>
+                <span className="customer-directory-status">
+                  <StatusBadge tone={getCustomerResponseTone(customer.response_mode)}>
+                    {getCustomerResponseLabel(customer.response_mode)}
+                  </StatusBadge>
+                  <small>{formatCompactDateTime(customer.last_message_at)}</small>
+                </span>
+                <ArrowRight aria-hidden="true" className="row-arrow" size={18} />
+                <span className="sr-only">お客様ページを開く</span>
               </a>
             </li>
           ))}
@@ -89,51 +117,23 @@ export function CustomersPageView({ result }: { result: CustomersPageLoadResult 
   );
 }
 
-function formatValue(value: string | number | boolean | null | undefined): string {
-  if (value === null || value === undefined || value === "") {
-    return "-";
+function matchesCustomer(
+  customer: AdminCustomerListItem,
+  rawQuery: string,
+  filter: CustomerFilter
+): boolean {
+  const query = rawQuery.trim().toLocaleLowerCase("ja");
+  const matchesQuery =
+    !query ||
+    [customer.name, customer.display_name, customer.last_message_body]
+      .filter((value): value is string => Boolean(value))
+      .some((value) => value.toLocaleLowerCase("ja").includes(query));
+
+  if (!matchesQuery) return false;
+  if (filter === "all") return true;
+  if (filter === "needs_action") {
+    return ["human_required", "emergency"].includes(customer.response_mode);
   }
-
-  return String(value);
-}
-
-function getCustomerName(customer: AdminCustomerListItem): string {
-  return customer.display_name || customer.name || customer.id;
-}
-
-function formatCustomerStatus(status: string): string {
-  const labels: Record<string, string> = {
-    active: "対応中",
-    closed: "対応完了"
-  };
-
-  return labels[status] ?? status;
-}
-
-function formatResponseMode(mode: string): string {
-  const labels: Record<string, string> = {
-    bot_auto: "自動対応中",
-    human_required: "担当者の確認が必要",
-    human_active: "担当者が対応中",
-    emergency: "至急対応",
-    closed: "対応完了"
-  };
-
-  return labels[mode] ?? mode;
-}
-
-function getResponseModeBadgeClass(mode: string): string {
-  if (mode === "human_required" || mode === "human_active") {
-    return "status-pill status-pill-warning";
-  }
-
-  if (mode === "emergency") {
-    return "status-pill status-pill-danger";
-  }
-
-  if (mode === "closed") {
-    return "status-pill status-pill-muted";
-  }
-
-  return "status-pill";
+  if (filter === "in_progress") return customer.response_mode === "human_active";
+  return customer.status === "archived" || customer.response_mode === "closed";
 }

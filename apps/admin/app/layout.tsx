@@ -5,8 +5,8 @@ import { AdminShell } from "./_components/admin-shell";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Amami LINE CRM Admin",
-  description: "LINE相談を確認して返信する管理画面"
+  title: "顧客対応デスク",
+  description: "LINE相談と顧客対応をまとめて管理する画面"
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
