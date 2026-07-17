@@ -94,6 +94,11 @@ import {
   evaluateAdminRouteRoleGuardCompatibility
 } from "./admin/role-guarded-handler";
 import {
+  evaluateAdminBroadcastGate,
+  isAdminBroadcastAvailable,
+  resolveAdminBroadcastMaxRecipients
+} from "./admin/broadcast-gate";
+import {
   evaluateStaffReplyLinePushGate,
   inferLineClientMode,
   InMemoryLinePushIdempotencyStore,
@@ -450,6 +455,148 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     });
   });
 
+  api.get("/api/admin/broadcast/preview", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.previewBroadcast,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const customers = await customerRepository.listByTenant(tenant.tenantId);
+    const selection = selectAdminBroadcastRecipients(customers);
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      total_customers: customers.length,
+      eligible_recipients: selection.recipients.length,
+      excluded_archived: customers.filter((customer) => customer.status === "archived").length,
+      excluded_without_line: customers.filter(
+        (customer) => customer.status !== "archived" && !customer.line_user_id?.trim()
+      ).length,
+      excluded_duplicate_line: selection.excludedDuplicateLine,
+      broadcast_enabled: isAdminBroadcastAvailable({
+        env,
+        lineClientMode,
+        tenantContext: tenant.context,
+        selectedTenantId: tenant.selectedTenantId
+      }),
+      max_recipients: resolveAdminBroadcastMaxRecipients(env)
+    });
+  });
+
+  api.post("/api/admin/broadcast/send", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.sendBroadcast,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const request = await readAdminBroadcastBody(c.req.raw);
+    if (!request) {
+      return c.json({ ok: false, error: "invalid_broadcast_body" }, 400);
+    }
+
+    const customers = await customerRepository.listByTenant(tenant.tenantId);
+    const selection = selectAdminBroadcastRecipients(customers);
+    const recipients = selection.recipients;
+    const gate = evaluateAdminBroadcastGate({
+      env,
+      lineClientMode,
+      tenantContext: tenant.context,
+      selectedTenantId: tenant.selectedTenantId,
+      recipientCount: recipients.length,
+      body: request.body,
+      confirmed: request.confirmed,
+      confirmation: request.confirmation,
+      idempotencyKey: request.idempotencyKey
+    });
+
+    if (!gate.ok) {
+      return c.json({ ok: false, error: gate.error }, gate.status);
+    }
+
+    const idempotencyScope = `${tenant.tenantId}:broadcast:${request.idempotencyKey}`;
+    if (!linePushIdempotencyStore.reserve(idempotencyScope)) {
+      return c.json({ ok: false, error: "broadcast_duplicate" }, 409);
+    }
+
+    const staffUserId = readStaffReplyStaffUserId({
+      env,
+      staffUserIdHeader: c.req.header("x-staff-id")
+    });
+    let sentCount = 0;
+    let failedCount = 0;
+    let historyRecordFailedCount = 0;
+
+    for (const customer of recipients) {
+      const lineUserId = customer.line_user_id?.trim();
+      if (!lineUserId) {
+        continue;
+      }
+
+      try {
+        await lineClient.pushMessage(lineUserId, [{ type: "text", text: request.body }]);
+        sentCount += 1;
+      } catch {
+        failedCount += 1;
+        continue;
+      }
+
+      const timestamp = now?.() ?? new Date().toISOString();
+      try {
+        await messageRepository.insert({
+          id: globalThis.crypto.randomUUID(),
+          tenant_id: tenant.tenantId,
+          customer_id: customer.id,
+          consultation_id: null,
+          line_message_id: null,
+          role: "staff",
+          message_type: "text",
+          body: request.body,
+          media_storage_path: null,
+          staff_user_id: staffUserId,
+          ai_generated: false,
+          sent_to_line_at: timestamp,
+          created_at: timestamp
+        });
+        await customerRepository.save({
+          ...customer,
+          last_message_at: timestamp,
+          updated_at: timestamp
+        });
+      } catch {
+        historyRecordFailedCount += 1;
+      }
+    }
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      intended_recipients: recipients.length,
+      sent_count: sentCount,
+      failed_count: failedCount,
+      history_record_failed_count: historyRecordFailedCount,
+      retry_allowed: false
+    });
+  });
+
   api.get("/api/admin/customers/:customerId", async (c) => {
     const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
@@ -479,6 +626,108 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       ok: true,
       tenant_id: tenant.tenantId,
       customer
+    });
+  });
+
+  api.post("/api/admin/customers/:customerId/archive", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.archiveCustomer,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const archiveRequest = await readCustomerArchiveBody(c.req.raw);
+    if (!archiveRequest?.confirmed) {
+      return c.json({ ok: false, error: "customer_archive_confirmation_required" }, 400);
+    }
+
+    const customer = await customerRepository.findByIdForTenant(
+      tenant.tenantId,
+      c.req.param("customerId")
+    );
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const archivedCustomer =
+      customer.status === "archived"
+        ? customer
+        : await customerRepository.save({
+            ...customer,
+            status: "archived",
+            updated_at: timestamp
+          });
+
+    const alerts = await alertRepository.listByTenant(tenant.tenantId);
+    await Promise.all(
+      alerts
+        .filter(
+          (alert) =>
+            alert.customer_id === customer.id &&
+            (alert.status === "open" || alert.status === "notified")
+        )
+        .map((alert) =>
+          alertRepository.updateStatus({
+            tenant_id: tenant.tenantId,
+            alert_id: alert.id,
+            status: "resolved",
+            resolved_at: timestamp,
+            updated_at: timestamp
+          })
+        )
+    );
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_id: archivedCustomer.id,
+      status: archivedCustomer.status
+    });
+  });
+
+  api.post("/api/admin/customers/:customerId/restore", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.restoreCustomer,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const customer = await customerRepository.findByIdForTenant(
+      tenant.tenantId,
+      c.req.param("customerId")
+    );
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const restoredCustomer = await customerRepository.save({
+      ...customer,
+      status: "active",
+      updated_at: now?.() ?? new Date().toISOString()
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_id: restoredCustomer.id,
+      status: restoredCustomer.status
     });
   });
 
@@ -643,6 +892,10 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (!customer) {
       return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    if (customer.status === "archived") {
+      return c.json({ ok: false, error: "customer_archived" }, 409);
     }
 
     const switchRequest = await readCustomerRichMenuSwitchBody(c.req.raw);
@@ -934,6 +1187,10 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     if (!customer) {
       return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    if (customer.status === "archived") {
+      return c.json({ ok: false, error: "customer_archived" }, 409);
     }
 
     const replyRequest = await readStaffReplyBody(c.req.raw);
@@ -3552,6 +3809,95 @@ function normalizeEnvString(value: string | undefined): string | null {
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
+}
+
+interface AdminBroadcastRequest {
+  body: string;
+  confirmed: boolean;
+  confirmation: string;
+  idempotencyKey: string;
+}
+
+async function readCustomerArchiveBody(
+  request: Request
+): Promise<{ confirmed: boolean } | null> {
+  let parsed: unknown;
+
+  try {
+    parsed = await request.json();
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed)) {
+    return null;
+  }
+
+  return { confirmed: parsed.confirmed === true };
+}
+
+async function readAdminBroadcastBody(request: Request): Promise<AdminBroadcastRequest | null> {
+  let parsed: unknown;
+
+  try {
+    parsed = await request.json();
+  } catch {
+    return null;
+  }
+
+  if (!isRecord(parsed) || typeof parsed.body !== "string") {
+    return null;
+  }
+
+  const body = parsed.body.trim();
+  const confirmation =
+    typeof parsed.confirmation === "string" ? parsed.confirmation.trim() : "";
+  const idempotencyKey =
+    typeof parsed.idempotency_key === "string" ? parsed.idempotency_key.trim() : "";
+
+  if (
+    !body ||
+    body.length > 5_000 ||
+    idempotencyKey.length < 16 ||
+    idempotencyKey.length > 160 ||
+    !/^[A-Za-z0-9_-]+$/u.test(idempotencyKey)
+  ) {
+    return null;
+  }
+
+  return {
+    body,
+    confirmed: parsed.confirmed === true,
+    confirmation,
+    idempotencyKey
+  };
+}
+
+function selectAdminBroadcastRecipients(customers: Customer[]): {
+  recipients: Customer[];
+  excludedDuplicateLine: number;
+} {
+  const recipientsByLineUserId = new Map<string, Customer>();
+  let excludedDuplicateLine = 0;
+
+  for (const customer of customers) {
+    const lineUserId = customer.line_user_id?.trim();
+    if (customer.status === "archived" || !lineUserId) {
+      continue;
+    }
+
+    if (recipientsByLineUserId.has(lineUserId)) {
+      excludedDuplicateLine += 1;
+      continue;
+    }
+
+    recipientsByLineUserId.set(lineUserId, customer);
+  }
+
+  return {
+    recipients: [...recipientsByLineUserId.values()],
+    excludedDuplicateLine
+  };
 }
 
 async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushRequest | null> {

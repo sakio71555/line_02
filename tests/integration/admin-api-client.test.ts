@@ -1,12 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ADMIN_BROADCAST_CONFIRMATION_VALUE,
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
   adminApiFetch,
+  adminCustomerArchivePath,
   adminCustomerDetailPath,
   adminCustomerMessageAttachmentPath,
+  adminCustomerRestorePath,
   adminCustomerRichMenuPath,
   adminLineRealSendCapabilityPath,
+  archiveAdminCustomer,
   checkUnrepliedAlerts,
   createAiReplyDraft,
   createAiSummary,
@@ -16,11 +20,14 @@ import {
   DEFAULT_STAFF_ID,
   DEFAULT_TENANT_ID,
   formatAdminApiKnownError,
+  getAdminBroadcastPreview,
   getAdminApiConfig,
   getAdminCustomerMessageAttachment,
   getAdminLineRealSendCapability,
   listAlerts,
   notifyOpenAlerts,
+  restoreAdminCustomer,
+  sendAdminBroadcast,
   sendStaffReply,
   switchAdminCustomerRichMenu,
   shouldIncludeDevTenantHeader
@@ -100,6 +107,15 @@ describe("admin read-only API client", () => {
   it("builds encoded customer rich menu paths", () => {
     expect(adminCustomerRichMenuPath("customer 1/2")).toBe(
       "/api/admin/customers/customer%201%2F2/rich-menu"
+    );
+  });
+
+  it("builds encoded customer archive and restore paths", () => {
+    expect(adminCustomerArchivePath("customer 1/2")).toBe(
+      "/api/admin/customers/customer%201%2F2/archive"
+    );
+    expect(adminCustomerRestorePath("customer 1/2")).toBe(
+      "/api/admin/customers/customer%201%2F2/restore"
     );
   });
 
@@ -594,6 +610,72 @@ describe("admin read-only API client", () => {
     expect(headers.get("x-staff-id")).toBe("staff_admin_001");
     expect(headers.get("content-type")).toBe("application/json");
     expect(calls[0]?.init?.body).toBe(JSON.stringify({ menu_type: "negotiation" }));
+  });
+
+  it("posts confirmed customer archive requests and supports restore", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const options = {
+      config: {
+        apiBaseUrl: "http://localhost:4000",
+        tenantId: "tenant_amamihome"
+      },
+      fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        calls.push({ input, init });
+        return jsonResponse({ ok: true });
+      }
+    };
+
+    await archiveAdminCustomer("customer 1/2", options);
+    await restoreAdminCustomer("customer 1/2", options);
+
+    expect(calls[0]?.input).toBe(
+      "http://localhost:4000/api/admin/customers/customer%201%2F2/archive"
+    );
+    expect(calls[0]?.init?.method).toBe("POST");
+    expect(calls[0]?.init?.body).toBe(JSON.stringify({ confirmed: true }));
+    expect(new Headers(calls[0]?.init?.headers).get("content-type")).toBe("application/json");
+    expect(calls[1]?.input).toBe(
+      "http://localhost:4000/api/admin/customers/customer%201%2F2/restore"
+    );
+    expect(calls[1]?.init?.method).toBe("POST");
+  });
+
+  it("previews and sends a broadcast with explicit confirmation fields", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const options = {
+      config: {
+        apiBaseUrl: "http://localhost:4000",
+        tenantId: "tenant_amamihome"
+      },
+      fetchFn: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        calls.push({ input, init });
+        return jsonResponse({ ok: true });
+      }
+    };
+
+    await getAdminBroadcastPreview(options);
+    await sendAdminBroadcast(
+      {
+        body: "営業時間変更のお知らせです。",
+        confirmed: true,
+        confirmation: ADMIN_BROADCAST_CONFIRMATION_VALUE,
+        idempotencyKey: "admin-broadcast-client-test"
+      },
+      options
+    );
+
+    expect(calls[0]?.input).toBe("http://localhost:4000/api/admin/broadcast/preview");
+    expect(calls[0]?.init?.cache).toBe("no-store");
+    expect(calls[1]?.input).toBe("http://localhost:4000/api/admin/broadcast/send");
+    expect(calls[1]?.init?.method).toBe("POST");
+    expect(calls[1]?.init?.body).toBe(
+      JSON.stringify({
+        body: "営業時間変更のお知らせです。",
+        confirmed: true,
+        confirmation: ADMIN_BROADCAST_CONFIRMATION_VALUE,
+        idempotency_key: "admin-broadcast-client-test"
+      })
+    );
   });
 
   it("can include real LINE push confirmation fields in staff reply requests", async () => {

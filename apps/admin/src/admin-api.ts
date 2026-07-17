@@ -20,6 +20,7 @@ export const DEFAULT_API_BASE_URL = "http://localhost:4000";
 export const DEFAULT_TENANT_ID = "tenant_amamihome";
 export const DEFAULT_STAFF_ID = "dev_staff";
 export const ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE = "CONFIRM_REAL_LINE_PUSH";
+export const ADMIN_BROADCAST_CONFIRMATION_VALUE = "一斉送信を実行";
 
 export interface AdminApiConfig {
   apiBaseUrl: string;
@@ -44,6 +45,35 @@ export interface AdminCustomerDetailResponse {
   ok: true;
   tenant_id: string;
   customer: CustomerDetail;
+}
+
+export interface AdminCustomerArchiveResponse {
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  status: "active" | "archived";
+}
+
+export interface AdminBroadcastPreviewResponse {
+  ok: true;
+  tenant_id: string;
+  total_customers: number;
+  eligible_recipients: number;
+  excluded_archived: number;
+  excluded_without_line: number;
+  excluded_duplicate_line: number;
+  broadcast_enabled: boolean;
+  max_recipients: number;
+}
+
+export interface AdminBroadcastSendResponse {
+  ok: true;
+  tenant_id: string;
+  intended_recipients: number;
+  sent_count: number;
+  failed_count: number;
+  history_record_failed_count: number;
+  retry_allowed: false;
 }
 
 export interface AdminCustomerTimelineResponse {
@@ -342,6 +372,14 @@ export function adminCustomerRichMenuPath(customerId: string): string {
   return `/api/admin/customers/${encodeURIComponent(customerId)}/rich-menu`;
 }
 
+export function adminCustomerArchivePath(customerId: string): string {
+  return `/api/admin/customers/${encodeURIComponent(customerId)}/archive`;
+}
+
+export function adminCustomerRestorePath(customerId: string): string {
+  return `/api/admin/customers/${encodeURIComponent(customerId)}/restore`;
+}
+
 export function adminLineRealSendCapabilityPath(): string {
   return "/api/admin/runtime/line-real-send-capability";
 }
@@ -370,6 +408,67 @@ export async function getAdminCustomerTimeline(
   return adminApiFetch<AdminCustomerTimelineResponse>(
     adminCustomerTimelinePath(customerId),
     {},
+    options
+  );
+}
+
+export async function archiveAdminCustomer(
+  customerId: string,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminCustomerArchiveResponse> {
+  return adminApiFetch<AdminCustomerArchiveResponse>(
+    adminCustomerArchivePath(customerId),
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ confirmed: true })
+    },
+    options
+  );
+}
+
+export async function restoreAdminCustomer(
+  customerId: string,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminCustomerArchiveResponse> {
+  return adminApiFetch<AdminCustomerArchiveResponse>(
+    adminCustomerRestorePath(customerId),
+    { method: "POST" },
+    options
+  );
+}
+
+export async function getAdminBroadcastPreview(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminBroadcastPreviewResponse> {
+  return adminApiFetch<AdminBroadcastPreviewResponse>(
+    "/api/admin/broadcast/preview",
+    {},
+    options
+  );
+}
+
+export async function sendAdminBroadcast(
+  input: {
+    body: string;
+    confirmed: boolean;
+    confirmation: string;
+    idempotencyKey: string;
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<AdminBroadcastSendResponse> {
+  return adminApiFetch<AdminBroadcastSendResponse>(
+    "/api/admin/broadcast/send",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        body: input.body,
+        confirmed: input.confirmed,
+        confirmation: input.confirmation,
+        idempotency_key: input.idempotencyKey
+      })
+    },
     options
   );
 }

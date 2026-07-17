@@ -6,6 +6,7 @@ import {
   House,
   Inbox,
   LogOut,
+  SendHorizontal,
   Settings,
   UsersRound
 } from "lucide-react";
@@ -25,11 +26,14 @@ const navItems = [
   { href: "/inbox", icon: Inbox, label: "受信トレイ" },
   { href: "/customers", icon: UsersRound, label: "顧客" },
   { href: "/tasks", icon: CheckSquare2, label: "タスク" },
+  { href: "/broadcast", icon: SendHorizontal, label: "一斉送信" },
   { href: "/deals", icon: BriefcaseBusiness, label: "案件" },
   { href: "/settings", icon: Settings, label: "設定" }
 ] as const;
 
-const mobileNavItems = navItems.slice(0, 5);
+const mobileNavItems = navItems.filter((item) =>
+  ["/", "/inbox", "/customers", "/tasks", "/broadcast"].includes(item.href)
+);
 const hideChromePaths = new Set(["/login", "/logout", "/line/customer-registration"]);
 
 export function AdminShell({ children }: { children: ReactNode }) {

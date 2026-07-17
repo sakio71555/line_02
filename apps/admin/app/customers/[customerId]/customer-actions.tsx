@@ -10,6 +10,7 @@ import {
 import {
   runAiReplyDraftAction,
   runAiSummaryAction,
+  runCustomerArchiveAction,
   runRagAnswerDraftAction,
   runRichMenuSwitchAction,
   runStaffReplyAction
@@ -18,6 +19,7 @@ import { RoleVisibilityNote } from "../../role-visibility-note";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
+  CustomerArchiveActionState,
   RagAnswerDraftActionState,
   RichMenuSwitchActionState,
   StaffReplyActionState
@@ -40,6 +42,10 @@ const initialStaffReplyState: StaffReplyActionState = {
 };
 
 const initialRichMenuSwitchState: RichMenuSwitchActionState = {
+  status: "idle"
+};
+
+const initialCustomerArchiveState: CustomerArchiveActionState = {
   status: "idle"
 };
 
@@ -374,6 +380,91 @@ export function CustomerRichMenuSwitchPanel({
       </form>
       <RichMenuSwitchResult state={state} />
     </article>
+  );
+}
+
+export function CustomerArchiveControl({
+  customerId,
+  customerName,
+  isArchived
+}: {
+  customerId: string;
+  customerName: string;
+  isArchived: boolean;
+}) {
+  const router = useRouter();
+  const [state, runAction, pending] = useActionState(
+    runCustomerArchiveAction.bind(null, customerId),
+    initialCustomerArchiveState
+  );
+
+  useEffect(() => {
+    if (state.status === "success") {
+      router.refresh();
+    }
+  }, [router, state.result?.status, state.status]);
+
+  if (isArchived) {
+    return (
+      <section className="workspace-section customer-archive-control customer-restore-control">
+        <h3>削除済みのお客様</h3>
+        <p className="meta">
+          LINE履歴と登録情報は保管されています。一覧へ戻すと、再び対応できます。
+        </p>
+        <form action={runAction} className="action-form">
+          <input name="archive_mode" type="hidden" value="restore" />
+          <button disabled={pending} type="submit">
+            {pending ? "戻しています..." : "顧客一覧へ戻す"}
+          </button>
+        </form>
+        <CustomerArchiveResult state={state} />
+      </section>
+    );
+  }
+
+  return (
+    <details className="customer-archive-control">
+      <summary>このお客様を削除</summary>
+      <div className="customer-archive-control-body">
+        <p>
+          顧客一覧から非表示にします。LINE履歴と登録情報は消えず、あとから元に戻せます。
+        </p>
+        <form action={runAction} className="action-form">
+          <input name="archive_mode" type="hidden" value="archive" />
+          <input name="expected_customer_name" type="hidden" value={customerName} />
+          <label htmlFor="customer-name-confirmation">
+            確認のため「{customerName}」と入力
+          </label>
+          <input
+            autoComplete="off"
+            id="customer-name-confirmation"
+            name="customer_name_confirmation"
+            required
+            type="text"
+          />
+          <button className="danger-action-button" disabled={pending} type="submit">
+            {pending ? "削除しています..." : "顧客一覧から削除する"}
+          </button>
+        </form>
+        <CustomerArchiveResult state={state} />
+      </div>
+    </details>
+  );
+}
+
+function CustomerArchiveResult({ state }: { state: CustomerArchiveActionState }) {
+  if (state.status === "idle") return null;
+
+  if (state.status === "error") {
+    return <p className="action-error">{state.error}</p>;
+  }
+
+  return (
+    <p className="action-result">
+      {state.result?.status === "archived"
+        ? "顧客一覧から削除しました。"
+        : "顧客一覧へ戻しました。"}
+    </p>
   );
 }
 

@@ -1,6 +1,7 @@
 import type {
   AdminAiReplyDraftResponse,
   AdminAiSummaryResponse,
+  AdminCustomerArchiveResponse,
   AdminCustomerRichMenuSwitchResponse,
   AdminRagAnswerDraftResponse,
   AdminStaffReplyResponse
@@ -36,5 +37,11 @@ export interface StaffReplyActionState {
 export interface RichMenuSwitchActionState {
   status: ActionStatus;
   result?: AdminCustomerRichMenuSwitchResponse;
+  error?: string;
+}
+
+export interface CustomerArchiveActionState {
+  status: ActionStatus;
+  result?: AdminCustomerArchiveResponse;
   error?: string;
 }

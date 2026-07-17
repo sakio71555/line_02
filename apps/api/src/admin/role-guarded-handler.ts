@@ -14,12 +14,16 @@ import type { AdminTenantContext } from "./tenant-context";
 export const adminRouteActions = {
   listCustomers: "view_customers",
   getCustomerDetail: "view_customer_detail",
+  archiveCustomer: "manage_customers",
+  restoreCustomer: "manage_customers",
   getCustomerTimeline: "view_timeline",
   createAiSummary: "create_ai_summary",
   createAiReplyDraft: "create_ai_reply_draft",
   searchRag: "search_rag",
   createRagAnswerDraft: "create_rag_answer_draft",
   sendStaffReply: "send_staff_reply",
+  previewBroadcast: "send_broadcast",
+  sendBroadcast: "send_broadcast",
   listAlerts: "view_alerts",
   checkUnrepliedAlerts: "check_unreplied_alerts",
   notifyOpenAlerts: "notify_open_alerts"

@@ -14,7 +14,11 @@ import {
 } from "../../../src/customer-timeline-display";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import { PageTitle, SectionHeader, StatusBadge } from "../../_components/ui";
-import { CustomerActionPanel, CustomerRichMenuSwitch } from "./customer-actions";
+import {
+  CustomerActionPanel,
+  CustomerArchiveControl,
+  CustomerRichMenuSwitch
+} from "./customer-actions";
 import { CustomerTimelineList } from "./customer-timeline-list";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +37,7 @@ export default async function CustomerDetailPage({
   const timelineMessages =
     timeline.status === "ok" ? toLineConversationTimelineMessages(timeline.messages) : [];
   const lineRealSendCapability = await loadLineRealSendCapability(requestOptions);
+  const isArchived = detail.status === "ok" && detail.customer.status === "archived";
 
   return (
     <main>
@@ -70,6 +75,11 @@ export default async function CustomerDetailPage({
 
           <div className="customer-workspace">
             <div className="customer-conversation-column">
+              {isArchived ? (
+                <div className="customer-archived-notice">
+                  このお客様は削除済みです。履歴の確認はできますが、返信やLINEメニュー変更はできません。
+                </div>
+              ) : null}
               <section className="workspace-section customer-conversation">
                 <SectionHeader
                   title="LINEトーク"
@@ -84,12 +94,14 @@ export default async function CustomerDetailPage({
                 )}
               </section>
 
-              <CustomerActionPanel
-                customerId={customerId}
-                lineRealSendCustomerAvailable={Boolean(detail.customer.line_user_id)}
-                lineRealSendWindowOpen={lineRealSendCapability.lineRealSendWindowOpen}
-                recipientLabel={getCustomerRecipientLabel(detail.customer)}
-              />
+              {!isArchived ? (
+                <CustomerActionPanel
+                  customerId={customerId}
+                  lineRealSendCustomerAvailable={Boolean(detail.customer.line_user_id)}
+                  lineRealSendWindowOpen={lineRealSendCapability.lineRealSendWindowOpen}
+                  recipientLabel={getCustomerRecipientLabel(detail.customer)}
+                />
+              ) : null}
             </div>
 
             <aside className="customer-sidebar">
@@ -107,12 +119,14 @@ export default async function CustomerDetailPage({
                 ) : null}
               </section>
 
-              <section className="workspace-section customer-menu-section">
-                <CustomerRichMenuSwitch
-                  customerAvailable={Boolean(detail.customer.line_user_id)}
-                  customerId={customerId}
-                />
-              </section>
+              {!isArchived ? (
+                <section className="workspace-section customer-menu-section">
+                  <CustomerRichMenuSwitch
+                    customerAvailable={Boolean(detail.customer.line_user_id)}
+                    customerId={customerId}
+                  />
+                </section>
+              ) : null}
 
               <details className="customer-all-details">
                 <summary>すべてのお客様情報</summary>
@@ -122,6 +136,12 @@ export default async function CustomerDetailPage({
                   ))}
                 </dl>
               </details>
+
+              <CustomerArchiveControl
+                customerId={customerId}
+                customerName={getCustomerRecipientLabel(detail.customer)}
+                isArchived={isArchived}
+              />
             </aside>
           </div>
         </>
@@ -238,6 +258,7 @@ function isCustomerDateTimeLabel(label: string): boolean {
 function formatCustomerStatus(status: string): string {
   const labels: Record<string, string> = {
     active: "対応中",
+    archived: "削除済み",
     closed: "対応完了"
   };
 

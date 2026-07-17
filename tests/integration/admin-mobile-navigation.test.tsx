@@ -19,10 +19,12 @@ describe("admin mobile navigation shell", () => {
     expect(html).toContain("顧客");
     expect(html).toContain("タスク");
     expect(html).toContain("案件");
+    expect(html).toContain("一斉送信");
     expect(html).toContain("href=\"/customers\"");
     expect(html).toContain("href=\"/inbox\"");
     expect(html).toContain("href=\"/tasks\"");
     expect(html).toContain("href=\"/deals\"");
+    expect(html).toContain("href=\"/broadcast\"");
     expect(html).toContain("aria-current=\"page\"");
   });
 

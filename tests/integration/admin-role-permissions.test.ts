@@ -38,6 +38,8 @@ describe("admin role permission boundary", () => {
       "view_customers",
       "view_customer_detail",
       "view_timeline",
+      "manage_customers",
+      "send_broadcast",
       "send_staff_reply",
       "create_ai_summary",
       "create_ai_reply_draft",
@@ -92,6 +94,8 @@ describe("admin role permission boundary", () => {
       "create_ai_summary",
       "check_unreplied_alerts",
       "notify_open_alerts",
+      "manage_customers",
+      "send_broadcast",
       "manage_knowledge",
       "manage_staff",
       "manage_tenant_settings"

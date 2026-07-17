@@ -32,6 +32,10 @@ describe("admin API role guard full route rollout compatibility", () => {
       searchRag: "search_rag",
       createRagAnswerDraft: "create_rag_answer_draft",
       sendStaffReply: "send_staff_reply",
+      archiveCustomer: "manage_customers",
+      restoreCustomer: "manage_customers",
+      previewBroadcast: "send_broadcast",
+      sendBroadcast: "send_broadcast",
       listAlerts: "view_alerts",
       checkUnrepliedAlerts: "check_unreplied_alerts",
       notifyOpenAlerts: "notify_open_alerts"

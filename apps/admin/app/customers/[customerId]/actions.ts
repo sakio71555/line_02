@@ -4,21 +4,67 @@ import { revalidatePath } from "next/cache";
 
 import {
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+  archiveAdminCustomer,
   type AdminCustomerRichMenuType,
   createAiReplyDraft,
   createAiSummary,
   createRagAnswerDraft,
   sendStaffReply,
+  restoreAdminCustomer,
   switchAdminCustomerRichMenu
 } from "../../../src/admin-api";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
+  CustomerArchiveActionState,
   RagAnswerDraftActionState,
   RichMenuSwitchActionState,
   StaffReplyActionState
 } from "./action-types";
+
+export async function runCustomerArchiveAction(
+  customerId: string,
+  _previousState: CustomerArchiveActionState,
+  formData: FormData
+): Promise<CustomerArchiveActionState> {
+  const mode = readTrimmedFormValue(formData, "archive_mode");
+
+  if (mode === "restore") {
+    try {
+      const result = await restoreAdminCustomer(
+        customerId,
+        await getServerAdminApiRequestOptions()
+      );
+      revalidatePath("/customers");
+      revalidatePath(`/customers/${customerId}`);
+      return { status: "success", result };
+    } catch (error) {
+      return { status: "error", error: formatActionError(error) };
+    }
+  }
+
+  const confirmation = readTrimmedFormValue(formData, "customer_name_confirmation");
+  const expectedConfirmation = readTrimmedFormValue(formData, "expected_customer_name");
+  if (!expectedConfirmation || confirmation !== expectedConfirmation) {
+    return {
+      status: "error",
+      error: "確認欄に表示されているお客様名を正確に入力してください。"
+    };
+  }
+
+  try {
+    const result = await archiveAdminCustomer(
+      customerId,
+      await getServerAdminApiRequestOptions()
+    );
+    revalidatePath("/customers");
+    revalidatePath(`/customers/${customerId}`);
+    return { status: "success", result };
+  } catch (error) {
+    return { status: "error", error: formatActionError(error) };
+  }
+}
 
 export async function runAiSummaryAction(
   customerId: string,

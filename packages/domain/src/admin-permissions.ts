@@ -7,8 +7,10 @@ export type AdminRole = StaffRole;
 export const adminActions = [
   "view_customers",
   "view_customer_detail",
+  "manage_customers",
   "view_timeline",
   "send_staff_reply",
+  "send_broadcast",
   "create_ai_summary",
   "create_ai_reply_draft",
   "search_rag",
@@ -27,8 +29,10 @@ export type AdminAction = (typeof adminActions)[number];
 export const roleGuardedAdminActions = [
   "view_customers",
   "view_customer_detail",
+  "manage_customers",
   "view_timeline",
   "send_staff_reply",
+  "send_broadcast",
   "create_ai_summary",
   "create_ai_reply_draft",
   "search_rag",
@@ -65,8 +69,10 @@ const ownerAllowedActions = new Set<AdminAction>(roleGuardedAdminActions);
 const managerAllowedActions = new Set<AdminAction>([
   "view_customers",
   "view_customer_detail",
+  "manage_customers",
   "view_timeline",
   "send_staff_reply",
+  "send_broadcast",
   "create_ai_summary",
   "create_ai_reply_draft",
   "search_rag",

@@ -16,13 +16,14 @@ export type CustomersPageLoadResult =
   | { status: "ok"; customers: AdminCustomerListItem[] }
   | { status: "error"; message: string };
 
-type CustomerFilter = "all" | "needs_action" | "in_progress" | "closed";
+type CustomerFilter = "all" | "needs_action" | "in_progress" | "closed" | "deleted";
 
 const customerFilters: Array<{ label: string; value: CustomerFilter }> = [
   { label: "すべて", value: "all" },
   { label: "要対応", value: "needs_action" },
   { label: "対応中", value: "in_progress" },
-  { label: "完了", value: "closed" }
+  { label: "完了", value: "closed" },
+  { label: "削除済み", value: "deleted" }
 ];
 
 export function CustomersPageView({ result }: { result: CustomersPageLoadResult }) {
@@ -130,10 +131,13 @@ function matchesCustomer(
       .some((value) => value.toLocaleLowerCase("ja").includes(query));
 
   if (!matchesQuery) return false;
+  const isArchived = customer.status === "archived";
+  if (filter === "deleted") return isArchived;
+  if (isArchived) return false;
   if (filter === "all") return true;
   if (filter === "needs_action") {
     return ["human_required", "emergency"].includes(customer.response_mode);
   }
   if (filter === "in_progress") return customer.response_mode === "human_active";
-  return customer.status === "archived" || customer.response_mode === "closed";
+  return customer.response_mode === "closed";
 }

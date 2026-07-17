@@ -34,6 +34,8 @@ STAFF_LINE_WEBHOOK_SECRET_PATH=
 STAFF_LINE_GROUP_ID=
 LINE_MESSAGING_ENABLED=false
 LINE_REAL_PUSH_ENABLED=false
+LINE_BROADCAST_ENABLED=false
+LINE_BROADCAST_MAX_RECIPIENTS=500
 
 # OpenAI / GPT staging - mock by default
 # Do not call OpenAI until a later Loop explicitly enables it.
