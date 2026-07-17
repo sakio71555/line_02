@@ -1,12 +1,23 @@
 import type {
+  AlertWorkflowStatus,
   AlertSeverity,
   AlertStatus,
   AlertType,
+  AuditEvent,
+  Customer,
   CustomerDetail,
   CustomerListItem as DomainCustomerListItem,
   CustomerRichMenuType,
   CustomerTimelineMessage,
-  ResponseMode
+  InternalNote,
+  Message,
+  OperationsStaffMember,
+  ReplyTemplate,
+  Reservation,
+  ReservationStatus,
+  ReservationType,
+  ResponseMode,
+  WorkspaceSettings
 } from "@amami-line-crm/domain";
 
 import {
@@ -159,6 +170,14 @@ export interface AdminStaffReplyResponse {
   };
 }
 
+export interface AdminCustomerStatusNotificationResponse {
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  message: CustomerTimelineMessage;
+  retry_allowed: false;
+}
+
 export type AdminCustomerRichMenuType = CustomerRichMenuType;
 
 export interface AdminCustomerRichMenuSwitchResponse {
@@ -190,6 +209,92 @@ export interface AdminAlertsResponse {
   ok: true;
   tenant_id: string;
   alerts: AdminAlertListItem[];
+}
+
+export interface AdminOperationsTask extends AdminAlertListItem {
+  workflow_status: AlertWorkflowStatus;
+  assigned_staff_user_id: string | null;
+  due_at: string | null;
+  completed_at: string | null;
+  is_overdue: boolean;
+  customer: {
+    id: string;
+    name: string | null;
+    display_name: string | null;
+    phone: string | null;
+    email: string | null;
+    last_message_at: string | null;
+    last_message_body: string | null;
+  } | null;
+}
+
+export interface AdminOperationsBoardResponse {
+  ok: true;
+  tenant_id: string;
+  tasks: AdminOperationsTask[];
+  staff: OperationsStaffMember[];
+  summary: {
+    total: number;
+    open: number;
+    in_progress: number;
+    waiting_customer: number;
+    overdue: number;
+    completed: number;
+    high_priority: number;
+  };
+}
+
+export interface AdminInternalNotesResponse {
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  notes: InternalNote[];
+}
+
+export interface AdminReplyTemplatesResponse {
+  ok: true;
+  tenant_id: string;
+  templates: ReplyTemplate[];
+}
+
+export interface AdminReservationsResponse {
+  ok: true;
+  tenant_id: string;
+  reservations: Reservation[];
+}
+
+export interface AdminWorkspaceSearchResponse {
+  ok: true;
+  tenant_id: string;
+  query: string;
+  customers: Customer[];
+  messages: Array<{ customer_id: string; message: Message }>;
+  notes: Array<{ customer_id: string; note: InternalNote }>;
+  alerts: AdminAlertListItem[];
+}
+
+export interface AdminWorkspaceSettingsResponse {
+  ok: true;
+  tenant_id: string;
+  settings: WorkspaceSettings;
+}
+
+export interface AdminAuditEventsResponse {
+  ok: true;
+  tenant_id: string;
+  events: AuditEvent[];
+}
+
+export interface AdminOperationsReport {
+  customers: { total: number; active: number; new: number; registered: number };
+  tasks: { total: number; open: number; completed: number; overdue: number; completion_rate: number };
+  reservations: { total: number; upcoming: number; completed: number; cancelled: number };
+}
+
+export interface AdminOperationsReportResponse {
+  ok: true;
+  tenant_id: string;
+  report: AdminOperationsReport;
 }
 
 export interface AdminCheckUnrepliedAlertsResponse {
@@ -680,5 +785,202 @@ export async function switchAdminCustomerRichMenu(
       ...options,
       config
     }
+  );
+}
+
+export async function getAdminOperationsBoard(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminOperationsBoardResponse> {
+  return adminApiFetch<AdminOperationsBoardResponse>("/api/admin/operations/board", {}, options);
+}
+
+export async function updateAdminOperationsTask(
+  alertId: string,
+  input: {
+    workflow_status?: AlertWorkflowStatus;
+    assigned_staff_user_id?: string | null;
+    due_at?: string | null;
+    severity?: AlertSeverity;
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<{ ok: true; tenant_id: string; task: AdminOperationsTask }> {
+  return adminApiFetch(
+    `/api/admin/operations/tasks/${encodeURIComponent(alertId)}`,
+    {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function getAdminInternalNotes(
+  customerId: string,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminInternalNotesResponse> {
+  return adminApiFetch(
+    `/api/admin/customers/${encodeURIComponent(customerId)}/internal-notes`,
+    {},
+    options
+  );
+}
+
+export async function createAdminInternalNote(
+  customerId: string,
+  input: { body: string; alert_id?: string | null; mention_staff_user_ids?: string[] },
+  options: AdminApiRequestOptions = {}
+): Promise<{ ok: true; tenant_id: string; note: InternalNote }> {
+  return adminApiFetch(
+    `/api/admin/customers/${encodeURIComponent(customerId)}/internal-notes`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function getAdminReplyTemplates(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminReplyTemplatesResponse> {
+  return adminApiFetch("/api/admin/reply-templates", {}, options);
+}
+
+export async function saveAdminReplyTemplate(
+  input: {
+    id?: string;
+    title: string;
+    category: string;
+    body: string;
+    is_active: boolean;
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<{ ok: true; tenant_id: string; template: ReplyTemplate }> {
+  return adminApiFetch(
+    "/api/admin/reply-templates",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function getAdminReservations(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminReservationsResponse> {
+  return adminApiFetch("/api/admin/reservations", {}, options);
+}
+
+export async function saveAdminReservation(
+  input: {
+    id?: string;
+    customer_id: string;
+    reservation_type: ReservationType;
+    preferred_dates: unknown[];
+    confirmed_start_at: string | null;
+    confirmed_end_at: string | null;
+    status: ReservationStatus;
+    staff_user_id: string | null;
+    notes: string | null;
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<{ ok: true; tenant_id: string; reservation: Reservation }> {
+  return adminApiFetch(
+    "/api/admin/reservations",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function searchAdminWorkspace(
+  query: string,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminWorkspaceSearchResponse> {
+  return adminApiFetch(`/api/admin/search?q=${encodeURIComponent(query)}`, {}, options);
+}
+
+export async function getAdminWorkspaceSettings(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminWorkspaceSettingsResponse> {
+  return adminApiFetch("/api/admin/workspace-settings", {}, options);
+}
+
+export async function saveAdminWorkspaceSettings(
+  input: Omit<WorkspaceSettings, "tenant_id" | "created_at" | "updated_at">,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminWorkspaceSettingsResponse> {
+  return adminApiFetch(
+    "/api/admin/workspace-settings",
+    {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function getAdminAuditEvents(
+  limit = 100,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminAuditEventsResponse> {
+  return adminApiFetch(`/api/admin/audit-events?limit=${limit}`, {}, options);
+}
+
+export async function getAdminOperationsReport(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminOperationsReportResponse> {
+  return adminApiFetch("/api/admin/reports/overview", {}, options);
+}
+
+export async function updateAdminCustomerStage(
+  customerId: string,
+  input: { stage: AdminCustomerRichMenuType; apply_rich_menu: boolean },
+  options: AdminApiRequestOptions = {}
+): Promise<{
+  ok: true;
+  tenant_id: string;
+  customer_id: string;
+  stage: AdminCustomerRichMenuType;
+  rich_menu_linked: boolean;
+  customer: Customer;
+}> {
+  return adminApiFetch(
+    `/api/admin/customers/${encodeURIComponent(customerId)}/stage`,
+    {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function sendAdminCustomerStatusNotification(
+  customerId: string,
+  input: {
+    body: string;
+    confirmed: boolean;
+    confirmation: string;
+    idempotency_key: string;
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<AdminCustomerStatusNotificationResponse> {
+  return adminApiFetch(
+    `/api/admin/customers/${encodeURIComponent(customerId)}/status-notification`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
   );
 }

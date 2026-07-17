@@ -14,12 +14,41 @@ export function CustomerTimelineList({
   customerId: string;
   messages: AdminTimelineMessage[];
 }) {
+  const [filter, setFilter] = useState<"all" | "attachments">("all");
+  const attachmentCount = messages.filter((message) => message.attachment_available).length;
+  const visibleMessages = filter === "attachments"
+    ? messages.filter((message) => message.attachment_available)
+    : messages;
+
   return (
-    <ol
-      aria-label="LINEトーク履歴"
-      className="timeline-list timeline-list-line-log"
-    >
-      {messages.map((message) => (
+    <>
+      <div className="timeline-filter" aria-label="LINEトークの表示切替">
+        <button
+          aria-pressed={filter === "all"}
+          className={filter === "all" ? "is-active" : ""}
+          onClick={() => setFilter("all")}
+          type="button"
+        >
+          すべて <span>{messages.length}</span>
+        </button>
+        <button
+          aria-pressed={filter === "attachments"}
+          className={filter === "attachments" ? "is-active" : ""}
+          disabled={attachmentCount === 0}
+          onClick={() => setFilter("attachments")}
+          type="button"
+        >
+          画像・ファイル <span>{attachmentCount}</span>
+        </button>
+      </div>
+      {visibleMessages.length === 0 ? (
+        <p className="empty">画像・ファイル付きのメッセージはありません。</p>
+      ) : (
+        <ol
+          aria-label="LINEトーク履歴"
+          className="timeline-list timeline-list-line-log"
+        >
+      {visibleMessages.map((message) => (
         <li className={`timeline-item ${getTimelineItemClass(message)}`} key={message.id}>
           <div className="timeline-meta">
             <span className={getTimelineRoleBadgeClass(message.role)}>
@@ -47,7 +76,9 @@ export function CustomerTimelineList({
           ) : null}
         </li>
       ))}
-    </ol>
+        </ol>
+      )}
+    </>
   );
 }
 

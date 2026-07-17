@@ -4,6 +4,7 @@ export {
   type SupabaseMessageRepositoryClient
 } from "./message-repository";
 export { SupabaseAlertRepository } from "./alert-repository";
+export { SupabaseOperationsRepository } from "./operations-repository";
 export { SupabaseKnowledgePageRepository } from "./knowledge-page-repository";
 export { SupabaseStaffAuthLookupRepository } from "./staff-auth-lookup-repository";
 export {

@@ -3,6 +3,8 @@
 import React, { useActionState, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import type { ReplyTemplate } from "@amami-line-crm/domain";
+
 import {
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
   type AdminCustomerRichMenuType
@@ -79,11 +81,13 @@ export function CustomerActionPanel({
   customerId,
   lineRealSendCustomerAvailable,
   lineRealSendWindowOpen,
+  replyTemplates = [],
   recipientLabel
 }: {
   customerId: string;
   lineRealSendCustomerAvailable: boolean;
   lineRealSendWindowOpen: boolean;
+  replyTemplates?: ReplyTemplate[];
   recipientLabel: string;
 }) {
   const router = useRouter();
@@ -129,6 +133,7 @@ export function CustomerActionPanel({
       runReplyDraft={runReplyDraft}
       runStaffReply={runStaffReply}
       runSummary={runSummary}
+      replyTemplates={replyTemplates}
       staffReplyLineRealSendCustomerAvailable={lineRealSendCustomerAvailable}
       staffReplyLineRealSendWindowOpen={lineRealSendWindowOpen}
       staffReplyRecipientLabel={recipientLabel}
@@ -149,6 +154,7 @@ export function CustomerActionPanelView({
   runReplyDraft,
   runStaffReply,
   runSummary,
+  replyTemplates = [],
   staffReplyForm,
   staffReplyLineRealSendCustomerAvailable,
   staffReplyLineRealSendWindowOpen,
@@ -166,6 +172,7 @@ export function CustomerActionPanelView({
   runReplyDraft: FormAction;
   runStaffReply: FormAction;
   runSummary: FormAction;
+  replyTemplates?: ReplyTemplate[];
   staffReplyForm?: React.ReactNode;
   staffReplyLineRealSendCustomerAvailable: boolean;
   staffReplyLineRealSendWindowOpen: boolean;
@@ -285,6 +292,7 @@ export function CustomerActionPanelView({
             lineRealSendCustomerAvailable={staffReplyLineRealSendCustomerAvailable}
             lineRealSendWindowOpen={staffReplyLineRealSendWindowOpen}
             pending={staffReplyPending}
+            replyTemplates={replyTemplates}
             recipientLabel={staffReplyRecipientLabel}
             runStaffReply={runStaffReply}
             state={staffReplyState}
@@ -472,6 +480,7 @@ function StaffReplyConfirmationForm({
   lineRealSendCustomerAvailable,
   lineRealSendWindowOpen,
   pending,
+  replyTemplates,
   recipientLabel,
   runStaffReply,
   state
@@ -479,6 +488,7 @@ function StaffReplyConfirmationForm({
   lineRealSendCustomerAvailable: boolean;
   lineRealSendWindowOpen: boolean;
   pending: boolean;
+  replyTemplates: ReplyTemplate[];
   recipientLabel: string;
   runStaffReply: FormAction;
   state: StaffReplyActionState;
@@ -551,6 +561,21 @@ function StaffReplyConfirmationForm({
         </>
       ) : (
         <>
+          {replyTemplates.length > 0 ? (
+            <label htmlFor="staff-reply-template">返信定型文
+              <select
+                id="staff-reply-template"
+                onChange={(event) => {
+                  const template = replyTemplates.find((item) => item.id === event.currentTarget.value);
+                  if (template) setReplyText(template.body);
+                }}
+                value=""
+              >
+                <option value="">選択して返信欄へ挿入</option>
+                {replyTemplates.map((template) => <option key={template.id} value={template.id}>{template.title}</option>)}
+              </select>
+            </label>
+          ) : null}
           <label htmlFor="staff-reply-body">返信文</label>
           <textarea
             id="staff-reply-body"

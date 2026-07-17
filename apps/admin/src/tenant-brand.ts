@@ -4,7 +4,8 @@ export const TENANT_BRAND_UPDATED_EVENT = "amami-line-crm:tenant-brand-updated";
 export const accentPresets = {
   ocean: { accent: "#176b87", accentStrong: "#0d4f68", label: "オーシャン" },
   forest: { accent: "#28745b", accentStrong: "#185540", label: "フォレスト" },
-  graphite: { accent: "#48566a", accentStrong: "#2f3a4a", label: "グラファイト" }
+  charcoal: { accent: "#48566a", accentStrong: "#2f3a4a", label: "チャコール" },
+  sunrise: { accent: "#b8652c", accentStrong: "#85451f", label: "サンライズ" }
 } as const;
 
 export type TenantAccentPreset = keyof typeof accentPresets;

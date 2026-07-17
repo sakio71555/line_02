@@ -4,10 +4,16 @@ import Link from "next/link";
 import {
   getAdminCustomerDetail,
   getAdminCustomerTimeline,
+  getAdminInternalNotes,
   getAdminLineRealSendCapability,
+  getAdminOperationsBoard,
+  getAdminReplyTemplates,
+  getAdminWorkspaceSettings,
   type AdminApiRequestOptions,
-  type AdminCustomerDetailResponse
+  type AdminCustomerDetailResponse,
+  type AdminOperationsBoardResponse
 } from "../../../src/admin-api";
+import type { WorkspaceSettings } from "@amami-line-crm/domain";
 import {
   formatAdminDateTime,
   toLineConversationTimelineMessages
@@ -20,6 +26,8 @@ import {
   CustomerRichMenuSwitch
 } from "./customer-actions";
 import { CustomerTimelineList } from "./customer-timeline-list";
+import { CustomerOperationsPanel } from "./customer-operations";
+import { OperationsTaskCard } from "../../tasks/operations-board";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +41,10 @@ export default async function CustomerDetailPage({
   const { customerId } = await params;
   const requestOptions = await getServerAdminApiRequestOptions();
   const detail = await loadCustomerDetail(customerId, requestOptions);
-  const timeline = await loadCustomerTimeline(customerId, requestOptions);
+  const [timeline, operations] = await Promise.all([
+    loadCustomerTimeline(customerId, requestOptions),
+    loadCustomerOperations(customerId, requestOptions)
+  ]);
   const timelineMessages =
     timeline.status === "ok" ? toLineConversationTimelineMessages(timeline.messages) : [];
   const lineRealSendCapability = await loadLineRealSendCapability(requestOptions);
@@ -100,7 +111,22 @@ export default async function CustomerDetailPage({
                   lineRealSendCustomerAvailable={Boolean(detail.customer.line_user_id)}
                   lineRealSendWindowOpen={lineRealSendCapability.lineRealSendWindowOpen}
                   recipientLabel={getCustomerRecipientLabel(detail.customer)}
+                  replyTemplates={operations.replyTemplates}
                 />
+              ) : null}
+
+              {operations.tasks.length > 0 ? (
+                <section className="workspace-section customer-task-section">
+                  <SectionHeader
+                    title="このお客様の対応タスク"
+                    description="担当者、期限、進み具合をここで更新できます。"
+                  />
+                  <div className="customer-task-list">
+                    {operations.tasks.map((task) => (
+                      <OperationsTaskCard key={task.id} staff={operations.staff} task={task} />
+                    ))}
+                  </div>
+                </section>
               ) : null}
             </div>
 
@@ -118,6 +144,20 @@ export default async function CustomerDetailPage({
                   </div>
                 ) : null}
               </section>
+
+              {!isArchived ? (
+                <section className="workspace-section customer-operations-section">
+                  <SectionHeader title="対応・引継ぎ" />
+                  <CustomerOperationsPanel
+                    customerAvailable={Boolean(detail.customer.line_user_id)}
+                    customerId={customerId}
+                    currentStage={getCustomerStage(detail.customer.tags)}
+                    notes={operations.notes}
+                    settings={operations.settings}
+                    staff={operations.staff}
+                  />
+                </section>
+              ) : null}
 
               {!isArchived ? (
                 <section className="workspace-section customer-menu-section">
@@ -148,6 +188,59 @@ export default async function CustomerDetailPage({
       )}
     </main>
   );
+}
+
+async function loadCustomerOperations(
+  customerId: string,
+  options: AdminApiRequestOptions
+) {
+  const [notesResult, boardResult, templatesResult, settingsResult] = await Promise.allSettled([
+    getAdminInternalNotes(customerId, options),
+    getAdminOperationsBoard(options),
+    getAdminReplyTemplates(options),
+    getAdminWorkspaceSettings(options)
+  ]);
+  const board: AdminOperationsBoardResponse | null =
+    boardResult.status === "fulfilled" ? boardResult.value : null;
+
+  return {
+    notes: notesResult.status === "fulfilled" ? notesResult.value.notes : [],
+    replyTemplates:
+      templatesResult.status === "fulfilled"
+        ? templatesResult.value.templates.filter((template) => template.is_active)
+        : [],
+    settings:
+      settingsResult.status === "fulfilled"
+        ? settingsResult.value.settings
+        : defaultWorkspaceSettings(),
+    staff: board?.staff ?? [],
+    tasks: (board?.tasks ?? []).filter((task) => task.customer_id === customerId)
+  };
+}
+
+function defaultWorkspaceSettings(): WorkspaceSettings {
+  return {
+    tenant_id: "",
+    company_name: "",
+    product_name: "LINE CRM",
+    accent_preset: "forest",
+    sla_minutes: 1440,
+    rich_menu_auto_switch_enabled: false,
+    customer_status_notifications_enabled: false,
+    setup_completed: false,
+    created_at: "",
+    updated_at: ""
+  };
+}
+
+function getCustomerStage(
+  tags: string[]
+): "initial" | "negotiation" | "aftercare" {
+  const stage = tags.find((tag) => tag.startsWith("crm_stage:"))?.split(":")[1]
+    ?? tags.find((tag) => tag.startsWith("rich_menu:"))?.split(":")[1];
+
+  if (stage === "negotiation" || stage === "aftercare") return stage;
+  return "initial";
 }
 
 async function loadLineRealSendCapability(options: AdminApiRequestOptions) {

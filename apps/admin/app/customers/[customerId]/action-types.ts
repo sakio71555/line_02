@@ -45,3 +45,9 @@ export interface CustomerArchiveActionState {
   result?: AdminCustomerArchiveResponse;
   error?: string;
 }
+
+export interface CustomerOperationsActionState {
+  status: ActionStatus;
+  message?: string;
+  error?: string;
+}

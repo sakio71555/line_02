@@ -17,6 +17,7 @@ import {
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  InMemoryOperationsRepository,
   ensureOpenUnrepliedCustomerMessageAlert,
   formatCustomerRichMenuTypeLabel,
   insertBotTextTimelineMessage,
@@ -33,7 +34,9 @@ import {
   type AdminAction,
   type Alert,
   type AlertSeverity,
+  type AlertWorkflowStatus,
   type AlertRepository,
+  type AuditEvent,
   type Customer,
   type CustomerLineStaffNotificationEvent,
   type CustomerNormalChatAiCandidate,
@@ -43,6 +46,17 @@ import {
   type LineAttachmentStorage,
   type Message,
   type MessageRepository,
+  type InternalNote,
+  type OperationsRepository,
+  type ReplyTemplate,
+  type Reservation,
+  type ReservationStatus,
+  type ReservationType,
+  type WorkspaceSettings,
+  alertWorkflowStatusSchema,
+  internalNoteInputSchema,
+  replyTemplateInputSchema,
+  workspaceSettingsInputSchema,
   type StaffAuthLookup,
   type StaffNotificationPayload,
   type StaffNotifier,
@@ -126,6 +140,7 @@ export interface ApiAppDependencies {
   customerMessageRepositories?: CustomerMessageRepositoryRuntimeBundle;
   customerRepository?: CustomerRepository;
   messageRepository?: MessageRepository;
+  operationsRepository?: OperationsRepository;
   lineClient?: LineClient;
   staffLineClient?: LineClient;
   staffNotifier?: StaffNotifier;
@@ -155,11 +170,13 @@ export interface CustomerMessageRepositoryRuntimeBundle {
   alertRepository?: AlertRepository;
   knowledgePageRepository?: KnowledgePageRepository;
   lineAttachmentStorage?: LineAttachmentStorage;
+  operationsRepository?: OperationsRepository;
 }
 
 const defaultAlertRepository = new InMemoryAlertRepository();
 const defaultCustomerRepository = new InMemoryCustomerRepository();
 const defaultMessageRepository = new InMemoryMessageRepository();
+const defaultOperationsRepository = new InMemoryOperationsRepository();
 const defaultLineClient = new MockLineClient();
 const defaultStaffNotifier = new MockStaffNotifier();
 const defaultKnowledgePageRepository = new InMemoryKnowledgePageRepository(
@@ -176,7 +193,8 @@ function shouldCreateRuntimeRepositories(dependencies: ApiAppDependencies): bool
     !dependencies.customerRepository &&
     !dependencies.messageRepository &&
     !dependencies.alertRepository &&
-    !dependencies.knowledgePageRepository
+    !dependencies.knowledgePageRepository &&
+    !dependencies.operationsRepository
   );
 }
 
@@ -211,6 +229,10 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     dependencies.messageRepository ??
     runtimeRepositories?.messageRepository ??
     defaultMessageRepository;
+  const operationsRepository =
+    dependencies.operationsRepository ??
+    runtimeRepositories?.operationsRepository ??
+    defaultOperationsRepository;
   const lineAttachmentStorage =
     dependencies.lineAttachmentStorage ?? runtimeRepositories?.lineAttachmentStorage;
   const lineClient = dependencies.lineClient ?? runtimeLineClient?.lineClient ?? defaultLineClient;
@@ -1369,6 +1391,748 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       skipped: result.skipped,
       notified_alerts: result.notified_alerts,
       failed_alerts: result.failed_alerts
+    });
+  });
+
+  api.get("/api/admin/operations/board", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listOperationsBoard,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const [alerts, customers, staff, savedSettings] = await Promise.all([
+      alertRepository.listByTenant(tenant.tenantId),
+      customerRepository.listByTenant(tenant.tenantId),
+      operationsRepository.listStaffMembers(tenant.tenantId),
+      operationsRepository.getWorkspaceSettings(tenant.tenantId)
+    ]);
+    const settings = savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const customersById = new Map(customers.map((customer) => [customer.id, customer]));
+    const nowTimestamp = now?.() ?? new Date().toISOString();
+
+    const tasks = alerts
+      .map((alert) => {
+        const customer = customersById.get(alert.customer_id);
+        const workflowStatus = resolveAlertWorkflowStatus(alert);
+        const dueAt = alert.due_at ?? addMinutes(alert.triggered_at, settings.sla_minutes);
+        return {
+          ...toAdminAlert(alert),
+          workflow_status: workflowStatus,
+          assigned_staff_user_id: alert.assigned_staff_user_id ?? null,
+          due_at: dueAt,
+          completed_at: alert.completed_at ?? null,
+          is_overdue: workflowStatus !== "completed" && dueAt < nowTimestamp,
+          customer: customer
+            ? {
+                id: customer.id,
+                name: null,
+                display_name: customer.display_name,
+                phone: customer.phone,
+                email: customer.email,
+                last_message_at: customer.last_message_at,
+                last_message_body: null
+              }
+            : null
+        };
+      })
+      .sort(compareOperationsTasks);
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      tasks,
+      staff,
+      summary: buildOperationsBoardSummary(tasks)
+    });
+  });
+
+  api.patch("/api/admin/operations/tasks/:alertId", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.updateOperationsTask,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const input = await readOperationsTaskUpdateBody(c.req.raw);
+    if (!input) {
+      return c.json({ ok: false, error: "invalid_operations_task_body" }, 400);
+    }
+
+    const alertId = c.req.param("alertId");
+    const alerts = await alertRepository.listByTenant(tenant.tenantId);
+    const current = alerts.find((alert) => alert.id === alertId);
+    if (!current) {
+      return c.json({ ok: false, error: "alert_not_found" }, 404);
+    }
+
+    if (input.assigned_staff_user_id) {
+      const staff = await operationsRepository.listStaffMembers(tenant.tenantId);
+      if (!staff.some((member) => member.id === input.assigned_staff_user_id)) {
+        return c.json({ ok: false, error: "assigned_staff_not_found" }, 400);
+      }
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const workflowStatus = input.workflow_status ?? resolveAlertWorkflowStatus(current);
+    const updated = await alertRepository.updateWorkflow({
+      tenant_id: tenant.tenantId,
+      alert_id: alertId,
+      ...input,
+      completed_at: workflowStatus === "completed" ? current.completed_at ?? timestamp : null,
+      updated_at: timestamp
+    });
+
+    if (!updated) {
+      return c.json({ ok: false, error: "alert_not_found" }, 404);
+    }
+
+    const desiredAlertStatus = workflowStatus === "completed" ? "resolved" : "open";
+    const normalized =
+      updated.status === desiredAlertStatus
+        ? updated
+        : (await alertRepository.updateStatus({
+            tenant_id: tenant.tenantId,
+            alert_id: alertId,
+            status: desiredAlertStatus,
+            resolved_at: workflowStatus === "completed" ? timestamp : null,
+            updated_at: timestamp
+          })) ?? updated;
+
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "operations_task_updated",
+      resourceType: "alert",
+      resourceId: alertId,
+      summary: "対応状況を更新",
+      metadata: {
+        workflow_status: workflowStatus,
+        assigned_staff_user_id: input.assigned_staff_user_id ?? undefined,
+        due_at: input.due_at ?? undefined,
+        severity: input.severity ?? undefined
+      },
+      timestamp
+    });
+
+    return c.json({ ok: true, tenant_id: tenant.tenantId, task: toAdminOperationsTask(normalized) });
+  });
+
+  api.get("/api/admin/customers/:customerId/internal-notes", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listInternalNotes,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const customerId = c.req.param("customerId");
+    const customer = await customerRepository.findByIdForTenant(tenant.tenantId, customerId);
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const notes = await operationsRepository.listInternalNotes(tenant.tenantId, customerId);
+    return c.json({ ok: true, tenant_id: tenant.tenantId, customer_id: customerId, notes });
+  });
+
+  api.post("/api/admin/customers/:customerId/internal-notes", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.createInternalNote,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const customerId = c.req.param("customerId");
+    const customer = await customerRepository.findByIdForTenant(tenant.tenantId, customerId);
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const parsed = internalNoteInputSchema.safeParse(await readJsonBody(c.req.raw));
+    if (!parsed.success) {
+      return c.json({ ok: false, error: "invalid_internal_note_body" }, 400);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const note: InternalNote = {
+      id: globalThis.crypto.randomUUID(),
+      tenant_id: tenant.tenantId,
+      customer_id: customerId,
+      alert_id: parsed.data.alert_id ?? null,
+      author_staff_user_id: tenant.context.staffUserId ?? null,
+      body: parsed.data.body,
+      mention_staff_user_ids: parsed.data.mention_staff_user_ids,
+      created_at: timestamp,
+      updated_at: timestamp
+    };
+    const saved = await operationsRepository.saveInternalNote(note);
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "internal_note_created",
+      resourceType: "customer",
+      resourceId: customerId,
+      summary: "社内メモを追加",
+      metadata: { mention_count: note.mention_staff_user_ids.length },
+      timestamp
+    });
+
+    return c.json({ ok: true, tenant_id: tenant.tenantId, note: saved }, 201);
+  });
+
+  api.get("/api/admin/reply-templates", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listReplyTemplates,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const templates = await operationsRepository.listReplyTemplates(tenant.tenantId);
+    return c.json({ ok: true, tenant_id: tenant.tenantId, templates });
+  });
+
+  api.post("/api/admin/reply-templates", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.saveReplyTemplate,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const parsed = replyTemplateInputSchema.safeParse(await readJsonBody(c.req.raw));
+    if (!parsed.success) {
+      return c.json({ ok: false, error: "invalid_reply_template_body" }, 400);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const existing = parsed.data.id
+      ? (await operationsRepository.listReplyTemplates(tenant.tenantId)).find(
+          (template) => template.id === parsed.data.id
+        )
+      : null;
+    if (parsed.data.id && !existing) {
+      return c.json({ ok: false, error: "reply_template_not_found" }, 404);
+    }
+
+    const template: ReplyTemplate = {
+      id: existing?.id ?? globalThis.crypto.randomUUID(),
+      tenant_id: tenant.tenantId,
+      title: parsed.data.title,
+      category: parsed.data.category,
+      body: parsed.data.body,
+      is_active: parsed.data.is_active,
+      created_at: existing?.created_at ?? timestamp,
+      updated_at: timestamp
+    };
+    const saved = await operationsRepository.saveReplyTemplate(template);
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: existing ? "reply_template_updated" : "reply_template_created",
+      resourceType: "reply_template",
+      resourceId: saved.id,
+      summary: existing ? "返信テンプレートを更新" : "返信テンプレートを追加",
+      metadata: { category: saved.category },
+      timestamp
+    });
+
+    return c.json({ ok: true, tenant_id: tenant.tenantId, template: saved }, existing ? 200 : 201);
+  });
+
+  api.get("/api/admin/reservations", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listReservations,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const reservations = await operationsRepository.listReservations(tenant.tenantId);
+    return c.json({ ok: true, tenant_id: tenant.tenantId, reservations });
+  });
+
+  api.post("/api/admin/reservations", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.saveReservation,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const input = await readReservationBody(c.req.raw);
+    if (!input) {
+      return c.json({ ok: false, error: "invalid_reservation_body" }, 400);
+    }
+
+    const customer = await customerRepository.findByIdForTenant(tenant.tenantId, input.customer_id);
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const existing = input.id
+      ? (await operationsRepository.listReservations(tenant.tenantId)).find(
+          (reservation) => reservation.id === input.id
+        )
+      : null;
+    if (input.id && !existing) {
+      return c.json({ ok: false, error: "reservation_not_found" }, 404);
+    }
+
+    const reservation: Reservation = {
+      id: existing?.id ?? globalThis.crypto.randomUUID(),
+      tenant_id: tenant.tenantId,
+      customer_id: input.customer_id,
+      consultation_id: existing?.consultation_id ?? null,
+      reservation_type: input.reservation_type,
+      preferred_dates: input.preferred_dates,
+      confirmed_start_at: input.confirmed_start_at,
+      confirmed_end_at: input.confirmed_end_at,
+      status: input.status,
+      staff_user_id: input.staff_user_id,
+      notes: input.notes,
+      created_at: existing?.created_at ?? timestamp,
+      updated_at: timestamp
+    };
+    const saved = await operationsRepository.saveReservation(reservation);
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: existing ? "reservation_updated" : "reservation_created",
+      resourceType: "reservation",
+      resourceId: saved.id,
+      summary: existing ? "予定を更新" : "予定を追加",
+      metadata: { customer_id: saved.customer_id, status: saved.status },
+      timestamp
+    });
+
+    return c.json({ ok: true, tenant_id: tenant.tenantId, reservation: saved }, existing ? 200 : 201);
+  });
+
+  api.get("/api/admin/search", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.globalSearch,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const query = c.req.query("q")?.trim() ?? "";
+    if (query.length < 2 || query.length > 120) {
+      return c.json({ ok: false, error: "invalid_search_query" }, 400);
+    }
+
+    const [customers, alerts] = await Promise.all([
+      customerRepository.listByTenant(tenant.tenantId),
+      alertRepository.listByTenant(tenant.tenantId)
+    ]);
+    const normalizedQuery = query.toLocaleLowerCase("ja");
+    const customerHits = customers.filter((customer) => customerMatchesQuery(customer, normalizedQuery));
+    const messageHits: Array<{ customer_id: string; message: Message }> = [];
+    const noteHits: Array<{ customer_id: string; note: InternalNote }> = [];
+
+    for (const customer of customers.slice(0, 100)) {
+      const [messages, notes] = await Promise.all([
+        messageRepository.listByCustomer(tenant.tenantId, customer.id),
+        operationsRepository.listInternalNotes(tenant.tenantId, customer.id)
+      ]);
+      for (const message of messages) {
+        if (message.body?.toLocaleLowerCase("ja").includes(normalizedQuery)) {
+          messageHits.push({ customer_id: customer.id, message });
+        }
+      }
+      for (const note of notes) {
+        if (note.body.toLocaleLowerCase("ja").includes(normalizedQuery)) {
+          noteHits.push({ customer_id: customer.id, note });
+        }
+      }
+      if (messageHits.length + noteHits.length >= 50) {
+        break;
+      }
+    }
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      query,
+      customers: customerHits.slice(0, 20),
+      messages: messageHits.slice(0, 30),
+      notes: noteHits.slice(0, 20),
+      alerts: alerts
+        .filter((alert) => alert.message.toLocaleLowerCase("ja").includes(normalizedQuery))
+        .slice(0, 20)
+    });
+  });
+
+  api.get("/api/admin/workspace-settings", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.getWorkspaceSettings,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const settings =
+      (await operationsRepository.getWorkspaceSettings(tenant.tenantId)) ??
+      createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    return c.json({ ok: true, tenant_id: tenant.tenantId, settings });
+  });
+
+  api.put("/api/admin/workspace-settings", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.updateWorkspaceSettings,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const parsed = workspaceSettingsInputSchema.safeParse(await readJsonBody(c.req.raw));
+    if (!parsed.success) {
+      return c.json({ ok: false, error: "invalid_workspace_settings_body" }, 400);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const existing = await operationsRepository.getWorkspaceSettings(tenant.tenantId);
+    const settings: WorkspaceSettings = {
+      tenant_id: tenant.tenantId,
+      ...parsed.data,
+      created_at: existing?.created_at ?? timestamp,
+      updated_at: timestamp
+    };
+    const saved = await operationsRepository.saveWorkspaceSettings(settings);
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "workspace_settings_updated",
+      resourceType: "workspace_settings",
+      resourceId: tenant.tenantId,
+      summary: "初期設定を更新",
+      metadata: { setup_completed: saved.setup_completed, accent_preset: saved.accent_preset },
+      timestamp
+    });
+
+    return c.json({ ok: true, tenant_id: tenant.tenantId, settings: saved });
+  });
+
+  api.get("/api/admin/audit-events", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listAuditEvents,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const requestedLimit = Number(c.req.query("limit") ?? "100");
+    const limit = Number.isInteger(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 500) : 100;
+    const events = await operationsRepository.listAuditEvents(tenant.tenantId, limit);
+    return c.json({ ok: true, tenant_id: tenant.tenantId, events });
+  });
+
+  api.get("/api/admin/reports/overview", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.getOperationsReport,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const [customers, alerts, reservations, savedSettings] = await Promise.all([
+      customerRepository.listByTenant(tenant.tenantId),
+      alertRepository.listByTenant(tenant.tenantId),
+      operationsRepository.listReservations(tenant.tenantId),
+      operationsRepository.getWorkspaceSettings(tenant.tenantId)
+    ]);
+    const settings = savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      report: buildOperationsReport(
+        customers,
+        alerts,
+        reservations,
+        now?.() ?? new Date().toISOString(),
+        settings.sla_minutes
+      )
+    });
+  });
+
+  api.patch("/api/admin/customers/:customerId/stage", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.updateCustomerStage,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const input = await readCustomerStageBody(c.req.raw);
+    if (!input) {
+      return c.json({ ok: false, error: "invalid_customer_stage_body" }, 400);
+    }
+
+    const customer = await customerRepository.findByIdForTenant(
+      tenant.tenantId,
+      c.req.param("customerId")
+    );
+    if (!customer) {
+      return c.json({ ok: false, error: "customer_not_found" }, 404);
+    }
+
+    const settings =
+      (await operationsRepository.getWorkspaceSettings(tenant.tenantId)) ??
+      createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const shouldLinkRichMenu = input.apply_rich_menu && settings.rich_menu_auto_switch_enabled;
+    const lineUserId = shouldLinkRichMenu ? customer.line_user_id?.trim() : null;
+    const richMenuId = shouldLinkRichMenu ? readCustomerRichMenuIdFromEnv(env, input.stage) : null;
+
+    if (shouldLinkRichMenu && (!lineUserId || !richMenuId || !lineClient.linkRichMenuToUser)) {
+      return c.json({ ok: false, error: "rich_menu_auto_switch_unavailable" }, 409);
+    }
+
+    if (shouldLinkRichMenu && lineUserId && richMenuId && lineClient.linkRichMenuToUser) {
+      try {
+        await lineClient.linkRichMenuToUser(lineUserId, richMenuId);
+      } catch {
+        return c.json({ ok: false, error: "line_rich_menu_switch_failed" }, 502);
+      }
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const tags = customer.interest_tags.filter(
+      (tag) => !tag.startsWith("crm_stage:") && !tag.startsWith("rich_menu:")
+    );
+    tags.push(`crm_stage:${input.stage}`, `rich_menu:${input.stage}`);
+    const savedCustomer = await customerRepository.save({
+      ...customer,
+      interest_tags: tags,
+      updated_at: timestamp
+    });
+    const richMenuLinked = Boolean(shouldLinkRichMenu);
+
+    if (richMenuLinked) {
+      await recordCustomerRichMenuSwitchMessage(messageRepository, {
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        menu_type: input.stage,
+        created_at: timestamp
+      });
+    }
+
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "customer_stage_updated",
+      resourceType: "customer",
+      resourceId: customer.id,
+      summary: "顧客段階を更新",
+      metadata: { stage: input.stage, rich_menu_linked: richMenuLinked },
+      timestamp
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_id: customer.id,
+      stage: input.stage,
+      rich_menu_linked: richMenuLinked,
+      customer: savedCustomer
+    });
+  });
+
+  api.post("/api/admin/customers/:customerId/status-notification", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.sendCustomerStatusNotification,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const input = await readCustomerStatusNotificationBody(c.req.raw);
+    if (!input) {
+      return c.json({ ok: false, error: "invalid_status_notification_body" }, 400);
+    }
+
+    const customer = await customerRepository.findByIdForTenant(
+      tenant.tenantId,
+      c.req.param("customerId")
+    );
+    if (!customer || !customer.line_user_id?.trim()) {
+      return c.json({ ok: false, error: "customer_line_target_not_found" }, 404);
+    }
+
+    const settings =
+      (await operationsRepository.getWorkspaceSettings(tenant.tenantId)) ??
+      createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    if (!settings.customer_status_notifications_enabled) {
+      return c.json({ ok: false, error: "customer_status_notifications_disabled" }, 409);
+    }
+
+    const pushRequest: StaffReplyLinePushRequest = {
+      body: input.body,
+      deliveryMode: "real_line_push",
+      realLinePushConfirmed: input.confirmed,
+      linePushConfirmation: input.confirmation,
+      idempotencyKey: input.idempotency_key
+    };
+    const gate = evaluateStaffReplyLinePushGate({
+      env,
+      lineClientMode,
+      tenantContext: tenant.context,
+      selectedTenantId: tenant.selectedTenantId,
+      customer,
+      request: pushRequest
+    });
+    if (!gate.ok) {
+      return c.json({ ok: false, error: gate.error }, gate.status);
+    }
+    if (gate.idempotencyScope && !linePushIdempotencyStore.reserve(gate.idempotencyScope)) {
+      return c.json({ ok: false, error: "real_push_duplicate" }, 409);
+    }
+
+    try {
+      await lineClient.pushMessage(customer.line_user_id.trim(), [{ type: "text", text: input.body }]);
+    } catch {
+      if (gate.idempotencyScope) {
+        linePushIdempotencyStore.release(gate.idempotencyScope);
+      }
+      return c.json({ ok: false, error: "line_send_failed" }, 502);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const message = await messageRepository.insert({
+      id: globalThis.crypto.randomUUID(),
+      tenant_id: tenant.tenantId,
+      customer_id: customer.id,
+      consultation_id: null,
+      line_message_id: null,
+      role: "staff",
+      message_type: "text",
+      body: input.body,
+      media_storage_path: null,
+      staff_user_id: tenant.context.staffUserId ?? null,
+      ai_generated: false,
+      sent_to_line_at: timestamp,
+      created_at: timestamp
+    });
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "customer_status_notification_sent",
+      resourceType: "customer",
+      resourceId: customer.id,
+      summary: "状況通知をLINE送信",
+      metadata: { message_id: message.id },
+      timestamp
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      customer_id: customer.id,
+      message: toAdminTimelineMessage(message),
+      retry_allowed: false
     });
   });
 
@@ -4059,6 +4823,376 @@ function parsePort(value: string | undefined): number | undefined {
   }
 
   return parsed;
+}
+
+interface AdminOperationsTaskView {
+  id: string;
+  severity: string;
+  workflow_status: AlertWorkflowStatus;
+  due_at: string | null;
+  is_overdue: boolean;
+  created_at: string;
+}
+
+function createDefaultWorkspaceSettings(
+  tenantId: string,
+  tenantSlug: string
+): WorkspaceSettings {
+  const timestamp = new Date().toISOString();
+  const companyName = tenantSlug
+    .split(/[-_]/u)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+  return {
+    tenant_id: tenantId,
+    company_name: companyName,
+    product_name: "LINE相談CRM",
+    accent_preset: "ocean",
+    sla_minutes: 240,
+    rich_menu_auto_switch_enabled: false,
+    customer_status_notifications_enabled: false,
+    setup_completed: false,
+    created_at: timestamp,
+    updated_at: timestamp
+  };
+}
+
+function addMinutes(timestamp: string, minutes: number): string {
+  const parsed = Date.parse(timestamp);
+  if (!Number.isFinite(parsed)) {
+    return timestamp;
+  }
+  return new Date(parsed + minutes * 60_000).toISOString();
+}
+
+function resolveAlertWorkflowStatus(alert: Alert): AlertWorkflowStatus {
+  if (alert.workflow_status) {
+    return alert.workflow_status;
+  }
+  return alert.status === "resolved" ? "completed" : "open";
+}
+
+function compareOperationsTasks(a: AdminOperationsTaskView, b: AdminOperationsTaskView): number {
+  const workflowRank: Record<AlertWorkflowStatus, number> = {
+    open: 0,
+    in_progress: 1,
+    waiting_customer: 2,
+    completed: 3
+  };
+  const severityRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+  const workflowDifference = workflowRank[a.workflow_status] - workflowRank[b.workflow_status];
+  if (workflowDifference !== 0) {
+    return workflowDifference;
+  }
+  if (a.is_overdue !== b.is_overdue) {
+    return a.is_overdue ? -1 : 1;
+  }
+  const severityDifference = (severityRank[a.severity] ?? 9) - (severityRank[b.severity] ?? 9);
+  if (severityDifference !== 0) {
+    return severityDifference;
+  }
+  return (a.due_at ?? a.created_at).localeCompare(b.due_at ?? b.created_at);
+}
+
+function buildOperationsBoardSummary(tasks: AdminOperationsTaskView[]): {
+  total: number;
+  open: number;
+  in_progress: number;
+  waiting_customer: number;
+  completed: number;
+  overdue: number;
+  high_priority: number;
+} {
+  return {
+    total: tasks.length,
+    open: tasks.filter((task) => task.workflow_status === "open").length,
+    in_progress: tasks.filter((task) => task.workflow_status === "in_progress").length,
+    waiting_customer: tasks.filter((task) => task.workflow_status === "waiting_customer").length,
+    completed: tasks.filter((task) => task.workflow_status === "completed").length,
+    overdue: tasks.filter((task) => task.is_overdue).length,
+    high_priority: tasks.filter(
+      (task) =>
+        (task.severity === "high" || task.severity === "critical") &&
+        task.workflow_status !== "completed"
+    ).length
+  };
+}
+
+async function readJsonBody(request: Request): Promise<unknown> {
+  try {
+    return await request.json();
+  } catch {
+    return null;
+  }
+}
+
+function readNullableString(value: unknown, maxLength = 4000): string | null | undefined {
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    return undefined;
+  }
+  const normalized = value.trim();
+  return normalized.length > 0 && normalized.length <= maxLength ? normalized : undefined;
+}
+
+function readNullableIsoTimestamp(value: unknown): string | null | undefined {
+  const normalized = readNullableString(value, 80);
+  if (normalized === null) {
+    return null;
+  }
+  return normalized && Number.isFinite(Date.parse(normalized)) ? new Date(normalized).toISOString() : undefined;
+}
+
+async function readOperationsTaskUpdateBody(request: Request): Promise<{
+  workflow_status?: AlertWorkflowStatus;
+  assigned_staff_user_id?: string | null;
+  due_at?: string | null;
+  severity?: AlertSeverity;
+} | null> {
+  const body = await readJsonBody(request);
+  if (!isRecord(body)) {
+    return null;
+  }
+  const output: {
+    workflow_status?: AlertWorkflowStatus;
+    assigned_staff_user_id?: string | null;
+    due_at?: string | null;
+    severity?: AlertSeverity;
+  } = {};
+  if ("workflow_status" in body) {
+    const parsed = alertWorkflowStatusSchema.safeParse(body.workflow_status);
+    if (!parsed.success) return null;
+    output.workflow_status = parsed.data;
+  }
+  if ("assigned_staff_user_id" in body) {
+    const value = readNullableString(body.assigned_staff_user_id, 200);
+    if (value === undefined) return null;
+    output.assigned_staff_user_id = value;
+  }
+  if ("due_at" in body) {
+    const value = readNullableIsoTimestamp(body.due_at);
+    if (value === undefined) return null;
+    output.due_at = value;
+  }
+  if ("severity" in body) {
+    if (
+      body.severity !== "low" &&
+      body.severity !== "medium" &&
+      body.severity !== "high" &&
+      body.severity !== "critical"
+    ) {
+      return null;
+    }
+    output.severity = body.severity;
+  }
+  return Object.keys(output).length > 0 ? output : null;
+}
+
+function toAdminOperationsTask(alert: Alert): ReturnType<typeof toAdminAlert> & {
+  workflow_status: AlertWorkflowStatus;
+  assigned_staff_user_id: string | null;
+  due_at: string | null;
+  completed_at: string | null;
+} {
+  return {
+    ...toAdminAlert(alert),
+    workflow_status: resolveAlertWorkflowStatus(alert),
+    assigned_staff_user_id: alert.assigned_staff_user_id ?? null,
+    due_at: alert.due_at ?? null,
+    completed_at: alert.completed_at ?? null
+  };
+}
+
+async function recordOperationsAudit(
+  repository: OperationsRepository,
+  input: {
+    tenant: Extract<TenantScopedAdminRouteTenantResolution, { ok: true }>;
+    action: string;
+    resourceType: string;
+    resourceId: string | null;
+    summary: string;
+    metadata: Record<string, unknown>;
+    timestamp: string;
+  }
+): Promise<AuditEvent> {
+  return repository.recordAuditEvent({
+    id: globalThis.crypto.randomUUID(),
+    tenant_id: input.tenant.tenantId,
+    actor_staff_user_id: input.tenant.context.staffUserId ?? null,
+    action: input.action,
+    resource_type: input.resourceType,
+    resource_id: input.resourceId,
+    summary: input.summary,
+    metadata: input.metadata,
+    created_at: input.timestamp
+  });
+}
+
+async function readReservationBody(request: Request): Promise<{
+  id?: string;
+  customer_id: string;
+  reservation_type: ReservationType;
+  preferred_dates: unknown[];
+  confirmed_start_at: string | null;
+  confirmed_end_at: string | null;
+  status: ReservationStatus;
+  staff_user_id: string | null;
+  notes: string | null;
+} | null> {
+  const body = await readJsonBody(request);
+  if (!isRecord(body)) return null;
+  const id = body.id === undefined ? undefined : readNullableString(body.id, 200);
+  const customerId = readNullableString(body.customer_id, 200);
+  const reservationTypes: ReservationType[] = [
+    "model_home",
+    "online_consultation",
+    "office_visit",
+    "after_support"
+  ];
+  const reservationStatuses: ReservationStatus[] = ["requested", "confirmed", "cancelled", "completed"];
+  if (
+    (body.id !== undefined && !id) ||
+    !customerId ||
+    typeof body.reservation_type !== "string" ||
+    !reservationTypes.includes(body.reservation_type as ReservationType) ||
+    typeof body.status !== "string" ||
+    !reservationStatuses.includes(body.status as ReservationStatus) ||
+    !Array.isArray(body.preferred_dates) ||
+    body.preferred_dates.length > 10
+  ) {
+    return null;
+  }
+  const confirmedStartAt = readNullableIsoTimestamp(body.confirmed_start_at ?? null);
+  const confirmedEndAt = readNullableIsoTimestamp(body.confirmed_end_at ?? null);
+  const staffUserId = readNullableString(body.staff_user_id ?? null, 200);
+  const notes = readNullableString(body.notes ?? null, 4000);
+  if (
+    confirmedStartAt === undefined ||
+    confirmedEndAt === undefined ||
+    staffUserId === undefined ||
+    notes === undefined
+  ) {
+    return null;
+  }
+  return {
+    ...(id ? { id } : {}),
+    customer_id: customerId,
+    reservation_type: body.reservation_type as ReservationType,
+    preferred_dates: body.preferred_dates,
+    confirmed_start_at: confirmedStartAt,
+    confirmed_end_at: confirmedEndAt,
+    status: body.status as ReservationStatus,
+    staff_user_id: staffUserId,
+    notes
+  };
+}
+
+function customerMatchesQuery(customer: Customer, query: string): boolean {
+  return [
+    customer.display_name,
+    customer.phone,
+    customer.email,
+    customer.address,
+    customer.line_user_id,
+    ...customer.interest_tags
+  ].some((value) => value?.toLocaleLowerCase("ja").includes(query));
+}
+
+function buildOperationsReport(
+  customers: Customer[],
+  alerts: Alert[],
+  reservations: Reservation[],
+  currentTimestamp: string,
+  slaMinutes: number
+): {
+  customers: { total: number; active: number; new: number; registered: number };
+  tasks: { total: number; open: number; completed: number; overdue: number; completion_rate: number };
+  reservations: { total: number; upcoming: number; completed: number; cancelled: number };
+} {
+  const activeTasks = alerts.filter((alert) => resolveAlertWorkflowStatus(alert) !== "completed");
+  const completedTasks = alerts.filter((alert) => resolveAlertWorkflowStatus(alert) === "completed");
+  const overdueTasks = activeTasks.filter((alert) => {
+    const dueAt = alert.due_at ?? addMinutes(alert.triggered_at, slaMinutes);
+    return dueAt < currentTimestamp;
+  });
+  const registeredCustomers = customers.filter((customer) =>
+    customer.interest_tags.includes("crm_stage:registered")
+  );
+  const futureReservations = reservations.filter(
+    (reservation) =>
+      reservation.status !== "cancelled" &&
+      reservation.status !== "completed" &&
+      Boolean(reservation.confirmed_start_at && reservation.confirmed_start_at >= currentTimestamp)
+  );
+
+  return {
+    customers: {
+      total: customers.length,
+      active: customers.filter((customer) => customer.status === "active").length,
+      new: customers.filter((customer) => customer.status === "new").length,
+      registered: registeredCustomers.length
+    },
+    tasks: {
+      total: alerts.length,
+      open: activeTasks.length,
+      completed: completedTasks.length,
+      overdue: overdueTasks.length,
+      completion_rate: alerts.length === 0 ? 0 : Math.round((completedTasks.length / alerts.length) * 100)
+    },
+    reservations: {
+      total: reservations.length,
+      upcoming: futureReservations.length,
+      completed: reservations.filter((reservation) => reservation.status === "completed").length,
+      cancelled: reservations.filter((reservation) => reservation.status === "cancelled").length
+    }
+  };
+}
+
+async function readCustomerStageBody(request: Request): Promise<{
+  stage: CustomerRichMenuType;
+  apply_rich_menu: boolean;
+} | null> {
+  const body = await readJsonBody(request);
+  if (
+    !isRecord(body) ||
+    typeof body.stage !== "string" ||
+    !isCustomerRichMenuType(body.stage) ||
+    typeof body.apply_rich_menu !== "boolean"
+  ) {
+    return null;
+  }
+  return { stage: body.stage, apply_rich_menu: body.apply_rich_menu };
+}
+
+async function readCustomerStatusNotificationBody(request: Request): Promise<{
+  body: string;
+  confirmed: boolean;
+  confirmation: string | null;
+  idempotency_key: string | null;
+} | null> {
+  const input = await readJsonBody(request);
+  if (!isRecord(input)) return null;
+  const body = readNullableString(input.body, 5000);
+  const confirmation = readNullableString(input.confirmation ?? null, 100);
+  const idempotencyKey = readNullableString(input.idempotency_key ?? null, 200);
+  if (
+    !body ||
+    typeof input.confirmed !== "boolean" ||
+    confirmation === undefined ||
+    idempotencyKey === undefined
+  ) {
+    return null;
+  }
+  return {
+    body,
+    confirmed: input.confirmed,
+    confirmation,
+    idempotency_key: idempotencyKey
+  };
 }
 
 function toAiConversationTurns(

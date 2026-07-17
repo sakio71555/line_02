@@ -2,13 +2,16 @@
 
 import {
   BriefcaseBusiness,
+  CalendarDays,
   CheckSquare2,
   ChevronRight,
   House,
   Inbox,
   LogOut,
+  Search,
   SendHorizontal,
   Settings,
+  TrendingUp,
   UsersRound
 } from "lucide-react";
 import React, { type CSSProperties, type ReactNode, useEffect, useState } from "react";
@@ -27,19 +30,22 @@ const navItems = [
   { href: "/inbox", icon: Inbox, label: "受信トレイ" },
   { href: "/customers", icon: UsersRound, label: "顧客" },
   { href: "/tasks", icon: CheckSquare2, label: "タスク" },
+  { href: "/calendar", icon: CalendarDays, label: "予定" },
+  { href: "/search", icon: Search, label: "検索" },
   { href: "/broadcast", icon: SendHorizontal, label: "一斉送信" },
   { href: "/deals", icon: BriefcaseBusiness, label: "案件" },
+  { href: "/reports", icon: TrendingUp, label: "レポート" },
   { href: "/settings", icon: Settings, label: "設定" }
 ] as const;
 
 const navGroups = [
   {
     label: "対応",
-    items: navItems.filter((item) => ["/", "/inbox", "/tasks"].includes(item.href))
+    items: navItems.filter((item) => ["/", "/inbox", "/tasks", "/calendar"].includes(item.href))
   },
   {
     label: "顧客管理",
-    items: navItems.filter((item) => ["/customers", "/deals", "/broadcast"].includes(item.href))
+    items: navItems.filter((item) => ["/customers", "/deals", "/broadcast", "/search", "/reports"].includes(item.href))
   },
   {
     label: "運用設定",

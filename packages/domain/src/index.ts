@@ -62,6 +62,15 @@ export const alertSeverities = ["low", "medium", "high", "critical"] as const;
 
 export type AlertSeverity = (typeof alertSeverities)[number];
 
+export const alertWorkflowStatuses = [
+  "open",
+  "in_progress",
+  "waiting_customer",
+  "completed"
+] as const;
+
+export type AlertWorkflowStatus = (typeof alertWorkflowStatuses)[number];
+
 export type TenantStatus = "active" | "paused";
 export const staffRoles = ["owner", "manager", "staff"] as const;
 
@@ -181,6 +190,10 @@ export interface Alert extends TenantScoped, Timestamped {
   triggered_at: string;
   notified_at: string | null;
   resolved_at: string | null;
+  workflow_status?: AlertWorkflowStatus;
+  assigned_staff_user_id?: string | null;
+  due_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface KnowledgePage extends TenantScoped, Timestamped {
@@ -234,6 +247,7 @@ export const messageRoleSchema = z.enum(messageRoles);
 export const messageTypeSchema = z.enum(messageTypes);
 export const alertStatusSchema = z.enum(alertStatuses);
 export const alertSeveritySchema = z.enum(alertSeverities);
+export const alertWorkflowStatusSchema = z.enum(alertWorkflowStatuses);
 export const knowledgeSourceTypeSchema = z.enum(knowledgeSourceTypes);
 export const staffRoleSchema = z.enum(staffRoles);
 export const staffStatusSchema = z.enum(staffStatuses);
@@ -355,6 +369,16 @@ export interface AlertRepository {
     message?: string;
     notified_at?: string | null;
     resolved_at?: string | null;
+    updated_at: string;
+  }): Promise<Alert | null>;
+  updateWorkflow(input: {
+    tenant_id: string;
+    alert_id: string;
+    workflow_status?: AlertWorkflowStatus;
+    assigned_staff_user_id?: string | null;
+    due_at?: string | null;
+    severity?: AlertSeverity;
+    completed_at?: string | null;
     updated_at: string;
   }): Promise<Alert | null>;
 }
@@ -4850,6 +4874,40 @@ export class InMemoryAlertRepository implements AlertRepository {
     return updated;
   }
 
+  async updateWorkflow(input: {
+    tenant_id: string;
+    alert_id: string;
+    workflow_status?: AlertWorkflowStatus;
+    assigned_staff_user_id?: string | null;
+    due_at?: string | null;
+    severity?: AlertSeverity;
+    completed_at?: string | null;
+    updated_at: string;
+  }): Promise<Alert | null> {
+    const existing = this.alertsById.get(input.alert_id);
+
+    if (!existing || existing.tenant_id !== input.tenant_id) {
+      return null;
+    }
+
+    const updated: Alert = {
+      ...existing,
+      workflow_status: input.workflow_status ?? existing.workflow_status ?? "open",
+      assigned_staff_user_id:
+        input.assigned_staff_user_id !== undefined
+          ? input.assigned_staff_user_id
+          : existing.assigned_staff_user_id ?? null,
+      due_at: input.due_at !== undefined ? input.due_at : existing.due_at ?? null,
+      severity: input.severity ?? existing.severity,
+      completed_at:
+        input.completed_at !== undefined ? input.completed_at : existing.completed_at ?? null,
+      updated_at: input.updated_at
+    };
+
+    this.alertsById.set(updated.id, updated);
+    return updated;
+  }
+
   list(): Alert[] {
     return Array.from(this.alertsById.values());
   }
@@ -4877,3 +4935,5 @@ function lineEventTimestampToIsoString(
 function createDefaultId(): string {
   return globalThis.crypto.randomUUID();
 }
+
+export * from "./operations";

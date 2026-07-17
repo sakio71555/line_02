@@ -18,6 +18,10 @@ export const adminActions = [
   "view_alerts",
   "check_unreplied_alerts",
   "notify_open_alerts",
+  "view_operations",
+  "manage_operations",
+  "manage_workspace",
+  "view_audit",
   "manage_knowledge",
   "manage_staff",
   "manage_tenant_settings",
@@ -40,6 +44,10 @@ export const roleGuardedAdminActions = [
   "view_alerts",
   "check_unreplied_alerts",
   "notify_open_alerts",
+  "view_operations",
+  "manage_operations",
+  "manage_workspace",
+  "view_audit",
   "manage_knowledge",
   "manage_staff",
   "manage_tenant_settings"
@@ -79,7 +87,11 @@ const managerAllowedActions = new Set<AdminAction>([
   "create_rag_answer_draft",
   "view_alerts",
   "check_unreplied_alerts",
-  "notify_open_alerts"
+  "notify_open_alerts",
+  "view_operations",
+  "manage_operations",
+  "manage_workspace",
+  "view_audit"
 ]);
 const staffAllowedActions = new Set<AdminAction>([
   "view_customers",
@@ -89,7 +101,9 @@ const staffAllowedActions = new Set<AdminAction>([
   "create_ai_reply_draft",
   "search_rag",
   "create_rag_answer_draft",
-  "view_alerts"
+  "view_alerts",
+  "view_operations",
+  "manage_operations"
 ]);
 
 const rolePermissionMatrix: Record<AdminRole, ReadonlySet<AdminAction>> = {

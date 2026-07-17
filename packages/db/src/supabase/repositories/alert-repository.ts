@@ -1,4 +1,10 @@
-import type { Alert, AlertRepository, AlertStatus, AlertType } from "@amami-line-crm/domain";
+import type {
+  Alert,
+  AlertRepository,
+  AlertStatus,
+  AlertType,
+  AlertWorkflowStatus
+} from "@amami-line-crm/domain";
 
 import { assertTenantId, type SupabaseRepositoryClient } from "./customer-repository";
 import { unwrapSupabaseResult, type SupabaseRepositoryResult } from "./errors";
@@ -15,8 +21,21 @@ interface SupabaseAlertRow {
   triggered_at: string;
   notified_at: string | null;
   resolved_at: string | null;
+  workflow_status: AlertWorkflowStatus;
+  assigned_staff_user_id: string | null;
+  due_at: string | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
+}
+
+interface SupabaseAlertWorkflowUpdateRow {
+  updated_at: string;
+  workflow_status?: AlertWorkflowStatus;
+  assigned_staff_user_id?: string | null;
+  due_at?: string | null;
+  severity?: Alert["severity"];
+  completed_at?: string | null;
 }
 
 interface SupabaseAlertStatusUpdateRow {
@@ -134,6 +153,30 @@ export class SupabaseAlertRepository implements AlertRepository {
 
     return row && row.tenant_id === input.tenant_id ? toAlert(row) : null;
   }
+
+  async updateWorkflow(input: {
+    tenant_id: string;
+    alert_id: string;
+    workflow_status?: AlertWorkflowStatus;
+    assigned_staff_user_id?: string | null;
+    due_at?: string | null;
+    severity?: Alert["severity"];
+    completed_at?: string | null;
+    updated_at: string;
+  }): Promise<Alert | null> {
+    assertTenantId(input.tenant_id);
+
+    const result = (await this.client
+      .from("alerts")
+      .update(toAlertWorkflowUpdateRow(input))
+      .eq("tenant_id", input.tenant_id)
+      .eq("id", input.alert_id)
+      .select("*")
+      .maybeSingle()) as SupabaseRepositoryResult<SupabaseAlertRow>;
+    const row = unwrapSupabaseResult(result, "alerts", "updateWorkflow");
+
+    return row && row.tenant_id === input.tenant_id ? toAlert(row) : null;
+  }
 }
 
 function toAlert(row: SupabaseAlertRow): Alert {
@@ -149,6 +192,10 @@ function toAlert(row: SupabaseAlertRow): Alert {
     triggered_at: row.triggered_at,
     notified_at: row.notified_at,
     resolved_at: row.resolved_at,
+    workflow_status: row.workflow_status,
+    assigned_staff_user_id: row.assigned_staff_user_id,
+    due_at: row.due_at,
+    completed_at: row.completed_at,
     created_at: row.created_at,
     updated_at: row.updated_at
   };
@@ -167,9 +214,34 @@ function toAlertRow(alert: Alert): SupabaseAlertRow {
     triggered_at: alert.triggered_at,
     notified_at: alert.notified_at,
     resolved_at: alert.resolved_at,
+    workflow_status: alert.workflow_status ?? "open",
+    assigned_staff_user_id: alert.assigned_staff_user_id ?? null,
+    due_at: alert.due_at ?? null,
+    completed_at: alert.completed_at ?? null,
     created_at: alert.created_at,
     updated_at: alert.updated_at
   };
+}
+
+function toAlertWorkflowUpdateRow(input: {
+  workflow_status?: AlertWorkflowStatus;
+  assigned_staff_user_id?: string | null;
+  due_at?: string | null;
+  severity?: Alert["severity"];
+  completed_at?: string | null;
+  updated_at: string;
+}): SupabaseAlertWorkflowUpdateRow {
+  const row: SupabaseAlertWorkflowUpdateRow = { updated_at: input.updated_at };
+
+  if (input.workflow_status !== undefined) row.workflow_status = input.workflow_status;
+  if (input.assigned_staff_user_id !== undefined) {
+    row.assigned_staff_user_id = input.assigned_staff_user_id;
+  }
+  if (input.due_at !== undefined) row.due_at = input.due_at;
+  if (input.severity !== undefined) row.severity = input.severity;
+  if (input.completed_at !== undefined) row.completed_at = input.completed_at;
+
+  return row;
 }
 
 function toAlertStatusUpdateRow(input: {

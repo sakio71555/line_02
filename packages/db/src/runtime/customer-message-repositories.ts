@@ -2,11 +2,13 @@ import {
   InMemoryAlertRepository,
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  InMemoryOperationsRepository,
   type AlertRepository,
   type CustomerRepository,
   type KnowledgePage,
   type LineAttachmentStorage,
-  type MessageRepository
+  type MessageRepository,
+  type OperationsRepository
 } from "@amami-line-crm/domain";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -19,6 +21,7 @@ import {
   SupabaseKnowledgePageRepository,
   SupabaseLineAttachmentStorage,
   SupabaseMessageRepository,
+  SupabaseOperationsRepository,
   type SupabaseEnv,
   type SupabaseEnvName,
   type SupabaseRepositoryClient
@@ -35,6 +38,7 @@ export interface CustomerMessageRepositoryBundle {
   alertRepository?: AlertRepository;
   knowledgePageRepository?: KnowledgePageRepositoryRuntime;
   lineAttachmentStorage?: LineAttachmentStorage;
+  operationsRepository: OperationsRepository;
 }
 
 export interface CustomerMessageAlertRepositoryBundle extends CustomerMessageRepositoryBundle {
@@ -108,6 +112,7 @@ export function createInMemoryCustomerMessageRepositories(): CustomerMessageAler
     customerRepository: new InMemoryCustomerRepository(),
     messageRepository: new InMemoryMessageRepository(),
     alertRepository: new InMemoryAlertRepository(),
+    operationsRepository: new InMemoryOperationsRepository(),
     knowledgePageRepository: new EmptyInMemoryKnowledgePageRepository()
   };
 }
@@ -120,6 +125,7 @@ export function createSupabaseCustomerMessageRepositories(input: {
     customerRepository: new SupabaseCustomerRepository(input.client),
     messageRepository: new SupabaseMessageRepository(input.client),
     alertRepository: new SupabaseAlertRepository(input.client),
+    operationsRepository: new SupabaseOperationsRepository(input.client),
     knowledgePageRepository: new SupabaseKnowledgePageRepository(input.client),
     ...(input.client.storage
       ? {

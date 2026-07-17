@@ -10,6 +10,10 @@ export const tenantScopedTables = [
   "knowledge_pages",
   "construction_cases",
   "reservations"
+  ,"internal_notes"
+  ,"reply_templates"
+  ,"tenant_workspace_settings"
+  ,"audit_events"
 ] as const;
 
 export type TenantScopedTable = (typeof tenantScopedTables)[number];
@@ -37,6 +41,10 @@ export const tableDefinitions: TableDefinition[] = [
   { name: "knowledge_pages", has_tenant_id: true, purpose: "公式HP・FAQなどのRAG知識" },
   { name: "construction_cases", has_tenant_id: true, purpose: "施工事例レコメンド候補" },
   { name: "reservations", has_tenant_id: true, purpose: "モデルホーム・相談予約" }
+  ,{ name: "internal_notes", has_tenant_id: true, purpose: "社内メモと引き継ぎ" }
+  ,{ name: "reply_templates", has_tenant_id: true, purpose: "担当者返信テンプレート" }
+  ,{ name: "tenant_workspace_settings", has_tenant_id: true, purpose: "管理画面と運用設定" }
+  ,{ name: "audit_events", has_tenant_id: true, purpose: "操作監査履歴" }
 ];
 
 export * from "./supabase";

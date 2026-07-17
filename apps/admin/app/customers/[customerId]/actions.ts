@@ -6,22 +6,108 @@ import {
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
   archiveAdminCustomer,
   type AdminCustomerRichMenuType,
+  createAdminInternalNote,
   createAiReplyDraft,
   createAiSummary,
   createRagAnswerDraft,
   sendStaffReply,
   restoreAdminCustomer,
-  switchAdminCustomerRichMenu
+  sendAdminCustomerStatusNotification,
+  switchAdminCustomerRichMenu,
+  updateAdminCustomerStage
 } from "../../../src/admin-api";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import type {
   AiReplyDraftActionState,
   AiSummaryActionState,
   CustomerArchiveActionState,
+  CustomerOperationsActionState,
   RagAnswerDraftActionState,
   RichMenuSwitchActionState,
   StaffReplyActionState
 } from "./action-types";
+
+export async function runInternalNoteAction(
+  customerId: string,
+  _previousState: CustomerOperationsActionState,
+  formData: FormData
+): Promise<CustomerOperationsActionState> {
+  const body = readTrimmedFormValue(formData, "body");
+  const mentionStaffUserIds = formData
+    .getAll("mention_staff_user_ids")
+    .filter((value): value is string => typeof value === "string" && Boolean(value.trim()))
+    .map((value) => value.trim());
+  if (!body) return { status: "error", error: "社内メモを入力してください。" };
+
+  try {
+    await createAdminInternalNote(
+      customerId,
+      { body, mention_staff_user_ids: mentionStaffUserIds },
+      await getServerAdminApiRequestOptions()
+    );
+    revalidatePath(`/customers/${customerId}`);
+    revalidatePath("/search");
+    return { status: "success", message: "社内メモを保存しました。" };
+  } catch (error) {
+    return { status: "error", error: formatActionError(error) };
+  }
+}
+
+export async function runCustomerStageAction(
+  customerId: string,
+  _previousState: CustomerOperationsActionState,
+  formData: FormData
+): Promise<CustomerOperationsActionState> {
+  const stage = readCustomerRichMenuType(formData);
+  if (!stage) return { status: "error", error: "顧客段階を選択してください。" };
+
+  try {
+    const result = await updateAdminCustomerStage(
+      customerId,
+      { stage, apply_rich_menu: readTrimmedFormValue(formData, "apply_rich_menu") === "on" },
+      await getServerAdminApiRequestOptions()
+    );
+    revalidatePath(`/customers/${customerId}`);
+    revalidatePath("/customers");
+    return {
+      status: "success",
+      message: result.rich_menu_linked
+        ? "顧客段階とLINEメニューを更新しました。"
+        : "顧客段階を更新しました。"
+    };
+  } catch (error) {
+    return { status: "error", error: formatActionError(error) };
+  }
+}
+
+export async function runCustomerStatusNotificationAction(
+  customerId: string,
+  _previousState: CustomerOperationsActionState,
+  formData: FormData
+): Promise<CustomerOperationsActionState> {
+  const body = readTrimmedFormValue(formData, "body");
+  if (!body) return { status: "error", error: "お客様へ知らせる内容を入力してください。" };
+  if (readTrimmedFormValue(formData, "confirm_status_notification") !== "on") {
+    return { status: "error", error: "LINEへ1通送信する確認が必要です。" };
+  }
+
+  try {
+    await sendAdminCustomerStatusNotification(
+      customerId,
+      {
+        body,
+        confirmed: true,
+        confirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+        idempotency_key: `status-${customerId}-${globalThis.crypto.randomUUID()}`
+      },
+      await getServerAdminApiRequestOptions()
+    );
+    revalidatePath(`/customers/${customerId}`);
+    return { status: "success", message: "お客様へ状況を1通送信しました。" };
+  } catch (error) {
+    return { status: "error", error: formatActionError(error) };
+  }
+}
 
 export async function runCustomerArchiveAction(
   customerId: string,

@@ -38,7 +38,22 @@ describe("admin API role guard full route rollout compatibility", () => {
       sendBroadcast: "send_broadcast",
       listAlerts: "view_alerts",
       checkUnrepliedAlerts: "check_unreplied_alerts",
-      notifyOpenAlerts: "notify_open_alerts"
+      notifyOpenAlerts: "notify_open_alerts",
+      listOperationsBoard: "view_operations",
+      updateOperationsTask: "manage_operations",
+      listInternalNotes: "view_operations",
+      createInternalNote: "manage_operations",
+      listReplyTemplates: "view_operations",
+      saveReplyTemplate: "manage_workspace",
+      listReservations: "view_operations",
+      saveReservation: "manage_operations",
+      globalSearch: "view_operations",
+      getWorkspaceSettings: "view_operations",
+      updateWorkspaceSettings: "manage_workspace",
+      listAuditEvents: "view_audit",
+      getOperationsReport: "view_operations",
+      updateCustomerStage: "manage_operations",
+      sendCustomerStatusNotification: "manage_operations"
     });
     expect(routeActions()).not.toContain("run_dev_seed");
   });

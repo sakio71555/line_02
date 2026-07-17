@@ -1,5 +1,10 @@
 import type { AdminAlertListItem, AdminCustomerListItem } from "./admin-api";
 
+type AlertCustomerSummary = Pick<
+  AdminCustomerListItem,
+  "display_name" | "last_message_body"
+> & { name?: string | null };
+
 export function formatCompactDateTime(value: string | null | undefined): string {
   if (!value) {
     return "日時なし";
@@ -20,7 +25,7 @@ export function formatCompactDateTime(value: string | null | undefined): string 
   }).format(date);
 }
 
-export function getCustomerDisplayName(customer: AdminCustomerListItem): string {
+export function getCustomerDisplayName(customer: AlertCustomerSummary): string {
   return customer.name || customer.display_name || "名前未登録";
 }
 
@@ -95,7 +100,7 @@ const alertFieldLabels: Record<string, string> = {
 
 export function getAlertPresentation(
   alert: AdminAlertListItem,
-  customer?: AdminCustomerListItem
+  customer?: AlertCustomerSummary
 ): AdminAlertPresentation {
   const customerName = customer ? getCustomerDisplayName(customer) : "名前未登録のお客様";
   const fields = parseAlertFields(alert.message);
@@ -222,7 +227,7 @@ function parseContactStaffMessage(message: string): {
 
 function formatPlainAlertDetail(
   alert: AdminAlertListItem,
-  customer?: AdminCustomerListItem
+  customer?: AlertCustomerSummary
 ): string {
   if (/^customer .+ is unreplied in response_mode .+\.$/u.test(alert.message)) {
     return customer?.last_message_body
