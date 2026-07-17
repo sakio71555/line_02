@@ -379,8 +379,9 @@ export async function getAdminCustomerMessageAttachment(
   messageId: string,
   options: AdminApiRequestOptions = {}
 ): Promise<{
-  data: ArrayBuffer;
+  body: ReadableStream<Uint8Array> | null;
   contentDisposition: string | null;
+  contentLength: string | null;
   contentType: string | null;
 }> {
   const response = await adminApiFetchResponse(
@@ -394,8 +395,9 @@ export async function getAdminCustomerMessageAttachment(
   );
 
   return {
-    data: await response.arrayBuffer(),
+    body: response.body,
     contentDisposition: response.headers.get("content-disposition"),
+    contentLength: response.headers.get("content-length"),
     contentType: response.headers.get("content-type")
   };
 }

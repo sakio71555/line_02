@@ -25,7 +25,7 @@ describe("admin customer attachment API", () => {
     const lineAttachmentStorage = createAttachmentStorage(async (input) => {
       downloadInputs.push(input);
       return {
-        data: new Uint8Array([10, 20, 30]),
+        data: new Blob([new Uint8Array([10, 20, 30])], { type: "image/png" }),
         content_type: "image/png"
       };
     });
@@ -100,7 +100,10 @@ describe("admin customer attachment API", () => {
       messageRepository,
       lineAttachmentStorage: createAttachmentStorage(async () => {
         downloadCalls += 1;
-        return { data: new Uint8Array([1]), content_type: "application/pdf" };
+        return {
+          data: new Blob([new Uint8Array([1])], { type: "application/pdf" }),
+          content_type: "application/pdf"
+        };
       }),
       env: createEnv()
     });
@@ -172,7 +175,10 @@ describe("admin customer attachment API", () => {
       messageRepository,
       lineAttachmentStorage: createAttachmentStorage(async () => {
         downloadCalls += 1;
-        return { data: new Uint8Array([1]), content_type: "image/png" };
+        return {
+          data: new Blob([new Uint8Array([1])], { type: "image/png" }),
+          content_type: "image/png"
+        };
       }),
       env: createEnv()
     });

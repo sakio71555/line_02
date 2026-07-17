@@ -211,10 +211,17 @@ describe("Loop 102 RealLineClient boundary", () => {
 
   it("rejects oversized LINE message content before reading the response body", async () => {
     let bodyRead = false;
+    let bodyCancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      cancel() {
+        bodyCancelled = true;
+      }
+    });
     const transport = new FetchLineMessagingTransport({
       async fetch() {
         return {
           ok: true,
+          body,
           async text() {
             return "";
           },
@@ -241,6 +248,47 @@ describe("Loop 102 RealLineClient boundary", () => {
       })
     ).rejects.toThrow("LINE message content exceeds the allowed size.");
     expect(bodyRead).toBe(false);
+    expect(bodyCancelled).toBe(true);
+  });
+
+  it("cancels streamed LINE message content as soon as the actual size exceeds the limit", async () => {
+    let bodyCancelled = false;
+    let arrayBufferRead = false;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array([1, 2, 3]));
+        controller.enqueue(new Uint8Array([4, 5]));
+      },
+      cancel() {
+        bodyCancelled = true;
+      }
+    });
+    const transport = new FetchLineMessagingTransport({
+      maxMessageContentBytes: 4,
+      async fetch() {
+        return {
+          ok: true,
+          body,
+          async text() {
+            return "";
+          },
+          async arrayBuffer() {
+            arrayBufferRead = true;
+            return new Uint8Array([1]).buffer;
+          }
+        };
+      }
+    });
+
+    await expect(
+      transport.getMessageContent({
+        channelAccessToken: "test-channel-access-token",
+        endpoint: "https://line.example.invalid/content/message-stream-too-large/content",
+        messageId: "message-stream-too-large"
+      })
+    ).rejects.toThrow("LINE message content exceeds the allowed size.");
+    expect(bodyCancelled).toBe(true);
+    expect(arrayBufferRead).toBe(false);
   });
 
   it("redacts transport error details from RealLineClient errors", async () => {

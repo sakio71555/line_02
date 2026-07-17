@@ -53,8 +53,13 @@ export interface KnowledgePageRepositoryRuntime {
     tenant_id: string;
     lease_key: string;
     holder_id: string;
-    expires_at: string;
-    now: string;
+    lease_ttl_seconds: number;
+  }): Promise<boolean>;
+  renewOfficialSiteKnowledgeRefreshLease?(input: {
+    tenant_id: string;
+    lease_key: string;
+    holder_id: string;
+    lease_ttl_seconds: number;
   }): Promise<boolean>;
   releaseOfficialSiteKnowledgeRefreshLease?(input: {
     tenant_id: string;

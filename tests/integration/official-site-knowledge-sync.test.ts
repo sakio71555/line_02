@@ -275,6 +275,7 @@ class InMemoryRefreshLeaseRepository implements OfficialSiteKnowledgeRefreshLeas
     tenant_id: string;
     lease_key: string;
     holder_id: string;
+    lease_ttl_seconds: number;
   }): Promise<boolean> {
     const key = `${input.tenant_id}:${input.lease_key}`;
     const currentHolder = this.holders.get(key);
@@ -291,6 +292,7 @@ class InMemoryRefreshLeaseRepository implements OfficialSiteKnowledgeRefreshLeas
     tenant_id: string;
     lease_key: string;
     holder_id: string;
+    lease_ttl_seconds: number;
   }): Promise<boolean> {
     const key = `${input.tenant_id}:${input.lease_key}`;
 

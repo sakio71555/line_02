@@ -28,7 +28,7 @@ export class SupabaseLineAttachmentStorage implements LineAttachmentStorage {
   }
 
   async download(input: Parameters<LineAttachmentStorage["download"]>[0]): Promise<{
-    data: Uint8Array;
+    data: Blob;
     content_type: string | null;
   }> {
     assertLineAttachmentObjectPath(input);
@@ -40,7 +40,7 @@ export class SupabaseLineAttachmentStorage implements LineAttachmentStorage {
     }
 
     return {
-      data: new Uint8Array(await result.data.arrayBuffer()),
+      data: result.data,
       content_type: result.data.type || null
     };
   }

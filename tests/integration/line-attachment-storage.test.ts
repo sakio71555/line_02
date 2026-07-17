@@ -80,16 +80,15 @@ describe("LINE attachment private storage", () => {
     } as unknown as SupabaseStorageClient;
     const storage = new SupabaseLineAttachmentStorage(client);
 
-    await expect(
-      storage.download({
-        tenant_id: "tenant_amamihome",
-        customer_id: "customer_1",
-        media_storage_path: "tenant_amamihome/customer_1/message_1.png"
-      })
-    ).resolves.toEqual({
-      data: new Uint8Array([7, 8, 9]),
-      content_type: "image/png"
+    const result = await storage.download({
+      tenant_id: "tenant_amamihome",
+      customer_id: "customer_1",
+      media_storage_path: "tenant_amamihome/customer_1/message_1.png"
     });
+
+    expect(result.content_type).toBe("image/png");
+    expect(result.data).toBeInstanceOf(Blob);
+    expect(new Uint8Array(await result.data.arrayBuffer())).toEqual(new Uint8Array([7, 8, 9]));
     expect(downloads).toEqual([
       {
         bucket: lineAttachmentStorageBucket,

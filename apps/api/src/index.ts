@@ -53,6 +53,7 @@ import {
   FetchLineIdTokenVerifier,
   LineIdTokenVerificationError,
   LineMessagingApiError,
+  MAX_LINE_MESSAGE_CONTENT_BYTES,
   MockLineClient,
   parseLineWebhookPayload,
   RealLineClient,
@@ -564,16 +565,21 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         customer_id: customerId,
         media_storage_path: message.media_storage_path
       });
+
+      if (attachment.data.size > MAX_LINE_MESSAGE_CONTENT_BYTES) {
+        return c.json({ ok: false, error: "attachment_not_found" }, 404);
+      }
+
       const contentType = resolveSafeAttachmentContentType(attachment.content_type);
       const disposition = isInlineAttachmentContentType(contentType) ? "inline" : "attachment";
       const fileName = buildSafeAttachmentFileName(message, message.media_storage_path);
 
-      return new Response(Uint8Array.from(attachment.data).buffer, {
+      return new Response(attachment.data, {
         status: 200,
         headers: {
           "cache-control": "private, no-store",
           "content-disposition": `${disposition}; filename="${fileName}"`,
-          "content-length": String(attachment.data.byteLength),
+          "content-length": String(attachment.data.size),
           "content-type": contentType,
           "x-content-type-options": "nosniff"
         }

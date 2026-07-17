@@ -209,6 +209,7 @@ describe("admin read-only API client", () => {
           status: 200,
           headers: {
             "content-disposition": 'inline; filename="line-image.png"',
+            "content-length": String(expectedBytes.byteLength),
             "content-type": "image/png"
           }
         });
@@ -222,8 +223,12 @@ describe("admin read-only API client", () => {
     expect(headers.get("accept")).toBe("*/*");
     expect(headers.get("authorization")).toBe("Bearer private-admin-token");
     expect(headers.get("x-selected-tenant-id")).toBe("tenant_amamihome");
-    expect(new Uint8Array(attachment.data)).toEqual(expectedBytes);
+    expect(attachment.body).not.toBeNull();
+    expect(
+      new Uint8Array(await new Response(attachment.body).arrayBuffer())
+    ).toEqual(expectedBytes);
     expect(attachment.contentDisposition).toBe('inline; filename="line-image.png"');
+    expect(attachment.contentLength).toBe("4");
     expect(attachment.contentType).toBe("image/png");
   });
 

@@ -25,7 +25,11 @@ export async function GET(
       headers.set("content-disposition", attachment.contentDisposition);
     }
 
-    return new Response(attachment.data, {
+    if (attachment.contentLength) {
+      headers.set("content-length", attachment.contentLength);
+    }
+
+    return new Response(attachment.body, {
       status: 200,
       headers
     });

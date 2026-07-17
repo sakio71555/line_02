@@ -333,7 +333,7 @@ export interface LineAttachmentStorage {
     customer_id: string;
     media_storage_path: string;
   }): Promise<{
-    data: Uint8Array;
+    data: Blob;
     content_type: string | null;
   }>;
 }

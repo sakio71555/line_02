@@ -27,6 +27,7 @@ const DEFAULT_FETCH_TIMEOUT_MS = 10_000;
 const DEFAULT_MAX_HTML_BYTES = 1_000_000;
 const DEFAULT_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_REFRESH_LEASE_TTL_MS = 30 * 60 * 1000;
+const MAX_REFRESH_LEASE_TTL_SECONDS = 24 * 60 * 60;
 const DEFAULT_REFRESH_LEASE_KEY = "official_site_knowledge_refresh";
 const MAX_REDIRECTS = 3;
 const MIN_EXTRACTED_TEXT_LENGTH = 40;
@@ -65,15 +66,13 @@ export interface OfficialSiteKnowledgeRefreshLeaseRepository {
     tenant_id: string;
     lease_key: string;
     holder_id: string;
-    expires_at: string;
-    now: string;
+    lease_ttl_seconds: number;
   }): Promise<boolean>;
   renewOfficialSiteKnowledgeRefreshLease(input: {
     tenant_id: string;
     lease_key: string;
     holder_id: string;
-    expires_at: string;
-    now: string;
+    lease_ttl_seconds: number;
   }): Promise<boolean>;
   releaseOfficialSiteKnowledgeRefreshLease(input: {
     tenant_id: string;
@@ -213,6 +212,7 @@ export function startOfficialSiteKnowledgeRefreshScheduler(input: {
   const holderId = input.holderId ?? randomUUID();
   const leaseKey = input.leaseKey ?? DEFAULT_REFRESH_LEASE_KEY;
   const leaseTtlMs = input.leaseTtlMs ?? DEFAULT_REFRESH_LEASE_TTL_MS;
+  const leaseTtlSeconds = Math.ceil(leaseTtlMs / 1_000);
   const leaseRenewIntervalMs =
     input.leaseRenewIntervalMs ?? Math.max(1, Math.floor(leaseTtlMs / 3));
 
@@ -221,7 +221,9 @@ export function startOfficialSiteKnowledgeRefreshScheduler(input: {
     leaseTtlMs <= 0 ||
     !Number.isFinite(leaseRenewIntervalMs) ||
     leaseRenewIntervalMs <= 0 ||
-    leaseRenewIntervalMs >= leaseTtlMs
+    leaseRenewIntervalMs >= leaseTtlMs ||
+    !Number.isSafeInteger(leaseTtlSeconds) ||
+    leaseTtlSeconds > MAX_REFRESH_LEASE_TTL_SECONDS
   ) {
     throw new Error("official_site_refresh_lease_timing_invalid");
   }
@@ -238,19 +240,11 @@ export function startOfficialSiteKnowledgeRefreshScheduler(input: {
     let leaseRenewalError: Error | null = null;
 
     try {
-      const startedAt = input.now?.() ?? new Date().toISOString();
-      const startedAtMilliseconds = Date.parse(startedAt);
-
-      if (!Number.isFinite(startedAtMilliseconds)) {
-        throw new Error("official_site_refresh_time_invalid");
-      }
-
       leaseAcquired = await input.leaseRepository.tryAcquireOfficialSiteKnowledgeRefreshLease({
         tenant_id: input.tenant_id,
         lease_key: leaseKey,
         holder_id: holderId,
-        expires_at: new Date(startedAtMilliseconds + leaseTtlMs).toISOString(),
-        now: startedAt
+        lease_ttl_seconds: leaseTtlSeconds
       });
 
       if (!leaseAcquired) {
@@ -258,19 +252,11 @@ export function startOfficialSiteKnowledgeRefreshScheduler(input: {
       }
 
       const renewLease = async (): Promise<void> => {
-        const renewedAt = input.now?.() ?? new Date().toISOString();
-        const renewedAtMilliseconds = Date.parse(renewedAt);
-
-        if (!Number.isFinite(renewedAtMilliseconds)) {
-          throw new Error("official_site_refresh_time_invalid");
-        }
-
         const renewed = await input.leaseRepository.renewOfficialSiteKnowledgeRefreshLease({
           tenant_id: input.tenant_id,
           lease_key: leaseKey,
           holder_id: holderId,
-          expires_at: new Date(renewedAtMilliseconds + leaseTtlMs).toISOString(),
-          now: renewedAt
+          lease_ttl_seconds: leaseTtlSeconds
         });
 
         if (!renewed) {

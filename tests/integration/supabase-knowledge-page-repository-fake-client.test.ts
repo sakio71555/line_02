@@ -151,8 +151,7 @@ describe("Supabase knowledge page repository fake-client hardening", () => {
       tenant_id: tenantId,
       lease_key: "official_site_knowledge_refresh",
       holder_id: "api_instance_a",
-      expires_at: "2026-07-16T00:30:00.000Z",
-      now: "2026-07-16T00:00:00.000Z"
+      lease_ttl_seconds: 1_800
     };
 
     await expect(
@@ -176,8 +175,7 @@ describe("Supabase knowledge page repository fake-client hardening", () => {
         p_tenant_id: tenantId,
         p_lease_key: leaseInput.lease_key,
         p_holder_id: leaseInput.holder_id,
-        p_expires_at: leaseInput.expires_at,
-        p_now: leaseInput.now
+        p_lease_ttl_seconds: leaseInput.lease_ttl_seconds
       }
     });
     expect(client.operations).toContainEqual({
@@ -187,8 +185,7 @@ describe("Supabase knowledge page repository fake-client hardening", () => {
         p_tenant_id: tenantId,
         p_lease_key: leaseInput.lease_key,
         p_holder_id: leaseInput.holder_id,
-        p_expires_at: leaseInput.expires_at,
-        p_now: leaseInput.now
+        p_lease_ttl_seconds: leaseInput.lease_ttl_seconds
       }
     });
     expect(client.operations).toContainEqual({

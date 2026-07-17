@@ -229,6 +229,7 @@ export interface LineMessagingFetchResponse {
   ok: boolean;
   text(): Promise<string>;
   arrayBuffer?(): Promise<ArrayBuffer>;
+  body?: ReadableStream<Uint8Array> | null;
   headers?: {
     get(name: string): string | null;
   };
@@ -306,9 +307,20 @@ export class FetchLineIdTokenVerifier implements LineIdTokenVerifier {
 
 export class FetchLineMessagingTransport implements LineMessagingTransport {
   private readonly fetchImplementation: LineMessagingFetch;
+  private readonly maxMessageContentBytes: number;
 
-  constructor(input: { fetch?: LineMessagingFetch } = {}) {
+  constructor(input: { fetch?: LineMessagingFetch; maxMessageContentBytes?: number } = {}) {
     this.fetchImplementation = input.fetch ?? (fetch.bind(globalThis) as LineMessagingFetch);
+    this.maxMessageContentBytes =
+      input.maxMessageContentBytes ?? MAX_LINE_MESSAGE_CONTENT_BYTES;
+
+    if (
+      !Number.isSafeInteger(this.maxMessageContentBytes) ||
+      this.maxMessageContentBytes < 1 ||
+      this.maxMessageContentBytes > MAX_LINE_MESSAGE_CONTENT_BYTES
+    ) {
+      throw new LineMessagingApiError("LINE message content size limit is invalid.");
+    }
   }
 
   async pushMessage(request: LineMessagingPushRequest): Promise<void> {
@@ -352,7 +364,7 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
       }
     });
 
-    if (!response.ok || !response.arrayBuffer) {
+    if (!response.ok || (!response.body && !response.arrayBuffer)) {
       throw new LineMessagingApiError("LINE message content request failed.", readStatus(response));
     }
 
@@ -360,18 +372,22 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
 
     if (
       declaredContentLength !== null &&
-      declaredContentLength > MAX_LINE_MESSAGE_CONTENT_BYTES
+      declaredContentLength > this.maxMessageContentBytes
     ) {
+      await cancelMessageContentBody(response.body);
       throw new LineMessagingApiError("LINE message content exceeds the allowed size.");
     }
 
-    const data = new Uint8Array(await response.arrayBuffer());
+    const data = await readMessageContentWithinLimit(
+      response,
+      this.maxMessageContentBytes
+    );
 
     if (data.byteLength === 0) {
       throw new LineMessagingApiError("LINE message content response was empty.");
     }
 
-    if (data.byteLength > MAX_LINE_MESSAGE_CONTENT_BYTES) {
+    if (data.byteLength > this.maxMessageContentBytes) {
       throw new LineMessagingApiError("LINE message content exceeds the allowed size.");
     }
 
@@ -412,6 +428,60 @@ export class FetchLineMessagingTransport implements LineMessagingTransport {
       throw new LineMessagingApiError("LINE Messaging API request failed.", readStatus(response));
     }
   }
+}
+
+async function readMessageContentWithinLimit(
+  response: LineMessagingFetchResponse,
+  maxBytes: number
+): Promise<Uint8Array> {
+  if (!response.body) {
+    if (!response.arrayBuffer) {
+      throw new LineMessagingApiError("LINE message content request failed.", readStatus(response));
+    }
+
+    return new Uint8Array(await response.arrayBuffer());
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    while (true) {
+      const chunk = await reader.read();
+
+      if (chunk.done) {
+        break;
+      }
+
+      totalBytes += chunk.value.byteLength;
+
+      if (totalBytes > maxBytes) {
+        await reader.cancel().catch(() => undefined);
+        throw new LineMessagingApiError("LINE message content exceeds the allowed size.");
+      }
+
+      chunks.push(chunk.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const data = new Uint8Array(totalBytes);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    data.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return data;
+}
+
+async function cancelMessageContentBody(
+  body: ReadableStream<Uint8Array> | null | undefined
+): Promise<void> {
+  await body?.cancel().catch(() => undefined);
 }
 
 function readStatus(response: LineMessagingFetchResponse): number | null {

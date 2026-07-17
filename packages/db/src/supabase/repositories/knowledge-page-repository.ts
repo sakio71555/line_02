@@ -60,8 +60,7 @@ export class SupabaseKnowledgePageRepository {
     tenant_id: string;
     lease_key: string;
     holder_id: string;
-    expires_at: string;
-    now: string;
+    lease_ttl_seconds: number;
   }): Promise<boolean> {
     assertTenantId(input.tenant_id);
 
@@ -69,8 +68,7 @@ export class SupabaseKnowledgePageRepository {
       p_tenant_id: input.tenant_id,
       p_lease_key: input.lease_key,
       p_holder_id: input.holder_id,
-      p_expires_at: input.expires_at,
-      p_now: input.now
+      p_lease_ttl_seconds: input.lease_ttl_seconds
     })) as SupabaseRepositoryResult<boolean>;
 
     return Boolean(
@@ -82,8 +80,7 @@ export class SupabaseKnowledgePageRepository {
     tenant_id: string;
     lease_key: string;
     holder_id: string;
-    expires_at: string;
-    now: string;
+    lease_ttl_seconds: number;
   }): Promise<boolean> {
     assertTenantId(input.tenant_id);
 
@@ -91,8 +88,7 @@ export class SupabaseKnowledgePageRepository {
       p_tenant_id: input.tenant_id,
       p_lease_key: input.lease_key,
       p_holder_id: input.holder_id,
-      p_expires_at: input.expires_at,
-      p_now: input.now
+      p_lease_ttl_seconds: input.lease_ttl_seconds
     })) as SupabaseRepositoryResult<boolean>;
 
     return Boolean(
