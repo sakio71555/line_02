@@ -89,10 +89,7 @@ import {
   type KnowledgePageRepository
 } from "@amami-line-crm/rag";
 
-import {
-  mapAdminTenantGuardErrorToHttp,
-  resolveAdminTenantContext
-} from "./admin/tenant-context";
+import { mapAdminTenantGuardErrorToHttp, resolveAdminTenantContext } from "./admin/tenant-context";
 import {
   mapAdminAuthErrorToHttp,
   type AdminAuthErrorCode,
@@ -218,9 +215,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         })
       : undefined;
   const alertRepository =
-    dependencies.alertRepository ??
-    runtimeRepositories?.alertRepository ??
-    defaultAlertRepository;
+    dependencies.alertRepository ?? runtimeRepositories?.alertRepository ?? defaultAlertRepository;
   const customerRepository =
     dependencies.customerRepository ??
     runtimeRepositories?.customerRepository ??
@@ -229,7 +224,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     dependencies.messageRepository ??
     runtimeRepositories?.messageRepository ??
     defaultMessageRepository;
-  const operationsRepository =
+  const operationsRepository: OperationsRepository =
     dependencies.operationsRepository ??
     runtimeRepositories?.operationsRepository ??
     defaultOperationsRepository;
@@ -1314,9 +1309,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     const status = c.req.query("status");
     const alerts = await alertRepository.listByTenant(tenant.tenantId);
-    const filteredAlerts = status
-      ? alerts.filter((alert) => alert.status === status)
-      : alerts;
+    const filteredAlerts = status ? alerts.filter((alert) => alert.status === status) : alerts;
 
     return c.json({
       ok: true,
@@ -1415,7 +1408,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       operationsRepository.listStaffMembers(tenant.tenantId),
       operationsRepository.getWorkspaceSettings(tenant.tenantId)
     ]);
-    const settings = savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const settings =
+      savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
     const customersById = new Map(customers.map((customer) => [customer.id, customer]));
     const nowTimestamp = now?.() ?? new Date().toISOString();
 
@@ -1495,7 +1489,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       tenant_id: tenant.tenantId,
       alert_id: alertId,
       ...input,
-      completed_at: workflowStatus === "completed" ? current.completed_at ?? timestamp : null,
+      completed_at: workflowStatus === "completed" ? (current.completed_at ?? timestamp) : null,
       updated_at: timestamp
     });
 
@@ -1507,13 +1501,13 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const normalized =
       updated.status === desiredAlertStatus
         ? updated
-        : (await alertRepository.updateStatus({
+        : ((await alertRepository.updateStatus({
             tenant_id: tenant.tenantId,
             alert_id: alertId,
             status: desiredAlertStatus,
             resolved_at: workflowStatus === "completed" ? timestamp : null,
             updated_at: timestamp
-          })) ?? updated;
+          })) ?? updated);
 
     await recordOperationsAudit(operationsRepository, {
       tenant,
@@ -1530,7 +1524,11 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       timestamp
     });
 
-    return c.json({ ok: true, tenant_id: tenant.tenantId, task: toAdminOperationsTask(normalized) });
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      task: toAdminOperationsTask(normalized)
+    });
   });
 
   api.get("/api/admin/customers/:customerId/internal-notes", async (c) => {
@@ -1763,7 +1761,10 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       timestamp
     });
 
-    return c.json({ ok: true, tenant_id: tenant.tenantId, reservation: saved }, existing ? 200 : 201);
+    return c.json(
+      { ok: true, tenant_id: tenant.tenantId, reservation: saved },
+      existing ? 200 : 201
+    );
   });
 
   api.get("/api/admin/search", async (c) => {
@@ -1786,33 +1787,47 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "invalid_search_query" }, 400);
     }
 
+    if (operationsRepository.searchWorkspace) {
+      const result = await operationsRepository.searchWorkspace(tenant.tenantId, query);
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        query,
+        ...result
+      });
+    }
+
     const [customers, alerts] = await Promise.all([
       customerRepository.listByTenant(tenant.tenantId),
       alertRepository.listByTenant(tenant.tenantId)
     ]);
     const normalizedQuery = query.toLocaleLowerCase("ja");
-    const customerHits = customers.filter((customer) => customerMatchesQuery(customer, normalizedQuery));
+    const customerHits = customers.filter((customer) =>
+      customerMatchesQuery(customer, normalizedQuery)
+    );
     const messageHits: Array<{ customer_id: string; message: Message }> = [];
     const noteHits: Array<{ customer_id: string; note: InternalNote }> = [];
 
-    for (const customer of customers.slice(0, 100)) {
-      const [messages, notes] = await Promise.all([
-        messageRepository.listByCustomer(tenant.tenantId, customer.id),
-        operationsRepository.listInternalNotes(tenant.tenantId, customer.id)
-      ]);
-      for (const message of messages) {
-        if (message.body?.toLocaleLowerCase("ja").includes(normalizedQuery)) {
-          messageHits.push({ customer_id: customer.id, message });
-        }
-      }
-      for (const note of notes) {
-        if (note.body.toLocaleLowerCase("ja").includes(normalizedQuery)) {
-          noteHits.push({ customer_id: customer.id, note });
-        }
-      }
-      if (messageHits.length + noteHits.length >= 50) {
-        break;
-      }
+    const customerConversations = await Promise.all(
+      customers.map(async (customer) => {
+        const [messages, notes] = await Promise.all([
+          messageRepository.listByCustomer(tenant.tenantId, customer.id),
+          operationsRepository.listInternalNotes(tenant.tenantId, customer.id)
+        ]);
+        return { customer, messages, notes };
+      })
+    );
+    for (const { customer, messages, notes } of customerConversations) {
+      messageHits.push(
+        ...messages
+          .filter((message) => message.body?.toLocaleLowerCase("ja").includes(normalizedQuery))
+          .map((message) => ({ customer_id: customer.id, message }))
+      );
+      noteHits.push(
+        ...notes
+          .filter((note) => note.body.toLocaleLowerCase("ja").includes(normalizedQuery))
+          .map((note) => ({ customer_id: customer.id, note }))
+      );
     }
 
     return c.json({
@@ -1907,7 +1922,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     }
 
     const requestedLimit = Number(c.req.query("limit") ?? "100");
-    const limit = Number.isInteger(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 500) : 100;
+    const limit = Number.isInteger(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 500)
+      : 100;
     const events = await operationsRepository.listAuditEvents(tenant.tenantId, limit);
     return c.json({ ok: true, tenant_id: tenant.tenantId, events });
   });
@@ -1933,7 +1950,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       operationsRepository.listReservations(tenant.tenantId),
       operationsRepository.getWorkspaceSettings(tenant.tenantId)
     ]);
-    const settings = savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
+    const settings =
+      savedSettings ?? createDefaultWorkspaceSettings(tenant.tenantId, config.tenant.slug);
     return c.json({
       ok: true,
       tenant_id: tenant.tenantId,
@@ -2093,7 +2111,9 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     }
 
     try {
-      await lineClient.pushMessage(customer.line_user_id.trim(), [{ type: "text", text: input.body }]);
+      await lineClient.pushMessage(customer.line_user_id.trim(), [
+        { type: "text", text: input.body }
+      ]);
     } catch {
       if (gate.idempotencyScope) {
         linePushIdempotencyStore.release(gate.idempotencyScope);
@@ -2445,8 +2465,7 @@ async function replyToLineReplyInstructions(input: {
       const failure = await recordLineReplyDeliveryFailure({
         tenant_id: input.tenant_id,
         customer_id: instruction.customer_id,
-        body:
-          "LINE自動返信は送信されましたが、送信記録の更新に失敗しました。再送せず担当者が確認してください。",
+        body: "LINE自動返信は送信されましたが、送信記録の更新に失敗しました。再送せず担当者が確認してください。",
         customerRepository: input.customerRepository,
         messageRepository: input.messageRepository,
         alertRepository: input.alertRepository,
@@ -2915,8 +2934,7 @@ async function recordNormalChatReplyFailure(input: {
   notification_required: boolean;
   message_logged: boolean;
 }> {
-  const message =
-    input.message ?? "自動応答のLINE送信に失敗しました。担当者の確認が必要です。";
+  const message = input.message ?? "自動応答のLINE送信に失敗しました。担当者の確認が必要です。";
   const alertResult = await createNormalChatHandoffAlert({
     candidate: input.candidate,
     alertRepository: input.alertRepository,
@@ -3001,9 +3019,7 @@ function isFreshnessSensitiveNormalChat(text: string): boolean {
   return normalChatFreshnessSensitiveKeywords.some((keyword) => text.includes(keyword));
 }
 
-function isRecentlyCrawledKnowledgeResult(result: {
-  last_crawled_at: string | null;
-}): boolean {
+function isRecentlyCrawledKnowledgeResult(result: { last_crawled_at: string | null }): boolean {
   if (!result.last_crawled_at) {
     return false;
   }
@@ -3472,10 +3488,8 @@ async function replyToStaffLineTargetSetupEvents(input: {
       } else {
         failed += 1;
         fallbackPushFailed += 1;
-        failureCategory =
-          fallbackResult.failure_category ?? classifyLineMessagingFailure(error);
-        failedStatusCode =
-          fallbackResult.failed_status_code ?? readLineMessagingStatusCode(error);
+        failureCategory = fallbackResult.failure_category ?? classifyLineMessagingFailure(error);
+        failedStatusCode = fallbackResult.failed_status_code ?? readLineMessagingStatusCode(error);
       }
     }
   }
@@ -3517,9 +3531,7 @@ function skippedStaffLineSetupReply(
 
 function isStaffLineSetupTriggerEvent(event: NormalizedLineWebhookEvent): boolean {
   return (
-    event.type === "message" &&
-    event.message_type === "text" &&
-    event.text?.trim() === "通知テスト"
+    event.type === "message" && event.message_type === "text" && event.text?.trim() === "通知テスト"
   );
 }
 
@@ -3617,7 +3629,8 @@ function logStaffLineWebhookProcessingResult(input: {
         input.notificationTargetCapture.runtime_target_present_after,
       notification_target_persist_attempted:
         input.notificationTargetCapture.runtime_file_persistence.attempted,
-      notification_target_persisted: input.notificationTargetCapture.runtime_file_persistence.written,
+      notification_target_persisted:
+        input.notificationTargetCapture.runtime_file_persistence.written,
       notification_target_persist_error_category:
         input.notificationTargetCapture.runtime_file_persistence.error_category,
       setup_reply_attempted: input.setupReply.attempted,
@@ -3926,7 +3939,9 @@ function shouldAttemptStaffLineAlertNotification(env: NodeJS.ProcessEnv): boolea
   return isProductionRuntime(env) || isStaffLineRuntimeConfigured(env);
 }
 
-function hasAuthorizationHeader(authorizationHeader: string | undefined): authorizationHeader is string {
+function hasAuthorizationHeader(
+  authorizationHeader: string | undefined
+): authorizationHeader is string {
   return Boolean(authorizationHeader?.trim());
 }
 
@@ -4582,9 +4597,7 @@ interface AdminBroadcastRequest {
   idempotencyKey: string;
 }
 
-async function readCustomerArchiveBody(
-  request: Request
-): Promise<{ confirmed: boolean } | null> {
+async function readCustomerArchiveBody(request: Request): Promise<{ confirmed: boolean } | null> {
   let parsed: unknown;
 
   try {
@@ -4614,8 +4627,7 @@ async function readAdminBroadcastBody(request: Request): Promise<AdminBroadcastR
   }
 
   const body = parsed.body.trim();
-  const confirmation =
-    typeof parsed.confirmation === "string" ? parsed.confirmation.trim() : "";
+  const confirmation = typeof parsed.confirmation === "string" ? parsed.confirmation.trim() : "";
   const idempotencyKey =
     typeof parsed.idempotency_key === "string" ? parsed.idempotency_key.trim() : "";
 
@@ -4834,10 +4846,7 @@ interface AdminOperationsTaskView {
   created_at: string;
 }
 
-function createDefaultWorkspaceSettings(
-  tenantId: string,
-  tenantSlug: string
-): WorkspaceSettings {
+function createDefaultWorkspaceSettings(tenantId: string, tenantSlug: string): WorkspaceSettings {
   const timestamp = new Date().toISOString();
   const companyName = tenantSlug
     .split(/[-_]/u)
@@ -4944,7 +4953,9 @@ function readNullableIsoTimestamp(value: unknown): string | null | undefined {
   if (normalized === null) {
     return null;
   }
-  return normalized && Number.isFinite(Date.parse(normalized)) ? new Date(normalized).toISOString() : undefined;
+  return normalized && Number.isFinite(Date.parse(normalized))
+    ? new Date(normalized).toISOString()
+    : undefined;
 }
 
 async function readOperationsTaskUpdateBody(request: Request): Promise<{
@@ -5053,7 +5064,12 @@ async function readReservationBody(request: Request): Promise<{
     "office_visit",
     "after_support"
   ];
-  const reservationStatuses: ReservationStatus[] = ["requested", "confirmed", "cancelled", "completed"];
+  const reservationStatuses: ReservationStatus[] = [
+    "requested",
+    "confirmed",
+    "cancelled",
+    "completed"
+  ];
   if (
     (body.id !== undefined && !id) ||
     !customerId ||
@@ -5110,11 +5126,19 @@ function buildOperationsReport(
   slaMinutes: number
 ): {
   customers: { total: number; active: number; new: number; registered: number };
-  tasks: { total: number; open: number; completed: number; overdue: number; completion_rate: number };
+  tasks: {
+    total: number;
+    open: number;
+    completed: number;
+    overdue: number;
+    completion_rate: number;
+  };
   reservations: { total: number; upcoming: number; completed: number; cancelled: number };
 } {
   const activeTasks = alerts.filter((alert) => resolveAlertWorkflowStatus(alert) !== "completed");
-  const completedTasks = alerts.filter((alert) => resolveAlertWorkflowStatus(alert) === "completed");
+  const completedTasks = alerts.filter(
+    (alert) => resolveAlertWorkflowStatus(alert) === "completed"
+  );
   const overdueTasks = activeTasks.filter((alert) => {
     const dueAt = alert.due_at ?? addMinutes(alert.triggered_at, slaMinutes);
     return dueAt < currentTimestamp;
@@ -5141,7 +5165,8 @@ function buildOperationsReport(
       open: activeTasks.length,
       completed: completedTasks.length,
       overdue: overdueTasks.length,
-      completion_rate: alerts.length === 0 ? 0 : Math.round((completedTasks.length / alerts.length) * 100)
+      completion_rate:
+        alerts.length === 0 ? 0 : Math.round((completedTasks.length / alerts.length) * 100)
     },
     reservations: {
       total: reservations.length,
@@ -5269,7 +5294,8 @@ function isInlineAttachmentContentType(contentType: string): boolean {
 
 function buildSafeAttachmentFileName(message: Message, mediaStoragePath: string): string {
   const safeMessageId = message.id.replace(/[^A-Za-z0-9_-]/gu, "_").slice(0, 80) || "message";
-  const extension = mediaStoragePath.match(/\.(jpg|png|gif|webp|mp4|m4a|mp3|wav|pdf|txt|bin)$/u)?.[1] ?? "bin";
+  const extension =
+    mediaStoragePath.match(/\.(jpg|png|gif|webp|mp4|m4a|mp3|wav|pdf|txt|bin)$/u)?.[1] ?? "bin";
 
   return `line-attachment-${safeMessageId}.${extension}`;
 }

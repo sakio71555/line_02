@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { Reservation, StaffRole } from "./index";
+import type { Alert, Customer, Message, Reservation, StaffRole } from "./index";
 
 export const workspaceAccentPresets = ["forest", "ocean", "charcoal", "sunrise"] as const;
 export type WorkspaceAccentPreset = (typeof workspaceAccentPresets)[number];
@@ -62,8 +62,16 @@ export interface AuditEvent {
   created_at: string;
 }
 
+export interface OperationsSearchResult {
+  customers: Customer[];
+  messages: Array<{ customer_id: string; message: Message }>;
+  notes: Array<{ customer_id: string; note: InternalNote }>;
+  alerts: Alert[];
+}
+
 export interface OperationsRepository {
   listStaffMembers(tenantId: string): Promise<OperationsStaffMember[]>;
+  searchWorkspace?(tenantId: string, query: string): Promise<OperationsSearchResult>;
   listInternalNotes(tenantId: string, customerId: string): Promise<InternalNote[]>;
   saveInternalNote(note: InternalNote): Promise<InternalNote>;
   listReplyTemplates(tenantId: string): Promise<ReplyTemplate[]>;
@@ -142,9 +150,7 @@ export class InMemoryOperationsRepository implements OperationsRepository {
     return [...this.reservations.values()]
       .filter((reservation) => reservation.tenant_id === tenantId)
       .sort((a, b) =>
-        (a.confirmed_start_at ?? a.created_at).localeCompare(
-          b.confirmed_start_at ?? b.created_at
-        )
+        (a.confirmed_start_at ?? a.created_at).localeCompare(b.confirmed_start_at ?? b.created_at)
       );
   }
 

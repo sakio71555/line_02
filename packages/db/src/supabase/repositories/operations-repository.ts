@@ -2,6 +2,7 @@ import type {
   AuditEvent,
   InternalNote,
   OperationsRepository,
+  OperationsSearchResult,
   OperationsStaffMember,
   ReplyTemplate,
   Reservation,
@@ -23,15 +24,32 @@ export class SupabaseOperationsRepository implements OperationsRepository {
 
   async listStaffMembers(tenantId: string): Promise<OperationsStaffMember[]> {
     assertTenantId(tenantId);
-    const result = (await this.client
-      .from("staff_users")
-      .select("id,tenant_id,display_name,email,role,is_active")
-      .eq("tenant_id", tenantId)
-      .eq("is_active", true)
-      .order("display_name", { ascending: true })) as SupabaseRepositoryResult<StaffRow[]>;
-    return (unwrapSupabaseResult(result, "staff_users", "listStaffMembers") ?? []).filter(
-      (row) => row.tenant_id === tenantId && row.is_active
-    );
+    const result = (await this.client.rpc("list_operations_staff_members", {
+      target_tenant_id: tenantId
+    })) as SupabaseRepositoryResult<StaffRow[]>;
+    return (
+      unwrapSupabaseResult(result, "list_operations_staff_members", "listStaffMembers") ?? []
+    ).filter((row) => row.tenant_id === tenantId && row.is_active);
+  }
+
+  async searchWorkspace(tenantId: string, query: string): Promise<OperationsSearchResult> {
+    assertTenantId(tenantId);
+    const result = (await this.client.rpc("search_operations_workspace", {
+      target_tenant_id: tenantId,
+      search_query: query
+    })) as SupabaseRepositoryResult<OperationsSearchResult>;
+    const value = unwrapSupabaseResult(result, "search_operations_workspace", "searchWorkspace");
+
+    return {
+      customers: (value?.customers ?? []).filter((customer) => customer.tenant_id === tenantId),
+      messages: (value?.messages ?? []).filter(
+        (hit) => hit.customer_id === hit.message.customer_id && hit.message.tenant_id === tenantId
+      ),
+      notes: (value?.notes ?? []).filter(
+        (hit) => hit.customer_id === hit.note.customer_id && hit.note.tenant_id === tenantId
+      ),
+      alerts: (value?.alerts ?? []).filter((alert) => alert.tenant_id === tenantId)
+    };
   }
 
   async listInternalNotes(tenantId: string, customerId: string): Promise<InternalNote[]> {
@@ -76,7 +94,9 @@ export class SupabaseOperationsRepository implements OperationsRepository {
       .from("reservations")
       .select("*")
       .eq("tenant_id", tenantId)
-      .order("confirmed_start_at", { ascending: true })) as SupabaseRepositoryResult<ReservationRow[]>;
+      .order("confirmed_start_at", { ascending: true })) as SupabaseRepositoryResult<
+      ReservationRow[]
+    >;
     return (unwrapSupabaseResult(result, "reservations", "listReservations") ?? []).filter(
       (row) => row.tenant_id === tenantId
     );
