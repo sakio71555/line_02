@@ -271,7 +271,11 @@ export async function runLineRichMenuDryRun(
     definitionAvailable: true,
     imageAvailable,
     imageBytes,
-    validationPassed: validationErrors.length === 0 && imageAvailable && imageBytes !== null && imageBytes <= 1_000_000,
+    validationPassed:
+      validationErrors.length === 0 &&
+      imageAvailable &&
+      imageBytes !== null &&
+      imageBytes <= 1_000_000,
     areaCount: definition.areas.length,
     messageActionCount: definition.areas.filter((area) => area.action.type === "message").length,
     uriActionCount: definition.areas.filter((area) => area.action.type === "uri").length,
@@ -306,7 +310,11 @@ export async function runCustomLineRichMenuDryRun(
     definitionAvailable: true,
     imageAvailable,
     imageBytes,
-    validationPassed: validationErrors.length === 0 && imageAvailable && imageBytes !== null && imageBytes <= 1_000_000,
+    validationPassed:
+      validationErrors.length === 0 &&
+      imageAvailable &&
+      imageBytes !== null &&
+      imageBytes <= 1_000_000,
     areaCount: definition.areas.length,
     messageActionCount: definition.areas.filter((area) => area.action.type === "message").length,
     uriActionCount: definition.areas.filter((area) => area.action.type === "uri").length,
@@ -408,10 +416,7 @@ export async function applyCustomRichMenu(input: {
   richMenuIdOutputPath: string;
   setDefault?: boolean;
   fetchImplementation?: typeof globalThis.fetch;
-  writeRichMenuIdOutputImplementation?: (
-    outputPath: string,
-    richMenuId: string
-  ) => Promise<void>;
+  writeRichMenuIdOutputImplementation?: (outputPath: string, richMenuId: string) => Promise<void>;
 }): Promise<CustomLineRichMenuApplyResult> {
   const repoRoot = input.repoRoot ?? process.cwd();
   const token = input.channelAccessToken.trim();
@@ -444,7 +449,6 @@ export async function applyCustomRichMenu(input: {
     fetchImplementation
   });
   let defaultRichMenuSetAttempted = false;
-  let defaultRichMenuSetConfirmed = false;
 
   try {
     if (input.setDefault) {
@@ -454,15 +458,11 @@ export async function applyCustomRichMenu(input: {
         richMenuId: createResult.richMenuId,
         fetchImplementation
       });
-      defaultRichMenuSetConfirmed = true;
     }
 
     const writeRichMenuIdOutputImplementation =
       input.writeRichMenuIdOutputImplementation ?? writeCustomRichMenuIdOutput;
-    await writeRichMenuIdOutputImplementation(
-      richMenuIdOutputPath,
-      createResult.richMenuId
-    );
+    await writeRichMenuIdOutputImplementation(richMenuIdOutputPath, createResult.richMenuId);
   } catch (error) {
     await rollbackRichMenusAndRethrow({
       error,
@@ -471,7 +471,6 @@ export async function applyCustomRichMenu(input: {
       activeRichMenuId: createResult.richMenuId,
       previousDefaultRichMenu,
       defaultRichMenuSetAttempted,
-      defaultRichMenuSetConfirmed,
       fetchImplementation
     });
   }
@@ -534,7 +533,6 @@ export async function applyLifecycleRichMenus(input: {
   const createdRichMenuIds = new Map<LineRichMenuLifecycleKey, string>();
   let liffUrlApplied = false;
   let defaultRichMenuSetAttempted = false;
-  let defaultRichMenuSetConfirmed = false;
 
   try {
     for (const menuType of LINE_RICH_MENU_LIFECYCLE_KEYS) {
@@ -561,7 +559,6 @@ export async function applyLifecycleRichMenus(input: {
       richMenuId: initialRichMenuId,
       fetchImplementation
     });
-    defaultRichMenuSetConfirmed = true;
 
     const writeRichMenuEnvOutputImplementation =
       input.writeRichMenuEnvOutputImplementation ?? writeRichMenuEnvOutput;
@@ -574,7 +571,6 @@ export async function applyLifecycleRichMenus(input: {
       activeRichMenuId: createdRichMenuIds.get("initial"),
       previousDefaultRichMenu,
       defaultRichMenuSetAttempted,
-      defaultRichMenuSetConfirmed,
       fetchImplementation
     });
   }
@@ -845,7 +841,9 @@ async function resolveCustomAssetPaths(
 
 async function resolveAssetFile(assetDirectory: string, filename: string): Promise<string> {
   const resolvedFile = await realpath(path.join(assetDirectory, filename)).catch(() => {
-    throw new LineRichMenuOperatorError(`rich_menu_asset_${filename === "rich-menu.png" ? "image" : "definition"}_missing`);
+    throw new LineRichMenuOperatorError(
+      `rich_menu_asset_${filename === "rich-menu.png" ? "image" : "definition"}_missing`
+    );
   });
 
   if (!isPathInside(assetDirectory, resolvedFile)) {
@@ -883,15 +881,12 @@ async function getDefaultRichMenuState(input: {
   token: string;
   fetchImplementation: typeof globalThis.fetch;
 }): Promise<PreviousDefaultRichMenuState> {
-  const response = await input.fetchImplementation(
-    "https://api.line.me/v2/bot/user/all/richmenu",
-    {
-      method: "GET",
-      headers: {
-        authorization: `Bearer ${input.token}`
-      }
+  const response = await input.fetchImplementation("https://api.line.me/v2/bot/user/all/richmenu", {
+    method: "GET",
+    headers: {
+      authorization: `Bearer ${input.token}`
     }
-  );
+  });
 
   if (response.status === 403 || response.status === 404) {
     return { source: "none_or_other_channel" };
@@ -912,15 +907,12 @@ async function clearDefaultRichMenu(input: {
   token: string;
   fetchImplementation: typeof globalThis.fetch;
 }): Promise<void> {
-  const response = await input.fetchImplementation(
-    "https://api.line.me/v2/bot/user/all/richmenu",
-    {
-      method: "DELETE",
-      headers: {
-        authorization: `Bearer ${input.token}`
-      }
+  const response = await input.fetchImplementation("https://api.line.me/v2/bot/user/all/richmenu", {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${input.token}`
     }
-  );
+  });
 
   if (!response.ok) {
     throw new LineRichMenuOperatorError("rich_menu_remove_default_failed");
@@ -1014,9 +1006,7 @@ async function cleanupRichMenusAndRethrow(input: {
     fetchImplementation: input.fetchImplementation
   });
   const priorCleanupFailureCount =
-    input.error instanceof LineRichMenuCleanupRequiredError
-      ? input.error.cleanupFailureCount
-      : 0;
+    input.error instanceof LineRichMenuCleanupRequiredError ? input.error.cleanupFailureCount : 0;
   const cleanupFailureCount = priorCleanupFailureCount + additionalCleanupFailureCount;
 
   if (cleanupFailureCount > 0) {
@@ -1049,24 +1039,12 @@ async function rollbackRichMenusAndRethrow(input: {
   activeRichMenuId?: string;
   previousDefaultRichMenu: PreviousDefaultRichMenuState;
   defaultRichMenuSetAttempted: boolean;
-  defaultRichMenuSetConfirmed: boolean;
   fetchImplementation: typeof globalThis.fetch;
 }): Promise<never> {
   let preserveRichMenuId: string | undefined;
   let additionalCleanupFailureCount = 0;
 
-  if (input.defaultRichMenuSetConfirmed) {
-    try {
-      await restoreDefaultRichMenu({
-        token: input.token,
-        previousDefaultRichMenu: input.previousDefaultRichMenu,
-        fetchImplementation: input.fetchImplementation
-      });
-    } catch {
-      preserveRichMenuId = input.activeRichMenuId;
-      additionalCleanupFailureCount += 1;
-    }
-  } else if (input.defaultRichMenuSetAttempted) {
+  if (input.defaultRichMenuSetAttempted) {
     let currentDefaultRichMenu: PreviousDefaultRichMenuState | undefined;
 
     try {
@@ -1117,9 +1095,7 @@ async function rollbackRichMenusAndRethrow(input: {
   });
 
   const priorCleanupFailureCount =
-    input.error instanceof LineRichMenuCleanupRequiredError
-      ? input.error.cleanupFailureCount
-      : 0;
+    input.error instanceof LineRichMenuCleanupRequiredError ? input.error.cleanupFailureCount : 0;
   const cleanupFailureCount = priorCleanupFailureCount + additionalCleanupFailureCount;
 
   if (cleanupFailureCount > 0) {
@@ -1163,14 +1139,8 @@ async function writeRichMenuEnvOutput(
   await writeEnvironmentOutput(outputPath, replacements);
 }
 
-async function writeCustomRichMenuIdOutput(
-  outputPath: string,
-  richMenuId: string
-): Promise<void> {
-  await writeEnvironmentOutput(
-    outputPath,
-    new Map([[CUSTOM_LINE_RICH_MENU_ENV_KEY, richMenuId]])
-  );
+async function writeCustomRichMenuIdOutput(outputPath: string, richMenuId: string): Promise<void> {
+  await writeEnvironmentOutput(outputPath, new Map([[CUSTOM_LINE_RICH_MENU_ENV_KEY, richMenuId]]));
 }
 
 export async function writeEnvironmentOutput(
@@ -1208,12 +1178,7 @@ async function readExistingEnvironmentOutput(outputPath: string): Promise<string
   try {
     return await readFile(outputPath, "utf8");
   } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "ENOENT"
-    ) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") {
       return "";
     }
 
