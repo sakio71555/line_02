@@ -1,5 +1,5 @@
-import { open, readFile, realpath, rename, unlink } from "node:fs/promises";
-import { randomUUID } from "node:crypto";
+import { mkdir, open, readFile, realpath, rename, rmdir, unlink } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
 import { statSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -25,6 +25,13 @@ export const RICH_MENU_DEFINITION_PATH = getRichMenuDefinitionPath("default");
 export const RICH_MENU_IMAGE_PATH = getRichMenuImagePath("default");
 export const LINE_RICH_MENU_APPLY_APPROVAL = "YES";
 export const LINE_RICH_MENU_REMOVE_APPROVAL = "YES";
+export const LINE_RICH_MENU_PUBLICATION_LEASE_TTL_SECONDS = 300;
+export const LINE_RICH_MENU_PUBLICATION_LEASE_REQUEST_TIMEOUT_MILLISECONDS = 10_000;
+export const LINE_RICH_MENU_PUBLICATION_LOCK_PATH = path.join(
+  "tmp",
+  "locks",
+  "line-rich-menu-publication.lock"
+);
 export const LINE_RICH_MENU_ENV_KEYS: Record<LineRichMenuLifecycleKey, string> = {
   initial: "LINE_RICH_MENU_INITIAL_ID",
   negotiation: "LINE_RICH_MENU_NEGOTIATION_ID",
@@ -131,6 +138,13 @@ export interface CustomLineRichMenuApplyResult {
   secretRecorded: false;
 }
 
+export interface LineRichMenuPublicationLease {
+  readonly renewalIntervalMilliseconds?: number;
+  tryAcquire(holderId: string): Promise<boolean>;
+  renew(holderId: string): Promise<boolean>;
+  release(holderId: string): Promise<boolean>;
+}
+
 export class LineRichMenuOperatorError extends Error {
   constructor(message: string) {
     super(message);
@@ -150,9 +164,124 @@ export class LineRichMenuCleanupRequiredError extends LineRichMenuOperatorError 
   }
 }
 
-type PreviousDefaultRichMenuState =
-  | { source: "messaging_api"; richMenuId: string }
-  | { source: "none_or_other_channel" };
+class LineRichMenuMutationOutcomeUnknownError extends LineRichMenuOperatorError {
+  constructor() {
+    super("rich_menu_mutation_result_unknown");
+    this.name = "LineRichMenuMutationOutcomeUnknownError";
+  }
+}
+
+export function createSupabaseLineRichMenuPublicationLease(input: {
+  supabaseUrl: string;
+  serviceRoleKey: string;
+  tenantId: string;
+  channelId: string;
+  leaseTtlSeconds?: number;
+  requestTimeoutMilliseconds?: number;
+  fetchImplementation?: typeof globalThis.fetch;
+}): LineRichMenuPublicationLease {
+  const supabaseUrl = input.supabaseUrl.trim().replace(/\/+$/, "");
+  const serviceRoleKey = input.serviceRoleKey.trim();
+  const tenantId = input.tenantId.trim();
+  const channelId = input.channelId.trim();
+  const leaseTtlSeconds = input.leaseTtlSeconds ?? LINE_RICH_MENU_PUBLICATION_LEASE_TTL_SECONDS;
+  const requestTimeoutMilliseconds =
+    input.requestTimeoutMilliseconds ??
+    LINE_RICH_MENU_PUBLICATION_LEASE_REQUEST_TIMEOUT_MILLISECONDS;
+
+  if (!supabaseUrl || !serviceRoleKey || !tenantId || !channelId) {
+    throw new LineRichMenuOperatorError("rich_menu_publication_lease_config_missing");
+  }
+
+  try {
+    const parsedUrl = new URL(supabaseUrl);
+
+    if (parsedUrl.protocol !== "https:") {
+      throw new Error("invalid_protocol");
+    }
+  } catch {
+    throw new LineRichMenuOperatorError("rich_menu_publication_lease_url_invalid");
+  }
+
+  if (!Number.isInteger(leaseTtlSeconds) || leaseTtlSeconds < 1 || leaseTtlSeconds > 3600) {
+    throw new LineRichMenuOperatorError("rich_menu_publication_lease_ttl_invalid");
+  }
+
+  if (
+    !Number.isInteger(requestTimeoutMilliseconds) ||
+    requestTimeoutMilliseconds < 1 ||
+    requestTimeoutMilliseconds > 60_000
+  ) {
+    throw new LineRichMenuOperatorError("rich_menu_publication_lease_request_timeout_invalid");
+  }
+
+  const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
+  const channelFingerprint = createHash("sha256").update(channelId).digest("hex");
+  const leaseKey = `line_rich_menu_publication:${channelFingerprint.slice(0, 32)}`;
+
+  const callLeaseRpc = async (
+    functionName: "try_acquire_runtime_lease" | "renew_runtime_lease" | "release_runtime_lease",
+    holderId: string
+  ): Promise<boolean> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), requestTimeoutMilliseconds);
+
+    try {
+      let response: Response;
+
+      try {
+        response = await fetchImplementation(`${supabaseUrl}/rest/v1/rpc/${functionName}`, {
+          method: "POST",
+          headers: {
+            apikey: serviceRoleKey,
+            authorization: `Bearer ${serviceRoleKey}`,
+            "content-type": "application/json"
+          },
+          body: JSON.stringify({
+            p_tenant_id: tenantId,
+            p_lease_key: leaseKey,
+            p_holder_id: holderId,
+            ...(functionName === "release_runtime_lease"
+              ? {}
+              : { p_lease_ttl_seconds: leaseTtlSeconds })
+          }),
+          signal: controller.signal
+        });
+      } catch {
+        throw new LineRichMenuOperatorError("rich_menu_publication_lease_request_failed");
+      }
+
+      if (!response.ok) {
+        throw new LineRichMenuOperatorError("rich_menu_publication_lease_request_failed");
+      }
+
+      try {
+        const result: unknown = await response.json();
+
+        if (typeof result !== "boolean") {
+          throw new Error("invalid_boolean_response");
+        }
+
+        return result;
+      } catch {
+        if (controller.signal.aborted) {
+          throw new LineRichMenuOperatorError("rich_menu_publication_lease_request_failed");
+        }
+
+        throw new LineRichMenuOperatorError("rich_menu_publication_lease_response_invalid");
+      }
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+
+  return {
+    renewalIntervalMilliseconds: Math.max(250, Math.floor((leaseTtlSeconds * 1000) / 3)),
+    tryAcquire: (holderId) => callLeaseRpc("try_acquire_runtime_lease", holderId),
+    renew: (holderId) => callLeaseRpc("renew_runtime_lease", holderId),
+    release: (holderId) => callLeaseRpc("release_runtime_lease", holderId)
+  };
+}
 
 export function getRichMenuDefinitionPath(menuType: LineRichMenuAssetKey): string {
   return path.join(RICH_MENU_ASSET_DIR_BY_KEY[menuType], "rich-menu.json");
@@ -348,6 +477,7 @@ export async function applyDefaultRichMenu(input: {
   repoRoot?: string;
   channelAccessToken: string;
   liffId?: string;
+  publicationLease: LineRichMenuPublicationLease;
   fetchImplementation?: typeof globalThis.fetch;
 }): Promise<LineRichMenuApplyResult> {
   const repoRoot = input.repoRoot ?? process.cwd();
@@ -359,39 +489,51 @@ export async function applyDefaultRichMenu(input: {
   }
 
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
-  const createResult = await createRichMenu({
+  return withLineRichMenuPublicationLock(
     repoRoot,
-    menuType: "default",
-    token,
-    liffId,
-    fetchImplementation
-  });
-  try {
-    await setDefaultRichMenu({
-      token,
-      richMenuId: createResult.richMenuId,
-      fetchImplementation
-    });
-  } catch (error) {
-    await cleanupRichMenusAndRethrow({
-      error,
-      token,
-      richMenuIds: [createResult.richMenuId],
-      fetchImplementation
-    });
-  }
+    input.publicationLease,
+    async (assertLeaseOwned) => {
+      const guardedFetch = createPublicationLeaseGuardedFetch(
+        fetchImplementation,
+        assertLeaseOwned
+      );
+      const createResult = await createRichMenu({
+        repoRoot,
+        menuType: "default",
+        token,
+        liffId,
+        fetchImplementation: guardedFetch
+      });
+      try {
+        await setDefaultRichMenu({
+          token,
+          richMenuId: createResult.richMenuId,
+          fetchImplementation: guardedFetch
+        });
+      } catch (error) {
+        await rollbackRichMenusAndRethrow({
+          error,
+          token,
+          richMenuIds: [createResult.richMenuId],
+          activeRichMenuId: createResult.richMenuId,
+          defaultRichMenuSetAttempted: true,
+          fetchImplementation: guardedFetch
+        });
+      }
 
-  return {
-    createRichMenuStatus: "success",
-    uploadImageStatus: "success",
-    setDefaultStatus: "success",
-    menuType: "default",
-    liffUrlApplied: createResult.liffUrlApplied,
-    liffIdRecorded: false,
-    richMenuIdRecorded: false,
-    lineSendAttempted: false,
-    secretRecorded: false
-  };
+      return {
+        createRichMenuStatus: "success",
+        uploadImageStatus: "success",
+        setDefaultStatus: "success",
+        menuType: "default",
+        liffUrlApplied: createResult.liffUrlApplied,
+        liffIdRecorded: false,
+        richMenuIdRecorded: false,
+        lineSendAttempted: false,
+        secretRecorded: false
+      };
+    }
+  );
 }
 
 export function formatLineRichMenuApplyResult(result: LineRichMenuApplyResult): string {
@@ -415,6 +557,7 @@ export async function applyCustomRichMenu(input: {
   channelAccessToken: string;
   richMenuIdOutputPath: string;
   setDefault?: boolean;
+  publicationLease: LineRichMenuPublicationLease;
   fetchImplementation?: typeof globalThis.fetch;
   writeRichMenuIdOutputImplementation?: (outputPath: string, richMenuId: string) => Promise<void>;
 }): Promise<CustomLineRichMenuApplyResult> {
@@ -437,54 +580,64 @@ export async function applyCustomRichMenu(input: {
   }
 
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
-  const paths = await resolveCustomAssetPaths(repoRoot, input.assetDirectory, true);
-  const definition = await loadRichMenuDefinitionFromAssetDirectory(repoRoot, input.assetDirectory);
-  const previousDefaultRichMenu = input.setDefault
-    ? await getDefaultRichMenuState({ token, fetchImplementation })
-    : { source: "none_or_other_channel" as const };
-  const createResult = await createRichMenuFromAssets({
-    definition,
-    imagePath: paths.imagePath,
-    token,
-    fetchImplementation
-  });
-  let defaultRichMenuSetAttempted = false;
-
-  try {
-    if (input.setDefault) {
-      defaultRichMenuSetAttempted = true;
-      await setDefaultRichMenu({
+  return withLineRichMenuPublicationLock(
+    repoRoot,
+    input.publicationLease,
+    async (assertLeaseOwned) => {
+      const guardedFetch = createPublicationLeaseGuardedFetch(
+        fetchImplementation,
+        assertLeaseOwned
+      );
+      const paths = await resolveCustomAssetPaths(repoRoot, input.assetDirectory, true);
+      const definition = await loadRichMenuDefinitionFromAssetDirectory(
+        repoRoot,
+        input.assetDirectory
+      );
+      const createResult = await createRichMenuFromAssets({
+        definition,
+        imagePath: paths.imagePath,
         token,
-        richMenuId: createResult.richMenuId,
-        fetchImplementation
+        fetchImplementation: guardedFetch
       });
+      let defaultRichMenuSetAttempted = false;
+
+      try {
+        if (input.setDefault) {
+          defaultRichMenuSetAttempted = true;
+          await setDefaultRichMenu({
+            token,
+            richMenuId: createResult.richMenuId,
+            fetchImplementation: guardedFetch
+          });
+        }
+
+        const writeRichMenuIdOutputImplementation =
+          input.writeRichMenuIdOutputImplementation ?? writeCustomRichMenuIdOutput;
+        await assertLeaseOwned();
+        await writeRichMenuIdOutputImplementation(richMenuIdOutputPath, createResult.richMenuId);
+      } catch (error) {
+        await rollbackRichMenusAndRethrow({
+          error,
+          token,
+          richMenuIds: [createResult.richMenuId],
+          activeRichMenuId: createResult.richMenuId,
+          defaultRichMenuSetAttempted,
+          fetchImplementation: guardedFetch
+        });
+      }
+
+      return {
+        createRichMenuStatus: "success",
+        uploadImageStatus: "success",
+        setDefaultStatus: input.setDefault ? "success" : "skipped",
+        assetDirectoryValidated: true,
+        richMenuIdOutputWritten: true,
+        richMenuIdRecorded: false,
+        lineSendAttempted: false,
+        secretRecorded: false
+      };
     }
-
-    const writeRichMenuIdOutputImplementation =
-      input.writeRichMenuIdOutputImplementation ?? writeCustomRichMenuIdOutput;
-    await writeRichMenuIdOutputImplementation(richMenuIdOutputPath, createResult.richMenuId);
-  } catch (error) {
-    await rollbackRichMenusAndRethrow({
-      error,
-      token,
-      richMenuIds: [createResult.richMenuId],
-      activeRichMenuId: createResult.richMenuId,
-      previousDefaultRichMenu,
-      defaultRichMenuSetAttempted,
-      fetchImplementation
-    });
-  }
-
-  return {
-    createRichMenuStatus: "success",
-    uploadImageStatus: "success",
-    setDefaultStatus: input.setDefault ? "success" : "skipped",
-    assetDirectoryValidated: true,
-    richMenuIdOutputWritten: true,
-    richMenuIdRecorded: false,
-    lineSendAttempted: false,
-    secretRecorded: false
-  };
+  );
 }
 
 export function formatCustomLineRichMenuApplyResult(result: CustomLineRichMenuApplyResult): string {
@@ -506,6 +659,7 @@ export async function applyLifecycleRichMenus(input: {
   channelAccessToken: string;
   liffId?: string;
   richMenuEnvOutputPath: string;
+  publicationLease: LineRichMenuPublicationLease;
   fetchImplementation?: typeof globalThis.fetch;
   writeRichMenuEnvOutputImplementation?: (
     outputPath: string,
@@ -526,71 +680,77 @@ export async function applyLifecycleRichMenus(input: {
   }
 
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
-  const previousDefaultRichMenu = await getDefaultRichMenuState({
-    token,
-    fetchImplementation
-  });
-  const createdRichMenuIds = new Map<LineRichMenuLifecycleKey, string>();
-  let liffUrlApplied = false;
-  let defaultRichMenuSetAttempted = false;
+  return withLineRichMenuPublicationLock(
+    repoRoot,
+    input.publicationLease,
+    async (assertLeaseOwned) => {
+      const guardedFetch = createPublicationLeaseGuardedFetch(
+        fetchImplementation,
+        assertLeaseOwned
+      );
+      const createdRichMenuIds = new Map<LineRichMenuLifecycleKey, string>();
+      let liffUrlApplied = false;
+      let defaultRichMenuSetAttempted = false;
 
-  try {
-    for (const menuType of LINE_RICH_MENU_LIFECYCLE_KEYS) {
-      const createResult = await createRichMenu({
-        repoRoot,
-        menuType,
-        token,
-        liffId,
-        fetchImplementation
-      });
-      createdRichMenuIds.set(menuType, createResult.richMenuId);
-      liffUrlApplied = liffUrlApplied || createResult.liffUrlApplied;
+      try {
+        for (const menuType of LINE_RICH_MENU_LIFECYCLE_KEYS) {
+          const createResult = await createRichMenu({
+            repoRoot,
+            menuType,
+            token,
+            liffId,
+            fetchImplementation: guardedFetch
+          });
+          createdRichMenuIds.set(menuType, createResult.richMenuId);
+          liffUrlApplied = liffUrlApplied || createResult.liffUrlApplied;
+        }
+
+        const initialRichMenuId = createdRichMenuIds.get("initial");
+
+        if (!initialRichMenuId) {
+          throw new LineRichMenuOperatorError("initial_rich_menu_id_missing");
+        }
+
+        defaultRichMenuSetAttempted = true;
+        await setDefaultRichMenu({
+          token,
+          richMenuId: initialRichMenuId,
+          fetchImplementation: guardedFetch
+        });
+
+        const writeRichMenuEnvOutputImplementation =
+          input.writeRichMenuEnvOutputImplementation ?? writeRichMenuEnvOutput;
+        await assertLeaseOwned();
+        await writeRichMenuEnvOutputImplementation(richMenuEnvOutputPath, createdRichMenuIds);
+      } catch (error) {
+        await rollbackRichMenusAndRethrow({
+          error,
+          token,
+          richMenuIds: [...createdRichMenuIds.values()],
+          activeRichMenuId: createdRichMenuIds.get("initial"),
+          defaultRichMenuSetAttempted,
+          fetchImplementation: guardedFetch
+        });
+      }
+
+      return {
+        createRichMenuStatus: "success",
+        uploadImageStatus: "success",
+        setDefaultStatus: "success",
+        lifecycleMenuCount: LINE_RICH_MENU_LIFECYCLE_KEYS.length,
+        defaultMenuType: "initial",
+        initialRichMenuCreated: true,
+        negotiationRichMenuCreated: true,
+        aftercareRichMenuCreated: true,
+        richMenuEnvOutputWritten: true,
+        liffUrlApplied,
+        liffIdRecorded: false,
+        richMenuIdRecorded: false,
+        lineSendAttempted: false,
+        secretRecorded: false
+      };
     }
-
-    const initialRichMenuId = createdRichMenuIds.get("initial");
-
-    if (!initialRichMenuId) {
-      throw new LineRichMenuOperatorError("initial_rich_menu_id_missing");
-    }
-
-    defaultRichMenuSetAttempted = true;
-    await setDefaultRichMenu({
-      token,
-      richMenuId: initialRichMenuId,
-      fetchImplementation
-    });
-
-    const writeRichMenuEnvOutputImplementation =
-      input.writeRichMenuEnvOutputImplementation ?? writeRichMenuEnvOutput;
-    await writeRichMenuEnvOutputImplementation(richMenuEnvOutputPath, createdRichMenuIds);
-  } catch (error) {
-    await rollbackRichMenusAndRethrow({
-      error,
-      token,
-      richMenuIds: [...createdRichMenuIds.values()],
-      activeRichMenuId: createdRichMenuIds.get("initial"),
-      previousDefaultRichMenu,
-      defaultRichMenuSetAttempted,
-      fetchImplementation
-    });
-  }
-
-  return {
-    createRichMenuStatus: "success",
-    uploadImageStatus: "success",
-    setDefaultStatus: "success",
-    lifecycleMenuCount: LINE_RICH_MENU_LIFECYCLE_KEYS.length,
-    defaultMenuType: "initial",
-    initialRichMenuCreated: true,
-    negotiationRichMenuCreated: true,
-    aftercareRichMenuCreated: true,
-    richMenuEnvOutputWritten: true,
-    liffUrlApplied,
-    liffIdRecorded: false,
-    richMenuIdRecorded: false,
-    lineSendAttempted: false,
-    secretRecorded: false
-  };
+  );
 }
 
 export function formatLineRichMenuLifecycleApplyResult(
@@ -642,9 +802,12 @@ export function formatLineRichMenuOperatorFailure(error: unknown): string {
 }
 
 export async function removeDefaultRichMenu(input: {
+  repoRoot?: string;
   channelAccessToken: string;
+  publicationLease: LineRichMenuPublicationLease;
   fetchImplementation?: typeof globalThis.fetch;
 }): Promise<LineRichMenuRemoveDefaultResult> {
+  const repoRoot = input.repoRoot ?? process.cwd();
   const token = input.channelAccessToken.trim();
 
   if (!token) {
@@ -652,14 +815,24 @@ export async function removeDefaultRichMenu(input: {
   }
 
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
-  await clearDefaultRichMenu({ token, fetchImplementation });
+  return withLineRichMenuPublicationLock(
+    repoRoot,
+    input.publicationLease,
+    async (assertLeaseOwned) => {
+      const guardedFetch = createPublicationLeaseGuardedFetch(
+        fetchImplementation,
+        assertLeaseOwned
+      );
+      await clearDefaultRichMenu({ token, fetchImplementation: guardedFetch });
 
-  return {
-    removeDefaultRichMenuStatus: "success",
-    richMenuIdRecorded: false,
-    lineSendAttempted: false,
-    secretRecorded: false
-  };
+      return {
+        removeDefaultRichMenuStatus: "success",
+        richMenuIdRecorded: false,
+        lineSendAttempted: false,
+        secretRecorded: false
+      };
+    }
+  );
 }
 
 export function formatLineRichMenuRemoveDefaultResult(
@@ -757,21 +930,37 @@ async function createRichMenuFromAssets(input: {
   }
 
   const image = await readFile(input.imagePath);
-  const createResponse = await input.fetchImplementation("https://api.line.me/v2/bot/richmenu", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${input.token}`,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify(input.definition)
-  });
+  let createResponse: Response;
+
+  try {
+    createResponse = await input.fetchImplementation("https://api.line.me/v2/bot/richmenu", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${input.token}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify(input.definition)
+    });
+  } catch (error) {
+    if (error instanceof LineRichMenuMutationOutcomeUnknownError) {
+      throw new LineRichMenuCleanupRequiredError("rich_menu_create_result_unknown", 1);
+    }
+
+    throw error;
+  }
 
   if (!createResponse.ok) {
     throw new LineRichMenuOperatorError("rich_menu_create_failed");
   }
 
-  const createBody: unknown = await createResponse.json();
-  const richMenuId = readRichMenuId(createBody);
+  let richMenuId: string;
+
+  try {
+    const createBody: unknown = await createResponse.json();
+    richMenuId = readRichMenuId(createBody);
+  } catch {
+    throw new LineRichMenuCleanupRequiredError("rich_menu_create_result_unknown", 1);
+  }
 
   try {
     const uploadResponse = await input.fetchImplementation(
@@ -790,8 +979,13 @@ async function createRichMenuFromAssets(input: {
       throw new LineRichMenuOperatorError("rich_menu_image_upload_failed");
     }
   } catch (error) {
+    const uploadError =
+      error instanceof LineRichMenuMutationOutcomeUnknownError
+        ? new LineRichMenuOperatorError("rich_menu_image_upload_result_unknown")
+        : error;
+
     await cleanupRichMenusAndRethrow({
-      error,
+      error: uploadError,
       token: input.token,
       richMenuIds: [richMenuId],
       fetchImplementation: input.fetchImplementation
@@ -862,81 +1056,58 @@ async function setDefaultRichMenu(input: {
   richMenuId: string;
   fetchImplementation: typeof globalThis.fetch;
 }): Promise<void> {
-  const defaultResponse = await input.fetchImplementation(
-    `https://api.line.me/v2/bot/user/all/richmenu/${encodeURIComponent(input.richMenuId)}`,
-    {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${input.token}`
+  let defaultResponse: Response;
+
+  try {
+    defaultResponse = await input.fetchImplementation(
+      `https://api.line.me/v2/bot/user/all/richmenu/${encodeURIComponent(input.richMenuId)}`,
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${input.token}`
+        }
       }
+    );
+  } catch (error) {
+    if (error instanceof LineRichMenuMutationOutcomeUnknownError) {
+      throw new LineRichMenuOperatorError("rich_menu_set_default_result_unknown");
     }
-  );
+
+    throw error;
+  }
 
   if (!defaultResponse.ok) {
     throw new LineRichMenuOperatorError("rich_menu_set_default_failed");
   }
 }
 
-async function getDefaultRichMenuState(input: {
-  token: string;
-  fetchImplementation: typeof globalThis.fetch;
-}): Promise<PreviousDefaultRichMenuState> {
-  const response = await input.fetchImplementation("https://api.line.me/v2/bot/user/all/richmenu", {
-    method: "GET",
-    headers: {
-      authorization: `Bearer ${input.token}`
-    }
-  });
-
-  if (response.status === 403 || response.status === 404) {
-    return { source: "none_or_other_channel" };
-  }
-
-  if (!response.ok) {
-    throw new LineRichMenuOperatorError("rich_menu_get_default_failed");
-  }
-
-  const responseBody: unknown = await response.json();
-  return {
-    source: "messaging_api",
-    richMenuId: readRichMenuId(responseBody)
-  };
-}
-
 async function clearDefaultRichMenu(input: {
   token: string;
   fetchImplementation: typeof globalThis.fetch;
 }): Promise<void> {
-  const response = await input.fetchImplementation("https://api.line.me/v2/bot/user/all/richmenu", {
-    method: "DELETE",
-    headers: {
-      authorization: `Bearer ${input.token}`
+  let response: Response;
+
+  try {
+    response = await input.fetchImplementation("https://api.line.me/v2/bot/user/all/richmenu", {
+      method: "DELETE",
+      headers: {
+        authorization: `Bearer ${input.token}`
+      }
+    });
+  } catch (error) {
+    if (error instanceof LineRichMenuMutationOutcomeUnknownError) {
+      throw new LineRichMenuCleanupRequiredError(
+        "rich_menu_remove_default_result_unknown",
+        1
+      );
     }
-  });
+
+    throw error;
+  }
 
   if (!response.ok) {
     throw new LineRichMenuOperatorError("rich_menu_remove_default_failed");
   }
-}
-
-async function restoreDefaultRichMenu(input: {
-  token: string;
-  previousDefaultRichMenu: PreviousDefaultRichMenuState;
-  fetchImplementation: typeof globalThis.fetch;
-}): Promise<void> {
-  if (input.previousDefaultRichMenu.source === "messaging_api") {
-    await setDefaultRichMenu({
-      token: input.token,
-      richMenuId: input.previousDefaultRichMenu.richMenuId,
-      fetchImplementation: input.fetchImplementation
-    });
-    return;
-  }
-
-  await clearDefaultRichMenu({
-    token: input.token,
-    fetchImplementation: input.fetchImplementation
-  });
 }
 
 async function deleteRichMenu(input: {
@@ -1019,69 +1190,19 @@ async function cleanupRichMenusAndRethrow(input: {
   throw input.error;
 }
 
-function defaultRichMenuStatesEqual(
-  left: PreviousDefaultRichMenuState,
-  right: PreviousDefaultRichMenuState
-): boolean {
-  if (left.source !== right.source) {
-    return false;
-  }
-
-  return left.source === "none_or_other_channel"
-    ? true
-    : right.source === "messaging_api" && left.richMenuId === right.richMenuId;
-}
-
 async function rollbackRichMenusAndRethrow(input: {
   error: unknown;
   token: string;
   richMenuIds: string[];
   activeRichMenuId?: string;
-  previousDefaultRichMenu: PreviousDefaultRichMenuState;
   defaultRichMenuSetAttempted: boolean;
   fetchImplementation: typeof globalThis.fetch;
 }): Promise<never> {
-  let preserveRichMenuId: string | undefined;
+  const preserveRichMenuId = input.defaultRichMenuSetAttempted ? input.activeRichMenuId : undefined;
   let additionalCleanupFailureCount = 0;
 
-  if (input.defaultRichMenuSetAttempted) {
-    let currentDefaultRichMenu: PreviousDefaultRichMenuState | undefined;
-
-    try {
-      currentDefaultRichMenu = await getDefaultRichMenuState({
-        token: input.token,
-        fetchImplementation: input.fetchImplementation
-      });
-    } catch {
-      preserveRichMenuId = input.activeRichMenuId;
-      additionalCleanupFailureCount += 1;
-    }
-
-    if (currentDefaultRichMenu) {
-      const activeRichMenuIsCurrentDefault =
-        currentDefaultRichMenu.source === "messaging_api" &&
-        currentDefaultRichMenu.richMenuId === input.activeRichMenuId;
-
-      if (activeRichMenuIsCurrentDefault) {
-        try {
-          await restoreDefaultRichMenu({
-            token: input.token,
-            previousDefaultRichMenu: input.previousDefaultRichMenu,
-            fetchImplementation: input.fetchImplementation
-          });
-        } catch {
-          preserveRichMenuId = input.activeRichMenuId;
-          additionalCleanupFailureCount += 1;
-        }
-      } else if (
-        currentDefaultRichMenu.source === "messaging_api" &&
-        input.richMenuIds.includes(currentDefaultRichMenu.richMenuId) &&
-        !defaultRichMenuStatesEqual(currentDefaultRichMenu, input.previousDefaultRichMenu)
-      ) {
-        preserveRichMenuId = currentDefaultRichMenu.richMenuId;
-        additionalCleanupFailureCount += 1;
-      }
-    }
+  if (preserveRichMenuId) {
+    additionalCleanupFailureCount += 1;
   }
 
   const deletableRichMenuIds = preserveRichMenuId
@@ -1106,6 +1227,211 @@ async function rollbackRichMenusAndRethrow(input: {
   }
 
   throw input.error;
+}
+
+async function withLineRichMenuPublicationLock<T>(
+  repoRoot: string,
+  publicationLease: LineRichMenuPublicationLease,
+  operation: (assertLeaseOwned: () => Promise<void>) => Promise<T>
+): Promise<T> {
+  const holderId = randomUUID();
+  const releaseLocalLock = await acquireLineRichMenuPublicationLock(repoRoot, holderId);
+  let sharedLeaseAcquired = false;
+  let sharedLeaseLost = false;
+  let renewalInFlight: Promise<void> | undefined;
+  let renewalTimer: ReturnType<typeof setInterval> | undefined;
+  let operationSucceeded = false;
+  let operationResult: T | undefined;
+  let operationError: unknown;
+
+  try {
+    sharedLeaseAcquired = await publicationLease.tryAcquire(holderId);
+
+    if (!sharedLeaseAcquired) {
+      throw new LineRichMenuOperatorError("rich_menu_publication_locked");
+    }
+
+    const assertLeaseOwned = async (): Promise<void> => {
+      if (sharedLeaseLost) {
+        throw new LineRichMenuOperatorError("rich_menu_publication_lease_lost");
+      }
+
+      if (!renewalInFlight) {
+        renewalInFlight = (async () => {
+          let renewed = false;
+
+          try {
+            renewed = await publicationLease.renew(holderId);
+          } catch {
+            renewed = false;
+          }
+
+          if (!renewed) {
+            sharedLeaseLost = true;
+            throw new LineRichMenuOperatorError("rich_menu_publication_lease_lost");
+          }
+        })().finally(() => {
+          renewalInFlight = undefined;
+        });
+      }
+
+      await renewalInFlight;
+    };
+
+    if (publicationLease.renewalIntervalMilliseconds) {
+      renewalTimer = setInterval(() => {
+        void assertLeaseOwned().catch(() => undefined);
+      }, publicationLease.renewalIntervalMilliseconds);
+      renewalTimer.unref?.();
+    }
+
+    operationResult = await operation(assertLeaseOwned);
+
+    try {
+      await assertLeaseOwned();
+    } catch {
+      throw new LineRichMenuCleanupRequiredError(
+        "rich_menu_publication_completion_state_unknown",
+        1
+      );
+    }
+
+    operationSucceeded = true;
+  } catch (error) {
+    operationError = error;
+  }
+
+  if (renewalTimer) {
+    clearInterval(renewalTimer);
+  }
+
+  await renewalInFlight?.catch(() => undefined);
+
+  let lockReleaseFailureCount = 0;
+
+  if (sharedLeaseAcquired) {
+    try {
+      if (!(await publicationLease.release(holderId)) && !sharedLeaseLost) {
+        lockReleaseFailureCount += 1;
+      }
+    } catch {
+      if (!sharedLeaseLost) {
+        lockReleaseFailureCount += 1;
+      }
+    }
+  }
+
+  try {
+    await releaseLocalLock();
+  } catch {
+    lockReleaseFailureCount += 1;
+  }
+
+  if (lockReleaseFailureCount > 0) {
+    const priorCleanupFailureCount =
+      operationError instanceof LineRichMenuCleanupRequiredError
+        ? operationError.cleanupFailureCount
+        : 0;
+    throw new LineRichMenuCleanupRequiredError(
+      operationSucceeded
+        ? "rich_menu_publication_lock_release_failed"
+        : getSanitizedApplyFailureReason(operationError),
+      priorCleanupFailureCount + lockReleaseFailureCount
+    );
+  }
+
+  if (!operationSucceeded) {
+    throw operationError;
+  }
+
+  return operationResult as T;
+}
+
+async function acquireLineRichMenuPublicationLock(
+  repoRoot: string,
+  holderId: string
+): Promise<() => Promise<void>> {
+  const lockPath = path.join(repoRoot, LINE_RICH_MENU_PUBLICATION_LOCK_PATH);
+  const ownerPath = path.join(lockPath, `owner-${holderId}.json`);
+
+  try {
+    await mkdir(path.dirname(lockPath), { recursive: true, mode: 0o700 });
+  } catch {
+    throw new LineRichMenuOperatorError("rich_menu_publication_lock_prepare_failed");
+  }
+
+  try {
+    await mkdir(lockPath, { mode: 0o700 });
+  } catch (error) {
+    if (getErrorCode(error) === "EEXIST") {
+      throw new LineRichMenuOperatorError("rich_menu_publication_locked");
+    }
+
+    throw new LineRichMenuOperatorError("rich_menu_publication_lock_acquire_failed");
+  }
+
+  let ownerHandle: Awaited<ReturnType<typeof open>> | undefined;
+
+  try {
+    ownerHandle = await open(ownerPath, "wx", 0o600);
+    await ownerHandle.writeFile(
+      JSON.stringify({ version: 1, holder_id: holderId, pid: process.pid }) + "\n",
+      "utf8"
+    );
+    await ownerHandle.sync();
+    await ownerHandle.close();
+    ownerHandle = undefined;
+  } catch {
+    await ownerHandle?.close().catch(() => undefined);
+    await unlink(ownerPath).catch(() => undefined);
+    await rmdir(lockPath).catch(() => undefined);
+    throw new LineRichMenuOperatorError("rich_menu_publication_lock_acquire_failed");
+  }
+
+  let released = false;
+
+  return async () => {
+    if (released) {
+      return;
+    }
+
+    released = true;
+
+    try {
+      await unlink(ownerPath);
+      await rmdir(lockPath);
+    } catch {
+      throw new LineRichMenuOperatorError("rich_menu_publication_lock_release_failed");
+    }
+  };
+}
+
+function createPublicationLeaseGuardedFetch(
+  fetchImplementation: typeof globalThis.fetch,
+  assertLeaseOwned: () => Promise<void>
+): typeof globalThis.fetch {
+  return (async (input, init) => {
+    await assertLeaseOwned();
+    let response: Response;
+
+    try {
+      response = await fetchImplementation(input, init);
+    } catch {
+      throw new LineRichMenuMutationOutcomeUnknownError();
+    }
+
+    try {
+      await assertLeaseOwned();
+    } catch {
+      throw new LineRichMenuMutationOutcomeUnknownError();
+    }
+
+    return response;
+  }) as typeof globalThis.fetch;
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  return isRecord(error) && typeof error.code === "string" ? error.code : undefined;
 }
 
 function getSanitizedApplyFailureReason(error: unknown): string {
@@ -1281,11 +1607,13 @@ async function main(): Promise<void> {
         throw new LineRichMenuOperatorError("line_rich_menu_apply_not_approved");
       }
 
+      const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
       const result = await applyCustomRichMenu({
         assetDirectory,
-        channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "",
+        channelAccessToken,
         richMenuIdOutputPath: readOptionValue(argv, "--rich-menu-id-output") ?? "",
-        setDefault: args.has("--set-default")
+        setDefault: args.has("--set-default"),
+        publicationLease: createPublicationLeaseFromEnvironment()
       });
       console.log(formatCustomLineRichMenuApplyResult(result));
       return;
@@ -1301,9 +1629,11 @@ async function main(): Promise<void> {
       throw new LineRichMenuOperatorError("line_rich_menu_apply_not_approved");
     }
 
+    const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
     const result = await applyDefaultRichMenu({
-      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "",
-      liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID
+      channelAccessToken,
+      liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID,
+      publicationLease: createPublicationLeaseFromEnvironment()
     });
     console.log(formatLineRichMenuApplyResult(result));
     return;
@@ -1314,10 +1644,12 @@ async function main(): Promise<void> {
       throw new LineRichMenuOperatorError("line_rich_menu_apply_not_approved");
     }
 
+    const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
     const result = await applyLifecycleRichMenus({
-      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "",
+      channelAccessToken,
       liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID,
-      richMenuEnvOutputPath: readOptionValue(argv, "--rich-menu-env-output") ?? ""
+      richMenuEnvOutputPath: readOptionValue(argv, "--rich-menu-env-output") ?? "",
+      publicationLease: createPublicationLeaseFromEnvironment()
     });
     console.log(formatLineRichMenuLifecycleApplyResult(result));
     return;
@@ -1328,8 +1660,10 @@ async function main(): Promise<void> {
       throw new LineRichMenuOperatorError("line_rich_menu_remove_not_approved");
     }
 
+    const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
     const result = await removeDefaultRichMenu({
-      channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? ""
+      channelAccessToken,
+      publicationLease: createPublicationLeaseFromEnvironment()
     });
     console.log(formatLineRichMenuRemoveDefaultResult(result));
     return;
@@ -1337,6 +1671,15 @@ async function main(): Promise<void> {
 
   const result = await runLineRichMenuDryRun();
   console.log(formatLineRichMenuDryRunResult(result));
+}
+
+function createPublicationLeaseFromEnvironment(): LineRichMenuPublicationLease {
+  return createSupabaseLineRichMenuPublicationLease({
+    supabaseUrl: process.env.SUPABASE_URL ?? "",
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+    tenantId: process.env.TENANT_ID ?? "",
+    channelId: process.env.LINE_CHANNEL_ID ?? ""
+  });
 }
 
 function readOptionValue(argv: string[], optionName: string): string | undefined {

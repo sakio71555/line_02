@@ -48,6 +48,38 @@ LINE_RICH_MENU_APPLY_APPROVED=YES npx pnpm@10.12.1 exec tsx scripts/ops/line_ric
 
 The apply command reads `LINE_CHANNEL_ACCESS_TOKEN` from the runtime environment. It does not print the token or the rich menu ID.
 
+## Publication safety
+
+Every mutating command (`--apply`, `--asset-dir ... --apply`, `--apply-lifecycle`, and
+`--remove-default`)
+requires the following runtime values in addition to its approval flag and LINE access token:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `TENANT_ID`
+- `LINE_CHANNEL_ID`
+
+The operator first creates an owner-specific local lock under the ignored
+`tmp/locks/line-rich-menu-publication.lock/` directory, then acquires a Supabase runtime lease. The
+shared lease is scoped by tenant and a hash of the stable LINE channel ID, so separate clones or
+hosts using the same Supabase project and tenant cannot publish to the same LINE channel at the same
+time. Access-token rotation does not change the lease key.
+
+The shared lease is renewed while a LINE API request is in flight. If ownership is lost, the
+operator stops before another LINE mutation or local output write. A stale local lock is not removed
+automatically because it may still belong to a live process. Confirm that no publication process is
+running before manually removing a stale lock.
+
+Supabase lease RPC requests have a 10-second timeout. Acquire or renewal timeouts stop publication
+before the next mutation. A release timeout is reported as `cleanup_required=true`, while the
+owner-specific local lock is still released so a stalled network request cannot leave the repository
+permanently blocked.
+
+If LINE accepts a mutation but its response is lost, or if the shared lease is lost during the final
+completion check, the operator reports `cleanup_required=true`. It does not guess the current LINE
+state or automatically delete a menu that may be live; an operator must verify the default menu and
+created menus before another publication.
+
 ## Apply lifecycle menus
 
 Use this for the production customer-facing account when all three lifecycle menus must exist before per-customer switching:
