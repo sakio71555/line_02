@@ -37,6 +37,7 @@ export function StaffManagement({ initialStaff }: { initialStaff: AdminStaffMemb
     createStaffMemberAction,
     initialState
   );
+  const isFirstStaff = initialStaff.length === 0;
 
   return (
     <div className="staff-management">
@@ -45,14 +46,22 @@ export function StaffManagement({ initialStaff }: { initialStaff: AdminStaffMemb
           <div>
             <p className="eyebrow">新しい利用者</p>
             <h2 id="staff-create-title">担当者を登録</h2>
-            <p>登録後、招待メールからログインを開始できます。</p>
+            <p>{isFirstStaff ? "最初の担当者は管理者として登録されます。" : "登録後、招待メールからログインを開始できます。"}</p>
           </div>
           <UserPlus aria-hidden="true" size={24} />
         </header>
         <form action={createAction} className="staff-create-form">
           <label><span>担当者名</span><input autoComplete="name" maxLength={120} name="display_name" placeholder="例：山田 花子" required /></label>
           <label><span>メールアドレス</span><input autoComplete="email" maxLength={320} name="email" placeholder="staff@example.com" required type="email" /></label>
-          <label><span>権限</span><select defaultValue="staff" name="role"><RoleOptions /></select></label>
+          {isFirstStaff ? (
+            <label>
+              <span>権限</span>
+              <input name="role" type="hidden" value="owner" />
+              <strong className="staff-fixed-role"><ShieldCheck size={16} />管理者（最初の担当者）</strong>
+            </label>
+          ) : (
+            <label><span>権限</span><select defaultValue="staff" name="role"><RoleOptions /></select></label>
+          )}
           <button disabled={createPending} type="submit"><UserPlus size={17} />{createPending ? "登録中" : "登録して招待"}</button>
         </form>
         <ActionMessage state={createState} />
@@ -68,7 +77,7 @@ export function StaffManagement({ initialStaff }: { initialStaff: AdminStaffMemb
           <strong>{initialStaff.length}名</strong>
         </header>
         {initialStaff.length === 0 ? (
-          <p className="staff-empty">担当者はまだ登録されていません。</p>
+          <p className="staff-empty">担当者はまだ登録されていません。上のフォームに実際の管理者名とメールアドレスを入力し、最初の担当者を登録してください。</p>
         ) : (
           <div className="staff-member-list">
             {initialStaff.map((member) => <StaffMemberCard key={member.id} member={member} />)}

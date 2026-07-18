@@ -12,7 +12,7 @@ const tenantId = "tenant_amamihome";
 const now = "2026-07-18T02:00:00.000Z";
 
 describe("admin staff management API", () => {
-  it("registers, invites and lists a sanitized tenant-owned staff member", async () => {
+  it("forces the first tenant staff member to owner and returns sanitized data", async () => {
     const repository = new InMemoryOperationsRepository();
     const invitationService: StaffInvitationService = {
       invite: vi.fn().mockResolvedValue({ authUserId: "auth_staff_1", outcome: "sent" })
@@ -38,7 +38,7 @@ describe("admin staff management API", () => {
         tenant_id: tenantId,
         display_name: "山田 花子",
         email: "hanako@example.test",
-        role: "staff",
+        role: "owner",
         status: "active",
         membership_status: "invited",
         auth_linked: true,
@@ -54,6 +54,35 @@ describe("admin staff management API", () => {
     expect(listResponse.status).toBe(200);
     expect(listed.staff).toEqual([created.staff_member]);
     await expect(repository.listStaffMembers(tenantId)).resolves.toEqual([]);
+  });
+
+  it("preserves the requested role after the first tenant owner exists", async () => {
+    const repository = new InMemoryOperationsRepository();
+    const app = createTestApp(repository);
+
+    const firstResponse = await app.fetch(
+      staffRequest("/api/admin/staff", "POST", {
+        display_name: "最初の管理者",
+        email: "owner@example.test",
+        role: "staff"
+      })
+    );
+    const secondResponse = await app.fetch(
+      staffRequest("/api/admin/staff", "POST", {
+        display_name: "二人目の担当者",
+        email: "staff@example.test",
+        role: "staff"
+      })
+    );
+
+    expect(firstResponse.status).toBe(201);
+    await expect(firstResponse.json()).resolves.toMatchObject({
+      staff_member: { role: "owner" }
+    });
+    expect(secondResponse.status).toBe(201);
+    await expect(secondResponse.json()).resolves.toMatchObject({
+      staff_member: { role: "staff" }
+    });
   });
 
   it("keeps a failed invitation as an explicit pending record", async () => {
@@ -237,7 +266,7 @@ describe("admin staff management API", () => {
       staff_member: {
         id: "staff_shared",
         tenant_id: tenantId,
-        role: "staff",
+        role: "owner",
         membership_status: "active",
         auth_linked: true
       }
@@ -247,7 +276,7 @@ describe("admin staff management API", () => {
       { id: "staff_shared", role: "manager", is_active: true }
     ]);
     await expect(repository.listStaffMembers(tenantId)).resolves.toMatchObject([
-      { id: "staff_shared", role: "staff", is_active: true }
+      { id: "staff_shared", role: "owner", is_active: true }
     ]);
   });
 

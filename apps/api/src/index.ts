@@ -1474,6 +1474,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     const timestamp = now?.() ?? new Date().toISOString();
     const staffUserId = globalThis.crypto.randomUUID();
+    const role = records.length === 0 ? "owner" : parsed.data.role;
     let record: StaffManagementRecord = {
       staff_user: {
         id: staffUserId,
@@ -1481,7 +1482,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         auth_user_id: null,
         email: parsed.data.email,
         display_name: parsed.data.display_name,
-        role: parsed.data.role,
+        role,
         status: "active",
         line_user_id: null,
         is_active: true,
@@ -1495,7 +1496,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         id: globalThis.crypto.randomUUID(),
         tenant_id: tenant.tenantId,
         staff_user_id: staffUserId,
-        role: parsed.data.role,
+        role,
         status: "invited",
         invited_at: timestamp,
         accepted_at: null,

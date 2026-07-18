@@ -4439,6 +4439,19 @@ dl.detail-grid {
   gap: 5px;
 }
 
+.staff-fixed-role {
+  align-items: center;
+  background: #edf6f1;
+  border: 1px solid #bdd8ca;
+  border-radius: 6px;
+  color: #245c45;
+  display: flex;
+  font-size: 13px;
+  gap: 7px;
+  min-height: 42px;
+  padding: 9px 11px;
+}
+
 .staff-create-form button {
   white-space: nowrap;
 }

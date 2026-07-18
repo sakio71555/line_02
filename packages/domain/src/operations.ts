@@ -897,6 +897,19 @@ export class InMemoryOperationsRepository implements OperationsRepository {
   ): Promise<StaffManagementRecord> {
     assertStaffManagementIdentity(record);
     const normalizedEmail = record.staff_user.email.trim().toLowerCase();
+    const firstTenantMember = ![...this.staffManagement.values()].some(
+      (candidate) => candidate.membership.tenant_id === record.membership.tenant_id
+    );
+    const requestedRecord: StaffManagementRecord = {
+      staff_user: {
+        ...structuredClone(record.staff_user),
+        role: firstTenantMember ? "owner" : record.staff_user.role
+      },
+      membership: {
+        ...structuredClone(record.membership),
+        role: firstTenantMember ? "owner" : record.membership.role
+      }
+    };
     const existingTenantRecord = [...this.staffManagement.values()].find(
       (candidate) =>
         candidate.membership.tenant_id === record.membership.tenant_id &&
@@ -923,13 +936,13 @@ export class InMemoryOperationsRepository implements OperationsRepository {
       ? {
           staff_user: structuredClone(existingIdentity.staff_user),
           membership: {
-            ...structuredClone(record.membership),
+            ...requestedRecord.membership,
             staff_user_id: existingIdentity.staff_user.id,
             status: acceptedIdentity ? "active" : "invited",
-            accepted_at: acceptedIdentity ? record.membership.created_at : null
+            accepted_at: acceptedIdentity ? requestedRecord.membership.created_at : null
           }
         }
-      : structuredClone(record);
+      : requestedRecord;
 
     this.staffManagement.set(staffManagementKey(saved), saved);
     return structuredClone(saved);
