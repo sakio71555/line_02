@@ -8,13 +8,18 @@ import {
   ShieldCheck,
   UsersRound
 } from "lucide-react";
-import React, { useActionState, useEffect, useState } from "react";
+import React, { useActionState, useEffect, useRef, useState } from "react";
 
 import {
   ADMIN_BROADCAST_CONFIRMATION_VALUE,
   type AdminBroadcastPreviewResponse
 } from "../../src/admin-api";
 import { PageTitle } from "../_components/ui";
+import {
+  MediaDropzone,
+  type MediaDropzoneHandle,
+  type MediaSelection
+} from "../_components/media-dropzone";
 import { runBroadcastAction, type BroadcastActionState } from "./actions";
 
 export type BroadcastPageLoadResult =
@@ -29,12 +34,28 @@ export function BroadcastPageView({ result }: { result: BroadcastPageLoadResult 
   const [confirmation, setConfirmation] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [idempotencyKey, setIdempotencyKey] = useState("");
+  const [mediaSelection, setMediaSelection] = useState<MediaSelection | null>(null);
+  const [mediaPreparing, setMediaPreparing] = useState(false);
+  const [mediaResetSignal, setMediaResetSignal] = useState(0);
+  const mediaDropzoneRef = useRef<MediaDropzoneHandle>(null);
 
   useEffect(() => {
     if (state.status !== "success" && !idempotencyKey) {
       setIdempotencyKey(createBroadcastIdempotencyKey());
     }
   }, [idempotencyKey, state.status]);
+
+  useEffect(() => {
+    if (pending) return;
+
+    if (state.status === "success") {
+      mediaDropzoneRef.current?.forgetPreparedMedia();
+      setBody("");
+      setMediaResetSignal((current) => current + 1);
+    } else if (state.status === "error") {
+      mediaDropzoneRef.current?.resumePreparedMediaOwnership();
+    }
+  }, [pending, state.status]);
 
   const preview = result.status === "ok" ? result.preview : null;
   const overLimit = Boolean(
@@ -45,10 +66,11 @@ export function BroadcastPageView({ result }: { result: BroadcastPageLoadResult 
       preview.broadcast_enabled &&
       preview.eligible_recipients > 0 &&
       !overLimit &&
-      body.trim() &&
+      (body.trim() || mediaSelection) &&
       confirmed &&
       confirmation === ADMIN_BROADCAST_CONFIRMATION_VALUE &&
       idempotencyKey &&
+      !mediaPreparing &&
       state.status !== "success"
   );
 
@@ -116,7 +138,11 @@ export function BroadcastPageView({ result }: { result: BroadcastPageLoadResult 
               </div>
             </div>
 
-            <form action={runBroadcast} className="broadcast-form">
+            <form
+              action={runBroadcast}
+              className="broadcast-form"
+              onSubmitCapture={() => mediaDropzoneRef.current?.handoffPreparedMedia()}
+            >
               <input name="idempotency_key" type="hidden" value={idempotencyKey} />
               <label htmlFor="broadcast-body">メッセージ</label>
               <textarea
@@ -126,11 +152,20 @@ export function BroadcastPageView({ result }: { result: BroadcastPageLoadResult 
                 name="body"
                 onChange={(event) => setBody(event.currentTarget.value)}
                 placeholder="お客様全員へ送る内容を入力"
-                required
                 rows={8}
                 value={body}
               />
               <div className="broadcast-character-count">{body.length} / 5000文字</div>
+
+              <MediaDropzone
+                disabled={state.status === "success"}
+                locked={pending}
+                onPreparingChange={setMediaPreparing}
+                onSelectionChange={setMediaSelection}
+                purpose="broadcast"
+                ref={mediaDropzoneRef}
+                resetSignal={mediaResetSignal}
+              />
 
               <div className="broadcast-confirmation">
                 <p>
@@ -159,7 +194,7 @@ export function BroadcastPageView({ result }: { result: BroadcastPageLoadResult 
                     type="checkbox"
                   />
                   <span>
-                    {preview?.eligible_recipients ?? 0}人へ1回だけ送信し、失敗時も自動再送しないことを確認しました。
+                    {preview?.eligible_recipients ?? 0}人へ本文と添付を1回だけ送信し、失敗時も自動再送しないことを確認しました。
                   </span>
                 </label>
               </div>
@@ -187,12 +222,24 @@ function BroadcastResult({ state }: { state: BroadcastActionState }) {
     return <div className="action-error">{state.error}</div>;
   }
 
+  const deliveryStatus = state.result?.delivery_status;
+  const resultMessage =
+    deliveryStatus === "completed_with_delivery_failures"
+      ? "一部のお客様へ送信できませんでした。"
+      : deliveryStatus === "completed_with_history_finalize_failures"
+        ? "送信は完了しましたが、一部の履歴を確定できませんでした。"
+        : deliveryStatus === "completed_with_customer_sync_failures"
+          ? "送信と履歴保存は完了しましたが、一部のお客様一覧の更新が遅れています。"
+          : "一斉送信が完了しました。";
+
   return (
     <div className="broadcast-result" role="status">
-      <strong>一斉送信処理が完了しました。</strong>
+      <strong>{resultMessage}</strong>
       <span>送信成功: {state.result?.sent_count ?? 0}件</span>
       <span>送信失敗: {state.result?.failed_count ?? 0}件</span>
-      <span>履歴保存失敗: {state.result?.history_record_failed_count ?? 0}件</span>
+      <span>送信前の履歴準備失敗: {state.result?.history_prepare_failed_count ?? 0}件</span>
+      <span>送信後の履歴確定失敗: {state.result?.history_finalize_failed_count ?? 0}件</span>
+      <span>お客様一覧の更新失敗: {state.result?.customer_sync_failed_count ?? 0}件</span>
       <small>二重送信を避けるため、この結果からの再送はできません。</small>
     </div>
   );

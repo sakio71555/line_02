@@ -70,8 +70,9 @@ describe("admin customer action panel", () => {
     expect(html).toContain("登録済み情報だけを参考");
     expect(html).toContain("オンライン相談 / メンテナンス / 新築 / リフォーム");
     expect(html).toContain("担当者として返信する");
-    expect(html).toContain("履歴に保存");
-    expect(html).toContain("LINE送信なし");
+    expect(html).toContain("社内メモに保存");
+    expect(html).toContain("確認後にLINE送信");
+    expect(html).toContain("画像・動画を1件添付");
     expect(html).toContain("送信前に確認する");
     expect(html).toContain("返信するときの注意");
     expect(html).toContain("返信文は必ず内容を確認してから保存・送信します。");
@@ -125,11 +126,13 @@ describe("admin customer action panel", () => {
       />
     );
 
-    expect(html).toContain("保存前に確認する");
-    expect(html).toContain("LINE送信なし");
+    expect(html).toContain("社内メモとして保存する前に確認");
+    expect(html).toContain("確認後にLINE送信");
     expect(html).toContain("LINE送信停止中");
     expect(html).toContain("LINEへ1通送信");
-    expect(html).toContain("今はLINEへ送信せず、履歴保存だけ使えます。");
+    expect(html).toContain(
+      "今はLINEへ送信できません。テキストは社内メモとして保存できます。"
+    );
     expect(html).not.toContain("name=\"delivery_mode\" value=\"real_line_push\"");
   });
 
@@ -192,6 +195,17 @@ describe("admin customer action panel", () => {
     expect(html).toContain("LINEへ送る前に確認する");
   });
 
+  it("blocks confirmation while an outbound media preview is still being prepared", () => {
+    const source = readFileSync(
+      join(process.cwd(), "apps/admin/app/customers/[customerId]/customer-actions.tsx"),
+      "utf8"
+    );
+
+    expect(source).toContain("const [mediaPreparing, setMediaPreparing] = useState(false)");
+    expect(source).toContain("onPreparingChange={setMediaPreparing}");
+    expect(source).toContain("!hasReplyContent || mediaPreparing || pending");
+  });
+
   it("renders the staff reply confirmation card with timeline-save safety wording", () => {
     const html = renderToStaticMarkup(
       <StaffReplyConfirmationCard
@@ -205,17 +219,16 @@ describe("admin customer action panel", () => {
     );
 
     expect(html).toContain("確認");
-    expect(html).toContain("この内容を履歴に保存しますか？");
+    expect(html).toContain("この内容を社内メモに保存しますか？");
     expect(html).toContain("宛先");
     expect(html).toContain("山田 太郎");
     expect(html).toContain("送信内容");
     expect(html).toContain("モデルホーム見学について担当者より確認いたします。");
-    expect(html).toContain("履歴に保存");
-    expect(html).toContain("担当者返信");
-    expect(html).toContain("LINE送信なし");
-    expect(html).toContain("この内容は履歴に担当者返信として保存されます");
+    expect(html).toContain("社内メモ");
+    expect(html).toContain("お客様には送信されません");
+    expect(html).toContain("担当者だけが確認できる社内メモとして保存されます");
     expect(html).toContain("この内容を確認しました");
-    expect(html).toContain("履歴に保存する");
+    expect(html).toContain("社内メモに保存する");
     expect(html).toContain("disabled=\"\"");
   });
 

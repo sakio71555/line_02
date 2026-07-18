@@ -30,3 +30,4 @@ export {
   SupabaseLineAttachmentStorage,
   type SupabaseStorageClient
 } from "./line-attachment-storage";
+export { SupabaseOutboundLineMediaStorage } from "./outbound-line-media-storage";

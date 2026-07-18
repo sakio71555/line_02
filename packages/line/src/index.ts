@@ -131,11 +131,28 @@ export interface LineQuickReply {
   items: LineQuickReplyItem[];
 }
 
-export interface LineReplyMessage {
+export interface LineTextReplyMessage {
   type: "text";
   text: string;
   quickReply?: LineQuickReply;
 }
+
+export interface LineImageReplyMessage {
+  type: "image";
+  originalContentUrl: string;
+  previewImageUrl: string;
+}
+
+export interface LineVideoReplyMessage {
+  type: "video";
+  originalContentUrl: string;
+  previewImageUrl: string;
+}
+
+export type LineReplyMessage =
+  | LineTextReplyMessage
+  | LineImageReplyMessage
+  | LineVideoReplyMessage;
 
 export interface LineUserProfile {
   userId: string;

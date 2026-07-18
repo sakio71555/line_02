@@ -4,6 +4,7 @@ import { createApiApp } from "../../apps/api/src/index";
 import {
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  InMemoryOperationsRepository,
   type Customer,
   type Message
 } from "@amami-line-crm/domain";
@@ -14,12 +15,14 @@ describe("API customer/message runtime bundle", () => {
   it("uses an injected customer/message bundle for customer detail timeline staff reply and AI summary", async () => {
     const customerRepository = new InMemoryCustomerRepository();
     const messageRepository = new InMemoryMessageRepository();
+    const operationsRepository = new InMemoryOperationsRepository();
     const app = createApiApp({
       customerMessageRepositories: {
         runtime_mode: "supabase",
         customerRepository,
         messageRepository
       },
+      operationsRepository,
       now: () => "2026-06-16T00:10:00.000Z",
       env: {
         TENANT_ID: tenantId,
@@ -78,15 +81,22 @@ describe("API customer/message runtime bundle", () => {
       })
     );
     const replyBody = (await replyResponse.json()) as {
-      message: { role: string; message_type: string; tenant_id: string };
+      delivery_status: string;
+      internal_note: { tenant_id: string; customer_id: string; body: string };
     };
 
     expect(replyResponse.status).toBe(200);
-    expect(replyBody.message).toMatchObject({
-      role: "staff",
-      message_type: "text",
-      tenant_id: tenantId
+    expect(replyBody).toMatchObject({
+      delivery_status: "saved_as_internal_note",
+      internal_note: {
+        tenant_id: tenantId,
+        customer_id: "customer_runtime_1",
+        body: "日程候補を確認します。"
+      }
     });
+    expect(
+      await operationsRepository.listInternalNotes(tenantId, "customer_runtime_1")
+    ).toHaveLength(1);
 
     const summaryResponse = await app.fetch(
       adminRequest("/api/admin/customers/customer_runtime_1/ai-summary", {
@@ -110,6 +120,7 @@ describe("API customer/message runtime bundle", () => {
         customerRepository,
         messageRepository
       },
+      operationsRepository,
       env: {
         TENANT_ID: tenantId,
         TENANT_SLUG: "amamihome"
@@ -126,7 +137,6 @@ describe("API customer/message runtime bundle", () => {
     expect(persistedTimelineBody.messages).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ role: "customer", message_type: "text", tenant_id: tenantId }),
-        expect.objectContaining({ role: "staff", message_type: "text", tenant_id: tenantId }),
         expect.objectContaining({ role: "ai", message_type: "summary", tenant_id: tenantId })
       ])
     );

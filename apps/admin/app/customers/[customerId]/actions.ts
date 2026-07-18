@@ -16,6 +16,7 @@ import {
   switchAdminCustomerRichMenu,
   updateAdminCustomerStage
 } from "../../../src/admin-api";
+import { parseOutboundLineMediaReference } from "../../../src/outbound-line-media";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import type {
   AiReplyDraftActionState,
@@ -226,15 +227,39 @@ export async function runStaffReplyAction(
   formData: FormData
 ): Promise<StaffReplyActionState> {
   const body = readTrimmedFormValue(formData, "body");
+  const mediaValue = formData.get("media_reference");
+  const media = parseOutboundLineMediaReference(mediaValue, "staff_reply");
 
-  if (!body) {
+  if (typeof mediaValue === "string" && mediaValue.trim() && !media) {
     return {
       status: "error",
-      error: "返信文を入力してください。"
+      error: "画像・動画の送信準備が無効です。選び直してください。"
     };
   }
 
+  if (!body && !media) {
+    return {
+      status: "error",
+      error: "返信文または画像・動画を指定してください。"
+    };
+  }
+
+  if (body.length > 5_000) {
+    return { status: "error", error: "返信文は5000文字以内で入力してください。" };
+  }
+
   const deliveryMode = readStaffReplyDeliveryMode(formData);
+
+  if (deliveryMode === "demo_save" && media) {
+    return {
+      status: "error",
+      error: "画像・動画はLINE送信時のみ利用できます。社内メモには本文だけを保存してください。"
+    };
+  }
+
+  if (deliveryMode === "demo_save" && !body) {
+    return { status: "error", error: "社内メモの本文を入力してください。" };
+  }
 
   if (deliveryMode === "real_line_push" && !isRealLinePushConfirmed(formData)) {
     return {
@@ -252,9 +277,14 @@ export async function runStaffReplyAction(
             deliveryMode,
             realLinePushConfirmed: true,
             linePushConfirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
-            idempotencyKey: readTrimmedFormValue(formData, "idempotency_key")
+            idempotencyKey: readTrimmedFormValue(formData, "idempotency_key"),
+            ...(media ? { media } : {})
           }
-        : { customerId, body, deliveryMode },
+        : {
+            customerId,
+            body,
+            deliveryMode
+          },
       await getServerAdminApiRequestOptions()
     );
     revalidatePath(`/customers/${customerId}`);

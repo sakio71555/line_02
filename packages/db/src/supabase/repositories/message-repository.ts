@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  isPendingLineReplyMessage,
+  isPendingTimelineMessage,
   type Message,
   type MessageRepository
 } from "@amami-line-crm/domain";
@@ -44,6 +44,31 @@ export class SupabaseMessageRepository implements MessageRepository {
     }
 
     return toMessage(row);
+  }
+
+  async insertMany(messages: Message[]): Promise<Message[]> {
+    if (messages.length === 0) {
+      return [];
+    }
+
+    const tenantId = messages[0]?.tenant_id ?? "";
+    assertTenantId(tenantId);
+
+    if (messages.some((message) => message.tenant_id !== tenantId)) {
+      throw new Error("Supabase messages.insertMany requires one tenant scope.");
+    }
+
+    const result = (await this.client
+      .from("messages")
+      .insert(messages.map(toMessageRow))
+      .select("*")) as SupabaseRepositoryResult<SupabaseMessageRow[]>;
+    const rows = unwrapSupabaseResult(result, "messages", "insertMany") ?? [];
+
+    if (rows.length !== messages.length || rows.some((row) => row.tenant_id !== tenantId)) {
+      throw new Error("Supabase messages.insertMany returned an incomplete or invalid result.");
+    }
+
+    return rows.map(toMessage);
   }
 
   async findByTenantAndLineMessageId(
@@ -104,6 +129,39 @@ export class SupabaseMessageRepository implements MessageRepository {
     return toMessage(row);
   }
 
+  async updateStaffMessagesSentToLineAt(input: {
+    tenant_id: string;
+    message_ids: string[];
+    sent_to_line_at: string;
+  }): Promise<Message[]> {
+    assertTenantId(input.tenant_id);
+
+    if (input.message_ids.length === 0) {
+      return [];
+    }
+
+    const result = (await this.client
+      .from("messages")
+      .update({ sent_to_line_at: input.sent_to_line_at })
+      .eq("tenant_id", input.tenant_id)
+      .eq("role", "staff")
+      .in("id", input.message_ids)
+      .is("sent_to_line_at", null)
+      .select("*")) as SupabaseRepositoryResult<SupabaseMessageRow[]>;
+    const rows = unwrapSupabaseResult(result, "messages", "updateStaffMessagesSentToLineAt") ?? [];
+
+    if (
+      rows.length !== new Set(input.message_ids).size ||
+      rows.some((row) => row.tenant_id !== input.tenant_id || row.role !== "staff")
+    ) {
+      throw new Error(
+        "Supabase messages.updateStaffMessagesSentToLineAt returned an incomplete or invalid result."
+      );
+    }
+
+    return rows.map(toMessage);
+  }
+
   async deleteByIdForTenant(tenantId: string, messageId: string): Promise<boolean> {
     assertTenantId(tenantId);
 
@@ -117,6 +175,24 @@ export class SupabaseMessageRepository implements MessageRepository {
     const row = unwrapSupabaseResult(result, "messages", "deleteByIdForTenant");
 
     return row?.id === messageId;
+  }
+
+  async deleteManyByIdForTenant(tenantId: string, messageIds: string[]): Promise<number> {
+    assertTenantId(tenantId);
+
+    if (messageIds.length === 0) {
+      return 0;
+    }
+
+    const result = (await this.client
+      .from("messages")
+      .delete()
+      .eq("tenant_id", tenantId)
+      .in("id", messageIds)
+      .select("id")) as SupabaseRepositoryResult<Array<{ id: string }>>;
+    const rows = unwrapSupabaseResult(result, "messages", "deleteManyByIdForTenant") ?? [];
+
+    return rows.length;
   }
 
   async findLatestByCustomerIds(
@@ -144,7 +220,7 @@ export class SupabaseMessageRepository implements MessageRepository {
       .sort(compareMessageRowsByCreatedAtDesc)) {
       const message = toMessage(row);
 
-      if (isPendingLineReplyMessage(message)) {
+      if (isPendingTimelineMessage(message)) {
         continue;
       }
 

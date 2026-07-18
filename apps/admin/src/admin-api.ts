@@ -109,11 +109,48 @@ export interface AdminBroadcastPreviewResponse {
 export interface AdminBroadcastSendResponse {
   ok: true;
   tenant_id: string;
+  delivery_status:
+    | "completed"
+    | "completed_with_delivery_failures"
+    | "completed_with_history_finalize_failures"
+    | "completed_with_customer_sync_failures";
   intended_recipients: number;
   sent_count: number;
   failed_count: number;
+  history_prepare_failed_count: number;
+  history_finalize_failed_count: number;
+  customer_sync_failed_count: number;
   history_record_failed_count: number;
   retry_allowed: false;
+}
+
+export type AdminOutboundMediaPurpose = "staff_reply" | "broadcast";
+export type AdminOutboundMediaType = "image" | "video";
+export type AdminOutboundMediaContentType = "image/jpeg" | "image/png" | "video/mp4";
+export type AdminOutboundMediaPreviewContentType = "image/jpeg" | "image/png";
+
+export interface AdminOutboundMediaReference {
+  purpose: AdminOutboundMediaPurpose;
+  media_id: string;
+  media_type: AdminOutboundMediaType;
+  content_type: AdminOutboundMediaContentType;
+  media_size: number;
+  preview_content_type: AdminOutboundMediaPreviewContentType;
+  preview_size: number;
+}
+
+export interface AdminOutboundMediaPrepareResponse {
+  ok: true;
+  tenant_id: string;
+  media: AdminOutboundMediaReference;
+  media_upload_url: string;
+  preview_upload_url: string;
+}
+
+export interface AdminOutboundMediaDiscardResponse {
+  ok: true;
+  tenant_id: string;
+  discarded: true;
 }
 
 export interface AdminCustomerTimelineResponse {
@@ -190,13 +227,27 @@ export interface AdminStaffReplyResponse {
   ok: true;
   tenant_id: string;
   customer_id: string;
-  message: CustomerTimelineMessage;
-  customer: {
+  delivery_status:
+    | "saved_as_internal_note"
+    | "saved_as_internal_note_audit_failed"
+    | "saved"
+    | "sent_and_recorded"
+    | "sent_history_finalize_failed"
+    | "saved_customer_sync_failed"
+    | "sent_and_recorded_customer_sync_failed";
+  history_recorded: boolean;
+  customer_updated: boolean;
+  audit_recorded?: boolean;
+  retry_allowed: false;
+  message?: CustomerTimelineMessage;
+  messages?: CustomerTimelineMessage[];
+  customer?: {
     id: string;
     tenant_id: string;
     response_mode: ResponseMode;
     last_staff_reply_at: string | null;
   };
+  internal_note?: InternalNote;
 }
 
 export interface AdminCustomerStatusNotificationResponse {
@@ -605,26 +656,69 @@ export async function getAdminBroadcastPreview(
   );
 }
 
+export async function prepareAdminOutboundMediaUpload(
+  media: Omit<AdminOutboundMediaReference, "media_id">,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminOutboundMediaPrepareResponse> {
+  return adminApiFetch<AdminOutboundMediaPrepareResponse>(
+    "/api/admin/outbound-media/uploads/prepare",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(media)
+    },
+    options
+  );
+}
+
+export async function discardAdminOutboundMediaUpload(
+  media: AdminOutboundMediaReference,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminOutboundMediaDiscardResponse> {
+  return adminApiFetch<AdminOutboundMediaDiscardResponse>(
+    "/api/admin/outbound-media/uploads/discard",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ media })
+    },
+    options
+  );
+}
+
 export async function sendAdminBroadcast(
   input: {
     body: string;
     confirmed: boolean;
     confirmation: string;
     idempotencyKey: string;
+    media?: AdminOutboundMediaReference;
   },
   options: AdminApiRequestOptions = {}
 ): Promise<AdminBroadcastSendResponse> {
+  const requestBody: {
+    body: string;
+    confirmed: boolean;
+    confirmation: string;
+    idempotency_key: string;
+    media?: AdminOutboundMediaReference;
+  } = {
+    body: input.body,
+    confirmed: input.confirmed,
+    confirmation: input.confirmation,
+    idempotency_key: input.idempotencyKey
+  };
+
+  if (input.media !== undefined) {
+    requestBody.media = input.media;
+  }
+
   return adminApiFetch<AdminBroadcastSendResponse>(
     "/api/admin/broadcast/send",
     {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        body: input.body,
-        confirmed: input.confirmed,
-        confirmation: input.confirmation,
-        idempotency_key: input.idempotencyKey
-      })
+      body: JSON.stringify(requestBody)
     },
     options
   );
@@ -755,13 +849,12 @@ export async function sendStaffReply(
     realLinePushConfirmed?: boolean;
     linePushConfirmation?: string;
     idempotencyKey?: string;
+    media?: AdminOutboundMediaReference;
   },
   options: AdminApiRequestOptions = {}
 ): Promise<AdminStaffReplyResponse> {
   const config = options.config ?? getAdminApiConfig();
-  const headers: Record<string, string> = {
-    "content-type": "application/json"
-  };
+  const headers: Record<string, string> = {};
   const staffId = config.staffId?.trim();
   const requestBody: {
     body: string;
@@ -769,6 +862,7 @@ export async function sendStaffReply(
     real_line_push_confirmed?: boolean;
     line_push_confirmation?: string;
     idempotency_key?: string;
+    media?: AdminOutboundMediaReference;
   } = {
     body: input.body
   };
@@ -789,9 +883,15 @@ export async function sendStaffReply(
     requestBody.idempotency_key = input.idempotencyKey;
   }
 
+  if (input.media !== undefined) {
+    requestBody.media = input.media;
+  }
+
   if (staffId) {
     headers["x-staff-id"] = staffId;
   }
+
+  headers["content-type"] = "application/json";
 
   return adminApiFetch<AdminStaffReplyResponse>(
     adminCustomerReplyPath(input.customerId),

@@ -195,6 +195,25 @@ describe("admin staff management API", () => {
     });
   });
 
+  it("does not allow the only invited owner to be disabled or demoted", async () => {
+    const owner = createStaffRecord({ id: "staff_invited_owner", role: "owner" });
+    owner.staff_user.auth_user_id = null;
+    owner.membership.status = "invited";
+    owner.membership.accepted_at = null;
+    const repository = new InMemoryOperationsRepository({ staffManagement: [owner] });
+    const app = createTestApp(repository);
+
+    const disableResponse = await app.fetch(
+      staffRequest("/api/admin/staff/staff_invited_owner", "PATCH", { is_active: false })
+    );
+    const demoteResponse = await app.fetch(
+      staffRequest("/api/admin/staff/staff_invited_owner", "PATCH", { role: "manager" })
+    );
+
+    expect(disableResponse.status).toBe(409);
+    expect(demoteResponse.status).toBe(409);
+  });
+
   it("does not let invitation resend silently reactivate a disabled member", async () => {
     const member = createStaffRecord({ id: "staff_disabled", role: "staff" });
     member.staff_user.status = "disabled";
@@ -277,6 +296,41 @@ describe("admin staff management API", () => {
     ]);
     await expect(repository.listStaffMembers(tenantId)).resolves.toMatchObject([
       { id: "staff_shared", role: "owner", is_active: true }
+    ]);
+  });
+
+  it("keeps the display name tenant-local when an identity is reused and edited", async () => {
+    const existing = createStaffRecord({
+      id: "staff_shared_name",
+      role: "manager",
+      tenantId: "tenant_other"
+    });
+    existing.staff_user.email = "shared-name@example.test";
+    existing.staff_user.display_name = "他社での表示名";
+    const repository = new InMemoryOperationsRepository({ staffManagement: [existing] });
+    const app = createTestApp(repository);
+
+    const createResponse = await app.fetch(
+      staffRequest("/api/admin/staff", "POST", {
+        display_name: "アマミでの表示名",
+        email: "shared-name@example.test",
+        role: "staff"
+      })
+    );
+    expect(createResponse.status).toBe(201);
+
+    const updateResponse = await app.fetch(
+      staffRequest("/api/admin/staff/staff_shared_name", "PATCH", {
+        display_name: "アマミでの新しい表示名"
+      })
+    );
+    expect(updateResponse.status).toBe(200);
+
+    await expect(repository.listStaffMembers("tenant_other")).resolves.toMatchObject([
+      { display_name: "他社での表示名" }
+    ]);
+    await expect(repository.listStaffMembers(tenantId)).resolves.toMatchObject([
+      { display_name: "アマミでの新しい表示名" }
     ]);
   });
 

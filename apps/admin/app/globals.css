@@ -2386,6 +2386,108 @@ dl.detail-grid {
   text-align: right;
 }
 
+.media-upload-field {
+  display: grid;
+  gap: 8px;
+}
+
+.media-upload-label {
+  font-weight: 700;
+}
+
+.media-dropzone {
+  align-items: center;
+  background: var(--admin-surface);
+  border: 2px dashed var(--admin-border-strong);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 96px;
+  padding: 16px;
+  transition: background 140ms ease, border-color 140ms ease;
+}
+
+.media-dropzone:hover,
+.media-dropzone:focus-within,
+.media-dropzone-dragging {
+  background: var(--admin-accent-soft);
+  border-color: var(--admin-accent);
+}
+
+.media-dropzone-selected {
+  border-style: solid;
+}
+
+.media-dropzone[aria-disabled="true"] {
+  opacity: 0.68;
+}
+
+.media-dropzone-picker {
+  align-items: center;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
+  padding: 0;
+  text-align: left;
+  width: 100%;
+}
+
+.media-dropzone-picker:disabled {
+  cursor: not-allowed;
+}
+
+.media-dropzone-icon {
+  align-items: center;
+  background: var(--admin-accent-soft);
+  border-radius: 6px;
+  color: var(--admin-accent-strong);
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.media-dropzone-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.media-dropzone-copy strong,
+.media-dropzone-copy small {
+  overflow-wrap: anywhere;
+}
+
+.media-dropzone-copy small {
+  color: var(--admin-text-muted);
+}
+
+.media-dropzone-remove {
+  align-items: center;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  color: var(--admin-danger);
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  padding: 0;
+  width: 40px;
+}
+
+.media-upload-error {
+  color: var(--admin-danger);
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .broadcast-confirmation {
   background: var(--admin-danger-soft);
   border: 1px solid #e4aaaa;

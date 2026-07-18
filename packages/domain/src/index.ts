@@ -333,13 +333,20 @@ export interface CustomerRepository {
 
 export interface MessageRepository {
   insert(message: Message): Promise<Message>;
+  insertMany(messages: Message[]): Promise<Message[]>;
   findByTenantAndLineMessageId(tenantId: string, lineMessageId: string): Promise<Message | null>;
   updateSentToLineAt(input: {
     tenant_id: string;
     message_id: string;
     sent_to_line_at: string;
   }): Promise<Message | null>;
+  updateStaffMessagesSentToLineAt(input: {
+    tenant_id: string;
+    message_ids: string[];
+    sent_to_line_at: string;
+  }): Promise<Message[]>;
   deleteByIdForTenant(tenantId: string, messageId: string): Promise<boolean>;
+  deleteManyByIdForTenant(tenantId: string, messageIds: string[]): Promise<number>;
   findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>>;
   listByCustomer(tenantId: string, customerId: string): Promise<Message[]>;
 }
@@ -362,6 +369,66 @@ export interface LineAttachmentStorage {
     data: Blob;
     content_type: string | null;
   }>;
+}
+
+export type OutboundLineMediaType = "image" | "video";
+export type OutboundLineMediaContentType = "image/jpeg" | "image/png" | "video/mp4";
+export type OutboundLinePreviewContentType = "image/jpeg" | "image/png";
+
+export interface OutboundLineMediaStorage {
+  prepareUpload?(input: {
+    tenant_id: string;
+    media_id: string;
+    media_type: OutboundLineMediaType;
+    content_type: OutboundLineMediaContentType;
+    preview_content_type: OutboundLinePreviewContentType;
+  }): Promise<{
+    media_upload_url: string;
+    preview_upload_url: string;
+  }>;
+  resolveUpload?(input: {
+    tenant_id: string;
+    media_id: string;
+    media_type: OutboundLineMediaType;
+    content_type: OutboundLineMediaContentType;
+    preview_content_type: OutboundLinePreviewContentType;
+  }): Promise<{
+    media_storage_path: string;
+    preview_storage_path: string;
+    original_content_url: string;
+    preview_image_url: string;
+  }>;
+  removeUpload?(input: {
+    tenant_id: string;
+    media_id: string;
+    content_type: OutboundLineMediaContentType;
+    preview_content_type: OutboundLinePreviewContentType;
+  }): Promise<void>;
+  store(input: {
+    tenant_id: string;
+    media_id: string;
+    media_type: OutboundLineMediaType;
+    content_type: OutboundLineMediaContentType;
+    data: Uint8Array;
+    preview_content_type: OutboundLinePreviewContentType;
+    preview_data: Uint8Array;
+  }): Promise<{
+    media_storage_path: string;
+    preview_storage_path: string;
+    original_content_url: string;
+    preview_image_url: string;
+  }>;
+  download(input: {
+    tenant_id: string;
+    media_storage_path: string;
+  }): Promise<{
+    data: Blob;
+    content_type: string | null;
+  }>;
+  remove(input: {
+    tenant_id: string;
+    media_storage_paths: string[];
+  }): Promise<void>;
 }
 
 export interface AlertRepository {
@@ -2186,6 +2253,14 @@ export function isPendingLineReplyMessage(message: Message): boolean {
     message.message_type === "summary" &&
     message.sent_to_line_at === null
   );
+}
+
+export function isPendingOutboundStaffMessage(message: Message): boolean {
+  return message.role === "staff" && message.sent_to_line_at === null;
+}
+
+export function isPendingTimelineMessage(message: Message): boolean {
+  return isPendingLineReplyMessage(message) || isPendingOutboundStaffMessage(message);
 }
 
 export async function recordCustomerRichMenuSwitchMessage(
@@ -4406,7 +4481,7 @@ export async function listCustomerTimeline(input: {
 }): Promise<CustomerTimelineMessage[]> {
   const messages = await input.messageRepository.listByCustomer(input.tenant_id, input.customer_id);
 
-  return messages.filter((message) => !isPendingLineReplyMessage(message)).map(toCustomerTimelineMessage);
+  return messages.filter((message) => !isPendingTimelineMessage(message)).map(toCustomerTimelineMessage);
 }
 
 function compareCustomerListItems(a: CustomerListItem, b: CustomerListItem): number {
@@ -4461,7 +4536,15 @@ function toCustomerTimelineMessage(message: Message): CustomerTimelineMessage {
 }
 
 export function isPrivateLineAttachmentMessage(
-  message: Pick<Message, "tenant_id" | "customer_id" | "message_type" | "media_storage_path">
+  message: Pick<
+    Message,
+    | "tenant_id"
+    | "customer_id"
+    | "role"
+    | "message_type"
+    | "media_storage_path"
+    | "sent_to_line_at"
+  >
 ): boolean {
   if (
     !message.media_storage_path ||
@@ -4472,8 +4555,15 @@ export function isPrivateLineAttachmentMessage(
 
   const tenantId = sanitizeLineAttachmentPathSegment(message.tenant_id);
   const customerId = sanitizeLineAttachmentPathSegment(message.customer_id);
+  if (!tenantId || !customerId) {
+    return false;
+  }
   const expectedPrefix = `${tenantId}/${customerId}/`;
   const objectName = message.media_storage_path.slice(expectedPrefix.length);
+
+  if (isPrivateOutboundLineMediaMessage(message)) {
+    return true;
+  }
 
   return (
     message.media_storage_path.startsWith(expectedPrefix) &&
@@ -4481,8 +4571,36 @@ export function isPrivateLineAttachmentMessage(
   );
 }
 
-function sanitizeLineAttachmentPathSegment(value: string): string {
-  return value.replace(/[^A-Za-z0-9_-]/gu, "_");
+export function isPrivateOutboundLineMediaMessage(
+  message: Pick<
+    Message,
+    "tenant_id" | "role" | "message_type" | "media_storage_path" | "sent_to_line_at"
+  >
+): boolean {
+  if (
+    message.role !== "staff" ||
+    message.sent_to_line_at === null ||
+    !message.media_storage_path ||
+    (message.message_type !== "image" && message.message_type !== "file")
+  ) {
+    return false;
+  }
+
+  const tenantId = sanitizeLineAttachmentPathSegment(message.tenant_id);
+  if (!tenantId) {
+    return false;
+  }
+  const expectedPrefix = `${tenantId}/outbound/`;
+  const objectName = message.media_storage_path.slice(expectedPrefix.length);
+
+  return (
+    message.media_storage_path.startsWith(expectedPrefix) &&
+    /^[A-Za-z0-9_-]+\/original\.(?:jpg|png|mp4)$/u.test(objectName)
+  );
+}
+
+function sanitizeLineAttachmentPathSegment(value: string): string | null {
+  return /^[A-Za-z0-9_-]+$/u.test(value) ? value : null;
 }
 
 function shouldCreateUnrepliedAlert(customer: Customer, nowTime: number): boolean {
@@ -5081,6 +5199,32 @@ export class InMemoryMessageRepository implements MessageRepository {
     return message;
   }
 
+  async insertMany(messages: Message[]): Promise<Message[]> {
+    const candidateLineMessageIds = new Set<string>();
+
+    for (const message of messages) {
+      if (!message.line_message_id) {
+        continue;
+      }
+
+      const scopedLineMessageId = `${message.tenant_id}:${message.line_message_id}`;
+      if (
+        candidateLineMessageIds.has(scopedLineMessageId) ||
+        (await this.findByTenantAndLineMessageId(message.tenant_id, message.line_message_id))
+      ) {
+        throw new Error("A LINE message with the same tenant and message id already exists.");
+      }
+
+      candidateLineMessageIds.add(scopedLineMessageId);
+    }
+
+    for (const message of messages) {
+      this.messagesById.set(message.id, message);
+    }
+
+    return messages;
+  }
+
   async findByTenantAndLineMessageId(
     tenantId: string,
     lineMessageId: string
@@ -5117,6 +5261,30 @@ export class InMemoryMessageRepository implements MessageRepository {
     return updated;
   }
 
+  async updateStaffMessagesSentToLineAt(input: {
+    tenant_id: string;
+    message_ids: string[];
+    sent_to_line_at: string;
+  }): Promise<Message[]> {
+    const messageIds = new Set(input.message_ids);
+    const pendingMessages = this.list().filter(
+      (message) =>
+        message.tenant_id === input.tenant_id &&
+        messageIds.has(message.id) &&
+        isPendingOutboundStaffMessage(message)
+    );
+
+    if (pendingMessages.length !== messageIds.size) {
+      return [];
+    }
+
+    return pendingMessages.map((message) => {
+      const updated = { ...message, sent_to_line_at: input.sent_to_line_at };
+      this.messagesById.set(updated.id, updated);
+      return updated;
+    });
+  }
+
   async deleteByIdForTenant(tenantId: string, messageId: string): Promise<boolean> {
     const message = this.messagesById.get(messageId);
 
@@ -5127,6 +5295,18 @@ export class InMemoryMessageRepository implements MessageRepository {
     return this.messagesById.delete(messageId);
   }
 
+  async deleteManyByIdForTenant(tenantId: string, messageIds: string[]): Promise<number> {
+    let deleted = 0;
+
+    for (const messageId of new Set(messageIds)) {
+      if (await this.deleteByIdForTenant(tenantId, messageId)) {
+        deleted += 1;
+      }
+    }
+
+    return deleted;
+  }
+
   async findLatestByCustomerIds(tenantId: string, customerIds: string[]): Promise<Map<string, Message>> {
     const customerIdSet = new Set(customerIds);
     const latestByCustomerId = new Map<string, Message>();
@@ -5135,7 +5315,7 @@ export class InMemoryMessageRepository implements MessageRepository {
       if (
         message.tenant_id !== tenantId ||
         !customerIdSet.has(message.customer_id) ||
-        isPendingLineReplyMessage(message)
+        isPendingTimelineMessage(message)
       ) {
         continue;
       }

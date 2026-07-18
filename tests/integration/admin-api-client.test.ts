@@ -726,6 +726,53 @@ describe("admin read-only API client", () => {
     );
   });
 
+  it("sends a prepared broadcast media reference as JSON", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const media = {
+      purpose: "broadcast" as const,
+      media_id: "86f66e55-28eb-4dc1-b7ab-fb2a22c50a89",
+      media_type: "image" as const,
+      content_type: "image/jpeg" as const,
+      media_size: 10_240,
+      preview_content_type: "image/jpeg" as const,
+      preview_size: 2_048
+    };
+
+    await sendAdminBroadcast(
+      {
+        body: "画像付きのお知らせです。",
+        confirmed: true,
+        confirmation: ADMIN_BROADCAST_CONFIRMATION_VALUE,
+        idempotencyKey: "admin-broadcast-media-test",
+        media
+      },
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome"
+        },
+        fetchFn: async (input, init) => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    const body = calls[0]?.init?.body;
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(body).toBe(
+      JSON.stringify({
+        body: "画像付きのお知らせです。",
+        confirmed: true,
+        confirmation: ADMIN_BROADCAST_CONFIRMATION_VALUE,
+        idempotency_key: "admin-broadcast-media-test",
+        media
+      })
+    );
+  });
+
   it("can include real LINE push confirmation fields in staff reply requests", async () => {
     const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
 
@@ -757,6 +804,58 @@ describe("admin read-only API client", () => {
         real_line_push_confirmed: true,
         line_push_confirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
         idempotency_key: "idem_admin_helper"
+      })
+    );
+  });
+
+  it("sends a prepared staff reply video reference as JSON", async () => {
+    const calls: Array<{ input: RequestInfo | URL; init?: RequestInit }> = [];
+    const media = {
+      purpose: "staff_reply" as const,
+      media_id: "9e884684-b10e-47d1-b893-48e3dc021be5",
+      media_type: "video" as const,
+      content_type: "video/mp4" as const,
+      media_size: 1_048_576,
+      preview_content_type: "image/jpeg" as const,
+      preview_size: 32_768
+    };
+
+    await sendStaffReply(
+      {
+        customerId: "customer_001",
+        body: "動画をご確認ください。",
+        deliveryMode: "real_line_push",
+        realLinePushConfirmed: true,
+        linePushConfirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+        idempotencyKey: "idem_admin_media_helper",
+        media
+      },
+      {
+        config: {
+          apiBaseUrl: "http://localhost:4000",
+          tenantId: "tenant_amamihome",
+          staffId: "staff_admin_001"
+        },
+        fetchFn: async (input, init) => {
+          calls.push({ input, init });
+          return jsonResponse({ ok: true });
+        }
+      }
+    );
+
+    const body = calls[0]?.init?.body;
+    const headers = new Headers(calls[0]?.init?.headers);
+
+    expect(headers.get("content-type")).toBe("application/json");
+    expect(headers.get("x-staff-id")).toBe("staff_admin_001");
+    expect(body).toBe(
+      JSON.stringify({
+        body: "動画をご確認ください。",
+        delivery_mode: "real_line_push",
+        real_line_push_confirmed: true,
+        line_push_confirmation: ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+        idempotency_key: "idem_admin_media_helper",
+        media
       })
     );
   });

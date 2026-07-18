@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useActionState, useEffect, useState } from "react";
+import React, { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { LineMenuSettings, ReplyTemplate } from "@amami-line-crm/domain";
@@ -8,6 +8,11 @@ import type { LineMenuSettings, ReplyTemplate } from "@amami-line-crm/domain";
 import {
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE
 } from "../../../src/admin-api";
+import {
+  MediaDropzone,
+  type MediaDropzoneHandle,
+  type MediaSelection
+} from "../../_components/media-dropzone";
 import {
   runAiReplyDraftAction,
   runAiSummaryAction,
@@ -127,7 +132,7 @@ export function CustomerActionPanel({
   }, [
     router,
     staffReplyState.status,
-    staffReplyState.result?.message.id,
+    staffReplyState.result?.message?.id,
     summaryState.status,
     summaryState.result?.message.id
   ]);
@@ -288,13 +293,13 @@ export function CustomerActionPanelView({
           <h3>担当者として返信する</h3>
         </div>
         <div className="status-pill-list">
-          <span className="status-pill">履歴に保存</span>
-          <span className="status-pill">LINE送信なし</span>
-          <span className="status-pill">送信前に確認</span>
+          <span className="status-pill">社内メモに保存</span>
+          <span className="status-pill">確認後にLINE送信</span>
+          <span className="status-pill">画像・動画を1件添付</span>
         </div>
         <p className="meta">
-          入力した内容を担当者返信として履歴に保存します。
-          LINEへ送る場合は、下の確認欄から1通だけ送れます。
+          返信文を社内メモとして残すか、画像・動画を添えてLINEへ1通送信できます。
+          LINEトーク履歴には、実際に送受信した内容だけを表示します。
         </p>
         {staffReplyForm ?? (
           <StaffReplyConfirmationForm
@@ -515,7 +520,12 @@ function StaffReplyConfirmationForm({
   );
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [idempotencyKey, setIdempotencyKey] = useState("");
+  const [mediaSelection, setMediaSelection] = useState<MediaSelection | null>(null);
+  const [mediaPreparing, setMediaPreparing] = useState(false);
+  const [mediaResetSignal, setMediaResetSignal] = useState(0);
+  const mediaDropzoneRef = useRef<MediaDropzoneHandle>(null);
   const replyPreview = replyText.trim();
+  const hasReplyContent = Boolean(replyPreview || mediaSelection);
   const isConfirming = confirmationMode !== null;
   const canPrepareRealLinePush = lineRealSendCustomerAvailable && lineRealSendWindowOpen;
   const realLineSendStatusLabel = !lineRealSendCustomerAvailable
@@ -527,7 +537,7 @@ function StaffReplyConfirmationForm({
     ? "このお客様にはLINE返信先がまだ紐づいていません。LINEから受信後に送信できます。"
     : lineRealSendWindowOpen
       ? "送信前に確認したうえで、このお客様へ1通だけ送ります。"
-      : "今はLINEへ送信せず、履歴保存だけ使えます。";
+      : "今はLINEへ送信できません。テキストは社内メモとして保存できます。";
   const realLineSendButtonLabel = !lineRealSendCustomerAvailable
     ? "LINE未連携"
     : lineRealSendWindowOpen
@@ -535,16 +545,22 @@ function StaffReplyConfirmationForm({
       : "LINE送信停止中";
 
   useEffect(() => {
+    if (pending) return;
+
     if (state.status === "success") {
+      mediaDropzoneRef.current?.forgetPreparedMedia();
       setReplyText("");
       setConfirmationMode(null);
       setIsConfirmed(false);
       setIdempotencyKey("");
+      setMediaResetSignal((current) => current + 1);
+    } else if (state.status === "error") {
+      mediaDropzoneRef.current?.resumePreparedMediaOwnership();
     }
-  }, [state.status, state.result?.message.id]);
+  }, [pending, state.status, state.result?.internal_note?.id, state.result?.message?.id]);
 
   function handlePrepareConfirmation(mode: "demo_save" | "real_line_push") {
-    if (!replyPreview) {
+    if (!hasReplyContent) {
       return;
     }
 
@@ -560,22 +576,12 @@ function StaffReplyConfirmationForm({
   }
 
   return (
-    <form action={runStaffReply} className="action-form">
-      {isConfirming ? (
-        <>
-          <input type="hidden" name="body" value={replyPreview} />
-          <StaffReplyConfirmationCard
-            bodyPreview={replyPreview}
-            deliveryMode={confirmationMode}
-            idempotencyKey={idempotencyKey}
-            isConfirmed={isConfirmed}
-            onConfirmChange={setIsConfirmed}
-            onEdit={handleEdit}
-            pending={pending}
-            recipientLabel={recipientLabel}
-          />
-        </>
-      ) : (
+    <form
+      action={runStaffReply}
+      className="action-form"
+      onSubmitCapture={() => mediaDropzoneRef.current?.handoffPreparedMedia()}
+    >
+      {!isConfirming ? (
         <>
           {replyTemplates.length > 0 ? (
             <label htmlFor="staff-reply-template">返信定型文
@@ -601,13 +607,44 @@ function StaffReplyConfirmationForm({
             rows={4}
             value={replyText}
           />
+        </>
+      ) : (
+        <input type="hidden" name="body" value={replyPreview} />
+      )}
+
+      <MediaDropzone
+        locked={isConfirming || pending}
+        onPreparingChange={setMediaPreparing}
+        onSelectionChange={setMediaSelection}
+        purpose="staff_reply"
+        ref={mediaDropzoneRef}
+        resetSignal={mediaResetSignal}
+      />
+
+      {isConfirming ? (
+        <StaffReplyConfirmationCard
+          bodyPreview={replyPreview}
+          deliveryMode={confirmationMode}
+          idempotencyKey={idempotencyKey}
+          isConfirmed={isConfirmed}
+          mediaLabel={mediaSelection?.fileName ?? null}
+          onConfirmChange={setIsConfirmed}
+          onEdit={handleEdit}
+          pending={pending}
+          recipientLabel={recipientLabel}
+        />
+      ) : (
+        <>
           <button
             type="button"
-            disabled={!replyPreview || pending}
+            disabled={!replyPreview || Boolean(mediaSelection) || mediaPreparing || pending}
             onClick={() => handlePrepareConfirmation("demo_save")}
           >
-            保存前に確認する
+            社内メモとして保存する前に確認
           </button>
+          {mediaSelection ? (
+            <p className="meta">画像・動画はLINE送信時のみ利用できます。</p>
+          ) : null}
           <div className="real-send-gate-card" aria-label="LINE送信">
             <div className="action-card-header">
               <p className="result-label">{realLineSendStatusLabel}</p>
@@ -622,7 +659,7 @@ function StaffReplyConfirmationForm({
             <button
               className="danger-action-button"
               type="button"
-              disabled={!canPrepareRealLinePush || !replyPreview || pending}
+              disabled={!canPrepareRealLinePush || !hasReplyContent || mediaPreparing || pending}
               onClick={() => handlePrepareConfirmation("real_line_push")}
             >
               {realLineSendButtonLabel}
@@ -647,6 +684,7 @@ export function StaffReplyConfirmationCard({
   deliveryMode = "demo_save",
   idempotencyKey = "",
   isConfirmed,
+  mediaLabel = null,
   onConfirmChange,
   onEdit,
   pending,
@@ -656,6 +694,7 @@ export function StaffReplyConfirmationCard({
   deliveryMode?: "demo_save" | "real_line_push";
   idempotencyKey?: string;
   isConfirmed: boolean;
+  mediaLabel?: string | null;
   onConfirmChange: (checked: boolean) => void;
   onEdit: () => void;
   pending: boolean;
@@ -667,7 +706,7 @@ export function StaffReplyConfirmationCard({
     <div className={isRealLinePush ? "confirmation-card real-send-confirmation-card" : "confirmation-card"}>
       <div className="action-card-header">
         <p className="result-label">確認</p>
-        <h4>{isRealLinePush ? "LINEへ1通送信しますか？" : "この内容を履歴に保存しますか？"}</h4>
+        <h4>{isRealLinePush ? "LINEへ1通送信しますか？" : "この内容を社内メモに保存しますか？"}</h4>
       </div>
       <div className="status-pill-list">
         {isRealLinePush ? (
@@ -678,9 +717,8 @@ export function StaffReplyConfirmationCard({
           </>
         ) : (
           <>
-            <span className="status-pill">履歴に保存</span>
-            <span className="status-pill">担当者返信</span>
-            <span className="status-pill">LINE送信なし</span>
+            <span className="status-pill">社内メモ</span>
+            <span className="status-pill">お客様には送信されません</span>
           </>
         )}
       </div>
@@ -702,15 +740,21 @@ export function StaffReplyConfirmationCard({
         <dd>
           {isRealLinePush
             ? "LINEへ1通だけ送信します。再送信や一斉送信は行いません。"
-            : "履歴に保存します。LINEには送信されません。"}
+            : "社内メモに保存します。LINEトーク履歴には表示されません。"}
         </dd>
         <dt>送信内容</dt>
-        <dd className="message-body">{bodyPreview}</dd>
+        <dd className="message-body">{bodyPreview || "本文なし"}</dd>
+        {mediaLabel ? (
+          <>
+            <dt>添付</dt>
+            <dd>{mediaLabel}</dd>
+          </>
+        ) : null}
         <dt>注意</dt>
         <dd>
           {isRealLinePush
             ? "LINEへ送信されます。再送信や一斉送信は行いません。"
-            : "この内容は履歴に担当者返信として保存されます。"}
+            : "この内容は担当者だけが確認できる社内メモとして保存されます。"}
         </dd>
       </dl>
       <label className="confirmation-check">
@@ -724,7 +768,7 @@ export function StaffReplyConfirmationCard({
         <span>
           {isRealLinePush
             ? "LINEへ1通だけ送信すること、再送信や一斉送信をしないことを確認しました。"
-            : "この内容を確認しました。LINEには送信されず、履歴に保存されることを理解しました。"}
+            : "この内容を確認しました。お客様には送信されず、社内メモに保存されることを理解しました。"}
         </span>
       </label>
       <div className="confirmation-actions">
@@ -742,7 +786,7 @@ export function StaffReplyConfirmationCard({
               : "LINEへ1通送信する"
             : pending
               ? "保存中..."
-              : "履歴に保存する"}
+              : "社内メモに保存する"}
         </button>
       </div>
     </div>
@@ -764,20 +808,48 @@ function StaffReplyResult({ state }: { state: StaffReplyActionState }) {
     return null;
   }
 
+  const resultMessage =
+    result.delivery_status === "saved_as_internal_note"
+      ? "社内メモに保存しました。お客様へのLINE送信とLINEトーク履歴への追加は行っていません。"
+      : result.delivery_status === "saved_as_internal_note_audit_failed"
+        ? "社内メモは保存済みですが、操作記録だけ保存できませんでした。重複防止のため再保存は不要です。"
+      : result.delivery_status === "sent_history_finalize_failed"
+      ? "LINEへの送信は完了しましたが、履歴を確定できませんでした。二重送信防止のため再送しないでください。"
+      : result.delivery_status === "sent_and_recorded_customer_sync_failed"
+        ? "LINE送信と履歴保存は完了しました。お客様一覧の最終返信日時だけ更新できていません。再送は不要です。"
+        : result.delivery_status === "saved_customer_sync_failed"
+          ? "履歴保存は完了しました。お客様一覧の最終返信日時だけ更新できていません。再保存は不要です。"
+      : result.delivery_status === "sent_and_recorded"
+        ? "担当者返信をLINEへ1通送信し、履歴へ保存しました。"
+        : "担当者返信を履歴へ保存しました。";
+
+  const isInternalNote =
+    result.delivery_status === "saved_as_internal_note" ||
+    result.delivery_status === "saved_as_internal_note_audit_failed";
+
   return (
     <div className="action-result">
       <p className="result-label">送信結果</p>
-      <p>
-        {state.deliveryMode === "real_line_push"
-          ? "担当者返信をLINEへ1通送信し、履歴へ保存しました。"
-          : "担当者返信を履歴へ保存しました。"}
-      </p>
-      <ResultField label="保存番号" value={result.message.id} />
-      <ResultField label="対応状況" value={formatResponseMode(result.customer.response_mode)} />
+      <p>{resultMessage}</p>
+      <ResultField label="LINE送信" value={state.deliveryMode === "real_line_push" ? "完了" : "なし"} />
       <ResultField
-        label="最後の担当者返信日時"
-        value={result.customer.last_staff_reply_at ?? "-"}
+        label={isInternalNote ? "社内メモ" : "LINEトーク履歴"}
+        value={isInternalNote ? "保存済み" : result.history_recorded ? "完了" : "要確認"}
       />
+      {isInternalNote ? (
+        <ResultField label="操作記録" value={result.audit_recorded === false ? "要確認" : "完了"} />
+      ) : null}
+      <ResultField label="保存番号" value={result.internal_note?.id ?? result.message?.id ?? "-"} />
+      {result.customer ? (
+        <>
+          <ResultField label="お客様一覧の更新" value={result.customer_updated ? "完了" : "要確認"} />
+          <ResultField label="対応状況" value={formatResponseMode(result.customer.response_mode)} />
+          <ResultField
+            label="最後の担当者返信日時"
+            value={result.customer.last_staff_reply_at ?? "-"}
+          />
+        </>
+      ) : null}
     </div>
   );
 }

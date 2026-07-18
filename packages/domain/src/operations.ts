@@ -897,17 +897,19 @@ export class InMemoryOperationsRepository implements OperationsRepository {
   ): Promise<StaffManagementRecord> {
     assertStaffManagementIdentity(record);
     const normalizedEmail = record.staff_user.email.trim().toLowerCase();
-    const firstTenantMember = ![...this.staffManagement.values()].some(
-      (candidate) => candidate.membership.tenant_id === record.membership.tenant_id
+    const tenantHasOwner = [...this.staffManagement.values()].some(
+      (candidate) =>
+        candidate.membership.tenant_id === record.membership.tenant_id &&
+        isConfiguredStaffOwner(candidate)
     );
     const requestedRecord: StaffManagementRecord = {
       staff_user: {
         ...structuredClone(record.staff_user),
-        role: firstTenantMember ? "owner" : record.staff_user.role
+        role: tenantHasOwner ? record.staff_user.role : "owner"
       },
       membership: {
         ...structuredClone(record.membership),
-        role: firstTenantMember ? "owner" : record.membership.role
+        role: tenantHasOwner ? record.membership.role : "owner"
       }
     };
     const existingTenantRecord = [...this.staffManagement.values()].find(
@@ -934,7 +936,11 @@ export class InMemoryOperationsRepository implements OperationsRepository {
       );
     const saved: StaffManagementRecord = existingIdentity
       ? {
-          staff_user: structuredClone(existingIdentity.staff_user),
+          staff_user: {
+            ...structuredClone(existingIdentity.staff_user),
+            display_name: requestedRecord.staff_user.display_name,
+            role: requestedRecord.membership.role
+          },
           membership: {
             ...requestedRecord.membership,
             staff_user_id: existingIdentity.staff_user.id,
@@ -954,13 +960,20 @@ export class InMemoryOperationsRepository implements OperationsRepository {
     const current = this.staffManagement.get(staffManagementKey(saved));
     if (
       current &&
-      isActiveStaffOwner(current) &&
-      !isActiveStaffOwner(saved) &&
-      [...this.staffManagement.values()].filter(
-        (candidate) =>
-          candidate.membership.tenant_id === saved.membership.tenant_id &&
-          isActiveStaffOwner(candidate)
-      ).length <= 1
+      ((isConfiguredStaffOwner(current) &&
+        !isConfiguredStaffOwner(saved) &&
+        [...this.staffManagement.values()].filter(
+          (candidate) =>
+            candidate.membership.tenant_id === saved.membership.tenant_id &&
+            isConfiguredStaffOwner(candidate)
+        ).length <= 1) ||
+        (isActiveStaffOwner(current) &&
+          !isActiveStaffOwner(saved) &&
+          [...this.staffManagement.values()].filter(
+            (candidate) =>
+              candidate.membership.tenant_id === saved.membership.tenant_id &&
+              isActiveStaffOwner(candidate)
+          ).length <= 1))
     ) {
       throw new Error("last_owner_must_remain_active");
     }
@@ -977,7 +990,11 @@ export class InMemoryOperationsRepository implements OperationsRepository {
     for (const [key, candidate] of this.staffManagement.entries()) {
       if (candidate.staff_user.id === saved.staff_user.id) {
         this.staffManagement.set(key, {
-          staff_user: structuredClone(saved.staff_user),
+          staff_user: {
+            ...structuredClone(saved.staff_user),
+            display_name: candidate.staff_user.display_name,
+            role: candidate.membership.role
+          },
           membership: candidate.membership
         });
       }
@@ -1072,6 +1089,15 @@ function compareReusableStaffIdentities(
   return (
     left.staff_user.created_at.localeCompare(right.staff_user.created_at) ||
     left.staff_user.id.localeCompare(right.staff_user.id)
+  );
+}
+
+function isConfiguredStaffOwner(record: StaffManagementRecord): boolean {
+  return (
+    record.staff_user.status !== "archived" &&
+    record.membership.status !== "archived" &&
+    record.membership.status !== "disabled" &&
+    record.membership.role === "owner"
   );
 }
 

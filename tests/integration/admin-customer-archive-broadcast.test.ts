@@ -7,6 +7,7 @@ import {
   type Alert,
   type AuthUserIdentity,
   type Customer,
+  type OutboundLineMediaStorage,
   type StaffAuthLookup,
   type StaffRole,
   type StaffTenantMembership,
@@ -21,6 +22,22 @@ import type {
 } from "../../apps/api/src/admin/auth-session";
 
 const now = "2026-07-17T00:00:00.000Z";
+const PNG_BYTES = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+class FailingFinalizeMessageRepository extends InMemoryMessageRepository {
+  override async updateStaffMessagesSentToLineAt(): Promise<never> {
+    throw new Error("history finalize failed");
+  }
+}
+
+class FailingCustomerSaveRepository extends InMemoryCustomerRepository {
+  failSaves = false;
+
+  override async save(customer: Customer): Promise<Customer> {
+    if (this.failSaves) throw new Error("customer projection failed");
+    return super.save(customer);
+  }
+}
 
 describe("admin customer archive and broadcast", () => {
   it("archives and restores a tenant customer while resolving its open alerts", async () => {
@@ -196,24 +213,173 @@ describe("admin customer archive and broadcast", () => {
       expect.objectContaining({ customer_id: "customer_success" })
     ]);
   });
+
+  it("reports sent broadcasts separately when history finalization fails", async () => {
+    const messageRepository = new FailingFinalizeMessageRepository();
+    const setup = createTestApp("manager", messageRepository);
+    await setup.customerRepository.save(makeCustomer("customer_active", "U_ACTIVE"));
+
+    const response = await setup.app.fetch(
+      authenticatedRequest("/api/admin/broadcast/send", {
+        method: "POST",
+        body: {
+          body: "営業時間変更のお知らせです。",
+          confirmed: true,
+          confirmation: ADMIN_BROADCAST_CONFIRMATION_VALUE,
+          idempotency_key: "admin-broadcast-finalize-failure-001"
+        }
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      delivery_status: "completed_with_history_finalize_failures",
+      intended_recipients: 1,
+      sent_count: 1,
+      failed_count: 0,
+      history_prepare_failed_count: 0,
+      history_finalize_failed_count: 1,
+      history_record_failed_count: 1,
+      retry_allowed: false
+    });
+    expect(setup.lineClient.pushes).toHaveLength(1);
+    expect(messageRepository.list()).toEqual([
+      expect.objectContaining({
+        customer_id: "customer_active",
+        role: "staff",
+        sent_to_line_at: null
+      })
+    ]);
+
+    const detailResponse = await setup.app.fetch(
+      authenticatedRequest("/api/admin/customers/customer_active/timeline")
+    );
+    expect(detailResponse.status).toBe(200);
+    expect(await detailResponse.json()).toMatchObject({ messages: [] });
+  });
+
+  it("reports customer projection failures without retrying an already sent broadcast", async () => {
+    const customerRepository = new FailingCustomerSaveRepository();
+    const setup = createTestApp("manager", new InMemoryMessageRepository(), customerRepository);
+    await setup.customerRepository.save(makeCustomer("customer_active", "U_ACTIVE"));
+    customerRepository.failSaves = true;
+
+    const response = await setup.app.fetch(
+      authenticatedRequest("/api/admin/broadcast/send", {
+        method: "POST",
+        body: {
+          body: "顧客更新失敗を確認するお知らせです。",
+          confirmed: true,
+          confirmation: ADMIN_BROADCAST_CONFIRMATION_VALUE,
+          idempotency_key: "admin-broadcast-customer-projection-failure-001"
+        }
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      delivery_status: "completed_with_customer_sync_failures",
+      intended_recipients: 1,
+      sent_count: 1,
+      failed_count: 0,
+      history_prepare_failed_count: 0,
+      history_finalize_failed_count: 0,
+      customer_sync_failed_count: 1,
+      history_record_failed_count: 0,
+      retry_allowed: false
+    });
+    expect(setup.lineClient.pushes).toHaveLength(1);
+    expect(setup.messageRepository.list()).toEqual([
+      expect.objectContaining({
+        customer_id: "customer_active",
+        role: "staff",
+        sent_to_line_at: now
+      })
+    ]);
+  });
+
+  it("stores one broadcast image and records the shared private media for each recipient", async () => {
+    const setup = createTestApp("manager");
+    await Promise.all([
+      setup.customerRepository.save(makeCustomer("customer_first", "U_FIRST")),
+      setup.customerRepository.save(makeCustomer("customer_second", "U_SECOND"))
+    ]);
+    const formData = new FormData();
+    formData.set("body", "");
+    formData.set("confirmed", "true");
+    formData.set("confirmation", ADMIN_BROADCAST_CONFIRMATION_VALUE);
+    formData.set("idempotency_key", "admin-broadcast-image-integration-001");
+    formData.set("attachment", new File([PNG_BYTES], "notice.png", {
+      type: "image/png"
+    }));
+
+    const response = await setup.app.fetch(
+      authenticatedMultipartRequest("/api/admin/broadcast/send", formData)
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      intended_recipients: 2,
+      sent_count: 2,
+      failed_count: 0,
+      history_record_failed_count: 0
+    });
+    expect(setup.outboundLineMediaStorage.stored).toHaveLength(1);
+    expect(setup.lineClient.pushes).toEqual([
+      {
+        to: "U_FIRST",
+        messages: [
+          {
+            type: "image",
+            originalContentUrl: "https://media.example.invalid/original",
+            previewImageUrl: "https://media.example.invalid/preview"
+          }
+        ]
+      },
+      {
+        to: "U_SECOND",
+        messages: [
+          {
+            type: "image",
+            originalContentUrl: "https://media.example.invalid/original",
+            previewImageUrl: "https://media.example.invalid/preview"
+          }
+        ]
+      }
+    ]);
+    const messages = setup.messageRepository.list();
+    expect(messages).toHaveLength(2);
+    expect(messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ customer_id: "customer_first", message_type: "image" }),
+        expect.objectContaining({ customer_id: "customer_second", message_type: "image" })
+      ])
+    );
+    expect(new Set(messages.map((message) => message.media_storage_path)).size).toBe(1);
+  });
 });
 
-function createTestApp(role: StaffRole) {
+function createTestApp(
+  role: StaffRole,
+  messageRepository: InMemoryMessageRepository = new InMemoryMessageRepository(),
+  customerRepository: InMemoryCustomerRepository = new InMemoryCustomerRepository()
+) {
   const alertRepository = new InMemoryAlertRepository();
-  const customerRepository = new InMemoryCustomerRepository();
-  const messageRepository = new InMemoryMessageRepository();
   const lineClient = new RecordingLineClient();
+  const outboundLineMediaStorage = new InMemoryOutboundLineMediaStorage();
 
   return {
     alertRepository,
     customerRepository,
     lineClient,
     messageRepository,
+    outboundLineMediaStorage,
     app: createApiApp({
       alertRepository,
       customerRepository,
       messageRepository,
       lineClient,
+      outboundLineMediaStorage,
       lineClientMode: "real",
       now: () => now,
       adminAuthRuntime: {
@@ -229,6 +395,17 @@ function createTestApp(role: StaffRole) {
       }
     })
   };
+}
+
+function authenticatedMultipartRequest(path: string, body: FormData): Request {
+  return new Request(`http://localhost${path}`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer test-admin-token",
+      "x-selected-tenant-id": "tenant_amamihome"
+    },
+    body
+  });
 }
 
 function authenticatedRequest(
@@ -262,6 +439,30 @@ class RecordingLineClient implements LineClient {
     }
     this.pushes.push({ to, messages });
   }
+}
+
+class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
+  readonly stored: Array<Parameters<OutboundLineMediaStorage["store"]>[0]> = [];
+
+  async store(
+    input: Parameters<OutboundLineMediaStorage["store"]>[0]
+  ): Promise<Awaited<ReturnType<OutboundLineMediaStorage["store"]>>> {
+    this.stored.push(input);
+    const prefix = `${input.tenant_id}/outbound/${input.media_id}`;
+
+    return {
+      media_storage_path: `${prefix}/original.png`,
+      preview_storage_path: `${prefix}/preview.png`,
+      original_content_url: "https://media.example.invalid/original",
+      preview_image_url: "https://media.example.invalid/preview"
+    };
+  }
+
+  async download(): Promise<{ data: Blob; content_type: string | null }> {
+    return { data: new Blob(), content_type: null };
+  }
+
+  async remove(): Promise<void> {}
 }
 
 class FakeAuthSessionVerifier implements AuthSessionVerifier {

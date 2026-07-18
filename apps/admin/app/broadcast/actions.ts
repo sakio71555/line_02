@@ -6,6 +6,7 @@ import {
   type AdminBroadcastSendResponse
 } from "../../src/admin-api";
 import { getServerAdminApiRequestOptions } from "../admin-api-request-options";
+import { parseOutboundLineMediaReference } from "../../src/outbound-line-media";
 
 export interface BroadcastActionState {
   status: "idle" | "success" | "error";
@@ -21,9 +22,15 @@ export async function runBroadcastAction(
   const confirmation = readValue(formData, "confirmation");
   const idempotencyKey = readValue(formData, "idempotency_key");
   const confirmed = readValue(formData, "confirmed") === "on";
+  const mediaValue = formData.get("media_reference");
+  const media = parseOutboundLineMediaReference(mediaValue, "broadcast");
 
-  if (!body || body.length > 5000) {
-    return { status: "error", error: "送信内容は1文字以上、5000文字以内で入力してください。" };
+  if (typeof mediaValue === "string" && mediaValue.trim() && !media) {
+    return { status: "error", error: "画像・動画の送信準備が無効です。選び直してください。" };
+  }
+
+  if ((!body && !media) || body.length > 5000) {
+    return { status: "error", error: "メッセージまたは画像・動画を指定してください。本文は5000文字以内です。" };
   }
 
   if (!confirmed || confirmation !== ADMIN_BROADCAST_CONFIRMATION_VALUE) {
@@ -36,7 +43,13 @@ export async function runBroadcastAction(
 
   try {
     const result = await sendAdminBroadcast(
-      { body, confirmed, confirmation, idempotencyKey },
+      {
+        body,
+        confirmed,
+        confirmation,
+        idempotencyKey,
+        ...(media ? { media } : {})
+      },
       await getServerAdminApiRequestOptions()
     );
 

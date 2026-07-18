@@ -9,6 +9,7 @@ import type {
 import {
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  InMemoryOperationsRepository,
   type Customer,
   type StaffAuthLookup,
   type StaffRole,
@@ -33,11 +34,16 @@ describe("Loop 102 LINE real push gate", () => {
 
     expect(response.status).toBe(200);
     expect(setup.lineClient.pushes).toHaveLength(0);
-    expect(setup.messageRepository.list()).toEqual([
+    expect(setup.messageRepository.list()).toHaveLength(0);
+    expect(
+      await setup.operationsRepository.listInternalNotes(
+        "tenant_amamihome",
+        "customer_amami"
+      )
+    ).toEqual([
       expect.objectContaining({
         tenant_id: "tenant_amamihome",
         customer_id: "customer_amami",
-        role: "staff",
         body: "デモ保存の返信です。"
       })
     ]);
@@ -88,11 +94,16 @@ describe("Loop 102 LINE real push gate", () => {
 
     expect(response.status).toBe(200);
     expect(setup.lineClient.pushes).toHaveLength(0);
-    expect(setup.messageRepository.list()).toEqual([
+    expect(setup.messageRepository.list()).toHaveLength(0);
+    expect(
+      await setup.operationsRepository.listInternalNotes(
+        "tenant_amamihome",
+        "customer_amami"
+      )
+    ).toEqual([
       expect.objectContaining({
         tenant_id: "tenant_amamihome",
         customer_id: "customer_amami",
-        role: "staff",
         body: "デモ保存の返信です。"
       })
     ]);
@@ -377,6 +388,7 @@ interface CreateRealPushGateAppInput {
 function createRealPushGateApp(input: CreateRealPushGateAppInput = {}) {
   const customerRepository = new InMemoryCustomerRepository();
   const messageRepository = new InMemoryMessageRepository();
+  const operationsRepository = new InMemoryOperationsRepository();
   const lineClient = new RecordingLineClient();
   const role = input.role ?? "staff";
 
@@ -398,6 +410,7 @@ function createRealPushGateApp(input: CreateRealPushGateAppInput = {}) {
   const app = createApiApp({
     customerRepository,
     messageRepository,
+    operationsRepository,
     lineClient,
     lineClientMode: input.lineClientMode ?? "real",
     adminAuthRuntime: {
@@ -418,7 +431,8 @@ function createRealPushGateApp(input: CreateRealPushGateAppInput = {}) {
     app,
     customerRepository,
     lineClient,
-    messageRepository
+    messageRepository,
+    operationsRepository
   };
 }
 

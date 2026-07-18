@@ -12,6 +12,7 @@ type BroadcastGateInput = {
   selectedTenantId: string | null;
   recipientCount?: number;
   body?: string;
+  hasAttachment?: boolean;
   confirmed?: boolean;
   confirmation?: string;
   idempotencyKey?: string;
@@ -64,7 +65,7 @@ export function evaluateAdminBroadcastGate(input: BroadcastGateInput):
   }
 
   const body = input.body?.trim() ?? "";
-  if (body.length < 1 || body.length > 5_000) {
+  if ((!body && !input.hasAttachment) || body.length > 5_000) {
     return { ok: false, status: 400, error: "invalid_broadcast_body" };
   }
   if (!input.confirmed || input.confirmation !== ADMIN_BROADCAST_CONFIRMATION_VALUE) {

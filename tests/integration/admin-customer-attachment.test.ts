@@ -4,6 +4,7 @@ import { createApiApp } from "../../apps/api/src/index";
 import {
   InMemoryCustomerRepository,
   InMemoryMessageRepository,
+  isPrivateLineAttachmentMessage,
   type Customer,
   type LineAttachmentStorage,
   type Message
@@ -202,6 +203,17 @@ describe("admin customer attachment API", () => {
     });
     expect(attachmentResponse.status).toBe(404);
     expect(downloadCalls).toBe(0);
+  });
+
+  it("does not treat paths derived from malformed tenant or customer identifiers as private", async () => {
+    const message = createAttachmentMessage({
+      id: "message_malformed_scope",
+      customerId: "customer/1",
+      storagePath: "tenant_amamihome/customer_1/line_message.png"
+    });
+    message.tenant_id = "tenant/amamihome";
+
+    expect(isPrivateLineAttachmentMessage(message)).toBe(false);
   });
 });
 

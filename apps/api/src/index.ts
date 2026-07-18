@@ -22,6 +22,7 @@ import {
   insertBotTextTimelineMessage,
   insertSystemAlertTimelineMessage,
   isPrivateLineAttachmentMessage,
+  isPrivateOutboundLineMediaMessage,
   listCustomerListItems,
   listCustomerTimeline,
   logLineWebhookEvents,
@@ -29,7 +30,6 @@ import {
   notifyOpenAlerts,
   recordCustomerRichMenuSwitchMessage,
   recordAiSummaryMessage,
-  recordStaffTextReply,
   type AdminAction,
   type Alert,
   type AlertSeverity,
@@ -44,6 +44,10 @@ import {
   type CustomerRepository,
   type LineReplyInstruction,
   type LineAttachmentStorage,
+  type OutboundLineMediaContentType,
+  type OutboundLineMediaStorage,
+  type OutboundLineMediaType,
+  type OutboundLinePreviewContentType,
   type Message,
   type MessageRepository,
   type InternalNote,
@@ -84,7 +88,8 @@ import {
   type NormalizedLineWebhookEvent,
   type LineClient,
   type LineIdTokenIdentity,
-  type LineIdTokenVerifier
+  type LineIdTokenVerifier,
+  type LineReplyMessage
 } from "@amami-line-crm/line";
 import {
   AMAMI_HOME_TENANT_ID,
@@ -167,6 +172,7 @@ export interface ApiAppDependencies {
   linePushIdempotencyStore?: LinePushIdempotencyStore;
   lineIdTokenVerifier?: LineIdTokenVerifier;
   lineAttachmentStorage?: LineAttachmentStorage;
+  outboundLineMediaStorage?: OutboundLineMediaStorage;
   startOfficialSiteKnowledgeSync?: boolean;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
@@ -181,6 +187,7 @@ export interface CustomerMessageRepositoryRuntimeBundle {
   alertRepository?: AlertRepository;
   knowledgePageRepository?: KnowledgePageRepository;
   lineAttachmentStorage?: LineAttachmentStorage;
+  outboundLineMediaStorage?: OutboundLineMediaStorage;
   operationsRepository?: OperationsRepository;
 }
 
@@ -246,6 +253,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     dependencies.staffInvitationService ?? createProductionStaffInvitationService(env);
   const lineAttachmentStorage =
     dependencies.lineAttachmentStorage ?? runtimeRepositories?.lineAttachmentStorage;
+  const outboundLineMediaStorage =
+    dependencies.outboundLineMediaStorage ?? runtimeRepositories?.outboundLineMediaStorage;
   const lineClient = dependencies.lineClient ?? runtimeLineClient?.lineClient ?? defaultLineClient;
   const staffLineClient = dependencies.staffLineClient ?? createRuntimeStaffLineClient(env);
   const staffNotifier =
@@ -526,6 +535,125 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     });
   });
 
+  api.post("/api/admin/outbound-media/uploads/prepare", async (c) => {
+    let parsed: unknown;
+    try {
+      parsed = await c.req.json();
+    } catch {
+      return c.json({ ok: false, error: "invalid_outbound_media_body" }, 400);
+    }
+
+    const request = readOutboundMediaPreparationRequest(parsed);
+    if (!request) {
+      return c.json({ ok: false, error: "invalid_outbound_media_body" }, 400);
+    }
+
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action:
+        request.purpose === "broadcast"
+          ? adminRouteActions.sendBroadcast
+          : adminRouteActions.sendStaffReply,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    if (!outboundLineMediaStorage?.prepareUpload) {
+      return c.json({ ok: false, error: "outbound_media_storage_unavailable" }, 503);
+    }
+
+    const mediaId = globalThis.crypto.randomUUID();
+    try {
+      const upload = await outboundLineMediaStorage.prepareUpload({
+        tenant_id: tenant.tenantId,
+        media_id: mediaId,
+        media_type: request.mediaType,
+        content_type: request.contentType,
+        preview_content_type: request.previewContentType
+      });
+
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        media: {
+          purpose: request.purpose,
+          media_id: mediaId,
+          media_type: request.mediaType,
+          content_type: request.contentType,
+          media_size: request.mediaSize,
+          preview_content_type: request.previewContentType,
+          preview_size: request.previewSize
+        },
+        media_upload_url: upload.media_upload_url,
+        preview_upload_url: upload.preview_upload_url
+      });
+    } catch {
+      return c.json({ ok: false, error: "outbound_media_prepare_failed" }, 503);
+    }
+  });
+
+  api.post("/api/admin/outbound-media/uploads/discard", async (c) => {
+    let parsed: unknown;
+    try {
+      parsed = await c.req.json();
+    } catch {
+      return c.json({ ok: false, error: "invalid_outbound_media_body" }, 400);
+    }
+
+    if (!isRecord(parsed) || !isRecord(parsed.media)) {
+      return c.json({ ok: false, error: "invalid_outbound_media_body" }, 400);
+    }
+
+    const purpose = parsed.media.purpose;
+    if (purpose !== "staff_reply" && purpose !== "broadcast") {
+      return c.json({ ok: false, error: "invalid_outbound_media_body" }, 400);
+    }
+    const media = readPreparedOutboundMediaUpload(parsed.media, purpose);
+    if (!media || media === "invalid") {
+      return c.json({ ok: false, error: "invalid_outbound_media_body" }, 400);
+    }
+
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action:
+        purpose === "broadcast"
+          ? adminRouteActions.sendBroadcast
+          : adminRouteActions.sendStaffReply,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    if (!outboundLineMediaStorage?.removeUpload) {
+      return c.json({ ok: false, error: "outbound_media_storage_unavailable" }, 503);
+    }
+
+    try {
+      await outboundLineMediaStorage.removeUpload({
+        tenant_id: tenant.tenantId,
+        media_id: media.mediaId,
+        content_type: media.contentType,
+        preview_content_type: media.previewContentType
+      });
+      return c.json({ ok: true, tenant_id: tenant.tenantId, discarded: true });
+    } catch {
+      return c.json({ ok: false, error: "outbound_media_discard_failed" }, 503);
+    }
+  });
+
   api.post("/api/admin/broadcast/send", async (c) => {
     const tenant = await resolveTenantScopedAdminRouteTenant({
       authorizationHeader: c.req.header("authorization"),
@@ -556,17 +684,28 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       selectedTenantId: tenant.selectedTenantId,
       recipientCount: recipients.length,
       body: request.body,
+      hasAttachment: Boolean(request.media),
       confirmed: request.confirmed,
       confirmation: request.confirmation,
       idempotencyKey: request.idempotencyKey
     });
 
     if (!gate.ok) {
+      await discardPreparedOutboundMedia({
+        tenantId: tenant.tenantId,
+        upload: request.media,
+        storage: outboundLineMediaStorage
+      });
       return c.json({ ok: false, error: gate.error }, gate.status);
     }
 
     const idempotencyScope = `${tenant.tenantId}:broadcast:${request.idempotencyKey}`;
     if (!linePushIdempotencyStore.reserve(idempotencyScope)) {
+      await discardPreparedOutboundMedia({
+        tenantId: tenant.tenantId,
+        upload: request.media,
+        storage: outboundLineMediaStorage
+      });
       return c.json({ ok: false, error: "broadcast_duplicate" }, 409);
     }
 
@@ -574,9 +713,32 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       env,
       staffUserIdHeader: c.req.header("x-staff-id")
     });
+    let storedMedia: StoredOutboundLineMedia | null = null;
+    if (request.media) {
+      if (!outboundLineMediaStorage) {
+        linePushIdempotencyStore.release(idempotencyScope);
+        return c.json({ ok: false, error: "outbound_media_storage_unavailable" }, 503);
+      }
+
+      try {
+        storedMedia = await storeOutboundLineMedia({
+          tenantId: tenant.tenantId,
+          upload: request.media,
+          storage: outboundLineMediaStorage,
+          expectedPurpose: "broadcast"
+        });
+      } catch {
+        linePushIdempotencyStore.release(idempotencyScope);
+        return c.json({ ok: false, error: "outbound_media_storage_failed" }, 503);
+      }
+    }
+
+    const lineMessages = buildOutboundLineMessages(request.body, storedMedia);
     let sentCount = 0;
     let failedCount = 0;
-    let historyRecordFailedCount = 0;
+    let historyPrepareFailedCount = 0;
+    let historyFinalizeFailedCount = 0;
+    let customerSyncFailedCount = 0;
 
     for (const customer of recipients) {
       const lineUserId = customer.line_user_id?.trim();
@@ -584,47 +746,81 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         continue;
       }
 
+      let prepared: PreparedOutboundStaffMessages;
       try {
-        await lineClient.pushMessage(lineUserId, [{ type: "text", text: request.body }]);
-        sentCount += 1;
+        prepared = await prepareOutboundStaffMessages({
+          tenantId: tenant.tenantId,
+          customer,
+          body: request.body,
+          storedMedia,
+          staffUserId,
+          messageRepository,
+          ...(now ? { now } : {})
+        });
       } catch {
+        historyPrepareFailedCount += 1;
         failedCount += 1;
         continue;
       }
 
-      const timestamp = now?.() ?? new Date().toISOString();
       try {
-        await messageRepository.insert({
-          id: globalThis.crypto.randomUUID(),
-          tenant_id: tenant.tenantId,
-          customer_id: customer.id,
-          consultation_id: null,
-          line_message_id: null,
-          role: "staff",
-          message_type: "text",
-          body: request.body,
-          media_storage_path: null,
-          staff_user_id: staffUserId,
-          ai_generated: false,
-          sent_to_line_at: timestamp,
-          created_at: timestamp
-        });
-        await customerRepository.save({
-          ...customer,
-          last_message_at: timestamp,
-          updated_at: timestamp
-        });
+        await lineClient.pushMessage(lineUserId, lineMessages);
+        sentCount += 1;
       } catch {
-        historyRecordFailedCount += 1;
+        await discardPreparedOutboundStaffMessages({
+          tenantId: tenant.tenantId,
+          prepared,
+          messageRepository
+        });
+        failedCount += 1;
+        continue;
+      }
+
+      try {
+        const finalized = await finalizeOutboundStaffMessages({
+          tenantId: tenant.tenantId,
+          prepared,
+          customerRepository,
+          messageRepository,
+          ...(now ? { now } : {})
+        });
+        if (!finalized.customerProjectionUpdated) {
+          customerSyncFailedCount += 1;
+        }
+      } catch {
+        historyFinalizeFailedCount += 1;
       }
     }
+
+    if (storedMedia && sentCount === 0 && outboundLineMediaStorage) {
+      await removeStoredOutboundLineMedia({
+        tenantId: tenant.tenantId,
+        storedMedia,
+        storage: outboundLineMediaStorage
+      });
+    }
+
+    const historyRecordFailedCount =
+      historyPrepareFailedCount + historyFinalizeFailedCount;
+    const deliveryStatus =
+      failedCount > 0
+        ? "completed_with_delivery_failures"
+        : historyFinalizeFailedCount > 0
+          ? "completed_with_history_finalize_failures"
+          : customerSyncFailedCount > 0
+            ? "completed_with_customer_sync_failures"
+          : "completed";
 
     return c.json({
       ok: true,
       tenant_id: tenant.tenantId,
+      delivery_status: deliveryStatus,
       intended_recipients: recipients.length,
       sent_count: sentCount,
       failed_count: failedCount,
+      history_prepare_failed_count: historyPrepareFailedCount,
+      history_finalize_failed_count: historyFinalizeFailedCount,
+      customer_sync_failed_count: customerSyncFailedCount,
       history_record_failed_count: historyRecordFailedCount,
       retry_allowed: false
     });
@@ -819,10 +1015,6 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json(tenant.body, tenant.status);
     }
 
-    if (!lineAttachmentStorage) {
-      return c.json({ ok: false, error: "attachment_storage_unavailable" }, 503);
-    }
-
     const customerId = c.req.param("customerId");
     const customer = await getCustomerDetail({
       tenant_id: tenant.tenantId,
@@ -841,12 +1033,27 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       return c.json({ ok: false, error: "attachment_not_found" }, 404);
     }
 
+    const isOutboundAttachment = isPrivateOutboundLineMediaMessage(message);
+    if (
+      (isOutboundAttachment && !outboundLineMediaStorage) ||
+      (!isOutboundAttachment && !lineAttachmentStorage)
+    ) {
+      return c.json({ ok: false, error: "attachment_storage_unavailable" }, 503);
+    }
+
     try {
-      const attachment = await lineAttachmentStorage.download({
-        tenant_id: tenant.tenantId,
-        customer_id: customerId,
-        media_storage_path: message.media_storage_path
-      });
+      const attachment = isOutboundAttachment
+        ? await downloadOutboundLineMedia({
+            tenantId: tenant.tenantId,
+            mediaStoragePath: message.media_storage_path,
+            storage: outboundLineMediaStorage
+          })
+        : await downloadInboundLineAttachment({
+            tenantId: tenant.tenantId,
+            customerId,
+            mediaStoragePath: message.media_storage_path,
+            storage: lineAttachmentStorage
+          });
 
       if (attachment.data.size > MAX_LINE_MESSAGE_CONTENT_BYTES) {
         return c.json({ ok: false, error: "attachment_not_found" }, 404);
@@ -1251,71 +1458,246 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     const isDemoSave = replyRequest.deliveryMode === "demo_save";
 
-    if (!isDemoSave) {
-      const lineUserId = customer.line_user_id;
-
-      if (!lineUserId) {
-        return c.json({ ok: false, error: "cannot_reply_without_line_user_id" }, 409);
+    if (isDemoSave) {
+      if (replyRequest.media) {
+        await discardPreparedOutboundMedia({
+          tenantId: tenant.tenantId,
+          upload: replyRequest.media,
+          storage: outboundLineMediaStorage
+        });
+        return c.json({ ok: false, error: "internal_note_media_not_supported" }, 400);
       }
 
-      const linePushGate = evaluateStaffReplyLinePushGate({
-        env,
-        lineClientMode,
-        tenantContext: tenant.context,
-        selectedTenantId: tenant.selectedTenantId,
-        customer,
-        request: replyRequest
-      });
-
-      if (!linePushGate.ok) {
-        return c.json({ ok: false, error: linePushGate.error }, linePushGate.status);
+      if (!replyRequest.body.trim()) {
+        return c.json({ ok: false, error: "internal_note_body_required" }, 400);
       }
 
-      if (
-        linePushGate.idempotencyScope &&
-        !linePushIdempotencyStore.reserve(linePushGate.idempotencyScope)
-      ) {
-        return c.json({ ok: false, error: "real_push_duplicate" }, 409);
+      const timestamp = now?.() ?? new Date().toISOString();
+      const note: InternalNote = {
+        id: globalThis.crypto.randomUUID(),
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        alert_id: null,
+        author_staff_user_id: tenant.context.staffUserId ?? null,
+        body: replyRequest.body.trim(),
+        mention_staff_user_ids: [],
+        created_at: timestamp,
+        updated_at: timestamp
+      };
+
+      let saved: InternalNote;
+
+      try {
+        saved = await operationsRepository.saveInternalNote(note);
+      } catch {
+        return c.json({ ok: false, error: "internal_note_save_failed" }, 500);
       }
 
       try {
-        await lineClient.pushMessage(lineUserId, [{ type: "text", text: replyRequest.body }]);
+        await recordOperationsAudit(operationsRepository, {
+          tenant,
+          action: "internal_note_created",
+          resourceType: "customer",
+          resourceId: customer.id,
+          summary: "返信欄から社内メモを追加",
+          metadata: { source: "staff_reply_form" },
+          timestamp
+        });
       } catch {
-        if (linePushGate.idempotencyScope) {
-          linePushIdempotencyStore.release(linePushGate.idempotencyScope);
-        }
+        return c.json({
+          ok: true,
+          tenant_id: tenant.tenantId,
+          customer_id: customer.id,
+          delivery_status: "saved_as_internal_note_audit_failed",
+          history_recorded: false,
+          customer_updated: false,
+          audit_recorded: false,
+          retry_allowed: false,
+          internal_note: saved
+        });
+      }
 
-        return c.json({ ok: false, error: "line_send_failed" }, 502);
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        delivery_status: "saved_as_internal_note",
+        history_recorded: false,
+        customer_updated: false,
+        audit_recorded: true,
+        retry_allowed: false,
+        internal_note: saved
+      });
+    }
+
+    const staffUserId = readStaffReplyStaffUserId({
+      env,
+      staffUserIdHeader: c.req.header("x-staff-id")
+    });
+    let prepared: PreparedOutboundStaffMessages;
+    let idempotencyScope: string | null = null;
+
+    const lineUserId = customer.line_user_id;
+
+    if (!lineUserId) {
+      await discardPreparedOutboundMedia({
+        tenantId: tenant.tenantId,
+        upload: replyRequest.media,
+        storage: outboundLineMediaStorage
+      });
+      return c.json({ ok: false, error: "cannot_reply_without_line_user_id" }, 409);
+    }
+
+    const linePushGate = evaluateStaffReplyLinePushGate({
+      env,
+      lineClientMode,
+      tenantContext: tenant.context,
+      selectedTenantId: tenant.selectedTenantId,
+      customer,
+      request: replyRequest
+    });
+
+    if (!linePushGate.ok) {
+      await discardPreparedOutboundMedia({
+        tenantId: tenant.tenantId,
+        upload: replyRequest.media,
+        storage: outboundLineMediaStorage
+      });
+      return c.json({ ok: false, error: linePushGate.error }, linePushGate.status);
+    }
+
+    if (
+      linePushGate.idempotencyScope &&
+      !linePushIdempotencyStore.reserve(linePushGate.idempotencyScope)
+    ) {
+      await discardPreparedOutboundMedia({
+        tenantId: tenant.tenantId,
+        upload: replyRequest.media,
+        storage: outboundLineMediaStorage
+      });
+      return c.json({ ok: false, error: "real_push_duplicate" }, 409);
+    }
+    idempotencyScope = linePushGate.idempotencyScope;
+
+    let storedMedia: StoredOutboundLineMedia | null = null;
+    if (replyRequest.media) {
+      if (!outboundLineMediaStorage) {
+        if (idempotencyScope) linePushIdempotencyStore.release(idempotencyScope);
+        return c.json({ ok: false, error: "outbound_media_storage_unavailable" }, 503);
+      }
+
+      try {
+        storedMedia = await storeOutboundLineMedia({
+          tenantId: tenant.tenantId,
+          upload: replyRequest.media,
+          storage: outboundLineMediaStorage,
+          expectedPurpose: "staff_reply"
+        });
+      } catch {
+        if (idempotencyScope) linePushIdempotencyStore.release(idempotencyScope);
+        return c.json({ ok: false, error: "outbound_media_storage_failed" }, 503);
       }
     }
 
-    const result = await recordStaffTextReply({
-      tenant_id: tenant.tenantId,
-      customer,
-      body: replyRequest.body,
-      staff_user_id: readStaffReplyStaffUserId({
-        env,
-        staffUserIdHeader: c.req.header("x-staff-id")
-      }),
-      customerRepository,
-      messageRepository
-    });
+    try {
+      prepared = await prepareOutboundStaffMessages({
+        tenantId: tenant.tenantId,
+        customer,
+        body: replyRequest.body,
+        storedMedia,
+        staffUserId,
+        messageRepository,
+        ...(now ? { now } : {})
+      });
+    } catch {
+      if (idempotencyScope) {
+        linePushIdempotencyStore.release(idempotencyScope);
+      }
+      if (storedMedia && outboundLineMediaStorage) {
+        await removeStoredOutboundLineMedia({
+          tenantId: tenant.tenantId,
+          storedMedia,
+          storage: outboundLineMediaStorage
+        });
+      }
+      return c.json({ ok: false, error: "reply_history_prepare_failed" }, 500);
+    }
+
+    try {
+      await lineClient.pushMessage(
+        lineUserId,
+        buildOutboundLineMessages(replyRequest.body, storedMedia)
+      );
+    } catch {
+      await discardPreparedOutboundStaffMessages({
+        tenantId: tenant.tenantId,
+        prepared,
+        messageRepository
+      });
+      if (idempotencyScope) {
+        linePushIdempotencyStore.release(idempotencyScope);
+      }
+
+      if (storedMedia && outboundLineMediaStorage) {
+        await removeStoredOutboundLineMedia({
+          tenantId: tenant.tenantId,
+          storedMedia,
+          storage: outboundLineMediaStorage
+        });
+      }
+
+      return c.json({ ok: false, error: "line_send_failed" }, 502);
+    }
+
+    let result: FinalizedOutboundStaffMessages;
+    try {
+      result = await finalizeOutboundStaffMessages({
+        tenantId: tenant.tenantId,
+        prepared,
+        customerRepository,
+        messageRepository,
+        ...(now ? { now } : {})
+      });
+    } catch {
+      const sentAt = now?.() ?? new Date().toISOString();
+      const responseMessages = prepared.messages.map((message) =>
+        toAdminTimelineMessage({ ...message, sent_to_line_at: sentAt })
+      );
+
+      return c.json({
+        ok: true,
+        tenant_id: tenant.tenantId,
+        customer_id: customer.id,
+        delivery_status: "sent_history_finalize_failed",
+        history_recorded: false,
+        customer_updated: false,
+        retry_allowed: false,
+        message: responseMessages[0],
+        messages: responseMessages,
+        customer: {
+          id: prepared.customer.id,
+          tenant_id: prepared.customer.tenant_id,
+          response_mode: prepared.customer.response_mode,
+          last_staff_reply_at: prepared.customer.last_staff_reply_at
+        }
+      });
+    }
+
+    const responseMessages = result.messages.map(toAdminTimelineMessage);
+    const deliveryStatus = !result.customerProjectionUpdated
+      ? "sent_and_recorded_customer_sync_failed"
+      : "sent_and_recorded";
 
     return c.json({
       ok: true,
       tenant_id: tenant.tenantId,
       customer_id: customer.id,
-      message: {
-        id: result.message.id,
-        tenant_id: result.message.tenant_id,
-        customer_id: result.message.customer_id,
-        role: result.message.role,
-        message_type: result.message.message_type,
-        body: result.message.body,
-        line_message_id: result.message.line_message_id,
-        source_url: result.message.media_storage_path,
-        created_at: result.message.created_at
-      },
+      delivery_status: deliveryStatus,
+      history_recorded: true,
+      customer_updated: result.customerProjectionUpdated,
+      retry_allowed: false,
+      message: responseMessages[0],
+      messages: responseMessages,
       customer: {
         id: result.customer.id,
         tenant_id: result.customer.tenant_id,
@@ -1474,7 +1856,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     const timestamp = now?.() ?? new Date().toISOString();
     const staffUserId = globalThis.crypto.randomUUID();
-    const role = records.length === 0 ? "owner" : parsed.data.role;
+    const role = records.some(isConfiguredOwnerStaffRecord) ? parsed.data.role : "owner";
     let record: StaffManagementRecord = {
       staff_user: {
         id: staffUserId,
@@ -1609,9 +1991,14 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     const nextRole = parsed.data.role ?? current.membership.role;
     const nextActive =
       parsed.data.is_active ?? current.membership.status !== "disabled";
+    const removesConfiguredOwner =
+      isConfiguredOwnerStaffRecord(current) && (!nextActive || nextRole !== "owner");
     const removesActiveOwner =
       isActiveOwnerStaffRecord(current) && (!nextActive || nextRole !== "owner");
-    if (removesActiveOwner && records.filter(isActiveOwnerStaffRecord).length <= 1) {
+    if (
+      (removesConfiguredOwner && records.filter(isConfiguredOwnerStaffRecord).length <= 1) ||
+      (removesActiveOwner && records.filter(isActiveOwnerStaffRecord).length <= 1)
+    ) {
       return c.json({ ok: false, error: "last_owner_must_remain_active" }, 409);
     }
     if (parsed.data.is_active === false && tenant.context.staffUserId === current.staff_user.id) {
@@ -2595,6 +2982,7 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     const pushRequest: StaffReplyLinePushRequest = {
       body: input.body,
+      hasAttachment: false,
       deliveryMode: "real_line_push",
       realLinePushConfirmed: input.confirmed,
       linePushConfirmation: input.confirmation,
@@ -5106,7 +5494,57 @@ interface AdminBroadcastRequest {
   confirmed: boolean;
   confirmation: string;
   idempotencyKey: string;
+  media: OutboundMediaUpload | null;
 }
+
+interface InlineOutboundMediaUpload {
+  source: "inline";
+  mediaType: OutboundLineMediaType;
+  contentType: OutboundLineMediaContentType;
+  data: Uint8Array;
+  previewContentType: OutboundLinePreviewContentType;
+  previewData: Uint8Array;
+}
+
+type OutboundMediaPurpose = "staff_reply" | "broadcast";
+
+interface PreparedOutboundMediaUpload {
+  source: "prepared";
+  purpose: OutboundMediaPurpose;
+  mediaId: string;
+  mediaType: OutboundLineMediaType;
+  contentType: OutboundLineMediaContentType;
+  mediaSize: number;
+  previewContentType: OutboundLinePreviewContentType;
+  previewSize: number;
+}
+
+type OutboundMediaUpload = InlineOutboundMediaUpload | PreparedOutboundMediaUpload;
+
+interface StoredOutboundLineMedia {
+  mediaType: OutboundLineMediaType;
+  mediaStoragePath: string;
+  previewStoragePath: string;
+  originalContentUrl: string;
+  previewImageUrl: string;
+}
+
+interface PreparedOutboundStaffMessages {
+  customer: Customer;
+  messages: Message[];
+}
+
+interface FinalizedOutboundStaffMessages extends PreparedOutboundStaffMessages {
+  customerProjectionUpdated: boolean;
+}
+
+interface ParsedStaffReplyRequest extends StaffReplyLinePushRequest {
+  media: OutboundMediaUpload | null;
+}
+
+const MAX_OUTBOUND_LINE_IMAGE_BYTES = 10 * 1024 * 1024;
+const MAX_OUTBOUND_LINE_VIDEO_BYTES = 50 * 1024 * 1024;
+const MAX_OUTBOUND_LINE_PREVIEW_BYTES = 1024 * 1024;
 
 async function readCustomerArchiveBody(request: Request): Promise<{ confirmed: boolean } | null> {
   let parsed: unknown;
@@ -5125,6 +5563,37 @@ async function readCustomerArchiveBody(request: Request): Promise<{ confirmed: b
 }
 
 async function readAdminBroadcastBody(request: Request): Promise<AdminBroadcastRequest | null> {
+  if (request.headers.get("content-type")?.toLowerCase().includes("multipart/form-data")) {
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return null;
+    }
+
+    const body = readFormDataText(formData, "body");
+    const media = await readOutboundMediaUpload(formData);
+    const confirmation = readFormDataText(formData, "confirmation");
+    const idempotencyKey = readFormDataText(formData, "idempotency_key");
+
+    if (
+      media === "invalid" ||
+      (!body && !media) ||
+      body.length > 5_000 ||
+      !isValidLineSendIdempotencyKey(idempotencyKey)
+    ) {
+      return null;
+    }
+
+    return {
+      body,
+      confirmed: readFormDataText(formData, "confirmed") === "true",
+      confirmation,
+      idempotencyKey,
+      media
+    };
+  }
+
   let parsed: unknown;
 
   try {
@@ -5138,12 +5607,14 @@ async function readAdminBroadcastBody(request: Request): Promise<AdminBroadcastR
   }
 
   const body = parsed.body.trim();
+  const media = readPreparedOutboundMediaUpload(parsed.media, "broadcast");
   const confirmation = typeof parsed.confirmation === "string" ? parsed.confirmation.trim() : "";
   const idempotencyKey =
     typeof parsed.idempotency_key === "string" ? parsed.idempotency_key.trim() : "";
 
   if (
-    !body ||
+    media === "invalid" ||
+    (!body && !media) ||
     body.length > 5_000 ||
     idempotencyKey.length < 16 ||
     idempotencyKey.length > 160 ||
@@ -5156,7 +5627,8 @@ async function readAdminBroadcastBody(request: Request): Promise<AdminBroadcastR
     body,
     confirmed: parsed.confirmed === true,
     confirmation,
-    idempotencyKey
+    idempotencyKey,
+    media
   };
 }
 
@@ -5187,7 +5659,36 @@ function selectAdminBroadcastRecipients(customers: Customer[]): {
   };
 }
 
-async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushRequest | null> {
+async function readStaffReplyBody(request: Request): Promise<ParsedStaffReplyRequest | null> {
+  if (request.headers.get("content-type")?.toLowerCase().includes("multipart/form-data")) {
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return null;
+    }
+
+    const body = readFormDataText(formData, "body");
+    const media = await readOutboundMediaUpload(formData);
+    if (media === "invalid" || (!body && !media) || body.length > 5_000) {
+      return null;
+    }
+
+    return {
+      body,
+      hasAttachment: media !== null,
+      media,
+      deliveryMode:
+        readFormDataText(formData, "delivery_mode") === "real_line_push"
+          ? "real_line_push"
+          : "demo_save",
+      realLinePushConfirmed:
+        readFormDataText(formData, "real_line_push_confirmed") === "true",
+      linePushConfirmation: readOptionalFormDataText(formData, "line_push_confirmation"),
+      idempotencyKey: readOptionalFormDataText(formData, "idempotency_key")
+    };
+  }
+
   let parsed: unknown;
 
   try {
@@ -5201,13 +5702,16 @@ async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushR
   }
 
   const body = parsed.body.trim();
+  const media = readPreparedOutboundMediaUpload(parsed.media, "staff_reply");
 
-  if (!body) {
+  if (media === "invalid" || (!body && !media) || body.length > 5_000) {
     return null;
   }
 
   return {
     body,
+    hasAttachment: media !== null,
+    media,
     deliveryMode: parsed.delivery_mode === "real_line_push" ? "real_line_push" : "demo_save",
     realLinePushConfirmed: parsed.real_line_push_confirmed === true,
     linePushConfirmation:
@@ -5219,6 +5723,644 @@ async function readStaffReplyBody(request: Request): Promise<StaffReplyLinePushR
         ? parsed.idempotency_key.trim()
         : null
   };
+}
+
+function readPreparedOutboundMediaUpload(
+  value: unknown,
+  expectedPurpose: OutboundMediaPurpose
+): PreparedOutboundMediaUpload | null | "invalid" {
+  if (value === null || value === undefined) return null;
+  if (!isRecord(value)) return "invalid";
+
+  const mediaType = value.media_type;
+  const contentType = value.content_type;
+  const previewContentType = value.preview_content_type;
+  const mediaSize = value.media_size;
+  const previewSize = value.preview_size;
+
+  if (
+    value.purpose !== expectedPurpose ||
+    typeof value.media_id !== "string" ||
+    !isValidOutboundMediaId(value.media_id) ||
+    (mediaType !== "image" && mediaType !== "video") ||
+    !isCompatibleOutboundMediaType(mediaType, contentType) ||
+    (previewContentType !== "image/jpeg" && previewContentType !== "image/png") ||
+    (mediaType === "video" && previewContentType !== "image/jpeg") ||
+    !isValidOutboundMediaSize(mediaType, mediaSize) ||
+    !Number.isInteger(previewSize) ||
+    (previewSize as number) <= 0 ||
+    (previewSize as number) > MAX_OUTBOUND_LINE_PREVIEW_BYTES
+  ) {
+    return "invalid";
+  }
+
+  return {
+    source: "prepared",
+    purpose: expectedPurpose,
+    mediaId: value.media_id,
+    mediaType,
+    contentType,
+    mediaSize: mediaSize as number,
+    previewContentType,
+    previewSize: previewSize as number
+  };
+}
+
+function readOutboundMediaPreparationRequest(
+  value: unknown
+): Omit<PreparedOutboundMediaUpload, "source" | "mediaId"> | null {
+  if (!isRecord(value)) return null;
+  const purpose = value.purpose;
+  if (purpose !== "staff_reply" && purpose !== "broadcast") return null;
+
+  const media = readPreparedOutboundMediaUpload(
+    { ...value, media_id: "00000000-0000-4000-8000-000000000000" },
+    purpose
+  );
+  if (!media || media === "invalid") return null;
+
+  return {
+    purpose: media.purpose,
+    mediaType: media.mediaType,
+    contentType: media.contentType,
+    mediaSize: media.mediaSize,
+    previewContentType: media.previewContentType,
+    previewSize: media.previewSize
+  };
+}
+
+function isCompatibleOutboundMediaType(
+  mediaType: unknown,
+  contentType: unknown
+): contentType is OutboundLineMediaContentType {
+  return mediaType === "video"
+    ? contentType === "video/mp4"
+    : mediaType === "image" &&
+        (contentType === "image/jpeg" || contentType === "image/png");
+}
+
+function isValidOutboundMediaSize(
+  mediaType: OutboundLineMediaType,
+  value: unknown
+): value is number {
+  return (
+    Number.isInteger(value) &&
+    (value as number) > 0 &&
+    (value as number) <=
+      (mediaType === "video"
+        ? MAX_OUTBOUND_LINE_VIDEO_BYTES
+        : MAX_OUTBOUND_LINE_IMAGE_BYTES)
+  );
+}
+
+function isValidOutboundMediaId(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(
+    value
+  );
+}
+
+async function readOutboundMediaUpload(
+  formData: FormData
+): Promise<OutboundMediaUpload | null | "invalid"> {
+  const attachment = formData.get("attachment");
+  if (attachment === null || (isUploadedFile(attachment) && attachment.size === 0)) {
+    return null;
+  }
+  if (!isUploadedFile(attachment)) {
+    return "invalid";
+  }
+
+  const contentType = attachment.type.toLowerCase();
+  if (contentType === "image/jpeg" || contentType === "image/png") {
+    if (attachment.size > MAX_OUTBOUND_LINE_IMAGE_BYTES) {
+      return "invalid";
+    }
+
+    const data = new Uint8Array(await attachment.arrayBuffer());
+    if (!hasOutboundMediaSignature(contentType, data)) {
+      return "invalid";
+    }
+
+    const preview = formData.get("preview");
+    if (isUploadedFile(preview) && preview.size > 0) {
+      const previewContentType = normalizeOutboundPreviewContentType(preview.type);
+      if (!previewContentType || preview.size > MAX_OUTBOUND_LINE_PREVIEW_BYTES) {
+        return "invalid";
+      }
+
+      const previewData = new Uint8Array(await preview.arrayBuffer());
+      if (!hasOutboundMediaSignature(previewContentType, previewData)) {
+        return "invalid";
+      }
+
+      return {
+        source: "inline",
+        mediaType: "image",
+        contentType,
+        data,
+        previewContentType,
+        previewData
+      };
+    }
+
+    if (attachment.size > MAX_OUTBOUND_LINE_PREVIEW_BYTES) {
+      return "invalid";
+    }
+
+    return {
+      source: "inline",
+      mediaType: "image",
+      contentType,
+      data,
+      previewContentType: contentType,
+      previewData: data
+    };
+  }
+
+  if (contentType !== "video/mp4" || attachment.size > MAX_OUTBOUND_LINE_VIDEO_BYTES) {
+    return "invalid";
+  }
+
+  const preview = formData.get("preview");
+  if (!isUploadedFile(preview) || preview.size === 0) {
+    return "invalid";
+  }
+
+  const previewContentType = normalizeOutboundPreviewContentType(preview.type);
+  if (!previewContentType || preview.size > MAX_OUTBOUND_LINE_PREVIEW_BYTES) {
+    return "invalid";
+  }
+
+  const data = new Uint8Array(await attachment.arrayBuffer());
+  const previewData = new Uint8Array(await preview.arrayBuffer());
+  if (
+    !hasOutboundMediaSignature(contentType, data) ||
+    !hasOutboundMediaSignature(previewContentType, previewData)
+  ) {
+    return "invalid";
+  }
+
+  return {
+    source: "inline",
+    mediaType: "video",
+    contentType,
+    data,
+    previewContentType,
+    previewData
+  };
+}
+
+function normalizeOutboundPreviewContentType(
+  value: string
+): OutboundLinePreviewContentType | null {
+  const normalized = value.toLowerCase();
+  return normalized === "image/jpeg" || normalized === "image/png" ? normalized : null;
+}
+
+function hasOutboundMediaSignature(contentType: string, data: Uint8Array): boolean {
+  if (contentType === "image/jpeg") {
+    return data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff;
+  }
+
+  if (contentType === "image/png") {
+    const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    return signature.every((byte, index) => data[index] === byte);
+  }
+
+  if (contentType === "video/mp4") {
+    return (
+      data.length >= 12 &&
+      data[4] === 0x66 &&
+      data[5] === 0x74 &&
+      data[6] === 0x79 &&
+      data[7] === 0x70
+    );
+  }
+
+  return false;
+}
+
+function isUploadedFile(value: FormDataEntryValue | null): value is File {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "arrayBuffer" in value &&
+    typeof value.arrayBuffer === "function" &&
+    "size" in value &&
+    typeof value.size === "number" &&
+    "type" in value &&
+    typeof value.type === "string"
+  );
+}
+
+function readFormDataText(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function readOptionalFormDataText(formData: FormData, key: string): string | null {
+  return readFormDataText(formData, key) || null;
+}
+
+function isValidLineSendIdempotencyKey(value: string): boolean {
+  return (
+    value.length >= 16 &&
+    value.length <= 160 &&
+    /^[A-Za-z0-9_-]+$/u.test(value)
+  );
+}
+
+async function storeOutboundLineMedia(input: {
+  tenantId: string;
+  upload: OutboundMediaUpload;
+  storage: OutboundLineMediaStorage;
+  expectedPurpose: OutboundMediaPurpose;
+}): Promise<StoredOutboundLineMedia> {
+  if (input.upload.source === "prepared") {
+    return resolvePreparedOutboundLineMedia({
+      tenantId: input.tenantId,
+      upload: input.upload,
+      storage: input.storage,
+      expectedPurpose: input.expectedPurpose
+    });
+  }
+
+  const stored = await input.storage.store({
+    tenant_id: input.tenantId,
+    media_id: globalThis.crypto.randomUUID(),
+    media_type: input.upload.mediaType,
+    content_type: input.upload.contentType,
+    data: input.upload.data,
+    preview_content_type: input.upload.previewContentType,
+    preview_data: input.upload.previewData
+  });
+
+  return {
+    mediaType: input.upload.mediaType,
+    mediaStoragePath: stored.media_storage_path,
+    previewStoragePath: stored.preview_storage_path,
+    originalContentUrl: stored.original_content_url,
+    previewImageUrl: stored.preview_image_url
+  };
+}
+
+async function resolvePreparedOutboundLineMedia(input: {
+  tenantId: string;
+  upload: PreparedOutboundMediaUpload;
+  storage: OutboundLineMediaStorage;
+  expectedPurpose: OutboundMediaPurpose;
+}): Promise<StoredOutboundLineMedia> {
+  const { upload, storage } = input;
+  if (
+    upload.purpose !== input.expectedPurpose ||
+    !storage.resolveUpload ||
+    !storage.removeUpload
+  ) {
+    throw new Error("Prepared outbound LINE media cannot be resolved.");
+  }
+
+  try {
+    const resolved = await storage.resolveUpload({
+      tenant_id: input.tenantId,
+      media_id: upload.mediaId,
+      media_type: upload.mediaType,
+      content_type: upload.contentType,
+      preview_content_type: upload.previewContentType
+    });
+    const [mediaFile, previewFile] = await Promise.all([
+      storage.download({
+        tenant_id: input.tenantId,
+        media_storage_path: resolved.media_storage_path
+      }),
+      storage.download({
+        tenant_id: input.tenantId,
+        media_storage_path: resolved.preview_storage_path
+      })
+    ]);
+    const [mediaData, previewData] = await Promise.all([
+      blobToBytes(mediaFile.data),
+      blobToBytes(previewFile.data)
+    ]);
+
+    if (
+      mediaData.byteLength !== upload.mediaSize ||
+      previewData.byteLength !== upload.previewSize ||
+      normalizeStoredMediaContentType(mediaFile.content_type) !== upload.contentType ||
+      normalizeStoredMediaContentType(previewFile.content_type) !== upload.previewContentType ||
+      !hasOutboundMediaSignature(upload.contentType, mediaData) ||
+      !hasOutboundMediaSignature(upload.previewContentType, previewData)
+    ) {
+      throw new Error("Prepared outbound LINE media validation failed.");
+    }
+
+    return {
+      mediaType: upload.mediaType,
+      mediaStoragePath: resolved.media_storage_path,
+      previewStoragePath: resolved.preview_storage_path,
+      originalContentUrl: resolved.original_content_url,
+      previewImageUrl: resolved.preview_image_url
+    };
+  } catch (error) {
+    await discardPreparedOutboundMedia({
+      tenantId: input.tenantId,
+      upload,
+      storage
+    });
+    throw error;
+  }
+}
+
+async function blobToBytes(blob: Blob): Promise<Uint8Array> {
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+function normalizeStoredMediaContentType(value: string | null): string | null {
+  if (!value) return null;
+  const normalized = value.split(";", 1)[0]?.trim().toLowerCase();
+  return normalized || null;
+}
+
+async function discardPreparedOutboundMedia(input: {
+  tenantId: string;
+  upload: OutboundMediaUpload | null;
+  storage: OutboundLineMediaStorage | null | undefined;
+}): Promise<void> {
+  if (
+    input.upload?.source !== "prepared" ||
+    !input.storage?.removeUpload
+  ) {
+    return;
+  }
+
+  try {
+    await input.storage.removeUpload({
+      tenant_id: input.tenantId,
+      media_id: input.upload.mediaId,
+      content_type: input.upload.contentType,
+      preview_content_type: input.upload.previewContentType
+    });
+  } catch {
+    // Best effort cleanup; unreferenced objects remain private.
+  }
+}
+
+function buildOutboundLineMessages(
+  body: string,
+  media: StoredOutboundLineMedia | null
+): LineReplyMessage[] {
+  const messages: LineReplyMessage[] = [];
+  if (body.trim()) {
+    messages.push({ type: "text", text: body.trim() });
+  }
+
+  if (media?.mediaType === "image") {
+    messages.push({
+      type: "image",
+      originalContentUrl: media.originalContentUrl,
+      previewImageUrl: media.previewImageUrl
+    });
+  } else if (media?.mediaType === "video") {
+    messages.push({
+      type: "video",
+      originalContentUrl: media.originalContentUrl,
+      previewImageUrl: media.previewImageUrl
+    });
+  }
+
+  return messages;
+}
+
+async function prepareOutboundStaffMessages(input: {
+  tenantId: string;
+  customer: Customer;
+  body: string;
+  storedMedia: StoredOutboundLineMedia | null;
+  staffUserId: string | null;
+  messageRepository: MessageRepository;
+  now?: () => string;
+}): Promise<PreparedOutboundStaffMessages> {
+  const timestamp = input.now?.() ?? new Date().toISOString();
+  const messages: Message[] = [];
+
+  if (input.body.trim()) {
+    messages.push({
+      id: globalThis.crypto.randomUUID(),
+      tenant_id: input.tenantId,
+      customer_id: input.customer.id,
+      consultation_id: null,
+      line_message_id: null,
+      role: "staff",
+      message_type: "text",
+      body: input.body.trim(),
+      staff_user_id: input.staffUserId,
+      media_storage_path: null,
+      ai_generated: false,
+      sent_to_line_at: null,
+      created_at: timestamp
+    });
+  }
+
+  if (input.storedMedia) {
+    messages.push({
+      id: globalThis.crypto.randomUUID(),
+      tenant_id: input.tenantId,
+      customer_id: input.customer.id,
+      consultation_id: null,
+      line_message_id: null,
+      role: "staff",
+      message_type: input.storedMedia.mediaType === "image" ? "image" : "file",
+      body: input.storedMedia.mediaType === "image" ? "画像" : "動画",
+      media_storage_path: input.storedMedia.mediaStoragePath,
+      staff_user_id: input.staffUserId,
+      ai_generated: false,
+      sent_to_line_at: null,
+      created_at: timestamp
+    });
+  }
+
+  let savedMessages: Message[];
+  try {
+    savedMessages = await input.messageRepository.insertMany(messages);
+  } catch (error) {
+    // IDs are generated before the insert. If the database committed but its
+    // response was lost, remove those still-pending rows before LINE is called.
+    await discardPendingOutboundStaffMessages({
+      tenantId: input.tenantId,
+      messageIds: messages.map((message) => message.id),
+      messageRepository: input.messageRepository
+    });
+    throw error;
+  }
+  if (savedMessages.length !== messages.length) {
+    await discardPendingOutboundStaffMessages({
+      tenantId: input.tenantId,
+      messageIds: messages.map((message) => message.id),
+      messageRepository: input.messageRepository
+    });
+    throw new Error("outbound_staff_message_prepare_incomplete");
+  }
+
+  return {
+    customer: {
+      ...input.customer,
+      response_mode: "human_active",
+      last_staff_reply_at: timestamp,
+      last_message_at: timestamp,
+      updated_at: timestamp
+    },
+    messages: savedMessages
+  };
+}
+
+async function discardPendingOutboundStaffMessages(input: {
+  tenantId: string;
+  messageIds: string[];
+  messageRepository: MessageRepository;
+}): Promise<void> {
+  try {
+    await input.messageRepository.deleteManyByIdForTenant(
+      input.tenantId,
+      input.messageIds
+    );
+  } catch {
+    // Preserve the prepare failure. Cleanup must never advance to LINE push.
+  }
+}
+
+async function finalizeOutboundStaffMessages(input: {
+  tenantId: string;
+  prepared: PreparedOutboundStaffMessages;
+  customerRepository: CustomerRepository;
+  messageRepository: MessageRepository;
+  now?: () => string;
+}): Promise<FinalizedOutboundStaffMessages> {
+  const sentAt = input.now?.() ?? new Date().toISOString();
+  const messageIds = input.prepared.messages.map((message) => message.id);
+  let messages: Message[] = [];
+  let finalizeError: unknown = null;
+
+  try {
+    messages = await input.messageRepository.updateStaffMessagesSentToLineAt({
+      tenant_id: input.tenantId,
+      message_ids: messageIds,
+      sent_to_line_at: sentAt
+    });
+  } catch (error) {
+    finalizeError = error;
+  }
+
+  if (messages.length !== input.prepared.messages.length) {
+    try {
+      const persistedMessages = await input.messageRepository.listByCustomer(
+        input.tenantId,
+        input.prepared.customer.id
+      );
+      const persistedById = new Map(
+        persistedMessages.map((message) => [message.id, message] as const)
+      );
+      const reconciled = messageIds.map((messageId) => persistedById.get(messageId));
+
+      if (
+        reconciled.every(
+          (message): message is Message =>
+            message?.role === "staff" && message.sent_to_line_at !== null
+        )
+      ) {
+        messages = reconciled;
+      }
+    } catch {
+      // Preserve the original finalization result below. Reading history must
+      // never trigger a second LINE push or hide the primary failure.
+    }
+  }
+
+  if (messages.length !== input.prepared.messages.length) {
+    if (finalizeError) throw finalizeError;
+    throw new Error("outbound_staff_message_finalize_incomplete");
+  }
+
+  let customer = input.prepared.customer;
+  let customerProjectionUpdated = false;
+
+  try {
+    customer = await input.customerRepository.save({
+      ...input.prepared.customer,
+      last_staff_reply_at: sentAt,
+      last_message_at: sentAt,
+      updated_at: sentAt
+    });
+    customerProjectionUpdated = true;
+  } catch {
+    // The message history is already final. A failed customer projection must not
+    // make the operator think LINE delivery or history recording can be retried.
+  }
+
+  return { customer, messages, customerProjectionUpdated };
+}
+
+async function discardPreparedOutboundStaffMessages(input: {
+  tenantId: string;
+  prepared: PreparedOutboundStaffMessages;
+  messageRepository: MessageRepository;
+}): Promise<void> {
+  try {
+    await input.messageRepository.deleteManyByIdForTenant(
+      input.tenantId,
+      input.prepared.messages.map((message) => message.id)
+    );
+  } catch {
+    // Cleanup failure must not replace the original delivery failure.
+  }
+}
+
+async function removeStoredOutboundLineMedia(input: {
+  tenantId: string;
+  storedMedia: StoredOutboundLineMedia;
+  storage: OutboundLineMediaStorage;
+}): Promise<void> {
+  try {
+    await input.storage.remove({
+      tenant_id: input.tenantId,
+      media_storage_paths: [
+        input.storedMedia.mediaStoragePath,
+        input.storedMedia.previewStoragePath
+      ]
+    });
+  } catch {
+    // Cleanup failure must not hide the original send or validation result.
+  }
+}
+
+async function downloadOutboundLineMedia(input: {
+  tenantId: string;
+  mediaStoragePath: string;
+  storage: OutboundLineMediaStorage | undefined;
+}): Promise<{ data: Blob; content_type: string | null }> {
+  if (!input.storage) {
+    throw new Error("Outbound attachment storage is unavailable.");
+  }
+
+  return input.storage.download({
+    tenant_id: input.tenantId,
+    media_storage_path: input.mediaStoragePath
+  });
+}
+
+async function downloadInboundLineAttachment(input: {
+  tenantId: string;
+  customerId: string;
+  mediaStoragePath: string;
+  storage: LineAttachmentStorage | undefined;
+}): Promise<{ data: Blob; content_type: string | null }> {
+  if (!input.storage) {
+    throw new Error("Inbound attachment storage is unavailable.");
+  }
+
+  return input.storage.download({
+    tenant_id: input.tenantId,
+    customer_id: input.customerId,
+    media_storage_path: input.mediaStoragePath
+  });
 }
 
 async function readCustomerRichMenuSwitchBody(
@@ -5428,6 +6570,15 @@ function toAdminStaffMember(record: StaffManagementRecord): AdminStaffMember {
     created_at: record.staff_user.created_at,
     updated_at: record.staff_user.updated_at
   };
+}
+
+function isConfiguredOwnerStaffRecord(record: StaffManagementRecord): boolean {
+  return (
+    record.staff_user.status !== "archived" &&
+    record.membership.status !== "archived" &&
+    record.membership.status !== "disabled" &&
+    record.membership.role === "owner"
+  );
 }
 
 function isActiveOwnerStaffRecord(record: StaffManagementRecord): boolean {

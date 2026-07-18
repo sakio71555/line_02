@@ -8,6 +8,7 @@ import {
   type KnowledgePage,
   type LineAttachmentStorage,
   type MessageRepository,
+  type OutboundLineMediaStorage,
   type OperationsRepository
 } from "@amami-line-crm/domain";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -20,6 +21,7 @@ import {
   SupabaseCustomerRepository,
   SupabaseKnowledgePageRepository,
   SupabaseLineAttachmentStorage,
+  SupabaseOutboundLineMediaStorage,
   SupabaseMessageRepository,
   SupabaseOperationsRepository,
   type SupabaseEnv,
@@ -38,6 +40,7 @@ export interface CustomerMessageRepositoryBundle {
   alertRepository?: AlertRepository;
   knowledgePageRepository?: KnowledgePageRepositoryRuntime;
   lineAttachmentStorage?: LineAttachmentStorage;
+  outboundLineMediaStorage?: OutboundLineMediaStorage;
   operationsRepository: OperationsRepository;
 }
 
@@ -130,6 +133,9 @@ export function createSupabaseCustomerMessageRepositories(input: {
     ...(input.client.storage
       ? {
           lineAttachmentStorage: new SupabaseLineAttachmentStorage(
+            input.client as Pick<SupabaseClient, "storage">
+          ),
+          outboundLineMediaStorage: new SupabaseOutboundLineMediaStorage(
             input.client as Pick<SupabaseClient, "storage">
           )
         }

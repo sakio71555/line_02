@@ -933,6 +933,11 @@ class SpyMessageRepository extends InMemoryMessageRepository {
     return super.insert(message);
   }
 
+  override async insertMany(messages: Message[]): Promise<Message[]> {
+    this.insertCalls.push(...messages);
+    return super.insertMany(messages);
+  }
+
   override async listByCustomer(tenantId: string, customerId: string): Promise<Message[]> {
     this.listByCustomerCalls.push({ tenantId, customerId });
     return super.listByCustomer(tenantId, customerId);

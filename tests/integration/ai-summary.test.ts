@@ -90,6 +90,7 @@ function makeMessage(input: {
   body: string | null;
   role?: Message["role"];
   messageType?: Message["message_type"];
+  sentToLineAt?: string | null;
   createdAt: string;
 }): Message {
   return {
@@ -104,7 +105,7 @@ function makeMessage(input: {
     media_storage_path: null,
     staff_user_id: null,
     ai_generated: input.role === "ai",
-    sent_to_line_at: null,
+    sent_to_line_at: input.sentToLineAt ?? null,
     created_at: input.createdAt
   };
 }
@@ -238,6 +239,7 @@ describe("admin AI summary API", () => {
         customerId: "customer_amami",
         body: "候補日を確認します",
         role: "staff",
+        sentToLineAt: "2026-06-13T00:02:00.000Z",
         createdAt: "2026-06-13T00:02:00.000Z"
       })
     );
