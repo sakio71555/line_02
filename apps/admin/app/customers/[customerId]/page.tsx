@@ -21,6 +21,7 @@ import {
   formatAdminDateTime,
   toLineConversationTimelineMessages
 } from "../../../src/customer-timeline-display";
+import { buildCustomerRichMenuSwitchOptions } from "../../../src/customer-rich-menu-options";
 import { getServerAdminApiRequestOptions } from "../../admin-api-request-options";
 import { PageTitle, SectionHeader, StatusBadge } from "../../_components/ui";
 import {
@@ -167,18 +168,9 @@ export default async function CustomerDetailPage({
                   <CustomerRichMenuSwitch
                     customerAvailable={Boolean(detail.customer.line_user_id)}
                     customerId={customerId}
-                    menus={operations.settings.line_experience.menus.map((menu) => ({
-                      menu_type: menu.menu_type,
-                      name: menu.name,
-                      line_rich_menu_id: menu.line_rich_menu_id,
-                      description: `${menu.items
-                        .slice(0, 2)
-                        .map((item) => item.label)
-                        .join("・")} など6つのメニュー`,
-                      switch_available:
-                        Boolean(menu.line_rich_menu_id?.trim()) ||
-                        ["initial", "negotiation", "aftercare"].includes(menu.menu_type)
-                    }))}
+                    menus={buildCustomerRichMenuSwitchOptions(
+                      operations.settings.line_experience
+                    )}
                   />
                 </section>
               ) : null}

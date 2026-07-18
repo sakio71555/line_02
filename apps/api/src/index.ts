@@ -1986,17 +1986,14 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
         return true;
       }
 
-      const existingMenu = existingResolved.line_experience.menus.find(
-        (candidate) => candidate.menu_type === menu.menu_type
+      const usesLegacyEnvironmentFallback = ["initial", "negotiation", "aftercare"].includes(
+        menu.menu_type
       );
-      const isFirstPublication =
-        existingMenu &&
-        resolveLineMenuPublicationStatus(existingMenu) === "draft" &&
-        !existingMenu.published_snapshot &&
-        status === "published";
 
       return Boolean(
-        isFirstPublication && !menu.published_snapshot?.line_rich_menu_id?.trim()
+        status === "published" &&
+          !usesLegacyEnvironmentFallback &&
+          !menu.published_snapshot?.line_rich_menu_id?.trim()
       );
     });
     if (invalidPublicationState) {

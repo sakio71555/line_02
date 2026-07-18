@@ -369,4 +369,47 @@ describe("workspace settings API", () => {
       error: "invalid_line_menu_publication_state"
     });
   });
+
+  it("requires a LINE rich menu ID when republishing a custom menu", async () => {
+    const repository = new InMemoryOperationsRepository();
+    const app = createTestApp(repository);
+    const createResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", createWorkspaceSettingsBody())
+    );
+    const created = await createResponse.json();
+    const firstPublishBody = createWorkspaceSettingsBody();
+    firstPublishBody.expected_updated_at = created.settings_version as string;
+    const firstPublishedMenu = firstPublishBody.line_experience.menus.at(-1)!;
+    firstPublishedMenu.publication_status = "published";
+    firstPublishedMenu.published_snapshot = {
+      name: firstPublishedMenu.name,
+      chat_bar_text: firstPublishedMenu.chat_bar_text,
+      line_rich_menu_id: firstPublishedMenu.line_rich_menu_id,
+      items: firstPublishedMenu.items
+    };
+    const firstPublishResponse = await app.fetch(
+      workspaceSettingsRequest("PUT", firstPublishBody)
+    );
+    const firstPublished = await firstPublishResponse.json();
+    expect(firstPublishResponse.status).toBe(200);
+
+    const republishBody = createWorkspaceSettingsBody();
+    republishBody.expected_updated_at = firstPublished.settings_version as string;
+    const republishedMenu = republishBody.line_experience.menus.at(-1)!;
+    republishedMenu.publication_status = "published";
+    republishedMenu.line_rich_menu_id = undefined;
+    republishedMenu.published_snapshot = {
+      name: "更新後メニュー",
+      chat_bar_text: republishedMenu.chat_bar_text,
+      items: republishedMenu.items
+    };
+
+    const response = await app.fetch(workspaceSettingsRequest("PUT", republishBody));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "invalid_line_menu_publication_state"
+    });
+  });
 });

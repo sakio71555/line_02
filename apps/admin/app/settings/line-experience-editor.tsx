@@ -60,6 +60,8 @@ const severityOptions = [
   ["critical", "至急"]
 ] as const;
 
+const LEGACY_LINE_RICH_MENU_TYPES = new Set(["initial", "negotiation", "aftercare"]);
+
 const conditionOperatorOptions: Array<{
   value: LineFlowConditionOperator;
   label: string;
@@ -208,7 +210,11 @@ export function LineExperienceEditor({
   };
 
   const confirmPublication = () => {
-    if (!activeMenu.published_snapshot && !activeMenu.line_rich_menu_id?.trim()) {
+    const requiresPublishedRichMenuId = !LEGACY_LINE_RICH_MENU_TYPES.has(
+      activeMenu.menu_type
+    );
+
+    if (requiresPublishedRichMenuId && !activeMenu.line_rich_menu_id?.trim()) {
       setPublicationMessage("先に公開用JSONを出力してLINEへ登録し、発行されたLINE公開IDを入力してください。");
       return;
     }

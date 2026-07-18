@@ -172,6 +172,38 @@ describe("LINE rich menu operator", () => {
     expect(JSON.stringify(createBody)).not.toContain(CUSTOMER_REGISTRATION_ENDPOINT);
   });
 
+  it("deletes the default rich menu when setting it as default fails", async () => {
+    const calls: Array<{ url: string; method: string }> = [];
+
+    await expect(
+      applyDefaultRichMenu({
+        channelAccessToken: "test-channel-access-token",
+        liffId: "1234567890-testLiff",
+        async fetchImplementation(input, init) {
+          const url = String(input);
+          const method = init?.method ?? "GET";
+          calls.push({ url, method });
+
+          if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
+            return new Response(JSON.stringify({ richMenuId: "richmenu-default-cleanup" }), {
+              status: 200,
+              headers: { "content-type": "application/json" }
+            });
+          }
+          if (url.includes("/v2/bot/user/all/richmenu/")) {
+            return new Response("{}", { status: 500 });
+          }
+          return new Response("{}", { status: 200 });
+        }
+      })
+    ).rejects.toThrow("rich_menu_set_default_failed");
+
+    expect(calls.at(-1)).toEqual({
+      url: "https://api.line.me/v2/bot/richmenu/richmenu-default-cleanup",
+      method: "DELETE"
+    });
+  });
+
   it("applies lifecycle rich menus without exposing tokens or created IDs", async () => {
     const calls: Array<{ input: string; init: RequestInit }> = [];
     let createCount = 0;
@@ -240,6 +272,53 @@ describe("LINE rich menu operator", () => {
     ]);
   });
 
+  it("deletes all created lifecycle menus when a later menu upload fails", async () => {
+    const calls: Array<{ url: string; method: string }> = [];
+    let createCount = 0;
+
+    await expect(
+      applyLifecycleRichMenus({
+        channelAccessToken: "test-channel-access-token",
+        liffId: "1234567890-testLiff",
+        async fetchImplementation(input, init) {
+          const url = String(input);
+          const method = init?.method ?? "GET";
+          calls.push({ url, method });
+
+          if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
+            createCount += 1;
+            return new Response(
+              JSON.stringify({ richMenuId: `richmenu-lifecycle-cleanup-${createCount}` }),
+              {
+                status: 200,
+                headers: { "content-type": "application/json" }
+              }
+            );
+          }
+          if (
+            url.includes("api-data.line.me") &&
+            url.includes("richmenu-lifecycle-cleanup-2")
+          ) {
+            return new Response("{}", { status: 500 });
+          }
+          return new Response("{}", { status: 200 });
+        }
+      })
+    ).rejects.toThrow("rich_menu_image_upload_failed");
+
+    const deleteCalls = calls.filter((call) => call.method === "DELETE");
+    expect(deleteCalls).toEqual([
+      {
+        url: "https://api.line.me/v2/bot/richmenu/richmenu-lifecycle-cleanup-2",
+        method: "DELETE"
+      },
+      {
+        url: "https://api.line.me/v2/bot/richmenu/richmenu-lifecycle-cleanup-1",
+        method: "DELETE"
+      }
+    ]);
+  });
+
   it("validates a repository-contained custom rich menu without calling LINE", async () => {
     const result = await runCustomLineRichMenuDryRun(
       process.cwd(),
@@ -268,9 +347,14 @@ describe("LINE rich menu operator", () => {
 
   it("applies a custom rich menu without changing the default unless explicitly requested", async () => {
     const calls: Array<{ input: string; init: RequestInit }> = [];
+    const recordedIds: string[] = [];
     const result = await applyCustomRichMenu({
       assetDirectory: "deploy/line/rich-menu/amamihome-initial",
       channelAccessToken: "test-channel-access-token",
+      richMenuIdOutputPath: "secure-rich-menu-id.env",
+      async writeRichMenuIdOutputImplementation(_outputPath, richMenuId) {
+        recordedIds.push(richMenuId);
+      },
       async fetchImplementation(input, init) {
         calls.push({ input: String(input), init });
 
@@ -291,6 +375,7 @@ describe("LINE rich menu operator", () => {
       uploadImageStatus: "success",
       setDefaultStatus: "skipped",
       assetDirectoryValidated: true,
+      richMenuIdOutputWritten: true,
       richMenuIdRecorded: false,
       lineSendAttempted: false,
       secretRecorded: false
@@ -299,6 +384,8 @@ describe("LINE rich menu operator", () => {
       "https://api.line.me/v2/bot/richmenu",
       "https://api-data.line.me/v2/bot/richmenu/richmenu-custom-id/content"
     ]);
+    expect(recordedIds).toEqual(["richmenu-custom-id"]);
+    expect(output).toContain("rich_menu_id_output_written=true");
     expect(output).toContain("set_default_rich_menu_status=skipped");
     expect(output).not.toContain("richmenu-custom-id");
     expect(output).not.toContain("test-channel-access-token");
@@ -311,6 +398,7 @@ describe("LINE rich menu operator", () => {
       applyCustomRichMenu({
         assetDirectory: "tests/fixtures/line-rich-menu-invalid",
         channelAccessToken: "test-channel-access-token",
+        richMenuIdOutputPath: "secure-rich-menu-id.env",
         async fetchImplementation(input) {
           calls.push(String(input));
           return new Response("{}", { status: 200 });
@@ -326,6 +414,8 @@ describe("LINE rich menu operator", () => {
     const result = await applyCustomRichMenu({
       assetDirectory: "deploy/line/rich-menu/amamihome-initial",
       channelAccessToken: "test-channel-access-token",
+      richMenuIdOutputPath: "secure-rich-menu-id.env",
+      async writeRichMenuIdOutputImplementation() {},
       setDefault: true,
       async fetchImplementation(input) {
         const requestUrl = String(input);
@@ -348,6 +438,75 @@ describe("LINE rich menu operator", () => {
       "https://api-data.line.me/v2/bot/richmenu/richmenu-custom-default-id/content",
       "https://api.line.me/v2/bot/user/all/richmenu/richmenu-custom-default-id"
     ]);
+  });
+
+  it("deletes a custom rich menu when image upload fails", async () => {
+    const calls: Array<{ url: string; method: string }> = [];
+
+    await expect(
+      applyCustomRichMenu({
+        assetDirectory: "deploy/line/rich-menu/amamihome-initial",
+        channelAccessToken: "test-channel-access-token",
+        richMenuIdOutputPath: "secure-rich-menu-id.env",
+        async writeRichMenuIdOutputImplementation() {},
+        async fetchImplementation(input, init) {
+          const url = String(input);
+          const method = init?.method ?? "GET";
+          calls.push({ url, method });
+
+          if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
+            return new Response(JSON.stringify({ richMenuId: "richmenu-upload-failed" }), {
+              status: 200,
+              headers: { "content-type": "application/json" }
+            });
+          }
+          if (url.includes("api-data.line.me")) {
+            return new Response("{}", { status: 500 });
+          }
+          return new Response("{}", { status: 200 });
+        }
+      })
+    ).rejects.toThrow("rich_menu_image_upload_failed");
+
+    expect(calls.at(-1)).toEqual({
+      url: "https://api.line.me/v2/bot/richmenu/richmenu-upload-failed",
+      method: "DELETE"
+    });
+  });
+
+  it("deletes a custom rich menu when setting it as default fails", async () => {
+    const calls: Array<{ url: string; method: string }> = [];
+
+    await expect(
+      applyCustomRichMenu({
+        assetDirectory: "deploy/line/rich-menu/amamihome-initial",
+        channelAccessToken: "test-channel-access-token",
+        richMenuIdOutputPath: "secure-rich-menu-id.env",
+        async writeRichMenuIdOutputImplementation() {},
+        setDefault: true,
+        async fetchImplementation(input, init) {
+          const url = String(input);
+          const method = init?.method ?? "GET";
+          calls.push({ url, method });
+
+          if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
+            return new Response(JSON.stringify({ richMenuId: "richmenu-default-failed" }), {
+              status: 200,
+              headers: { "content-type": "application/json" }
+            });
+          }
+          if (url.includes("/v2/bot/user/all/richmenu/")) {
+            return new Response("{}", { status: 500 });
+          }
+          return new Response("{}", { status: 200 });
+        }
+      })
+    ).rejects.toThrow("rich_menu_set_default_failed");
+
+    expect(calls.at(-1)).toEqual({
+      url: "https://api.line.me/v2/bot/richmenu/richmenu-default-failed",
+      method: "DELETE"
+    });
   });
 
   it("builds apply definitions with LIFF URLs while keeping source definitions unchanged", async () => {
