@@ -33,7 +33,7 @@ describe("Loop 128 corrected app Nginx candidate proxy remediation docs", () => 
     expect(example).toContain("location /api/");
     expect(example).toContain("proxy_pass http://127.0.0.1:8788/api/");
     expect(example).toContain("location /");
-    expect(example).toContain("proxy_pass http://127.0.0.1:3002");
+    expect(example).toContain("proxy_pass http://127.0.0.1:3100");
     expect(example).toContain("Temporary diagnostic marker for invalid-host dry-runs");
     expect(example).toContain('add_header X-Amami-Line-Crm-Proxy "amami-line-crm" always;');
     expect(example).not.toContain("server_name admin.taiyolabel.site");

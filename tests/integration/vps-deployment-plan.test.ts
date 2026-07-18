@@ -60,7 +60,7 @@ describe("Loop 106 VPS deployment plan and templates", () => {
 
     expect(combined).toContain("admin.taiyolabel.site");
     expect(combined).toContain("api.taiyolabel.site");
-    expect(combined).toContain("127.0.0.1:3002");
+    expect(combined).toContain("127.0.0.1:3100");
     expect(combined).toContain("127.0.0.1:8788");
     expect(combined).toContain("X-Forwarded-Proto");
     expect(combined).toContain("X-Forwarded-For");
@@ -90,7 +90,7 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     expect(combined).toContain("EnvironmentFile=/etc/amami-line-crm/api.env");
     expect(combined).toContain("EnvironmentFile=/etc/amami-line-crm/admin.env");
     expect(combined).toContain("API_PORT=8788");
-    expect(combined).toContain("ADMIN_PORT=3002");
+    expect(combined).toContain("ADMIN_PORT=3100");
     expect(combined).toContain("Restart=always");
     expect(combined).toContain(
       "ExecStart=/usr/bin/env npx pnpm@10.12.1 --filter @amami-line-crm/api start"

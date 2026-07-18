@@ -27,4 +27,4 @@ No-Go:
 
 - Existing sites would be overwritten.
 - The template routes another domain.
-- The template points to anything other than `127.0.0.1:3002` or `127.0.0.1:8788`.
+- The template points to anything other than `127.0.0.1:3100` or `127.0.0.1:8788`.

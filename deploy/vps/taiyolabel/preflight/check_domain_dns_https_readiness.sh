@@ -129,8 +129,8 @@ else
 fi
 
 if command -v ss >/dev/null 2>&1; then
-  echo "INFO listener summary for ports 80, 443, 3002, and 8788:"
-  ss -ltnp | grep -E ':(80|443|3002|8788)\b' || true
+  echo "INFO listener summary for ports 80, 443, 3100, and 8788:"
+  ss -ltnp | grep -E ':(80|443|3100|8788)\b' || true
 else
   echo "SKIP ss is not available"
 fi

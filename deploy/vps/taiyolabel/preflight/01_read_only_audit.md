@@ -5,7 +5,7 @@ These commands are for a later VPS execution Loop only. Loop 108 does not execut
 Purpose:
 
 - Confirm the VPS still matches the user audit.
-- Confirm ports `3002` and `8788` are free.
+- Confirm ports `3100` and `8788` are free.
 - Confirm existing nginx, systemd, and SSL assets before touching anything.
 
 Future commands:
@@ -14,7 +14,7 @@ Future commands:
 hostname
 whoami
 cat /etc/os-release
-ss -tulpn | grep -E ':(80|443|3002|8788|8080|8001|3100)\b' || true
+ss -tulpn | grep -E ':(80|443|3100|8788|8080|8001)\b' || true
 sudo systemctl status nginx --no-pager
 ls -la /etc/nginx/sites-enabled
 ls -la /etc/nginx/sites-available
@@ -28,7 +28,7 @@ git --version || true
 
 No-Go:
 
-- `3002` or `8788` is already in use.
+- `3100` or `8788` is already in use.
 - nginx is not active.
 - expected existing sites `default`, `ehime-portal`, `line-transport` are missing or unexpected.
 - `amami-line-crm-*` service already exists and is not understood.

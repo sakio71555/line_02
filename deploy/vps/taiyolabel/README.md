@@ -13,7 +13,7 @@ Do not copy them to the server without first reading:
 
 | host | local upstream | app |
 | --- | --- | --- |
-| `admin.taiyolabel.site` | `127.0.0.1:3002` | amami-line-crm admin |
+| `admin.taiyolabel.site` | `127.0.0.1:3100` | amami-line-crm admin |
 | `api.taiyolabel.site` | `127.0.0.1:8788` | amami-line-crm api |
 
 ## Safety notes

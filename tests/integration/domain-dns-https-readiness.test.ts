@@ -39,7 +39,7 @@ describe("Loop 116 domain DNS HTTPS readiness inventory", () => {
     expect(combined).toContain("server_name _CHANGE_ME_");
     expect(combined).toContain("proxy_pass http://127.0.0.1:8788/health");
     expect(combined).toContain("proxy_pass http://127.0.0.1:8788/api/");
-    expect(combined).toContain("proxy_pass http://127.0.0.1:3002");
+    expect(combined).toContain("proxy_pass http://127.0.0.1:3100");
     expect(combined).toContain("X-Forwarded-Proto");
     expect(combined).toContain("X-Forwarded-Host");
     expect(combined).toContain("X-Forwarded-Port");

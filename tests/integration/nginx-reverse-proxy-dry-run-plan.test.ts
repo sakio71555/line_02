@@ -40,7 +40,7 @@ describe("Loop 112 Nginx reverse proxy dry-run plan", () => {
     expect(example).toContain("location /api/");
     expect(example).toContain("proxy_pass http://127.0.0.1:8788/api/");
     expect(example).toContain("location /");
-    expect(example).toContain("proxy_pass http://127.0.0.1:3002");
+    expect(example).toContain("proxy_pass http://127.0.0.1:3100");
     expect(example).toContain("proxy_set_header Host $host");
     expect(example).toContain("X-Forwarded-For");
     expect(example).toContain("X-Forwarded-Proto");

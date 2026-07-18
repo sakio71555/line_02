@@ -68,7 +68,7 @@ describe("Loop 108 VPS dry deployment preflight docs", () => {
     expect(combined).toContain("admin.taiyolabel.site");
     expect(combined).toContain("api.taiyolabel.site");
     expect(combined).toContain("160.251.174.201");
-    expect(combined).toContain("127.0.0.1:3002");
+    expect(combined).toContain("127.0.0.1:3100");
     expect(combined).toContain("127.0.0.1:8788");
     expect(combined).toContain("Phase 0: Read-only audit");
     expect(combined).toContain("Phase 7: certbot SSL issue");
@@ -122,7 +122,7 @@ describe("Loop 108 VPS dry deployment preflight docs", () => {
   it("keeps nginx templates scoped and avoids default server or reused ajnl certificate paths", () => {
     const nginxTemplates = readAll([httpNginxPath, sslNginxPath]);
 
-    expect(nginxTemplates).toContain("proxy_pass http://127.0.0.1:3002");
+    expect(nginxTemplates).toContain("proxy_pass http://127.0.0.1:3100");
     expect(nginxTemplates).toContain("proxy_pass http://127.0.0.1:8788");
     expect(nginxTemplates).toContain("amami-line-crm-taiyolabel");
     expect(nginxTemplates).not.toContain("default_server");

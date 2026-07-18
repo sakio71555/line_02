@@ -1,4 +1,5 @@
-import { chmod, readFile, realpath, writeFile } from "node:fs/promises";
+import { open, readFile, realpath, rename, unlink } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { statSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -148,6 +149,10 @@ export class LineRichMenuCleanupRequiredError extends LineRichMenuOperatorError 
     this.cleanupFailureCount = cleanupFailureCount;
   }
 }
+
+type PreviousDefaultRichMenuState =
+  | { source: "messaging_api"; richMenuId: string }
+  | { source: "none_or_other_channel" };
 
 export function getRichMenuDefinitionPath(menuType: LineRichMenuAssetKey): string {
   return path.join(RICH_MENU_ASSET_DIR_BY_KEY[menuType], "rich-menu.json");
@@ -511,8 +516,13 @@ export async function applyLifecycleRichMenus(input: {
   }
 
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
+  const previousDefaultRichMenu = await getDefaultRichMenuState({
+    token,
+    fetchImplementation
+  });
   const createdRichMenuIds = new Map<LineRichMenuLifecycleKey, string>();
   let liffUrlApplied = false;
+  let defaultRichMenuChanged = false;
 
   try {
     for (const menuType of LINE_RICH_MENU_LIFECYCLE_KEYS) {
@@ -538,15 +548,19 @@ export async function applyLifecycleRichMenus(input: {
       richMenuId: initialRichMenuId,
       fetchImplementation
     });
+    defaultRichMenuChanged = true;
 
     const writeRichMenuEnvOutputImplementation =
       input.writeRichMenuEnvOutputImplementation ?? writeRichMenuEnvOutput;
     await writeRichMenuEnvOutputImplementation(richMenuEnvOutputPath, createdRichMenuIds);
   } catch (error) {
-    await cleanupRichMenusAndRethrow({
+    await rollbackLifecycleRichMenusAndRethrow({
       error,
       token,
       richMenuIds: [...createdRichMenuIds.values()],
+      activeRichMenuId: createdRichMenuIds.get("initial"),
+      previousDefaultRichMenu,
+      defaultRichMenuChanged,
       fetchImplementation
     });
   }
@@ -628,16 +642,7 @@ export async function removeDefaultRichMenu(input: {
   }
 
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
-  const response = await fetchImplementation("https://api.line.me/v2/bot/user/all/richmenu", {
-    method: "DELETE",
-    headers: {
-      authorization: `Bearer ${token}`
-    }
-  });
-
-  if (!response.ok) {
-    throw new LineRichMenuOperatorError("rich_menu_remove_default_failed");
-  }
+  await clearDefaultRichMenu({ token, fetchImplementation });
 
   return {
     removeDefaultRichMenuStatus: "success",
@@ -860,6 +865,74 @@ async function setDefaultRichMenu(input: {
   }
 }
 
+async function getDefaultRichMenuState(input: {
+  token: string;
+  fetchImplementation: typeof globalThis.fetch;
+}): Promise<PreviousDefaultRichMenuState> {
+  const response = await input.fetchImplementation(
+    "https://api.line.me/v2/bot/user/all/richmenu",
+    {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${input.token}`
+      }
+    }
+  );
+
+  if (response.status === 403 || response.status === 404) {
+    return { source: "none_or_other_channel" };
+  }
+
+  if (!response.ok) {
+    throw new LineRichMenuOperatorError("rich_menu_get_default_failed");
+  }
+
+  const responseBody: unknown = await response.json();
+  return {
+    source: "messaging_api",
+    richMenuId: readRichMenuId(responseBody)
+  };
+}
+
+async function clearDefaultRichMenu(input: {
+  token: string;
+  fetchImplementation: typeof globalThis.fetch;
+}): Promise<void> {
+  const response = await input.fetchImplementation(
+    "https://api.line.me/v2/bot/user/all/richmenu",
+    {
+      method: "DELETE",
+      headers: {
+        authorization: `Bearer ${input.token}`
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new LineRichMenuOperatorError("rich_menu_remove_default_failed");
+  }
+}
+
+async function restoreDefaultRichMenu(input: {
+  token: string;
+  previousDefaultRichMenu: PreviousDefaultRichMenuState;
+  fetchImplementation: typeof globalThis.fetch;
+}): Promise<void> {
+  if (input.previousDefaultRichMenu.source === "messaging_api") {
+    await setDefaultRichMenu({
+      token: input.token,
+      richMenuId: input.previousDefaultRichMenu.richMenuId,
+      fetchImplementation: input.fetchImplementation
+    });
+    return;
+  }
+
+  await clearDefaultRichMenu({
+    token: input.token,
+    fetchImplementation: input.fetchImplementation
+  });
+}
+
 async function deleteRichMenu(input: {
   token: string;
   richMenuId: string;
@@ -942,6 +1015,57 @@ async function cleanupRichMenusAndRethrow(input: {
   throw input.error;
 }
 
+async function rollbackLifecycleRichMenusAndRethrow(input: {
+  error: unknown;
+  token: string;
+  richMenuIds: string[];
+  activeRichMenuId?: string;
+  previousDefaultRichMenu: PreviousDefaultRichMenuState;
+  defaultRichMenuChanged: boolean;
+  fetchImplementation: typeof globalThis.fetch;
+}): Promise<never> {
+  let defaultRestoreSucceeded = !input.defaultRichMenuChanged;
+  let additionalCleanupFailureCount = 0;
+
+  if (input.defaultRichMenuChanged) {
+    try {
+      await restoreDefaultRichMenu({
+        token: input.token,
+        previousDefaultRichMenu: input.previousDefaultRichMenu,
+        fetchImplementation: input.fetchImplementation
+      });
+      defaultRestoreSucceeded = true;
+    } catch {
+      additionalCleanupFailureCount += 1;
+    }
+  }
+
+  const deletableRichMenuIds = defaultRestoreSucceeded
+    ? input.richMenuIds
+    : input.richMenuIds.filter((richMenuId) => richMenuId !== input.activeRichMenuId);
+
+  additionalCleanupFailureCount += await deleteRichMenusBestEffort({
+    token: input.token,
+    richMenuIds: deletableRichMenuIds,
+    fetchImplementation: input.fetchImplementation
+  });
+
+  const priorCleanupFailureCount =
+    input.error instanceof LineRichMenuCleanupRequiredError
+      ? input.error.cleanupFailureCount
+      : 0;
+  const cleanupFailureCount = priorCleanupFailureCount + additionalCleanupFailureCount;
+
+  if (cleanupFailureCount > 0) {
+    throw new LineRichMenuCleanupRequiredError(
+      getSanitizedApplyFailureReason(input.error),
+      cleanupFailureCount
+    );
+  }
+
+  throw input.error;
+}
+
 function getSanitizedApplyFailureReason(error: unknown): string {
   if (error instanceof LineRichMenuCleanupRequiredError) {
     return error.applyFailureReason;
@@ -983,9 +1107,10 @@ async function writeCustomRichMenuIdOutput(
   );
 }
 
-async function writeEnvironmentOutput(
+export async function writeEnvironmentOutput(
   outputPath: string,
-  replacements: Map<string, string>
+  replacements: Map<string, string>,
+  writeAtomically: (outputPath: string, body: string) => Promise<void> = writeFileAtomically
 ): Promise<void> {
   const existingBody = await readFile(outputPath, "utf8").catch(() => "");
 
@@ -1009,8 +1134,28 @@ async function writeEnvironmentOutput(
     }
   }
 
-  await writeFile(outputPath, `${outputLines.join("\n").replace(/\n+$/, "")}\n`, { mode: 0o600 });
-  await chmod(outputPath, 0o600);
+  await writeAtomically(outputPath, `${outputLines.join("\n").replace(/\n+$/, "")}\n`);
+}
+
+async function writeFileAtomically(outputPath: string, body: string): Promise<void> {
+  const temporaryPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${process.pid}.${randomUUID()}.tmp`
+  );
+  let fileHandle: Awaited<ReturnType<typeof open>> | undefined;
+
+  try {
+    fileHandle = await open(temporaryPath, "wx", 0o600);
+    await fileHandle.writeFile(body, "utf8");
+    await fileHandle.sync();
+    await fileHandle.close();
+    fileHandle = undefined;
+    await rename(temporaryPath, outputPath);
+  } catch (error) {
+    await fileHandle?.close().catch(() => undefined);
+    await unlink(temporaryPath).catch(() => undefined);
+    throw error;
+  }
 }
 
 function quoteEnvValue(value: string): string {

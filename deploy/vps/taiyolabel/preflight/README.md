@@ -17,7 +17,7 @@ Read in order:
 
 Planned upstreams:
 
-- Admin: `127.0.0.1:3002`
+- Admin: `127.0.0.1:3100`
 - API: `127.0.0.1:8788`
 
 Do not touch existing `default`, `ehime-portal`, `line-transport`, `/var/www/ehime-portal`, `/var/www/line-transport`, `/var/www/html`, or the existing ajnl certificate.

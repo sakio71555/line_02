@@ -5,7 +5,7 @@ These commands are for a later VPS execution Loop only. Loop 108 does not execut
 Planned local upstreams:
 
 - API: `127.0.0.1:8788`
-- Admin: `127.0.0.1:3002`
+- Admin: `127.0.0.1:3100`
 
 Install/build command shape:
 
@@ -30,7 +30,7 @@ Future local smoke:
 
 ```bash
 curl -sS http://127.0.0.1:8788/health || true
-curl -sS http://127.0.0.1:3002/ || true
+curl -sS http://127.0.0.1:3100/ || true
 ```
 
 Do not call LINE webhook, LINE push, OpenAI, Supabase mutation, or customer data endpoints in the first local smoke.
@@ -39,5 +39,5 @@ No-Go:
 
 - install or build fails.
 - API cannot bind `127.0.0.1:8788`.
-- Admin cannot bind `127.0.0.1:3002`.
+- Admin cannot bind `127.0.0.1:3100`.
 - local smoke returns an unexpected result.

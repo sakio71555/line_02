@@ -13,8 +13,8 @@ EnvironmentFile=/etc/amami-line-crm/admin.env
 Environment=HOST=127.0.0.1
 Environment=HOSTNAME=127.0.0.1
 Environment=ADMIN_HOST=127.0.0.1
-Environment=ADMIN_PORT=3002
-Environment=PORT=3002
+Environment=ADMIN_PORT=3100
+Environment=PORT=3100
 User=www-data
 Group=www-data
 Restart=always

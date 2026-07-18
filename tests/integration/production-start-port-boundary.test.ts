@@ -127,7 +127,7 @@ describe("Loop 107 production start script and port boundary", () => {
     expect(apiSystemd).toContain("Environment=API_HOST=127.0.0.1");
     expect(apiSystemd).toContain("Environment=API_PORT=8788");
     expect(adminSystemd).toContain("Environment=HOSTNAME=127.0.0.1");
-    expect(adminSystemd).toContain("Environment=PORT=3002");
+    expect(adminSystemd).toContain("Environment=PORT=3100");
     expect(`${apiSystemd}\n${adminSystemd}`).not.toContain("No production");
     expect(`${apiSystemd}\n${adminSystemd}`).not.toContain("Fail closed");
   });
@@ -138,8 +138,8 @@ describe("Loop 107 production start script and port boundary", () => {
     expect(combined).toContain("API_HOST=127.0.0.1");
     expect(combined).toContain("API_PORT=8788");
     expect(combined).toContain("HOSTNAME=127.0.0.1");
-    expect(combined).toContain("ADMIN_PORT=3002");
-    expect(combined).toContain("PORT=3002");
+    expect(combined).toContain("ADMIN_PORT=3100");
+    expect(combined).toContain("PORT=3100");
     expect(combined).not.toMatch(new RegExp(`${"sk"}-[A-Za-z0-9_-]{10,}`, "u"));
     expect(combined).not.toMatch(new RegExp(`${"ey"}J[A-Za-z0-9_-]{20,}`, "u"));
     expect(combined).not.toMatch(/postgres(?:ql)?:\/\//iu);
@@ -148,7 +148,7 @@ describe("Loop 107 production start script and port boundary", () => {
   it("keeps nginx scoped to taiyolabel upstreams without default server or reused ajnl certs", () => {
     const combined = `${readText(httpNginxPath)}\n${readText(sslNginxPath)}`;
 
-    expect(combined).toContain("proxy_pass http://127.0.0.1:3002");
+    expect(combined).toContain("proxy_pass http://127.0.0.1:3100");
     expect(combined).toContain("proxy_pass http://127.0.0.1:8788");
     expect(combined).not.toContain("default_server");
     expect(combined).not.toContain("server_name _");
