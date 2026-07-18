@@ -36,6 +36,7 @@ import {
   type AlertWorkflowStatus,
   type AlertRepository,
   type AuditEvent,
+  type AdminStaffMember,
   type Customer,
   type CustomerLineStaffNotificationEvent,
   type CustomerNormalChatAiCandidate,
@@ -47,6 +48,7 @@ import {
   type MessageRepository,
   type InternalNote,
   type OperationsRepository,
+  type StaffManagementRecord,
   type ReplyTemplate,
   type Reservation,
   type ReservationStatus,
@@ -54,6 +56,8 @@ import {
   type WorkspaceSettings,
   alertWorkflowStatusSchema,
   internalNoteInputSchema,
+  staffMemberCreateInputSchema,
+  staffMemberUpdateInputSchema,
   replyTemplateInputSchema,
   workspaceSettingsInputSchema,
   lineExperienceSettingsSchema,
@@ -132,6 +136,10 @@ import { resolveSelectedTenantIdTransport } from "./admin/selected-tenant-transp
 import type { SupabaseAuthClientLike } from "./admin/supabase-auth-session-verifier";
 import type { AdminTenantContext } from "./admin/tenant-context";
 import {
+  createProductionStaffInvitationService,
+  type StaffInvitationService
+} from "./admin/staff-invitation";
+import {
   createRuntimeAiProvider,
   createRuntimeLineClient,
   createRuntimeRepositories
@@ -143,6 +151,7 @@ export interface ApiAppDependencies {
   customerRepository?: CustomerRepository;
   messageRepository?: MessageRepository;
   operationsRepository?: OperationsRepository;
+  staffInvitationService?: StaffInvitationService;
   lineClient?: LineClient;
   staffLineClient?: LineClient;
   staffNotifier?: StaffNotifier;
@@ -233,6 +242,8 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
     dependencies.operationsRepository ??
     runtimeRepositories?.operationsRepository ??
     defaultOperationsRepository;
+  const staffInvitationService =
+    dependencies.staffInvitationService ?? createProductionStaffInvitationService(env);
   const lineAttachmentStorage =
     dependencies.lineAttachmentStorage ?? runtimeRepositories?.lineAttachmentStorage;
   const lineClient = dependencies.lineClient ?? runtimeLineClient?.lineClient ?? defaultLineClient;
@@ -1406,6 +1417,347 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
       skipped: result.skipped,
       notified_alerts: result.notified_alerts,
       failed_alerts: result.failed_alerts
+    });
+  });
+
+  api.get("/api/admin/staff", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.listStaffDirectory,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const records = await operationsRepository.listStaffManagementRecords(tenant.tenantId);
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      staff: records.map(toAdminStaffMember)
+    });
+  });
+
+  api.post("/api/admin/staff", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.createStaffMember,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const parsed = staffMemberCreateInputSchema.safeParse(await readJsonBody(c.req.raw));
+    if (!parsed.success) {
+      return c.json({ ok: false, error: "invalid_staff_member_body" }, 400);
+    }
+
+    const records = await operationsRepository.listStaffManagementRecords(tenant.tenantId);
+    if (
+      records.some(
+        (record) => record.staff_user.email.toLowerCase() === parsed.data.email.toLowerCase()
+      )
+    ) {
+      return c.json({ ok: false, error: "staff_email_already_registered" }, 409);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    const staffUserId = globalThis.crypto.randomUUID();
+    let record: StaffManagementRecord = {
+      staff_user: {
+        id: staffUserId,
+        tenant_id: tenant.tenantId,
+        auth_user_id: null,
+        email: parsed.data.email,
+        display_name: parsed.data.display_name,
+        role: parsed.data.role,
+        status: "active",
+        line_user_id: null,
+        is_active: true,
+        last_login_at: null,
+        disabled_at: null,
+        archived_at: null,
+        created_at: timestamp,
+        updated_at: timestamp
+      },
+      membership: {
+        id: globalThis.crypto.randomUUID(),
+        tenant_id: tenant.tenantId,
+        staff_user_id: staffUserId,
+        role: parsed.data.role,
+        status: "invited",
+        invited_at: timestamp,
+        accepted_at: null,
+        disabled_at: null,
+        archived_at: null,
+        created_at: timestamp,
+        updated_at: timestamp
+      }
+    };
+    try {
+      record = await operationsRepository.createStaffManagementRecord(record);
+    } catch (error) {
+      if (isStaffEmailConflict(error)) {
+        return c.json({ ok: false, error: "staff_email_already_registered" }, 409);
+      }
+      throw error;
+    }
+
+    let invitationStatus: "sent" | "reconciled" | "not_required" | "pending" | "failed" =
+      record.membership.status === "active" && record.membership.accepted_at
+        ? "not_required"
+        : "pending";
+    if (staffInvitationService && invitationStatus === "pending") {
+      let invitation: { authUserId: string; outcome: "sent" | "reconciled" } | null = null;
+      try {
+        invitation = await staffInvitationService.invite(parsed.data.email);
+      } catch {
+        invitationStatus = "failed";
+      }
+
+      if (invitation) {
+        try {
+          record = await operationsRepository.saveStaffManagementRecord({
+            staff_user: {
+              ...record.staff_user,
+              auth_user_id: invitation.authUserId,
+              updated_at: timestamp
+            },
+            membership: {
+              ...record.membership,
+              updated_at: timestamp
+            }
+          });
+          invitationStatus = invitation.outcome;
+        } catch (error) {
+          if (isStaffAuthLinkConflict(error)) {
+            return c.json({ ok: false, error: "staff_auth_user_already_linked" }, 409);
+          }
+          return c.json({ ok: false, error: "staff_invitation_state_save_failed" }, 502);
+        }
+      }
+    }
+
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "staff_member_created",
+      resourceType: "staff_user",
+      resourceId: record.staff_user.id,
+      summary: "担当者を登録",
+      metadata: {
+        role: record.membership.role,
+        invitation_status: invitationStatus
+      },
+      timestamp
+    });
+
+    return c.json(
+      {
+        ok: true,
+        tenant_id: tenant.tenantId,
+        staff_member: toAdminStaffMember(record),
+        invitation_status: invitationStatus
+      },
+      201
+    );
+  });
+
+  api.patch("/api/admin/staff/:staffId", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.updateStaffMember,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+
+    const parsed = staffMemberUpdateInputSchema.safeParse(await readJsonBody(c.req.raw));
+    if (!parsed.success) {
+      return c.json({ ok: false, error: "invalid_staff_member_body" }, 400);
+    }
+
+    const records = await operationsRepository.listStaffManagementRecords(tenant.tenantId);
+    const current = records.find((record) => record.staff_user.id === c.req.param("staffId"));
+    if (!current) {
+      return c.json({ ok: false, error: "staff_member_not_found" }, 404);
+    }
+    if (
+      current.staff_user.status === "archived" ||
+      current.membership.status === "archived"
+    ) {
+      return c.json({ ok: false, error: "staff_member_archived" }, 409);
+    }
+
+    const nextRole = parsed.data.role ?? current.membership.role;
+    const nextActive =
+      parsed.data.is_active ?? current.membership.status !== "disabled";
+    const removesActiveOwner =
+      isActiveOwnerStaffRecord(current) && (!nextActive || nextRole !== "owner");
+    if (removesActiveOwner && records.filter(isActiveOwnerStaffRecord).length <= 1) {
+      return c.json({ ok: false, error: "last_owner_must_remain_active" }, 409);
+    }
+    if (parsed.data.is_active === false && tenant.context.staffUserId === current.staff_user.id) {
+      return c.json({ ok: false, error: "cannot_disable_current_staff_user" }, 409);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    let saved: StaffManagementRecord;
+    try {
+      saved = await operationsRepository.saveStaffManagementRecord({
+        staff_user: {
+          ...current.staff_user,
+          display_name: parsed.data.display_name ?? current.staff_user.display_name,
+          updated_at: timestamp
+        },
+        membership: {
+          ...current.membership,
+          role: nextRole,
+          status: nextActive
+            ? current.staff_user.auth_user_id && current.membership.accepted_at
+              ? "active"
+              : "invited"
+            : "disabled",
+          disabled_at: nextActive ? null : timestamp,
+          updated_at: timestamp
+        }
+      });
+    } catch (error) {
+      if (isLastOwnerConflict(error)) {
+        return c.json({ ok: false, error: "last_owner_must_remain_active" }, 409);
+      }
+      if (isStaffAuthLinkConflict(error)) {
+        return c.json({ ok: false, error: "staff_auth_user_already_linked" }, 409);
+      }
+      throw error;
+    }
+
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "staff_member_updated",
+      resourceType: "staff_user",
+      resourceId: saved.staff_user.id,
+      summary: nextActive ? "担当者情報を更新" : "担当者を停止",
+      metadata: {
+        role: saved.membership.role,
+        active: saved.membership.status === "active"
+      },
+      timestamp
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      staff_member: toAdminStaffMember(saved)
+    });
+  });
+
+  api.post("/api/admin/staff/:staffId/invite", async (c) => {
+    const tenant = await resolveTenantScopedAdminRouteTenant({
+      authorizationHeader: c.req.header("authorization"),
+      selectedTenantIdHeader: c.req.header("x-selected-tenant-id"),
+      tenantIdHeader: c.req.header("x-tenant-id"),
+      action: adminRouteActions.resendStaffInvitation,
+      adminAuthRuntime,
+      authenticatedSelectedTenantId,
+      env
+    });
+
+    if (!tenant.ok) {
+      return c.json(tenant.body, tenant.status);
+    }
+    if (!staffInvitationService) {
+      return c.json({ ok: false, error: "staff_invitation_not_configured" }, 503);
+    }
+
+    const records = await operationsRepository.listStaffManagementRecords(tenant.tenantId);
+    const current = records.find((record) => record.staff_user.id === c.req.param("staffId"));
+    if (!current) {
+      return c.json({ ok: false, error: "staff_member_not_found" }, 404);
+    }
+    if (
+      current.staff_user.status !== "active" ||
+      !current.staff_user.is_active ||
+      current.membership.status === "disabled" ||
+      current.membership.status === "archived"
+    ) {
+      return c.json({ ok: false, error: "staff_member_disabled" }, 409);
+    }
+    if (
+      current.staff_user.auth_user_id &&
+      current.membership.status === "active" &&
+      current.membership.accepted_at
+    ) {
+      return c.json({ ok: false, error: "staff_invitation_not_required" }, 409);
+    }
+
+    let invitation: { authUserId: string; outcome: "sent" | "reconciled" };
+    try {
+      invitation = await staffInvitationService.invite(current.staff_user.email);
+    } catch {
+      return c.json({ ok: false, error: "staff_invitation_failed" }, 502);
+    }
+
+    const timestamp = now?.() ?? new Date().toISOString();
+    let saved: StaffManagementRecord;
+    try {
+      saved = await operationsRepository.saveStaffManagementRecord({
+        staff_user: {
+          ...current.staff_user,
+          auth_user_id: invitation.authUserId,
+          status: "active",
+          is_active: true,
+          disabled_at: null,
+          updated_at: timestamp
+        },
+        membership: {
+          ...current.membership,
+          status: "invited",
+          invited_at: timestamp,
+          accepted_at: null,
+          disabled_at: null,
+          updated_at: timestamp
+        }
+      });
+    } catch (error) {
+      if (isStaffAuthLinkConflict(error)) {
+        return c.json({ ok: false, error: "staff_auth_user_already_linked" }, 409);
+      }
+      return c.json({ ok: false, error: "staff_invitation_state_save_failed" }, 502);
+    }
+
+    await recordOperationsAudit(operationsRepository, {
+      tenant,
+      action: "staff_invitation_processed",
+      resourceType: "staff_user",
+      resourceId: saved.staff_user.id,
+      summary:
+        invitation.outcome === "sent" ? "担当者へ招待を送信" : "既存の招待情報を復旧",
+      metadata: { role: saved.membership.role, invitation_status: invitation.outcome },
+      timestamp
+    });
+
+    return c.json({
+      ok: true,
+      tenant_id: tenant.tenantId,
+      staff_member: toAdminStaffMember(saved),
+      invitation_status: invitation.outcome
     });
   });
 
@@ -5056,6 +5408,73 @@ function resolveWorkspaceSettings(
         )
       : defaults.line_experience
   };
+}
+
+function toAdminStaffMember(record: StaffManagementRecord): AdminStaffMember {
+  return {
+    id: record.staff_user.id,
+    tenant_id: record.membership.tenant_id,
+    email: record.staff_user.email,
+    display_name: record.staff_user.display_name,
+    role: record.membership.role,
+    status: record.staff_user.status,
+    membership_status: record.membership.status,
+    auth_linked: Boolean(record.staff_user.auth_user_id),
+    line_linked: Boolean(record.staff_user.line_user_id),
+    last_login_at: record.staff_user.last_login_at,
+    invited_at: record.membership.invited_at,
+    accepted_at: record.membership.accepted_at,
+    created_at: record.staff_user.created_at,
+    updated_at: record.staff_user.updated_at
+  };
+}
+
+function isActiveOwnerStaffRecord(record: StaffManagementRecord): boolean {
+  return (
+    record.staff_user.status === "active" &&
+    record.staff_user.is_active &&
+    Boolean(record.staff_user.auth_user_id) &&
+    record.membership.status === "active" &&
+    Boolean(record.membership.accepted_at) &&
+    record.membership.role === "owner"
+  );
+}
+
+function isStaffEmailConflict(error: unknown): boolean {
+  const repositoryCode = readRepositoryErrorCode(error);
+  return (
+    error instanceof Error &&
+    (error.message.includes("staff_email_already_registered") ||
+      error.message.includes("duplicate key") ||
+      repositoryCode === "23505")
+  );
+}
+
+function isLastOwnerConflict(error: unknown): boolean {
+  return (
+    (error instanceof Error && error.message.includes("last_owner_must_remain_active")) ||
+    readRepositoryErrorCode(error) === "P0001"
+  );
+}
+
+function isStaffAuthLinkConflict(error: unknown): boolean {
+  return (
+    (error instanceof Error && error.message.includes("staff_auth_user_already_linked")) ||
+    readRepositoryErrorCode(error) === "23505"
+  );
+}
+
+function readRepositoryErrorCode(error: unknown): unknown {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "causeError" in error &&
+    typeof error.causeError === "object" &&
+    error.causeError !== null &&
+    "code" in error.causeError
+      ? error.causeError.code
+      : null
+  );
 }
 
 function addMinutes(timestamp: string, minutes: number): string {

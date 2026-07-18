@@ -30,6 +30,7 @@ export type ProductionAuthRuntimeFetch = (
   init?: {
     method?: string;
     headers?: Record<string, string>;
+    body?: string;
   }
 ) => Promise<ProductionAuthRuntimeFetchResponse>;
 
@@ -191,6 +192,34 @@ export class FetchStaffAuthLookupRepository implements StaffAuthLookup {
       .filter((row) => row.staff_user_id === normalizedStaffUserId)
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
       .map(toStaffTenantMembership);
+  }
+
+  async activateInvitedMembershipsForStaffUserId(staffUserId: string): Promise<void> {
+    const normalizedStaffUserId = staffUserId.trim();
+    if (!normalizedStaffUserId) {
+      return;
+    }
+
+    const response = await this.fetchImplementation(
+      createSupabaseEndpointUrl(
+        this.config.supabaseUrl,
+        "/rest/v1/rpc/activate_staff_invited_memberships"
+      ),
+      {
+        method: "POST",
+        headers: {
+          apikey: this.config.supabaseServiceRoleKey,
+          authorization: `Bearer ${this.config.supabaseServiceRoleKey}`,
+          accept: "application/json",
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ target_staff_user_id: normalizedStaffUserId })
+      }
+    );
+
+    if (!response.ok) {
+      throw new ProductionAuthRuntimeRequestError("activate_staff_invited_memberships");
+    }
   }
 
   private async fetchRows<T>(table: string, query: Record<string, string>): Promise<T[]> {

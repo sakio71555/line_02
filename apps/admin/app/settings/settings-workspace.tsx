@@ -12,7 +12,7 @@ import { LineExperienceEditor } from "./line-experience-editor";
 
 const initialState: SettingsActionState = { status: "idle" };
 
-export function SettingsWorkspace({ auditEvents, initialSettings, settingsVersion, templates }: { auditEvents: AuditEvent[]; initialSettings: WorkspaceSettings; settingsVersion: string | null; templates: ReplyTemplate[] }) {
+export function SettingsWorkspace({ auditEvents, canManageStaff, initialSettings, settingsVersion, templates }: { auditEvents: AuditEvent[]; canManageStaff: boolean; initialSettings: WorkspaceSettings; settingsVersion: string | null; templates: ReplyTemplate[] }) {
   const [settings, setSettings] = useState(initialSettings);
   const [currentSettingsVersion, setCurrentSettingsVersion] = useState(settingsVersion);
   const [settingsState, settingsAction, settingsPending] = useActionState(saveWorkspaceSettingsAction, initialState);
@@ -53,7 +53,7 @@ export function SettingsWorkspace({ auditEvents, initialSettings, settingsVersio
     </form>
 
     <section className="settings-section"><header><p className="eyebrow">初期設定</p><h2>利用開始チェック</h2><p>他社へ追加するときも、この3項目を確認すれば開始できます。</p></header>
-      <ol className="setup-checklist"><li className={settings.company_name ? "is-done" : ""}><Building2 size={19} /><span><strong>会社の表示</strong><small>会社名と画面色</small></span><Check size={18} /></li><li><UsersRound size={19} /><span><strong>会社と担当者</strong><small>利用会社と権限を確認</small></span><a href="/select-tenant">確認</a></li><li className={settings.setup_completed ? "is-done" : ""}><KeyRound size={19} /><span><strong>LINE・AI接続</strong><small>管理者による接続確認</small></span><Check size={18} /></li></ol>
+      <ol className="setup-checklist"><li className={settings.company_name ? "is-done" : ""}><Building2 size={19} /><span><strong>会社の表示</strong><small>会社名と画面色</small></span><Check size={18} /></li><li><UsersRound size={19} /><span><strong>会社と担当者</strong><small>担当者、権限、利用状況を管理</small></span>{canManageStaff ? <a href="/settings/staff">管理</a> : <small className="setup-checklist-restricted">管理者のみ</small>}</li><li className={settings.setup_completed ? "is-done" : ""}><KeyRound size={19} /><span><strong>LINE・AI接続</strong><small>管理者による接続確認</small></span><Check size={18} /></li></ol>
     </section>
 
     <section className="settings-section"><header><p className="eyebrow">返信を速くする</p><h2>返信定型文</h2><p>よく使う文章を登録し、顧客詳細から選べるようにします。</p></header>

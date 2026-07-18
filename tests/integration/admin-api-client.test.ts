@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  ADMIN_API_PUBLIC_ERROR_MESSAGE,
   ADMIN_BROADCAST_CONFIRMATION_VALUE,
   ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE,
+  AdminApiError,
   adminApiFetch,
   adminCustomerArchivePath,
   adminCustomerDetailPath,
@@ -409,6 +411,43 @@ describe("admin read-only API client", () => {
         }
       )
     ).rejects.toThrow("Admin API request failed: 403 Forbidden");
+  });
+
+  it("does not expose an unknown API response body through the thrown error", async () => {
+    let caught: unknown;
+
+    try {
+      await adminApiFetch(
+        "/api/admin/customers",
+        {},
+        {
+          config: {
+            apiBaseUrl: "http://localhost:4000",
+            tenantId: "tenant_amamihome"
+          },
+          fetchFn: async () =>
+            new Response(
+              JSON.stringify({
+                ok: false,
+                error: "unexpected_sensitive_server_detail",
+                detail: "private-response-body"
+              }),
+              {
+                status: 500,
+                statusText: "Internal Server Error"
+              }
+            )
+        }
+      );
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBeInstanceOf(AdminApiError);
+    expect((caught as AdminApiError).errorCode).toBeNull();
+    expect((caught as AdminApiError).publicMessage).toBe(ADMIN_API_PUBLIC_ERROR_MESSAGE);
+    expect((caught as Error).message).not.toContain("unexpected_sensitive_server_detail");
+    expect((caught as Error).message).not.toContain("private-response-body");
   });
 
   it("maps selected tenant and auth error codes to readable UI messages", async () => {

@@ -6,6 +6,9 @@ import type {
   OperationsStaffMember,
   ReplyTemplate,
   Reservation,
+  StaffManagementRecord,
+  StaffTenantMembership,
+  StaffUser,
   WorkspaceSettings
 } from "@amami-line-crm/domain";
 
@@ -18,6 +21,12 @@ type TemplateRow = ReplyTemplate;
 type ReservationRow = Reservation;
 type SettingsRow = WorkspaceSettings;
 type AuditRow = AuditEvent;
+type StaffUserRow = StaffUser;
+type StaffMembershipRow = StaffTenantMembership;
+interface StaffManagementRpcRow {
+  staff_user: StaffUserRow;
+  membership: StaffMembershipRow;
+}
 
 export class SupabaseOperationsRepository implements OperationsRepository {
   constructor(private readonly client: SupabaseRepositoryClient) {}
@@ -30,6 +39,59 @@ export class SupabaseOperationsRepository implements OperationsRepository {
     return (
       unwrapSupabaseResult(result, "list_operations_staff_members", "listStaffMembers") ?? []
     ).filter((row) => row.tenant_id === tenantId && row.is_active);
+  }
+
+  async listStaffManagementRecords(tenantId: string): Promise<StaffManagementRecord[]> {
+    assertTenantId(tenantId);
+    const result = (await this.client.rpc("list_staff_management_records", {
+      target_tenant_id: tenantId
+    })) as SupabaseRepositoryResult<StaffManagementRpcRow[]>;
+    return (
+      unwrapSupabaseResult(result, "list_staff_management_records", "listStaffManagementRecords") ??
+      []
+    ).filter(
+      (record) =>
+        record.membership.tenant_id === tenantId &&
+        record.membership.staff_user_id === record.staff_user.id
+    );
+  }
+
+  async createStaffManagementRecord(
+    record: StaffManagementRecord
+  ): Promise<StaffManagementRecord> {
+    assertStaffManagementRecord(record);
+    const result = (await this.client.rpc("create_staff_management_record", {
+      staff_record: record.staff_user,
+      membership_record: record.membership
+    })) as SupabaseRepositoryResult<StaffManagementRpcRow>;
+    const saved = unwrapSupabaseResult(
+      result,
+      "create_staff_management_record",
+      "createStaffManagementRecord"
+    );
+    if (!saved || saved.membership.tenant_id !== record.membership.tenant_id) {
+      throw new Error("Staff management create returned an invalid tenant membership.");
+    }
+    return saved;
+  }
+
+  async saveStaffManagementRecord(
+    record: StaffManagementRecord
+  ): Promise<StaffManagementRecord> {
+    assertStaffManagementRecord(record);
+    const result = (await this.client.rpc("save_staff_management_record", {
+      staff_record: record.staff_user,
+      membership_record: record.membership
+    })) as SupabaseRepositoryResult<StaffManagementRpcRow>;
+    const saved = unwrapSupabaseResult(
+      result,
+      "save_staff_management_record",
+      "saveStaffManagementRecord"
+    );
+    if (!saved || saved.membership.tenant_id !== record.membership.tenant_id) {
+      throw new Error("Staff management save returned an invalid tenant membership.");
+    }
+    return saved;
   }
 
   async searchWorkspace(tenantId: string, query: string): Promise<OperationsSearchResult> {
@@ -197,5 +259,12 @@ export class SupabaseOperationsRepository implements OperationsRepository {
       throw new Error(`Supabase ${table}.${operation} returned a row outside tenant scope.`);
     }
     return row;
+  }
+}
+
+function assertStaffManagementRecord(record: StaffManagementRecord): void {
+  assertTenantId(record.membership.tenant_id);
+  if (record.staff_user.id !== record.membership.staff_user_id) {
+    throw new Error("Staff management identity mismatch.");
   }
 }

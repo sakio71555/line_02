@@ -41,7 +41,11 @@ export const adminRouteActions = {
   listAuditEvents: "view_audit",
   getOperationsReport: "view_operations",
   updateCustomerStage: "manage_operations",
-  sendCustomerStatusNotification: "manage_operations"
+  sendCustomerStatusNotification: "manage_operations",
+  listStaffDirectory: "manage_staff",
+  createStaffMember: "manage_staff",
+  updateStaffMember: "manage_staff",
+  resendStaffInvitation: "manage_staff"
 } as const satisfies Record<string, AdminAction>;
 
 export interface AdminRoleGuardedHandlerInput<TBody> {

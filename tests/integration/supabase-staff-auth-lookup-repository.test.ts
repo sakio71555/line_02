@@ -33,6 +33,11 @@ class FakeSupabaseClient {
     return new FakeQueryBuilder(this, table);
   }
 
+  rpc(functionName: string, args: Record<string, unknown>): Promise<FakeResult> {
+    this.operations.push({ table: functionName, action: "rpc", value: args });
+    return Promise.resolve(this.getResult(functionName, "list"));
+  }
+
   setResult(table: string, terminal: Terminal, result: FakeResult): void {
     this.results.set(`${table}:${terminal}`, result);
   }
@@ -257,6 +262,34 @@ describe("Supabase staff auth lookup repository", () => {
     const repository = new SupabaseStaffAuthLookupRepository(asRepositoryClient(client));
 
     await expect(repository.listMembershipsByStaffUserId(" ")).resolves.toEqual([]);
+
+    expect(client.operations).toEqual([]);
+  });
+
+  it("activates invited memberships through the guarded database function", async () => {
+    const client = createFakeClient();
+    client.setResult("activate_staff_invited_memberships", "list", {
+      data: 1,
+      error: null
+    });
+    const repository = new SupabaseStaffAuthLookupRepository(asRepositoryClient(client));
+
+    await expect(
+      repository.activateInvitedMembershipsForStaffUserId(" staff_1 ")
+    ).resolves.toBeUndefined();
+
+    expect(client.operations).toContainEqual({
+      table: "activate_staff_invited_memberships",
+      action: "rpc",
+      value: { target_staff_user_id: "staff_1" }
+    });
+  });
+
+  it("does not activate memberships for an empty staff_user_id", async () => {
+    const client = createFakeClient();
+    const repository = new SupabaseStaffAuthLookupRepository(asRepositoryClient(client));
+
+    await expect(repository.activateInvitedMembershipsForStaffUserId(" ")).resolves.toBeUndefined();
 
     expect(client.operations).toEqual([]);
   });

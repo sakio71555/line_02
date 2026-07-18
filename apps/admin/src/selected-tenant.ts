@@ -137,6 +137,28 @@ export function createClearSelectedTenantCookieValue(): string {
 
 export function formatAdminApiErrorCodeForUi(errorCode: string): string | null {
   const workspaceLabels: Record<string, string> = {
+    cannot_disable_current_staff_user:
+      "現在ログインしている担当者は停止できません。別の管理者から操作してください。",
+    last_owner_must_remain_active:
+      "管理者を最低1名残す必要があります。別の担当者を管理者にしてから変更してください。",
+    staff_email_already_registered:
+      "このメールアドレスはすでに担当者として登録されています。",
+    staff_invitation_failed:
+      "招待メールを送信できませんでした。時間をおいて再送してください。",
+    staff_invitation_state_save_failed:
+      "招待情報を安全に保存できませんでした。画面を再読み込みして担当者の状態を確認してください。",
+    staff_invitation_not_configured:
+      "招待メールの設定が完了していません。システム管理者へ確認してください。",
+    staff_invitation_not_required: "この担当者はすでに利用を開始しています。",
+    staff_member_disabled:
+      "停止中の担当者へ招待は送れません。先に担当者を利用中へ戻してください。",
+    staff_member_archived:
+      "削除済みの担当者は変更できません。再登録が必要な場合はシステム管理者へ確認してください。",
+    staff_member_not_found: "担当者が見つかりません。画面を再読み込みしてください。",
+    staff_auth_user_already_linked:
+      "このログイン情報は別の担当者に連携されています。システム管理者へ確認してください。",
+    invalid_staff_member_body:
+      "入力内容を確認してください。担当者名、メールアドレス、権限が必要です。",
     invalid_line_menu_publication_state:
       "LINEメニューの公開状態が正しくありません。画面を再読み込みして確認してください。",
     published_line_menu_delete_forbidden:

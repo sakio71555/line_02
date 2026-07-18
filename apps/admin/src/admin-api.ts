@@ -3,6 +3,7 @@ import type {
   AlertSeverity,
   AlertStatus,
   AlertType,
+  AdminStaffMember,
   AuditEvent,
   Customer,
   CustomerDetail,
@@ -32,6 +33,34 @@ export const DEFAULT_TENANT_ID = "tenant_amamihome";
 export const DEFAULT_STAFF_ID = "dev_staff";
 export const ADMIN_REAL_LINE_PUSH_CONFIRMATION_VALUE = "CONFIRM_REAL_LINE_PUSH";
 export const ADMIN_BROADCAST_CONFIRMATION_VALUE = "一斉送信を実行";
+export const ADMIN_API_PUBLIC_ERROR_MESSAGE =
+  "処理を完了できませんでした。画面を再読み込みして、もう一度お試しください。";
+
+export class AdminApiError extends Error {
+  public readonly publicMessage: string;
+  public readonly status: number;
+  public readonly statusText: string;
+  public readonly errorCode: string | null;
+
+  constructor(input: {
+    status: number;
+    statusText?: string;
+    errorCode?: string | null;
+    publicMessage?: string;
+  }) {
+    const statusText = input.statusText?.trim() ?? "";
+    const errorCode = input.errorCode ?? null;
+    const publicMessage = input.publicMessage ?? ADMIN_API_PUBLIC_ERROR_MESSAGE;
+    super(
+      `Admin API request failed: ${input.status}${statusText ? ` ${statusText}` : ""}${errorCode ? ` (${errorCode})` : ""}: ${publicMessage}`
+    );
+    this.name = "AdminApiError";
+    this.status = input.status;
+    this.statusText = statusText;
+    this.errorCode = errorCode;
+    this.publicMessage = publicMessage;
+  }
+}
 
 export interface AdminApiConfig {
   apiBaseUrl: string;
@@ -245,6 +274,19 @@ export interface AdminOperationsBoardResponse {
   };
 }
 
+export interface AdminStaffDirectoryResponse {
+  ok: true;
+  tenant_id: string;
+  staff: AdminStaffMember[];
+}
+
+export interface AdminStaffMemberMutationResponse {
+  ok: true;
+  tenant_id: string;
+  staff_member: AdminStaffMember;
+  invitation_status?: "sent" | "reconciled" | "not_required" | "pending" | "failed";
+}
+
 export interface AdminInternalNotesResponse {
   ok: true;
   tenant_id: string;
@@ -372,7 +414,11 @@ export async function adminApiFetchResponse(
   const selectedTenantId = validateSelectedTenantId(config.selectedTenantId);
 
   if (!selectedTenantId.ok) {
-    throw new Error(formatAdminApiKnownError("invalid_selected_tenant_id"));
+    throw new AdminApiError({
+      status: 400,
+      errorCode: "invalid_selected_tenant_id",
+      publicMessage: formatAdminApiKnownError("invalid_selected_tenant_id")
+    });
   }
 
   if (config.includeDevTenantHeader !== false) {
@@ -407,12 +453,16 @@ export async function adminApiFetchResponse(
 
   if (!response.ok) {
     const responseBody = await response.text();
-    const knownError = extractAdminApiErrorCode(responseBody);
-    const details = knownError ? formatAdminApiKnownError(knownError) : responseBody;
+    const responseError = extractAdminApiErrorCode(responseBody);
+    const knownMessage = responseError ? formatAdminApiErrorCodeForUi(responseError) : null;
+    const knownError = knownMessage ? responseError : null;
 
-    throw new Error(
-      `Admin API request failed: ${response.status} ${response.statusText || ""} ${details}`.trim()
-    );
+    throw new AdminApiError({
+      status: response.status,
+      statusText: response.statusText,
+      errorCode: knownError,
+      publicMessage: knownMessage ?? ADMIN_API_PUBLIC_ERROR_MESSAGE
+    });
   }
 
   return response;
@@ -794,6 +844,62 @@ export async function getAdminOperationsBoard(
   options: AdminApiRequestOptions = {}
 ): Promise<AdminOperationsBoardResponse> {
   return adminApiFetch<AdminOperationsBoardResponse>("/api/admin/operations/board", {}, options);
+}
+
+export async function getAdminStaffDirectory(
+  options: AdminApiRequestOptions = {}
+): Promise<AdminStaffDirectoryResponse> {
+  return adminApiFetch("/api/admin/staff", {}, options);
+}
+
+export async function createAdminStaffMember(
+  input: {
+    display_name: string;
+    email: string;
+    role: AdminStaffMember["role"];
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<AdminStaffMemberMutationResponse> {
+  return adminApiFetch(
+    "/api/admin/staff",
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function updateAdminStaffMember(
+  staffId: string,
+  input: {
+    display_name?: string;
+    role?: AdminStaffMember["role"];
+    is_active?: boolean;
+  },
+  options: AdminApiRequestOptions = {}
+): Promise<AdminStaffMemberMutationResponse> {
+  return adminApiFetch(
+    `/api/admin/staff/${encodeURIComponent(staffId)}`,
+    {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(input)
+    },
+    options
+  );
+}
+
+export async function resendAdminStaffInvitation(
+  staffId: string,
+  options: AdminApiRequestOptions = {}
+): Promise<AdminStaffMemberMutationResponse> {
+  return adminApiFetch(
+    `/api/admin/staff/${encodeURIComponent(staffId)}/invite`,
+    { method: "POST" },
+    options
+  );
 }
 
 export async function updateAdminOperationsTask(

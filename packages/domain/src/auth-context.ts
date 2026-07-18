@@ -36,6 +36,7 @@ export type TenantContextResolutionResult =
 export interface StaffAuthLookup {
   findStaffByAuthUserId(authUserId: string): Promise<StaffUser | null>;
   listMembershipsByStaffUserId(staffUserId: string): Promise<StaffTenantMembership[]>;
+  activateInvitedMembershipsForStaffUserId?(staffUserId: string): Promise<void>;
 }
 
 export async function resolveAuthenticatedTenantContext(
@@ -58,9 +59,19 @@ export async function resolveAuthenticatedTenantContext(
     return authContextFailure("staff_inactive");
   }
 
-  const memberships = await lookup.listMembershipsByStaffUserId(staff.id);
+  let memberships = await lookup.listMembershipsByStaffUserId(staff.id);
+  if (
+    lookup.activateInvitedMembershipsForStaffUserId &&
+    memberships.some((membership) => membership.status === "invited")
+  ) {
+    await lookup.activateInvitedMembershipsForStaffUserId(staff.id);
+    memberships = await lookup.listMembershipsByStaffUserId(staff.id);
+  }
   const activeMemberships = memberships.filter(
-    (membership) => membership.staff_user_id === staff.id && membership.status === "active"
+    (membership) =>
+      membership.staff_user_id === staff.id &&
+      membership.status === "active" &&
+      Boolean(membership.accepted_at)
   );
 
   if (activeMemberships.length === 0) {

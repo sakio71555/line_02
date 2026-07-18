@@ -39,6 +39,10 @@ describe("admin API role guard full route rollout compatibility", () => {
       listAlerts: "view_alerts",
       checkUnrepliedAlerts: "check_unreplied_alerts",
       notifyOpenAlerts: "notify_open_alerts",
+      listStaffDirectory: "manage_staff",
+      createStaffMember: "manage_staff",
+      updateStaffMember: "manage_staff",
+      resendStaffInvitation: "manage_staff",
       listOperationsBoard: "view_operations",
       updateOperationsTask: "manage_operations",
       listInternalNotes: "view_operations",
@@ -74,25 +78,59 @@ describe("admin API role guard full route rollout compatibility", () => {
     }
   });
 
-  it("enforces every mapped route action for owner and manager authenticated staff", () => {
-    for (const role of ["owner", "manager"] as const satisfies readonly StaffRole[]) {
-      for (const action of routeActions()) {
-        expect(
-          evaluateAdminRouteRoleGuardCompatibility({
-            context: authenticatedContext(role),
-            action
-          })
-        ).toMatchObject({
-          ok: true,
-          action,
-          mode: "enforced_authenticated_staff",
-          context: {
-            source: "authenticated_staff",
-            role
-          }
-        });
-      }
+  it("enforces every mapped route action for owners", () => {
+    for (const action of routeActions()) {
+      expect(
+        evaluateAdminRouteRoleGuardCompatibility({
+          context: authenticatedContext("owner"),
+          action
+        })
+      ).toMatchObject({
+        ok: true,
+        action,
+        mode: "enforced_authenticated_staff",
+        context: {
+          source: "authenticated_staff",
+          role: "owner"
+        }
+      });
     }
+  });
+
+  it("enforces non-owner-only mapped route actions for managers", () => {
+    for (const action of routeActions().filter((action) => action !== "manage_staff")) {
+      expect(
+        evaluateAdminRouteRoleGuardCompatibility({
+          context: authenticatedContext("manager"),
+          action
+        })
+      ).toMatchObject({
+        ok: true,
+        action,
+        mode: "enforced_authenticated_staff",
+        context: {
+          source: "authenticated_staff",
+          role: "manager"
+        }
+      });
+    }
+  });
+
+  it("keeps staff management owner-only", () => {
+    expect(
+      evaluateAdminRouteRoleGuardCompatibility({
+        context: authenticatedContext("manager"),
+        action: "manage_staff"
+      })
+    ).toEqual({
+      ok: false,
+      status: 403,
+      body: {
+        ok: false,
+        error: "permission_denied"
+      },
+      placeholderRoute: "/permission-denied"
+    });
   });
 
   it("allows staff on support/read actions and denies persistent summary and alert mutations", () => {

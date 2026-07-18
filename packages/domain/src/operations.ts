@@ -1,6 +1,17 @@
 import { z } from "zod";
 
-import type { Alert, Customer, Message, Reservation, StaffRole } from "./index";
+import type {
+  Alert,
+  Customer,
+  Message,
+  Reservation,
+  StaffMembershipStatus,
+  StaffRole,
+  StaffStatus,
+  StaffTenantMembership,
+  StaffUser
+} from "./index";
+import { adminRoles } from "./admin-permissions";
 
 export const workspaceAccentPresets = ["forest", "ocean", "charcoal", "sunrise"] as const;
 export type WorkspaceAccentPreset = (typeof workspaceAccentPresets)[number];
@@ -684,6 +695,28 @@ export interface OperationsStaffMember {
   is_active: boolean;
 }
 
+export interface StaffManagementRecord {
+  staff_user: StaffUser;
+  membership: StaffTenantMembership;
+}
+
+export interface AdminStaffMember {
+  id: string;
+  tenant_id: string;
+  email: string;
+  display_name: string;
+  role: StaffRole;
+  status: StaffStatus;
+  membership_status: StaffMembershipStatus;
+  auth_linked: boolean;
+  line_linked: boolean;
+  last_login_at: string | null;
+  invited_at: string | null;
+  accepted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface InternalNote {
   id: string;
   tenant_id: string;
@@ -742,6 +775,9 @@ export interface OperationsSearchResult {
 
 export interface OperationsRepository {
   listStaffMembers(tenantId: string): Promise<OperationsStaffMember[]>;
+  listStaffManagementRecords(tenantId: string): Promise<StaffManagementRecord[]>;
+  createStaffManagementRecord(record: StaffManagementRecord): Promise<StaffManagementRecord>;
+  saveStaffManagementRecord(record: StaffManagementRecord): Promise<StaffManagementRecord>;
   searchWorkspace?(tenantId: string, query: string): Promise<OperationsSearchResult>;
   listInternalNotes(tenantId: string, customerId: string): Promise<InternalNote[]>;
   saveInternalNote(note: InternalNote): Promise<InternalNote>;
@@ -784,20 +820,157 @@ export const workspaceSettingsInputSchema = z.object({
   setup_completed: z.boolean()
 });
 
+export const staffMemberCreateInputSchema = z.object({
+  display_name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(320).transform((value) => value.toLowerCase()),
+  role: z.enum(adminRoles)
+});
+
+export const staffMemberUpdateInputSchema = z
+  .object({
+    display_name: z.string().trim().min(1).max(120).optional(),
+    role: z.enum(adminRoles).optional(),
+    is_active: z.boolean().optional()
+  })
+  .refine((input) => Object.keys(input).length > 0, {
+    message: "変更内容を1つ以上指定してください。"
+  });
+
 export class InMemoryOperationsRepository implements OperationsRepository {
   private readonly staff: OperationsStaffMember[];
+  private readonly staffManagement = new Map<string, StaffManagementRecord>();
   private readonly notes = new Map<string, InternalNote>();
   private readonly templates = new Map<string, ReplyTemplate>();
   private readonly reservations = new Map<string, Reservation>();
   private readonly settings = new Map<string, WorkspaceSettings>();
   private readonly auditEvents = new Map<string, AuditEvent>();
 
-  constructor(input: { staff?: OperationsStaffMember[] } = {}) {
+  constructor(
+    input: { staff?: OperationsStaffMember[]; staffManagement?: StaffManagementRecord[] } = {}
+  ) {
     this.staff = [...(input.staff ?? [])];
+    for (const record of input.staffManagement ?? []) {
+      this.staffManagement.set(staffManagementKey(record), structuredClone(record));
+    }
   }
 
   async listStaffMembers(tenantId: string): Promise<OperationsStaffMember[]> {
-    return this.staff.filter((member) => member.tenant_id === tenantId && member.is_active);
+    const managed = [...this.staffManagement.values()]
+      .filter(
+        ({ staff_user, membership }) =>
+          membership.tenant_id === tenantId &&
+          staff_user.is_active &&
+          staff_user.status === "active" &&
+          Boolean(staff_user.auth_user_id) &&
+          membership.status === "active" &&
+          Boolean(membership.accepted_at)
+      )
+      .map(({ staff_user, membership }) => ({
+        id: staff_user.id,
+        tenant_id: tenantId,
+        display_name: staff_user.display_name,
+        email: staff_user.email,
+        role: membership.role,
+        is_active: true
+      }));
+    const managedIds = new Set(managed.map((member) => member.id));
+    return [
+      ...this.staff.filter(
+        (member) =>
+          member.tenant_id === tenantId && member.is_active && !managedIds.has(member.id)
+      ),
+      ...managed
+    ];
+  }
+
+  async listStaffManagementRecords(tenantId: string): Promise<StaffManagementRecord[]> {
+    return [...this.staffManagement.values()]
+      .filter(
+        ({ staff_user, membership }) =>
+          Boolean(staff_user.id) && membership.tenant_id === tenantId
+      )
+      .map((record) => structuredClone(record));
+  }
+
+  async createStaffManagementRecord(
+    record: StaffManagementRecord
+  ): Promise<StaffManagementRecord> {
+    assertStaffManagementIdentity(record);
+    const normalizedEmail = record.staff_user.email.trim().toLowerCase();
+    const existingTenantRecord = [...this.staffManagement.values()].find(
+      (candidate) =>
+        candidate.membership.tenant_id === record.membership.tenant_id &&
+        candidate.staff_user.email.trim().toLowerCase() === normalizedEmail
+    );
+    if (existingTenantRecord) {
+      throw new Error("staff_email_already_registered");
+    }
+
+    const existingIdentity = [...this.staffManagement.values()]
+      .filter(
+        (candidate) => candidate.staff_user.email.trim().toLowerCase() === normalizedEmail
+      )
+      .sort(compareReusableStaffIdentities)[0];
+    const acceptedIdentity =
+      existingIdentity?.staff_user.auth_user_id &&
+      [...this.staffManagement.values()].some(
+        (candidate) =>
+          candidate.staff_user.id === existingIdentity.staff_user.id &&
+          candidate.membership.status === "active" &&
+          Boolean(candidate.membership.accepted_at)
+      );
+    const saved: StaffManagementRecord = existingIdentity
+      ? {
+          staff_user: structuredClone(existingIdentity.staff_user),
+          membership: {
+            ...structuredClone(record.membership),
+            staff_user_id: existingIdentity.staff_user.id,
+            status: acceptedIdentity ? "active" : "invited",
+            accepted_at: acceptedIdentity ? record.membership.created_at : null
+          }
+        }
+      : structuredClone(record);
+
+    this.staffManagement.set(staffManagementKey(saved), saved);
+    return structuredClone(saved);
+  }
+
+  async saveStaffManagementRecord(record: StaffManagementRecord): Promise<StaffManagementRecord> {
+    assertStaffManagementIdentity(record);
+    const saved = structuredClone(record);
+    const current = this.staffManagement.get(staffManagementKey(saved));
+    if (
+      current &&
+      isActiveStaffOwner(current) &&
+      !isActiveStaffOwner(saved) &&
+      [...this.staffManagement.values()].filter(
+        (candidate) =>
+          candidate.membership.tenant_id === saved.membership.tenant_id &&
+          isActiveStaffOwner(candidate)
+      ).length <= 1
+    ) {
+      throw new Error("last_owner_must_remain_active");
+    }
+    if (
+      saved.staff_user.auth_user_id &&
+      [...this.staffManagement.values()].some(
+        (candidate) =>
+          candidate.staff_user.id !== saved.staff_user.id &&
+          candidate.staff_user.auth_user_id === saved.staff_user.auth_user_id
+      )
+    ) {
+      throw new Error("staff_auth_user_already_linked");
+    }
+    for (const [key, candidate] of this.staffManagement.entries()) {
+      if (candidate.staff_user.id === saved.staff_user.id) {
+        this.staffManagement.set(key, {
+          staff_user: structuredClone(saved.staff_user),
+          membership: candidate.membership
+        });
+      }
+    }
+    this.staffManagement.set(staffManagementKey(saved), saved);
+    return structuredClone(saved);
   }
 
   async listInternalNotes(tenantId: string, customerId: string): Promise<InternalNote[]> {
@@ -866,5 +1039,42 @@ export class InMemoryOperationsRepository implements OperationsRepository {
   async recordAuditEvent(event: AuditEvent): Promise<AuditEvent> {
     this.auditEvents.set(event.id, event);
     return event;
+  }
+}
+
+function staffManagementKey(record: StaffManagementRecord): string {
+  return `${record.membership.tenant_id}:${record.staff_user.id}`;
+}
+
+function compareReusableStaffIdentities(
+  left: StaffManagementRecord,
+  right: StaffManagementRecord
+): number {
+  const authLinkOrder = Number(Boolean(right.staff_user.auth_user_id)) -
+    Number(Boolean(left.staff_user.auth_user_id));
+  if (authLinkOrder !== 0) {
+    return authLinkOrder;
+  }
+
+  return (
+    left.staff_user.created_at.localeCompare(right.staff_user.created_at) ||
+    left.staff_user.id.localeCompare(right.staff_user.id)
+  );
+}
+
+function isActiveStaffOwner(record: StaffManagementRecord): boolean {
+  return (
+    record.staff_user.status === "active" &&
+    record.staff_user.is_active &&
+    Boolean(record.staff_user.auth_user_id) &&
+    record.membership.status === "active" &&
+    Boolean(record.membership.accepted_at) &&
+    record.membership.role === "owner"
+  );
+}
+
+function assertStaffManagementIdentity(record: StaffManagementRecord): void {
+  if (record.staff_user.id !== record.membership.staff_user_id) {
+    throw new Error("Staff management identity mismatch.");
   }
 }

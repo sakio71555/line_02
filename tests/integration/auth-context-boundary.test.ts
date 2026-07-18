@@ -47,11 +47,26 @@ function createMembership(
 class FakeStaffAuthLookup implements StaffAuthLookup {
   public staffLookups = 0;
   public membershipLookups = 0;
+  public membershipActivations = 0;
+  public activateInvitedMembershipsForStaffUserId?: (staffUserId: string) => Promise<void>;
 
   public constructor(
     private readonly staff: StaffUser | null,
-    private readonly memberships: StaffTenantMembership[]
-  ) {}
+    private readonly memberships: StaffTenantMembership[],
+    activateInvitations = false
+  ) {
+    if (activateInvitations) {
+      this.activateInvitedMembershipsForStaffUserId = async (staffUserId: string) => {
+        this.membershipActivations += 1;
+        for (const membership of this.memberships) {
+          if (membership.staff_user_id === staffUserId && membership.status === "invited") {
+            membership.status = "active";
+            membership.accepted_at = now;
+          }
+        }
+      };
+    }
+  }
 
   public async findStaffByAuthUserId(authUserId: string): Promise<StaffUser | null> {
     this.staffLookups += 1;
@@ -194,6 +209,46 @@ describe("auth context boundary", () => {
       ok: false,
       error: { code: "membership_not_found" }
     });
+  });
+
+  it("activates an invited membership only after the linked auth user signs in", async () => {
+    const lookup = new FakeStaffAuthLookup(
+      createStaff(),
+      [createMembership({ status: "invited", accepted_at: null })],
+      true
+    );
+
+    const result = await resolveAuthenticatedTenantContext({ authUserId: "auth_user_1" }, lookup);
+
+    expect(result).toEqual({
+      ok: true,
+      context: {
+        tenantId: "tenant_amamihome",
+        staffUserId: "staff_1",
+        authUserId: "auth_user_1",
+        role: "manager",
+        source: "authenticated_staff"
+      }
+    });
+    expect(lookup.membershipActivations).toBe(1);
+    expect(lookup.membershipLookups).toBe(2);
+  });
+
+  it("does not activate invitations for a disabled staff identity", async () => {
+    const lookup = new FakeStaffAuthLookup(
+      createStaff({ status: "disabled", is_active: false }),
+      [createMembership({ status: "invited", accepted_at: null })],
+      true
+    );
+
+    const result = await resolveAuthenticatedTenantContext({ authUserId: "auth_user_1" }, lookup);
+
+    expect(result).toEqual({
+      ok: false,
+      error: { code: "staff_inactive" }
+    });
+    expect(lookup.membershipActivations).toBe(0);
+    expect(lookup.membershipLookups).toBe(0);
   });
 
   it("rejects empty auth user id without lookup", async () => {

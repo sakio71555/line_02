@@ -79,6 +79,22 @@ export class SupabaseStaffAuthLookupRepository implements StaffAuthLookup {
       .sort(compareMembershipRowsByCreatedAtAsc)
       .map(toStaffTenantMembership);
   }
+
+  async activateInvitedMembershipsForStaffUserId(staffUserId: string): Promise<void> {
+    const normalizedStaffUserId = staffUserId.trim();
+    if (!normalizedStaffUserId) {
+      return;
+    }
+
+    const result = (await this.client.rpc("activate_staff_invited_memberships", {
+      target_staff_user_id: normalizedStaffUserId
+    })) as SupabaseRepositoryResult<number>;
+    unwrapSupabaseResult(
+      result,
+      "activate_staff_invited_memberships",
+      "activateInvitedMembershipsForStaffUserId"
+    );
+  }
 }
 
 function toStaffUser(row: SupabaseStaffUserRow): StaffUser {
