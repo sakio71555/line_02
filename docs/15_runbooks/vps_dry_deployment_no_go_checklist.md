@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Use this checklist before any real VPS deployment execution for `admin.taiyolabel.site` and `api.taiyolabel.site`.
+Use this checklist before any real VPS deployment execution for the same-origin `admin.taiyolabel.site` Admin and `/api/` routes.
 
 Loop 108 only records this checklist. It does not connect to the VPS or run commands.
 
@@ -11,8 +11,8 @@ Loop 108 only records this checklist. It does not connect to the VPS or run comm
 Stop if any item is true:
 
 - DNS `admin.taiyolabel.site` does not resolve to `160.251.174.201`.
-- DNS `api.taiyolabel.site` does not resolve to `160.251.174.201`.
-- Port `3002` is already in use.
+- The nginx plan does not route `admin.taiyolabel.site/api/` to the API upstream.
+- Port `3100` is already in use.
 - Port `8788` is already in use.
 - nginx status is not active.
 - Existing `sites-enabled` differs from expected `default`, `ehime-portal`, `line-transport` without explanation.

@@ -12,13 +12,12 @@ Domains:
 
 ```text
 admin.taiyolabel.site
-api.taiyolabel.site
 ```
 
 Future command shape:
 
 ```bash
-sudo certbot --nginx --cert-name amami-line-crm-taiyolabel -d admin.taiyolabel.site -d api.taiyolabel.site
+sudo certbot --nginx --cert-name amami-line-crm-taiyolabel -d admin.taiyolabel.site
 ```
 
 Rules:

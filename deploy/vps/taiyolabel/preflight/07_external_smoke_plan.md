@@ -6,8 +6,7 @@ Future external smoke after nginx and SSL are intentionally installed:
 
 ```bash
 curl -I https://admin.taiyolabel.site/
-curl -I https://api.taiyolabel.site/
-curl -sS https://api.taiyolabel.site/health || true
+curl -sS https://admin.taiyolabel.site/api/health || true
 ```
 
 Do not call:
@@ -21,7 +20,7 @@ Do not call:
 Future LINE webhook URL shape:
 
 ```text
-https://api.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
 ```
 
 Do not register this URL in LINE Developers during Loop 108.

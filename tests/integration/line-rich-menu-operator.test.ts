@@ -531,6 +531,127 @@ describe("LINE rich menu operator", () => {
     );
   });
 
+  it("restores the previous default when the default change succeeded but its response was lost", async () => {
+    const calls: Array<{ url: string; method: string }> = [];
+    let createCount = 0;
+    let defaultGetCount = 0;
+
+    await expect(
+      applyLifecycleRichMenus({
+        channelAccessToken: "test-channel-access-token",
+        liffId: "1234567890-testLiff",
+        richMenuEnvOutputPath: "secure-rich-menu-lifecycle.env",
+        async writeRichMenuEnvOutputImplementation() {},
+        async fetchImplementation(input, init) {
+          const url = String(input);
+          const method = init?.method ?? "GET";
+          calls.push({ url, method });
+
+          if (url.endsWith("/v2/bot/user/all/richmenu") && method === "GET") {
+            defaultGetCount += 1;
+            return new Response(
+              JSON.stringify({
+                richMenuId:
+                  defaultGetCount === 1
+                    ? "richmenu-previous-default"
+                    : "richmenu-response-lost-1"
+              }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            );
+          }
+          if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
+            createCount += 1;
+            return new Response(
+              JSON.stringify({ richMenuId: `richmenu-response-lost-${createCount}` }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            );
+          }
+          if (
+            url.endsWith("/v2/bot/user/all/richmenu/richmenu-response-lost-1") &&
+            method === "POST"
+          ) {
+            throw new Error("set_default_response_lost");
+          }
+
+          return new Response("{}", { status: 200 });
+        }
+      })
+    ).rejects.toThrow("set_default_response_lost");
+
+    const restoredDefaultIndex = calls.findIndex(
+      (call) =>
+        call.url.endsWith("/v2/bot/user/all/richmenu/richmenu-previous-default") &&
+        call.method === "POST"
+    );
+    const firstDeleteIndex = calls.findIndex((call) => call.method === "DELETE");
+
+    expect(defaultGetCount).toBe(2);
+    expect(restoredDefaultIndex).toBeGreaterThan(-1);
+    expect(firstDeleteIndex).toBeGreaterThan(restoredDefaultIndex);
+    expect(calls.filter((call) => call.method === "DELETE")).toHaveLength(3);
+  });
+
+  it("preserves the possible active default when response-loss reconciliation also fails", async () => {
+    const calls: Array<{ url: string; method: string }> = [];
+    let createCount = 0;
+    let defaultGetCount = 0;
+    let caughtError: unknown;
+
+    try {
+      await applyLifecycleRichMenus({
+        channelAccessToken: "test-channel-access-token",
+        liffId: "1234567890-testLiff",
+        richMenuEnvOutputPath: "secure-rich-menu-lifecycle.env",
+        async writeRichMenuEnvOutputImplementation() {},
+        async fetchImplementation(input, init) {
+          const url = String(input);
+          const method = init?.method ?? "GET";
+          calls.push({ url, method });
+
+          if (url.endsWith("/v2/bot/user/all/richmenu") && method === "GET") {
+            defaultGetCount += 1;
+            if (defaultGetCount > 1) {
+              throw new Error("default_reconciliation_failed");
+            }
+            return new Response(JSON.stringify({ richMenuId: "richmenu-previous-default" }), {
+              status: 200,
+              headers: { "content-type": "application/json" }
+            });
+          }
+          if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
+            createCount += 1;
+            return new Response(
+              JSON.stringify({ richMenuId: `richmenu-unknown-default-${createCount}` }),
+              { status: 200, headers: { "content-type": "application/json" } }
+            );
+          }
+          if (
+            url.endsWith("/v2/bot/user/all/richmenu/richmenu-unknown-default-1") &&
+            method === "POST"
+          ) {
+            throw new Error("set_default_response_lost");
+          }
+
+          return new Response("{}", { status: 200 });
+        }
+      });
+    } catch (error) {
+      caughtError = error;
+    }
+
+    const output = formatLineRichMenuOperatorFailure(caughtError);
+    const deletedUrls = calls
+      .filter((call) => call.method === "DELETE")
+      .map((call) => call.url);
+
+    expect(output).toContain("cleanup_required=true");
+    expect(output).toContain("cleanup_failure_count=1");
+    expect(deletedUrls).toEqual([
+      "https://api.line.me/v2/bot/richmenu/richmenu-unknown-default-3",
+      "https://api.line.me/v2/bot/richmenu/richmenu-unknown-default-2"
+    ]);
+  });
+
   it("preserves the previous environment file when an atomic replacement fails", async () => {
     const directory = path.join(process.cwd(), "tmp", "tests", randomUUID());
     const outputPath = path.join(directory, "rich-menu.env");
@@ -572,6 +693,25 @@ describe("LINE rich menu operator", () => {
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
+  });
+
+  it("does not overwrite an environment file when reading it fails for a non-ENOENT reason", async () => {
+    let writeAttempted = false;
+
+    await expect(
+      writeEnvironmentOutput(
+        "secure-rich-menu.env",
+        new Map([["LINE_RICH_MENU_INITIAL_ID", "new-menu-id"]]),
+        async () => {
+          writeAttempted = true;
+        },
+        async () => {
+          throw Object.assign(new Error("permission denied"), { code: "EACCES" });
+        }
+      )
+    ).rejects.toMatchObject({ code: "EACCES" });
+
+    expect(writeAttempted).toBe(false);
   });
 
   it("reports cleanup_required without exposing IDs or tokens when rollback deletion fails", async () => {
@@ -712,6 +852,13 @@ describe("LINE rich menu operator", () => {
         const requestUrl = String(input);
         calls.push(requestUrl);
 
+        if (requestUrl.endsWith("/v2/bot/user/all/richmenu")) {
+          return new Response(JSON.stringify({ richMenuId: "richmenu-previous-default" }), {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          });
+        }
+
         if (requestUrl.endsWith("/v2/bot/richmenu")) {
           return new Response(JSON.stringify({ richMenuId: "richmenu-custom-default-id" }), {
             status: 200,
@@ -725,6 +872,7 @@ describe("LINE rich menu operator", () => {
 
     expect(result.setDefaultStatus).toBe("success");
     expect(calls).toEqual([
+      "https://api.line.me/v2/bot/user/all/richmenu",
       "https://api.line.me/v2/bot/richmenu",
       "https://api-data.line.me/v2/bot/richmenu/richmenu-custom-default-id/content",
       "https://api.line.me/v2/bot/user/all/richmenu/richmenu-custom-default-id"
@@ -780,6 +928,13 @@ describe("LINE rich menu operator", () => {
           const method = init?.method ?? "GET";
           calls.push({ url, method });
 
+          if (url.endsWith("/v2/bot/user/all/richmenu") && method === "GET") {
+            return new Response(JSON.stringify({ richMenuId: "richmenu-previous-default" }), {
+              status: 200,
+              headers: { "content-type": "application/json" }
+            });
+          }
+
           if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
             return new Response(JSON.stringify({ richMenuId: "richmenu-default-failed" }), {
               status: 200,
@@ -798,6 +953,56 @@ describe("LINE rich menu operator", () => {
       url: "https://api.line.me/v2/bot/richmenu/richmenu-default-failed",
       method: "DELETE"
     });
+  });
+
+  it("restores the previous default when writing the custom menu output fails", async () => {
+    const calls: Array<{ url: string; method: string }> = [];
+
+    await expect(
+      applyCustomRichMenu({
+        assetDirectory: "deploy/line/rich-menu/amamihome-initial",
+        channelAccessToken: "test-channel-access-token",
+        richMenuIdOutputPath: "secure-rich-menu-id.env",
+        setDefault: true,
+        async writeRichMenuIdOutputImplementation() {
+          throw new Error("secure_output_write_failed");
+        },
+        async fetchImplementation(input, init) {
+          const url = String(input);
+          const method = init?.method ?? "GET";
+          calls.push({ url, method });
+
+          if (url.endsWith("/v2/bot/user/all/richmenu") && method === "GET") {
+            return new Response(JSON.stringify({ richMenuId: "richmenu-previous-default" }), {
+              status: 200,
+              headers: { "content-type": "application/json" }
+            });
+          }
+          if (url.endsWith("/v2/bot/richmenu") && method === "POST") {
+            return new Response(JSON.stringify({ richMenuId: "richmenu-custom-output" }), {
+              status: 200,
+              headers: { "content-type": "application/json" }
+            });
+          }
+
+          return new Response("{}", { status: 200 });
+        }
+      })
+    ).rejects.toThrow("secure_output_write_failed");
+
+    const restoredDefaultIndex = calls.findIndex(
+      (call) =>
+        call.url.endsWith("/v2/bot/user/all/richmenu/richmenu-previous-default") &&
+        call.method === "POST"
+    );
+    const deletedMenuIndex = calls.findIndex(
+      (call) =>
+        call.url.endsWith("/v2/bot/richmenu/richmenu-custom-output") &&
+        call.method === "DELETE"
+    );
+
+    expect(restoredDefaultIndex).toBeGreaterThan(-1);
+    expect(deletedMenuIndex).toBeGreaterThan(restoredDefaultIndex);
   });
 
   it("builds apply definitions with LIFF URLs while keeping source definitions unchanged", async () => {

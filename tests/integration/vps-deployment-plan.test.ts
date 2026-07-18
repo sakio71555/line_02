@@ -55,11 +55,15 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     }
   });
 
-  it("keeps nginx templates scoped to taiyolabel hosts and planned upstreams", () => {
+  it("keeps nginx templates on the production same-origin boundary", () => {
     const combined = `${readText(httpNginxPath)}\n${readText(sslNginxPath)}`;
 
     expect(combined).toContain("admin.taiyolabel.site");
-    expect(combined).toContain("api.taiyolabel.site");
+    expect(combined).not.toContain("server_name api.taiyolabel.site");
+    expect(combined).toContain("location /api/");
+    expect(combined).toContain("proxy_pass http://127.0.0.1:8788/api/;");
+    expect(combined).toContain("location = /api/health");
+    expect(combined).toContain("proxy_pass http://127.0.0.1:8788/health;");
     expect(combined).toContain("127.0.0.1:3100");
     expect(combined).toContain("127.0.0.1:8788");
     expect(combined).toContain("X-Forwarded-Proto");
@@ -122,6 +126,11 @@ describe("Loop 106 VPS deployment plan and templates", () => {
     expect(combined).toContain("LINE_REAL_PUSH_ENABLED=false");
     expect(combined).toContain("AI_PROVIDER=mock");
     expect(combined).toContain("OPENAI_REAL_API_ENABLED=false");
+    expect(combined).toContain("API_BASE_URL=https://admin.taiyolabel.site");
+    expect(combined).toContain("API_PUBLIC_ORIGIN=https://admin.taiyolabel.site");
+    expect(combined).not.toContain("API_BASE_URL=https://admin.taiyolabel.site/api");
+    expect(combined).not.toContain("API_PUBLIC_ORIGIN=https://admin.taiyolabel.site/api");
+    expect(combined).not.toContain("api.taiyolabel.site");
     expect(combined).not.toMatch(new RegExp(`${"sk"}-[A-Za-z0-9_-]{10,}`, "u"));
     expect(combined).not.toMatch(new RegExp(`${"ey"}J[A-Za-z0-9_-]{20,}`, "u"));
     expect(combined).not.toMatch(/postgres(?:ql)?:\/\//iu);

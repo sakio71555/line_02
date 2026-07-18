@@ -62,11 +62,14 @@ describe("Loop 108 VPS dry deployment preflight docs", () => {
     }
   });
 
-  it("documents taiyolabel hosts, planned upstreams, and execution phases", () => {
+  it("documents the same-origin production host, planned upstreams, and execution phases", () => {
     const combined = readAll([taskDocPath, preflightRunbookPath, ...preflightPackFiles]);
+    const currentPreflightPack = readAll(preflightPackFiles);
 
     expect(combined).toContain("admin.taiyolabel.site");
-    expect(combined).toContain("api.taiyolabel.site");
+    expect(currentPreflightPack).toContain("https://admin.taiyolabel.site/api/");
+    expect(currentPreflightPack).toContain("https://admin.taiyolabel.site/api/health");
+    expect(currentPreflightPack).not.toContain("api.taiyolabel.site");
     expect(combined).toContain("160.251.174.201");
     expect(combined).toContain("127.0.0.1:3100");
     expect(combined).toContain("127.0.0.1:8788");
@@ -123,7 +126,9 @@ describe("Loop 108 VPS dry deployment preflight docs", () => {
     const nginxTemplates = readAll([httpNginxPath, sslNginxPath]);
 
     expect(nginxTemplates).toContain("proxy_pass http://127.0.0.1:3100");
-    expect(nginxTemplates).toContain("proxy_pass http://127.0.0.1:8788");
+    expect(nginxTemplates).toContain("proxy_pass http://127.0.0.1:8788/api/");
+    expect(nginxTemplates).toContain("proxy_pass http://127.0.0.1:8788/health");
+    expect(nginxTemplates).not.toContain("server_name api.taiyolabel.site");
     expect(nginxTemplates).toContain("amami-line-crm-taiyolabel");
     expect(nginxTemplates).not.toContain("default_server");
     expect(nginxTemplates).not.toContain("/etc/letsencrypt/live/app.ajnl.net");
@@ -136,6 +141,11 @@ describe("Loop 108 VPS dry deployment preflight docs", () => {
     expect(envExamples).toContain("LINE_REAL_PUSH_ENABLED=false");
     expect(envExamples).toContain("AI_PROVIDER=mock");
     expect(envExamples).toContain("OPENAI_REAL_API_ENABLED=false");
+    expect(envExamples).toContain("API_BASE_URL=https://admin.taiyolabel.site");
+    expect(envExamples).toContain("API_PUBLIC_ORIGIN=https://admin.taiyolabel.site");
+    expect(envExamples).not.toContain("API_BASE_URL=https://admin.taiyolabel.site/api");
+    expect(envExamples).not.toContain("API_PUBLIC_ORIGIN=https://admin.taiyolabel.site/api");
+    expect(envExamples).not.toContain("api.taiyolabel.site");
     expect(envExamples).not.toMatch(new RegExp(`${"sk"}-[A-Za-z0-9_-]{10,}`, "u"));
     expect(envExamples).not.toMatch(new RegExp(`${"ey"}J[A-Za-z0-9_-]{20,}`, "u"));
     expect(envExamples).not.toMatch(/postgres(?:ql)?:\/\//iu);

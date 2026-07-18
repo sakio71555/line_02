@@ -5,21 +5,21 @@
 This runbook prepares the command order for a future dry deployment to the existing VPS for:
 
 - `admin.taiyolabel.site`
-- `api.taiyolabel.site`
+- `https://admin.taiyolabel.site/api/`
 
 Loop 108 does not execute these commands. Do not SSH to the VPS, do not create files on the VPS, do not run nginx, systemd, certbot, LINE, OpenAI, or Supabase commands in this Loop.
 
 ## Preconditions
 
 - DNS `admin.taiyolabel.site` points to `160.251.174.201`.
-- DNS `api.taiyolabel.site` points to `160.251.174.201`.
+- API traffic uses the same `admin.taiyolabel.site` origin under `/api/`.
 - DNS NS are `01.dnsv.jp`, `02.dnsv.jp`, `03.dnsv.jp`, `04.dnsv.jp`.
 - Existing apps run on the same VPS.
 - Do not overwrite existing nginx config.
 - Do not delete existing `sites-enabled` entries.
 - Do not reuse existing `app.ajnl.net` / `api.ajnl.net` certificates.
 - Planned release directory is `/var/www/amami-line-crm`.
-- Admin local upstream is `127.0.0.1:3002`.
+- Admin local upstream is `127.0.0.1:3100`.
 - API local upstream is `127.0.0.1:8788`.
 
 ## Known VPS State From User Audit
@@ -80,7 +80,7 @@ These commands are for a later VPS execution Loop only.
 hostname
 whoami
 cat /etc/os-release
-ss -tulpn | grep -E ':(80|443|3002|8788|8080|8001|3100)\b' || true
+ss -tulpn | grep -E ':(80|443|8788|8080|8001|3100)\b' || true
 sudo systemctl status nginx --no-pager
 ls -la /etc/nginx/sites-enabled
 ls -la /etc/nginx/sites-available
@@ -92,7 +92,7 @@ pnpm -v || true
 git --version || true
 ```
 
-No-Go if `3002` or `8788` is already in use, nginx is not active, or the existing site/service inventory differs from the user audit without explanation.
+No-Go if `3100` or `8788` is already in use, nginx is not active, or the existing site/service inventory differs from the user audit without explanation.
 
 ## Backup Commands For A Future Loop
 
@@ -177,7 +177,7 @@ Loop 108 does not run install or build on the VPS.
 Before systemd registration in a later Loop, verify local binding on the VPS:
 
 - API: `127.0.0.1:8788`
-- Admin: `127.0.0.1:3002`
+- Admin: `127.0.0.1:3100`
 
 API has a `/health` route in `apps/api/src/index.ts`.
 
@@ -185,7 +185,7 @@ Future smoke examples:
 
 ```bash
 curl -sS http://127.0.0.1:8788/health || true
-curl -sS http://127.0.0.1:3002/ || true
+curl -sS http://127.0.0.1:3100/ || true
 ```
 
 Do not call LINE, OpenAI, Supabase production, or mutation endpoints as part of this smoke.
@@ -232,7 +232,7 @@ Rules:
 
 - Do not use `default_server`.
 - Do not modify existing `default`, `ehime-portal`, or `line-transport` files.
-- Use only `admin.taiyolabel.site` and `api.taiyolabel.site` in `server_name`.
+- Use only `admin.taiyolabel.site` in `server_name` and route `/api/` separately.
 - If `nginx -t` fails in a future Loop, do not reload nginx.
 - Keep HTTP bootstrap separate from SSL config.
 
@@ -248,13 +248,12 @@ Future domains:
 
 ```text
 admin.taiyolabel.site
-api.taiyolabel.site
 ```
 
 Future command shape, to be verified in the execution Loop:
 
 ```bash
-sudo certbot --nginx --cert-name amami-line-crm-taiyolabel -d admin.taiyolabel.site -d api.taiyolabel.site
+sudo certbot --nginx --cert-name amami-line-crm-taiyolabel -d admin.taiyolabel.site
 ```
 
 Rules:
@@ -287,8 +286,7 @@ Future external smoke only after nginx and SSL are intentionally installed:
 
 ```bash
 curl -I https://admin.taiyolabel.site/
-curl -I https://api.taiyolabel.site/
-curl -sS https://api.taiyolabel.site/health || true
+curl -sS https://admin.taiyolabel.site/api/health || true
 ```
 
 Do not call LINE webhook, LINE push, OpenAI, Supabase mutation, or customer data endpoints in the first external smoke.
@@ -304,7 +302,7 @@ POST /api/line/webhook/:webhookSecret
 Future public URL shape:
 
 ```text
-https://api.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
 ```
 
 Do not write the real webhook secret path into docs. Do not register this URL in LINE Developers during Loop 108.

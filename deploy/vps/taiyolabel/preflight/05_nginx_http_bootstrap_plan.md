@@ -19,7 +19,9 @@ Rules:
 
 - Do not use `default_server`.
 - Do not edit existing `default`, `ehime-portal`, or `line-transport` files.
-- Use only `admin.taiyolabel.site` and `api.taiyolabel.site` as `server_name`.
+- Use only `admin.taiyolabel.site` as `server_name`.
+- Route `/api/` to `127.0.0.1:8788/api/` and all other application paths to `127.0.0.1:3100`.
+- Route `/api/health` explicitly to `127.0.0.1:8788/health`.
 - If the nginx config test fails in a future Loop, do not reload nginx.
 - Keep HTTP bootstrap separate from HTTPS config.
 
@@ -28,3 +30,4 @@ No-Go:
 - Existing sites would be overwritten.
 - The template routes another domain.
 - The template points to anything other than `127.0.0.1:3100` or `127.0.0.1:8788`.
+- A current template or environment file refers to a retired separate API host.

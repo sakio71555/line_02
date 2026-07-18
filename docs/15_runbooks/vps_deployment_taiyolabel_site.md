@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`admin.taiyolabel.site` と `api.taiyolabel.site` を将来のamami-line-crm production候補として使うためのVPS deployment planです。
+`admin.taiyolabel.site` の同一オリジン配下でAdmin UIとAPIを運用するためのVPS deployment planです。
 
 Loop 106ではこのrunbookとtemplatesを追加するだけです。VPSへSSHせず、nginx、systemd、certbot、LINE webhook、OpenAI、Supabase productionには触りません。
 
@@ -24,7 +24,6 @@ User-side read-only audit result:
 DNS:
 
 - `admin.taiyolabel.site` -> `160.251.174.201`
-- `api.taiyolabel.site` -> `160.251.174.201`
 - DNS management: お名前.com
 - name servers: `01.dnsv.jp`, `02.dnsv.jp`, `03.dnsv.jp`, `04.dnsv.jp`
 
@@ -70,12 +69,13 @@ Planned new placement:
 
 | public host | nginx upstream | app |
 | --- | --- | --- |
-| `admin.taiyolabel.site` | `127.0.0.1:3002` | Admin UI |
-| `api.taiyolabel.site` | `127.0.0.1:8788` | API |
+| `admin.taiyolabel.site/` | `127.0.0.1:3100` | Admin UI |
+| `admin.taiyolabel.site/api/` | `127.0.0.1:8788/api/` | API |
+| `admin.taiyolabel.site/api/health` | `127.0.0.1:8788/health` | API health |
 
 Planned conflict check from audit:
 
-- port `3002`: 空き
+- port `3100`: current Admin upstream boundary
 - port `8788`: 空き
 - systemd service name `amami-line-crm-*`: 未使用
 - `/var/www/amami-line-crm`: 未使用
@@ -103,7 +103,7 @@ Loop 107 resolved those repo-level start/port blockers:
 - `@amami-line-crm/api` has review/mock `start: tsx src/index.ts` to avoid Node ESM extensionless import issues until a dedicated compiled API runtime Loop。
 - `@amami-line-crm/admin` has `start: next start --hostname 127.0.0.1`。
 - API production binding resolves `API_HOST` / `HOST` and `API_PORT` / `PORT` with safe default `127.0.0.1:8788`。
-- Admin production binding uses an explicit Next.js localhost hostname and `PORT=3002`。
+- Admin production binding uses an explicit Next.js localhost hostname and `PORT=3100`。
 - systemd templates now call `npx pnpm@10.12.1 --filter ... start`。
 
 Still do not deploy directly from this runbook. Before real VPS deployment, run a dedicated Loop for:
@@ -132,7 +132,7 @@ Do not run these commands in Loop 106. They are a future operator checklist.
 
 1. Read-only preflight on VPS:
    - verify OS, node, corepack, git, nginx status。
-   - verify ports `3002` and `8788` are still free。
+   - verify ports `3100` and `8788` are still free。
    - verify `/var/www/amami-line-crm` is still unused。
    - verify `amami-line-crm-*` systemd services are still unused。
 2. Backup current nginx config:
@@ -147,9 +147,9 @@ Do not run these commands in Loop 106. They are a future operator checklist.
 7. Build the repo。
 8. Confirm Loop 107 start/port boundary tests pass。
 9. Create systemd services from templates only in a dedicated deployment Loop。
-10. Start local services on `127.0.0.1:3002` and `127.0.0.1:8788`。
+10. Start local services on `127.0.0.1:3100` and `127.0.0.1:8788`。
 11. Run local curl smoke against local upstreams。
-12. Add nginx HTTP bootstrap config for `admin.taiyolabel.site` and `api.taiyolabel.site`。
+12. Add nginx HTTP bootstrap config for `admin.taiyolabel.site`, routing `/api/` to the API upstream。
 13. Run `nginx -t`。
 14. Reload nginx only if `nginx -t` passes。
 15. Issue certbot certificate with cert name `amami-line-crm-taiyolabel`.
@@ -218,7 +218,7 @@ POST /api/line/webhook/:webhookSecret
 Future public URL shape:
 
 ```text
-https://api.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
 ```
 
 The real webhook secret path must be set only in the LINE console / server env and must not be written into docs.
@@ -234,12 +234,12 @@ Do not configure the LINE webhook until:
 
 Stop before deploy if any of these are true:
 
-- port `3002` or `8788` is already in use。
+- port `3100` or `8788` is already in use。
 - `/var/www/amami-line-crm` already exists with unknown content。
 - `amami-line-crm-*` systemd service already exists。
 - production start script tests fail。
 - API cannot bind to planned `127.0.0.1:8788` upstream。
-- Admin cannot bind to planned `127.0.0.1:3002` upstream。
+- Admin cannot bind to planned `127.0.0.1:3100` upstream。
 - `nginx -t` fails。
 - existing `app.ajnl.net`, `api.ajnl.net`, `ehime-portal`, `line-transport`, or other VPS apps might break。
 - certbot dry-run or issue fails。
@@ -279,7 +279,7 @@ Progress in Loop 107:
 
 - production start scripts added。
 - API planned port `8788` wired to runtime boundary。
-- Admin planned port `3002` represented by `HOSTNAME` / `PORT`。
+- Admin planned port `3100` represented by `HOSTNAME` / `PORT`。
 - systemd/env templates synchronized with real package scripts。
 
 Progress in Loop 108:

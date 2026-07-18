@@ -94,6 +94,15 @@ describe("admin read-only API client", () => {
     ).toBe("http://localhost:4999/api/admin/customers");
   });
 
+  it("builds same-origin production API URLs without duplicating the api prefix", () => {
+    expect(
+      createAdminApiUrl("/api/admin/customers", {
+        apiBaseUrl: "https://admin.taiyolabel.site",
+        tenantId: "tenant_amamihome"
+      })
+    ).toBe("https://admin.taiyolabel.site/api/admin/customers");
+  });
+
   it("builds encoded customer detail paths", () => {
     expect(adminCustomerDetailPath("customer 1/2")).toBe("/api/admin/customers/customer%201%2F2");
   });

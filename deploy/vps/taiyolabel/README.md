@@ -9,12 +9,16 @@ Do not copy them to the server without first reading:
 - `docs/15_runbooks/vps_dry_deployment_preflight_commands.md`
 - `docs/15_runbooks/vps_dry_deployment_no_go_checklist.md`
 
-## Planned public routes
+## Public routes
 
-| host | local upstream | app |
+| public route | local upstream | app |
 | --- | --- | --- |
-| `admin.taiyolabel.site` | `127.0.0.1:3100` | amami-line-crm admin |
-| `api.taiyolabel.site` | `127.0.0.1:8788` | amami-line-crm api |
+| `https://admin.taiyolabel.site/` | `127.0.0.1:3100` | amami-line-crm admin |
+| `https://admin.taiyolabel.site/api/` | `127.0.0.1:8788/api/` | amami-line-crm api |
+| `https://admin.taiyolabel.site/api/health` | `127.0.0.1:8788/health` | API health |
+
+The current production boundary is same-origin. Do not add a separate API host
+to current templates or environment examples.
 
 ## Safety notes
 

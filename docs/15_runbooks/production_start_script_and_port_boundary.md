@@ -57,9 +57,9 @@ Planned VPS Admin env:
 
 ```text
 HOSTNAME=127.0.0.1
-PORT=3002
+PORT=3100
 ADMIN_HOST=127.0.0.1
-ADMIN_PORT=3002
+ADMIN_PORT=3100
 ```
 
 The Admin `start` script passes `--hostname 127.0.0.1`; `PORT` remains the Next.js runtime port value. `ADMIN_HOST` / `ADMIN_PORT` are retained as deployment documentation values for consistency with nginx and systemd.
@@ -84,10 +84,10 @@ The templates still must not be installed directly without a dedicated deploymen
 
 The planned nginx upstreams remain:
 
-- Admin: `127.0.0.1:3002`
+- Admin: `127.0.0.1:3100`
 - API: `127.0.0.1:8788`
 
-The nginx templates stay scoped to `admin.taiyolabel.site` and `api.taiyolabel.site`, do not use `default_server`, and do not reuse the existing `app.ajnl.net` certificate path.
+The nginx templates stay scoped to `admin.taiyolabel.site`, route `/api/` to the API upstream, do not use `default_server`, and do not reuse the existing `app.ajnl.net` certificate path.
 
 ## Local Verification Shape
 
@@ -102,7 +102,7 @@ Before any VPS execution, a later Loop should perform a local build/start smoke:
 3. Start Admin with:
    - `NODE_ENV=production`
    - `HOSTNAME=127.0.0.1`
-   - `PORT=3002`
+   - `PORT=3100`
 4. Curl local upstreams only.
 5. Stop both processes.
 

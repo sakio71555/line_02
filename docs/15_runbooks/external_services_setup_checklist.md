@@ -14,7 +14,7 @@ Current known state:
 - DNS management: お名前.com
 - name servers: `01.dnsv.jp`, `02.dnsv.jp`, `03.dnsv.jp`, `04.dnsv.jp`
 - `admin.taiyolabel.site` -> `160.251.174.201`
-- `api.taiyolabel.site` -> `160.251.174.201`
+- API public boundary: `https://admin.taiyolabel.site/api/`
 
 Before deploy:
 
@@ -57,7 +57,7 @@ Known state:
 Future webhook URL shape:
 
 ```text
-https://api.taiyolabel.site/api/line/webhook/<webhookSecretPath>
+https://admin.taiyolabel.site/api/line/webhook/<webhookSecretPath>
 ```
 
 Rules:
@@ -88,7 +88,7 @@ Before certbot:
 - `nginx -t` passes。
 - existing `app.ajnl.net` certificate is not reused。
 - cert name `amami-line-crm-taiyolabel` is confirmed。
-- API local upstream is `127.0.0.1:8788` and Admin local upstream is `127.0.0.1:3002` after Loop 107 start/port boundary verification。
+- API local upstream is `127.0.0.1:8788` and Admin local upstream is `127.0.0.1:3100` after the current start/port boundary verification。
 
 ## Final Gate
 
