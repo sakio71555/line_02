@@ -104,7 +104,7 @@ export interface LineRichMenuLifecycleApplyResult {
   initialRichMenuCreated: true;
   negotiationRichMenuCreated: true;
   aftercareRichMenuCreated: true;
-  richMenuEnvOutputWritten: boolean;
+  richMenuEnvOutputWritten: true;
   liffUrlApplied: boolean;
   liffIdRecorded: false;
   richMenuIdRecorded: false;
@@ -134,6 +134,18 @@ export class LineRichMenuOperatorError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "LineRichMenuOperatorError";
+  }
+}
+
+export class LineRichMenuCleanupRequiredError extends LineRichMenuOperatorError {
+  readonly applyFailureReason: string;
+  readonly cleanupFailureCount: number;
+
+  constructor(applyFailureReason: string, cleanupFailureCount: number) {
+    super("rich_menu_apply_failed_cleanup_required");
+    this.name = "LineRichMenuCleanupRequiredError";
+    this.applyFailureReason = applyFailureReason;
+    this.cleanupFailureCount = cleanupFailureCount;
   }
 }
 
@@ -348,12 +360,12 @@ export async function applyDefaultRichMenu(input: {
       fetchImplementation
     });
   } catch (error) {
-    await deleteRichMenuBestEffort({
+    await cleanupRichMenusAndRethrow({
+      error,
       token,
-      richMenuId: createResult.richMenuId,
+      richMenuIds: [createResult.richMenuId],
       fetchImplementation
     });
-    throw error;
   }
 
   return {
@@ -440,12 +452,12 @@ export async function applyCustomRichMenu(input: {
       createResult.richMenuId
     );
   } catch (error) {
-    await deleteRichMenuBestEffort({
+    await cleanupRichMenusAndRethrow({
+      error,
       token,
-      richMenuId: createResult.richMenuId,
+      richMenuIds: [createResult.richMenuId],
       fetchImplementation
     });
-    throw error;
   }
 
   return {
@@ -478,15 +490,24 @@ export async function applyLifecycleRichMenus(input: {
   repoRoot?: string;
   channelAccessToken: string;
   liffId?: string;
-  richMenuEnvOutputPath?: string;
+  richMenuEnvOutputPath: string;
   fetchImplementation?: typeof globalThis.fetch;
+  writeRichMenuEnvOutputImplementation?: (
+    outputPath: string,
+    richMenuIds: ReadonlyMap<LineRichMenuLifecycleKey, string>
+  ) => Promise<void>;
 }): Promise<LineRichMenuLifecycleApplyResult> {
   const repoRoot = input.repoRoot ?? process.cwd();
   const token = input.channelAccessToken.trim();
   const liffId = input.liffId?.trim() ?? "";
+  const richMenuEnvOutputPath = input.richMenuEnvOutputPath.trim();
 
   if (!token) {
     throw new LineRichMenuOperatorError("line_channel_access_token_missing");
+  }
+
+  if (!richMenuEnvOutputPath) {
+    throw new LineRichMenuOperatorError("rich_menu_env_output_path_missing");
   }
 
   const fetchImplementation = input.fetchImplementation ?? globalThis.fetch.bind(globalThis);
@@ -518,16 +539,16 @@ export async function applyLifecycleRichMenus(input: {
       fetchImplementation
     });
 
-    if (input.richMenuEnvOutputPath) {
-      await writeRichMenuEnvOutput(input.richMenuEnvOutputPath, createdRichMenuIds);
-    }
+    const writeRichMenuEnvOutputImplementation =
+      input.writeRichMenuEnvOutputImplementation ?? writeRichMenuEnvOutput;
+    await writeRichMenuEnvOutputImplementation(richMenuEnvOutputPath, createdRichMenuIds);
   } catch (error) {
-    await deleteRichMenusBestEffort({
+    await cleanupRichMenusAndRethrow({
+      error,
       token,
       richMenuIds: [...createdRichMenuIds.values()],
       fetchImplementation
     });
-    throw error;
   }
 
   return {
@@ -539,7 +560,7 @@ export async function applyLifecycleRichMenus(input: {
     initialRichMenuCreated: true,
     negotiationRichMenuCreated: true,
     aftercareRichMenuCreated: true,
-    richMenuEnvOutputWritten: Boolean(input.richMenuEnvOutputPath),
+    richMenuEnvOutputWritten: true,
     liffUrlApplied,
     liffIdRecorded: false,
     richMenuIdRecorded: false,
@@ -567,6 +588,32 @@ export function formatLineRichMenuLifecycleApplyResult(
     `rich_menu_id_recorded=${result.richMenuIdRecorded}`,
     `line_send_attempted=${result.lineSendAttempted}`,
     `secret_recorded=${result.secretRecorded}`
+  ].join("\n");
+}
+
+export function formatLineRichMenuOperatorFailure(error: unknown): string {
+  if (error instanceof LineRichMenuCleanupRequiredError) {
+    return [
+      "line_rich_menu_operator_status=failed",
+      `failure_reason=${error.message}`,
+      `apply_failure_reason=${error.applyFailureReason}`,
+      "cleanup_required=true",
+      `cleanup_failure_count=${error.cleanupFailureCount}`
+    ].join("\n");
+  }
+
+  if (error instanceof LineRichMenuOperatorError) {
+    return [
+      "line_rich_menu_operator_status=failed",
+      `failure_reason=${error.message}`,
+      "cleanup_required=false"
+    ].join("\n");
+  }
+
+  return [
+    "line_rich_menu_operator_status=failed",
+    "failure_reason=unexpected_error",
+    "cleanup_required=false"
   ].join("\n");
 }
 
@@ -728,12 +775,12 @@ async function createRichMenuFromAssets(input: {
       throw new LineRichMenuOperatorError("rich_menu_image_upload_failed");
     }
   } catch (error) {
-    await deleteRichMenuBestEffort({
+    await cleanupRichMenusAndRethrow({
+      error,
       token: input.token,
-      richMenuId,
+      richMenuIds: [richMenuId],
       fetchImplementation: input.fetchImplementation
     });
-    throw error;
   }
 
   return {
@@ -837,11 +884,12 @@ async function deleteRichMenuBestEffort(input: {
   token: string;
   richMenuId: string;
   fetchImplementation: typeof globalThis.fetch;
-}): Promise<void> {
+}): Promise<boolean> {
   try {
     await deleteRichMenu(input);
+    return true;
   } catch {
-    // Preserve the original apply failure while making cleanup best effort.
+    return false;
   }
 }
 
@@ -849,19 +897,66 @@ async function deleteRichMenusBestEffort(input: {
   token: string;
   richMenuIds: string[];
   fetchImplementation: typeof globalThis.fetch;
-}): Promise<void> {
+}): Promise<number> {
+  let cleanupFailureCount = 0;
+
   for (const richMenuId of [...input.richMenuIds].reverse()) {
-    await deleteRichMenuBestEffort({
+    const cleanupSucceeded = await deleteRichMenuBestEffort({
       token: input.token,
       richMenuId,
       fetchImplementation: input.fetchImplementation
     });
+
+    if (!cleanupSucceeded) {
+      cleanupFailureCount += 1;
+    }
   }
+
+  return cleanupFailureCount;
+}
+
+async function cleanupRichMenusAndRethrow(input: {
+  error: unknown;
+  token: string;
+  richMenuIds: string[];
+  fetchImplementation: typeof globalThis.fetch;
+}): Promise<never> {
+  const additionalCleanupFailureCount = await deleteRichMenusBestEffort({
+    token: input.token,
+    richMenuIds: input.richMenuIds,
+    fetchImplementation: input.fetchImplementation
+  });
+  const priorCleanupFailureCount =
+    input.error instanceof LineRichMenuCleanupRequiredError
+      ? input.error.cleanupFailureCount
+      : 0;
+  const cleanupFailureCount = priorCleanupFailureCount + additionalCleanupFailureCount;
+
+  if (cleanupFailureCount > 0) {
+    throw new LineRichMenuCleanupRequiredError(
+      getSanitizedApplyFailureReason(input.error),
+      cleanupFailureCount
+    );
+  }
+
+  throw input.error;
+}
+
+function getSanitizedApplyFailureReason(error: unknown): string {
+  if (error instanceof LineRichMenuCleanupRequiredError) {
+    return error.applyFailureReason;
+  }
+
+  if (error instanceof LineRichMenuOperatorError) {
+    return error.message;
+  }
+
+  return "unexpected_error";
 }
 
 async function writeRichMenuEnvOutput(
   outputPath: string,
-  richMenuIds: Map<LineRichMenuLifecycleKey, string>
+  richMenuIds: ReadonlyMap<LineRichMenuLifecycleKey, string>
 ): Promise<void> {
   const replacements = new Map<string, string>();
 
@@ -1028,7 +1123,7 @@ async function main(): Promise<void> {
     const result = await applyLifecycleRichMenus({
       channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "",
       liffId: process.env.LINE_LIFF_ID ?? process.env.NEXT_PUBLIC_LIFF_ID ?? process.env.LIFF_ID,
-      richMenuEnvOutputPath: readOptionValue(argv, "--rich-menu-env-output")
+      richMenuEnvOutputPath: readOptionValue(argv, "--rich-menu-env-output") ?? ""
     });
     console.log(formatLineRichMenuLifecycleApplyResult(result));
     return;
@@ -1065,15 +1160,7 @@ const executedPath = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1
 
 if (import.meta.url === executedPath) {
   main().catch((error: unknown) => {
-    if (error instanceof LineRichMenuOperatorError) {
-      console.error(`line_rich_menu_operator_status=failed`);
-      console.error(`failure_reason=${error.message}`);
-      process.exitCode = 1;
-      return;
-    }
-
-    console.error("line_rich_menu_operator_status=failed");
-    console.error("failure_reason=unexpected_error");
+    console.error(formatLineRichMenuOperatorFailure(error));
     process.exitCode = 1;
   });
 }

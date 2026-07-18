@@ -17,7 +17,7 @@ Allowed:
 - Preserve active `.env*` files by rsync excludes.
 - Update `/var/www/amami-line-crm` only after staging install/lint/typecheck/test/test:integration/build pass.
 - Restart only existing `amami-line-crm-api.service` and `amami-line-crm-admin.service`.
-- Smoke only `127.0.0.1:8788` and `127.0.0.1:3002`.
+- Smoke only `127.0.0.1:8788` and `127.0.0.1:3100`.
 
 Forbidden:
 
@@ -146,15 +146,15 @@ Do not create new systemd units. Do not add pm2 registrations.
 
 ```bash
 curl -sS -o /dev/null -w "api /health %{http_code}\n" http://127.0.0.1:8788/health
-curl -sS -o /dev/null -w "admin /login %{http_code}\n" http://127.0.0.1:3002/login
-curl -sS -o /dev/null -w "admin /select-tenant %{http_code}\n" http://127.0.0.1:3002/select-tenant
-curl -sS -o /dev/null -w "admin /customers %{http_code}\n" http://127.0.0.1:3002/customers
-curl -sS -o /dev/null -w "admin /alerts %{http_code}\n" http://127.0.0.1:3002/alerts
+curl -sS -o /dev/null -w "admin /login %{http_code}\n" http://127.0.0.1:3100/login
+curl -sS -o /dev/null -w "admin /select-tenant %{http_code}\n" http://127.0.0.1:3100/select-tenant
+curl -sS -o /dev/null -w "admin /customers %{http_code}\n" http://127.0.0.1:3100/customers
+curl -sS -o /dev/null -w "admin /alerts %{http_code}\n" http://127.0.0.1:3100/alerts
 ```
 
 Listener expectations:
 
-- Admin: `127.0.0.1:3002`.
+- Admin: `127.0.0.1:3100`.
 - API: `127.0.0.1:8788`.
 - `18080` absent.
 - `sites-enabled` app include absent.
