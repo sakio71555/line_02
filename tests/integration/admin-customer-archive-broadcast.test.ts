@@ -304,19 +304,35 @@ describe("admin customer archive and broadcast", () => {
       setup.customerRepository.save(makeCustomer("customer_first", "U_FIRST")),
       setup.customerRepository.save(makeCustomer("customer_second", "U_SECOND"))
     ]);
-    const formData = new FormData();
-    formData.set("body", "");
-    formData.set("confirmed", "true");
-    formData.set("confirmation", ADMIN_BROADCAST_CONFIRMATION_VALUE);
-    formData.set("idempotency_key", "admin-broadcast-image-integration-001");
-    formData.set("attachment", new File([PNG_BYTES], "notice.png", {
-      type: "image/png"
-    }));
+    const prepareResponse = await setup.app.fetch(
+      authenticatedRequest("/api/admin/outbound-media/uploads/prepare", {
+        method: "POST",
+        body: {
+          purpose: "broadcast",
+          media_type: "image",
+          content_type: "image/png",
+          media_size: PNG_BYTES.byteLength,
+          preview_content_type: "image/png",
+          preview_size: PNG_BYTES.byteLength
+        }
+      })
+    );
+    const prepared = (await prepareResponse.json()) as { media: Record<string, unknown> };
 
     const response = await setup.app.fetch(
-      authenticatedMultipartRequest("/api/admin/broadcast/send", formData)
+      authenticatedRequest("/api/admin/broadcast/send", {
+        method: "POST",
+        body: {
+          body: "",
+          confirmed: true,
+          confirmation: ADMIN_BROADCAST_CONFIRMATION_VALUE,
+          idempotency_key: "admin-broadcast-image-integration-001",
+          media: prepared.media
+        }
+      })
     );
 
+    expect(prepareResponse.status).toBe(200);
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       intended_recipients: 2,
@@ -324,7 +340,9 @@ describe("admin customer archive and broadcast", () => {
       failed_count: 0,
       history_record_failed_count: 0
     });
-    expect(setup.outboundLineMediaStorage.stored).toHaveLength(1);
+    expect(setup.outboundLineMediaStorage.prepared).toHaveLength(1);
+    expect(setup.outboundLineMediaStorage.finalized).toHaveLength(1);
+    expect(setup.outboundLineMediaStorage.stored).toHaveLength(0);
     expect(setup.lineClient.pushes).toEqual([
       {
         to: "U_FIRST",
@@ -397,17 +415,6 @@ function createTestApp(
   };
 }
 
-function authenticatedMultipartRequest(path: string, body: FormData): Request {
-  return new Request(`http://localhost${path}`, {
-    method: "POST",
-    headers: {
-      authorization: "Bearer test-admin-token",
-      "x-selected-tenant-id": "tenant_amamihome"
-    },
-    body
-  });
-}
-
 function authenticatedRequest(
   path: string,
   input: { method?: string; body?: Record<string, unknown> } = {}
@@ -442,7 +449,51 @@ class RecordingLineClient implements LineClient {
 }
 
 class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
+  readonly prepared: Array<
+    Parameters<NonNullable<OutboundLineMediaStorage["prepareUpload"]>>[0]
+  > = [];
+  readonly finalized: Array<
+    Parameters<NonNullable<OutboundLineMediaStorage["finalizeUpload"]>>[0]
+  > = [];
   readonly stored: Array<Parameters<OutboundLineMediaStorage["store"]>[0]> = [];
+
+  async prepareUpload(
+    input: Parameters<NonNullable<OutboundLineMediaStorage["prepareUpload"]>>[0]
+  ): Promise<Awaited<ReturnType<NonNullable<OutboundLineMediaStorage["prepareUpload"]>>>> {
+    this.prepared.push(input);
+    return {
+      media_upload_url: "https://media.example.invalid/upload/original",
+      preview_upload_url: "https://media.example.invalid/upload/preview"
+    };
+  }
+
+  async resolveUpload(
+    input: Parameters<NonNullable<OutboundLineMediaStorage["resolveUpload"]>>[0]
+  ): Promise<Awaited<ReturnType<NonNullable<OutboundLineMediaStorage["resolveUpload"]>>>> {
+    return {
+      media_storage_path: `${input.tenant_id}/outbound-prepared/${input.media_id}-original.png`,
+      preview_storage_path: `${input.tenant_id}/outbound-prepared/${input.media_id}-preview.png`
+    };
+  }
+
+  async finalizeUpload(
+    input: Parameters<NonNullable<OutboundLineMediaStorage["finalizeUpload"]>>[0]
+  ): Promise<Awaited<ReturnType<NonNullable<OutboundLineMediaStorage["finalizeUpload"]>>>> {
+    this.finalized.push(input);
+    const prefix = `${input.tenant_id}/outbound/${input.media_id}`;
+    return {
+      media_storage_path: `${prefix}/original.png`,
+      preview_storage_path: `${prefix}/preview.png`,
+      original_content_url: "https://media.example.invalid/original",
+      preview_image_url: "https://media.example.invalid/preview"
+    };
+  }
+
+  async removeUpload(): Promise<void> {}
+
+  async removeExpiredUploads(): Promise<number> {
+    return 0;
+  }
 
   async store(
     input: Parameters<OutboundLineMediaStorage["store"]>[0]
@@ -458,8 +509,12 @@ class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
     };
   }
 
+  async inspect(): Promise<{ size: number; content_type: string | null }> {
+    return { size: PNG_BYTES.byteLength, content_type: "image/png" };
+  }
+
   async download(): Promise<{ data: Blob; content_type: string | null }> {
-    return { data: new Blob(), content_type: null };
+    return { data: new Blob([PNG_BYTES], { type: "image/png" }), content_type: "image/png" };
   }
 
   async remove(): Promise<void> {}

@@ -395,6 +395,16 @@ export interface OutboundLineMediaStorage {
   }): Promise<{
     media_storage_path: string;
     preview_storage_path: string;
+  }>;
+  finalizeUpload?(input: {
+    tenant_id: string;
+    media_id: string;
+    media_type: OutboundLineMediaType;
+    content_type: OutboundLineMediaContentType;
+    preview_content_type: OutboundLinePreviewContentType;
+  }): Promise<{
+    media_storage_path: string;
+    preview_storage_path: string;
     original_content_url: string;
     preview_image_url: string;
   }>;
@@ -404,6 +414,11 @@ export interface OutboundLineMediaStorage {
     content_type: OutboundLineMediaContentType;
     preview_content_type: OutboundLinePreviewContentType;
   }): Promise<void>;
+  removeExpiredUploads?(input: {
+    tenant_id: string;
+    expires_before: string;
+    limit: number;
+  }): Promise<number>;
   store(input: {
     tenant_id: string;
     media_id: string;
@@ -417,6 +432,13 @@ export interface OutboundLineMediaStorage {
     preview_storage_path: string;
     original_content_url: string;
     preview_image_url: string;
+  }>;
+  inspect(input: {
+    tenant_id: string;
+    media_storage_path: string;
+  }): Promise<{
+    size: number;
+    content_type: string | null;
   }>;
   download(input: {
     tenant_id: string;

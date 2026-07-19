@@ -32,27 +32,20 @@ describe("outbound LINE media private storage", () => {
     });
 
     expect(signedUploadPaths).toEqual([
-      "tenant_amamihome/outbound/00000000-0000-4000-8000-000000000001/original.mp4",
-      "tenant_amamihome/outbound/00000000-0000-4000-8000-000000000001/preview.jpg"
+      "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000001-original.mp4",
+      "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000001-preview.jpg"
     ]);
-    expect(result.media_upload_url).toContain("/tenant_amamihome/outbound/");
-    expect(result.preview_upload_url).toContain("/tenant_amamihome/outbound/");
+    expect(result.media_upload_url).toContain("/tenant_amamihome/outbound-prepared/");
+    expect(result.preview_upload_url).toContain("/tenant_amamihome/outbound-prepared/");
   });
 
-  it("creates one-hour delivery URLs for the same tenant-scoped objects", async () => {
-    const signedUrlCalls: Array<{ path: string; expiresIn: number }> = [];
+  it("resolves prepared paths without creating delivery URLs", async () => {
+    let storageCalls = 0;
     const client = {
       storage: {
         from() {
-          return {
-            async createSignedUrl(path: string, expiresIn: number) {
-              signedUrlCalls.push({ path, expiresIn });
-              return {
-                data: { signedUrl: `https://storage.example.invalid/delivery/${path}` },
-                error: null
-              };
-            }
-          };
+          storageCalls += 1;
+          throw new Error("Resolving prepared paths must not access storage.");
         }
       }
     };
@@ -66,6 +59,94 @@ describe("outbound LINE media private storage", () => {
       preview_content_type: "image/png"
     });
 
+    expect(storageCalls).toBe(0);
+    expect(result).toEqual({
+      media_storage_path:
+        "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-original.png",
+      preview_storage_path:
+        "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-preview.png"
+    });
+  });
+
+  it("inspects tenant-scoped object metadata without downloading the object", async () => {
+    const inspectedPaths: string[] = [];
+    const client = {
+      storage: {
+        from() {
+          return {
+            async info(path: string) {
+              inspectedPaths.push(path);
+              return {
+                data: { size: 8, contentType: "image/png" },
+                error: null
+              };
+            },
+            async download() {
+              throw new Error("Metadata inspection must not download the object.");
+            }
+          };
+        }
+      }
+    };
+    const storage = new SupabaseOutboundLineMediaStorage(client as never);
+
+    const result = await storage.inspect({
+      tenant_id: "tenant_amamihome",
+      media_storage_path:
+        "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-original.png"
+    });
+
+    expect(result).toEqual({ size: 8, content_type: "image/png" });
+    expect(inspectedPaths).toEqual([
+      "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-original.png"
+    ]);
+  });
+
+  it("moves validated uploads to durable paths before creating one-hour delivery URLs", async () => {
+    const moveCalls: Array<{ from: string; to: string }> = [];
+    const signedUrlCalls: Array<{ path: string; expiresIn: number }> = [];
+    const client = {
+      storage: {
+        from() {
+          return {
+            async move(from: string, to: string) {
+              moveCalls.push({ from, to });
+              return { data: { message: "Moved" }, error: null };
+            },
+            async createSignedUrl(path: string, expiresIn: number) {
+              signedUrlCalls.push({ path, expiresIn });
+              return {
+                data: { signedUrl: `https://storage.example.invalid/delivery/${path}` },
+                error: null
+              };
+            },
+            async remove() {
+              return { data: [], error: null };
+            }
+          };
+        }
+      }
+    };
+    const storage = new SupabaseOutboundLineMediaStorage(client as never);
+
+    const result = await storage.finalizeUpload({
+      tenant_id: "tenant_amamihome",
+      media_id: "00000000-0000-4000-8000-000000000002",
+      media_type: "image",
+      content_type: "image/png",
+      preview_content_type: "image/png"
+    });
+
+    expect(moveCalls).toEqual([
+      {
+        from: "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-original.png",
+        to: "tenant_amamihome/outbound/00000000-0000-4000-8000-000000000002/original.png"
+      },
+      {
+        from: "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-preview.png",
+        to: "tenant_amamihome/outbound/00000000-0000-4000-8000-000000000002/preview.png"
+      }
+    ]);
     expect(signedUrlCalls).toEqual([
       {
         path: "tenant_amamihome/outbound/00000000-0000-4000-8000-000000000002/original.png",
@@ -82,6 +163,174 @@ describe("outbound LINE media private storage", () => {
       preview_storage_path:
         "tenant_amamihome/outbound/00000000-0000-4000-8000-000000000002/preview.png"
     });
+  });
+
+  it("removes partial durable media when preview finalization fails", async () => {
+    const moveCalls: Array<{ from: string; to: string }> = [];
+    const removeCalls: string[][] = [];
+    const client = {
+      storage: {
+        from() {
+          return {
+            async move(from: string, to: string) {
+              moveCalls.push({ from, to });
+              return moveCalls.length === 2
+                ? { data: null, error: new Error("preview move failed") }
+                : { data: { message: "Moved" }, error: null };
+            },
+            async remove(paths: string[]) {
+              removeCalls.push(paths);
+              return { data: [], error: null };
+            }
+          };
+        }
+      }
+    };
+    const storage = new SupabaseOutboundLineMediaStorage(client as never);
+
+    await expect(
+      storage.finalizeUpload({
+        tenant_id: "tenant_amamihome",
+        media_id: "00000000-0000-4000-8000-000000000002",
+        media_type: "image",
+        content_type: "image/png",
+        preview_content_type: "image/png"
+      })
+    ).rejects.toThrow("Outbound LINE media preview finalization failed.");
+
+    expect(moveCalls).toHaveLength(2);
+    expect(removeCalls).toEqual([
+      [
+        "tenant_amamihome/outbound/00000000-0000-4000-8000-000000000002/original.png",
+        "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-original.png",
+        "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000002-preview.png"
+      ]
+    ]);
+  });
+
+  it("retries compensating cleanup before reporting the preview failure", async () => {
+    let moveCount = 0;
+    let removeCount = 0;
+    const client = {
+      storage: {
+        from() {
+          return {
+            async move() {
+              moveCount += 1;
+              return moveCount === 2
+                ? { data: null, error: new Error("preview move failed") }
+                : { data: { message: "Moved" }, error: null };
+            },
+            async remove() {
+              removeCount += 1;
+              return removeCount < 3
+                ? { data: null, error: new Error("transient cleanup failure") }
+                : { data: [], error: null };
+            }
+          };
+        }
+      }
+    };
+    const storage = new SupabaseOutboundLineMediaStorage(client as never);
+
+    await expect(
+      storage.finalizeUpload({
+        tenant_id: "tenant_amamihome",
+        media_id: "00000000-0000-4000-8000-000000000020",
+        media_type: "image",
+        content_type: "image/png",
+        preview_content_type: "image/png"
+      })
+    ).rejects.toThrow("Outbound LINE media preview finalization failed.");
+
+    expect(removeCount).toBe(3);
+  });
+
+  it("surfaces compensating cleanup failure after the bounded retries", async () => {
+    let moveCount = 0;
+    let removeCount = 0;
+    const client = {
+      storage: {
+        from() {
+          return {
+            async move() {
+              moveCount += 1;
+              return moveCount === 2
+                ? { data: null, error: new Error("preview move failed") }
+                : { data: { message: "Moved" }, error: null };
+            },
+            async remove() {
+              removeCount += 1;
+              return { data: null, error: new Error("cleanup failed") };
+            }
+          };
+        }
+      }
+    };
+    const storage = new SupabaseOutboundLineMediaStorage(client as never);
+
+    await expect(
+      storage.finalizeUpload({
+        tenant_id: "tenant_amamihome",
+        media_id: "00000000-0000-4000-8000-000000000021",
+        media_type: "image",
+        content_type: "image/png",
+        preview_content_type: "image/png"
+      })
+    ).rejects.toThrow(
+      "Outbound LINE media cleanup failed after preview finalization failure."
+    );
+
+    expect(removeCount).toBe(3);
+  });
+
+  it("removes only expired prepared uploads returned by the bounded scan", async () => {
+    const removedPaths: string[][] = [];
+    const client = {
+      storage: {
+        from() {
+          return {
+            async list() {
+              return {
+                data: [
+                  {
+                    name: "00000000-0000-4000-8000-000000000010-original.jpg",
+                    created_at: "2026-07-17T00:00:00.000Z"
+                  },
+                  {
+                    name: "00000000-0000-4000-8000-000000000010-preview.jpg",
+                    created_at: "2026-07-17T00:00:00.000Z"
+                  },
+                  {
+                    name: "00000000-0000-4000-8000-000000000011-original.jpg",
+                    created_at: "2026-07-19T00:00:00.000Z"
+                  },
+                  { name: "unexpected-object", created_at: "2026-07-17T00:00:00.000Z" }
+                ],
+                error: null
+              };
+            },
+            async remove(paths: string[]) {
+              removedPaths.push(paths);
+              return { data: [], error: null };
+            }
+          };
+        }
+      }
+    };
+    const storage = new SupabaseOutboundLineMediaStorage(client as never);
+
+    const removedCount = await storage.removeExpiredUploads({
+      tenant_id: "tenant_amamihome",
+      expires_before: "2026-07-18T00:00:00.000Z",
+      limit: 100
+    });
+
+    expect(removedCount).toBe(2);
+    expect(removedPaths).toEqual([[
+      "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000010-original.jpg",
+      "tenant_amamihome/outbound-prepared/00000000-0000-4000-8000-000000000010-preview.jpg"
+    ]]);
   });
 
   it("removes the uploaded original when preview storage fails", async () => {
@@ -171,6 +420,12 @@ describe("outbound LINE media private storage", () => {
     };
     const storage = new SupabaseOutboundLineMediaStorage(client as never);
 
+    await expect(
+      storage.inspect({
+        tenant_id: "tenant_amamihome",
+        media_storage_path: "tenant_other/outbound/media_1/original.png"
+      })
+    ).rejects.toThrow("outside the tenant scope");
     await expect(
       storage.download({
         tenant_id: "tenant_amamihome",

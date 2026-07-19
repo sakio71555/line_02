@@ -21,6 +21,12 @@ export {
   createSupabaseServiceRoleServerClient
 } from "./client";
 export {
+  assertSupabaseRuntimeSchemaReady,
+  assertSupabaseRuntimeSchemaReadyFromEnv,
+  supabaseRuntimeSchemaPreflightRpc,
+  SupabaseRuntimeSchemaNotReadyError
+} from "./runtime-schema-preflight";
+export {
   createSupabaseAuthBrowserClient,
   createSupabaseAuthServerClient
 } from "./auth-client";

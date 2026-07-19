@@ -9,6 +9,7 @@ import {
   type AiRagAnswerSource
 } from "@amami-line-crm/ai";
 import { loadAppConfig } from "@amami-line-crm/config";
+import { assertSupabaseRuntimeSchemaReadyFromEnv } from "@amami-line-crm/db";
 import {
   buildCustomerActivityStaffNotificationPayload,
   buildStaffNotificationPayload,
@@ -176,6 +177,10 @@ export interface ApiAppDependencies {
   startOfficialSiteKnowledgeSync?: boolean;
   now?: () => string;
   env?: NodeJS.ProcessEnv;
+}
+
+export interface ApiRuntimeSchemaPreflightDependencies {
+  assertSupabaseRuntimeSchemaReadyFromEnv?: (env: NodeJS.ProcessEnv) => Promise<void>;
 }
 
 export type CustomerMessageRepositoryRuntimeMode = "in_memory" | "supabase";
@@ -571,6 +576,18 @@ export function createApiApp(dependencies: ApiAppDependencies = {}): Hono {
 
     const mediaId = globalThis.crypto.randomUUID();
     try {
+      if (outboundLineMediaStorage.removeExpiredUploads) {
+        await withPreparedMediaStorageTimeout(
+          outboundLineMediaStorage.removeExpiredUploads({
+            tenant_id: tenant.tenantId,
+            expires_before: new Date(
+              Date.now() - OUTBOUND_PREPARED_UPLOAD_MAX_AGE_MS
+            ).toISOString(),
+            limit: OUTBOUND_PREPARED_UPLOAD_CLEANUP_LIMIT
+          }),
+          "Prepared outbound LINE media expiry cleanup timed out."
+        ).catch(() => undefined);
+      }
       const upload = await outboundLineMediaStorage.prepareUpload({
         tenant_id: tenant.tenantId,
         media_id: mediaId,
@@ -5497,15 +5514,6 @@ interface AdminBroadcastRequest {
   media: OutboundMediaUpload | null;
 }
 
-interface InlineOutboundMediaUpload {
-  source: "inline";
-  mediaType: OutboundLineMediaType;
-  contentType: OutboundLineMediaContentType;
-  data: Uint8Array;
-  previewContentType: OutboundLinePreviewContentType;
-  previewData: Uint8Array;
-}
-
 type OutboundMediaPurpose = "staff_reply" | "broadcast";
 
 interface PreparedOutboundMediaUpload {
@@ -5519,7 +5527,7 @@ interface PreparedOutboundMediaUpload {
   previewSize: number;
 }
 
-type OutboundMediaUpload = InlineOutboundMediaUpload | PreparedOutboundMediaUpload;
+type OutboundMediaUpload = PreparedOutboundMediaUpload;
 
 interface StoredOutboundLineMedia {
   mediaType: OutboundLineMediaType;
@@ -5545,6 +5553,13 @@ interface ParsedStaffReplyRequest extends StaffReplyLinePushRequest {
 const MAX_OUTBOUND_LINE_IMAGE_BYTES = 10 * 1024 * 1024;
 const MAX_OUTBOUND_LINE_VIDEO_BYTES = 50 * 1024 * 1024;
 const MAX_OUTBOUND_LINE_PREVIEW_BYTES = 1024 * 1024;
+const OUTBOUND_PREPARED_UPLOAD_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const OUTBOUND_PREPARED_UPLOAD_CLEANUP_LIMIT = 100;
+const OUTBOUND_MEDIA_STORAGE_TIMEOUT_MS = 15_000;
+const OUTBOUND_MEDIA_VALIDATION_CONCURRENCY = 4;
+const preparedMediaValidationQueues = new Map<string, Promise<void>>();
+const preparedMediaValidationWaiters: Array<() => void> = [];
+let activePreparedMediaValidations = 0;
 
 async function readCustomerArchiveBody(request: Request): Promise<{ confirmed: boolean } | null> {
   let parsed: unknown;
@@ -5564,34 +5579,7 @@ async function readCustomerArchiveBody(request: Request): Promise<{ confirmed: b
 
 async function readAdminBroadcastBody(request: Request): Promise<AdminBroadcastRequest | null> {
   if (request.headers.get("content-type")?.toLowerCase().includes("multipart/form-data")) {
-    let formData: FormData;
-    try {
-      formData = await request.formData();
-    } catch {
-      return null;
-    }
-
-    const body = readFormDataText(formData, "body");
-    const media = await readOutboundMediaUpload(formData);
-    const confirmation = readFormDataText(formData, "confirmation");
-    const idempotencyKey = readFormDataText(formData, "idempotency_key");
-
-    if (
-      media === "invalid" ||
-      (!body && !media) ||
-      body.length > 5_000 ||
-      !isValidLineSendIdempotencyKey(idempotencyKey)
-    ) {
-      return null;
-    }
-
-    return {
-      body,
-      confirmed: readFormDataText(formData, "confirmed") === "true",
-      confirmation,
-      idempotencyKey,
-      media
-    };
+    return null;
   }
 
   let parsed: unknown;
@@ -5661,32 +5649,7 @@ function selectAdminBroadcastRecipients(customers: Customer[]): {
 
 async function readStaffReplyBody(request: Request): Promise<ParsedStaffReplyRequest | null> {
   if (request.headers.get("content-type")?.toLowerCase().includes("multipart/form-data")) {
-    let formData: FormData;
-    try {
-      formData = await request.formData();
-    } catch {
-      return null;
-    }
-
-    const body = readFormDataText(formData, "body");
-    const media = await readOutboundMediaUpload(formData);
-    if (media === "invalid" || (!body && !media) || body.length > 5_000) {
-      return null;
-    }
-
-    return {
-      body,
-      hasAttachment: media !== null,
-      media,
-      deliveryMode:
-        readFormDataText(formData, "delivery_mode") === "real_line_push"
-          ? "real_line_push"
-          : "demo_save",
-      realLinePushConfirmed:
-        readFormDataText(formData, "real_line_push_confirmed") === "true",
-      linePushConfirmation: readOptionalFormDataText(formData, "line_push_confirmation"),
-      idempotencyKey: readOptionalFormDataText(formData, "idempotency_key")
-    };
+    return null;
   }
 
   let parsed: unknown;
@@ -5819,104 +5782,6 @@ function isValidOutboundMediaId(value: string): boolean {
   );
 }
 
-async function readOutboundMediaUpload(
-  formData: FormData
-): Promise<OutboundMediaUpload | null | "invalid"> {
-  const attachment = formData.get("attachment");
-  if (attachment === null || (isUploadedFile(attachment) && attachment.size === 0)) {
-    return null;
-  }
-  if (!isUploadedFile(attachment)) {
-    return "invalid";
-  }
-
-  const contentType = attachment.type.toLowerCase();
-  if (contentType === "image/jpeg" || contentType === "image/png") {
-    if (attachment.size > MAX_OUTBOUND_LINE_IMAGE_BYTES) {
-      return "invalid";
-    }
-
-    const data = new Uint8Array(await attachment.arrayBuffer());
-    if (!hasOutboundMediaSignature(contentType, data)) {
-      return "invalid";
-    }
-
-    const preview = formData.get("preview");
-    if (isUploadedFile(preview) && preview.size > 0) {
-      const previewContentType = normalizeOutboundPreviewContentType(preview.type);
-      if (!previewContentType || preview.size > MAX_OUTBOUND_LINE_PREVIEW_BYTES) {
-        return "invalid";
-      }
-
-      const previewData = new Uint8Array(await preview.arrayBuffer());
-      if (!hasOutboundMediaSignature(previewContentType, previewData)) {
-        return "invalid";
-      }
-
-      return {
-        source: "inline",
-        mediaType: "image",
-        contentType,
-        data,
-        previewContentType,
-        previewData
-      };
-    }
-
-    if (attachment.size > MAX_OUTBOUND_LINE_PREVIEW_BYTES) {
-      return "invalid";
-    }
-
-    return {
-      source: "inline",
-      mediaType: "image",
-      contentType,
-      data,
-      previewContentType: contentType,
-      previewData: data
-    };
-  }
-
-  if (contentType !== "video/mp4" || attachment.size > MAX_OUTBOUND_LINE_VIDEO_BYTES) {
-    return "invalid";
-  }
-
-  const preview = formData.get("preview");
-  if (!isUploadedFile(preview) || preview.size === 0) {
-    return "invalid";
-  }
-
-  const previewContentType = normalizeOutboundPreviewContentType(preview.type);
-  if (!previewContentType || preview.size > MAX_OUTBOUND_LINE_PREVIEW_BYTES) {
-    return "invalid";
-  }
-
-  const data = new Uint8Array(await attachment.arrayBuffer());
-  const previewData = new Uint8Array(await preview.arrayBuffer());
-  if (
-    !hasOutboundMediaSignature(contentType, data) ||
-    !hasOutboundMediaSignature(previewContentType, previewData)
-  ) {
-    return "invalid";
-  }
-
-  return {
-    source: "inline",
-    mediaType: "video",
-    contentType,
-    data,
-    previewContentType,
-    previewData
-  };
-}
-
-function normalizeOutboundPreviewContentType(
-  value: string
-): OutboundLinePreviewContentType | null {
-  const normalized = value.toLowerCase();
-  return normalized === "image/jpeg" || normalized === "image/png" ? normalized : null;
-}
-
 function hasOutboundMediaSignature(contentType: string, data: Uint8Array): boolean {
   if (contentType === "image/jpeg") {
     return data.length >= 3 && data[0] === 0xff && data[1] === 0xd8 && data[2] === 0xff;
@@ -5940,68 +5805,18 @@ function hasOutboundMediaSignature(contentType: string, data: Uint8Array): boole
   return false;
 }
 
-function isUploadedFile(value: FormDataEntryValue | null): value is File {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "arrayBuffer" in value &&
-    typeof value.arrayBuffer === "function" &&
-    "size" in value &&
-    typeof value.size === "number" &&
-    "type" in value &&
-    typeof value.type === "string"
-  );
-}
-
-function readFormDataText(formData: FormData, key: string): string {
-  const value = formData.get(key);
-  return typeof value === "string" ? value.trim() : "";
-}
-
-function readOptionalFormDataText(formData: FormData, key: string): string | null {
-  return readFormDataText(formData, key) || null;
-}
-
-function isValidLineSendIdempotencyKey(value: string): boolean {
-  return (
-    value.length >= 16 &&
-    value.length <= 160 &&
-    /^[A-Za-z0-9_-]+$/u.test(value)
-  );
-}
-
 async function storeOutboundLineMedia(input: {
   tenantId: string;
   upload: OutboundMediaUpload;
   storage: OutboundLineMediaStorage;
   expectedPurpose: OutboundMediaPurpose;
 }): Promise<StoredOutboundLineMedia> {
-  if (input.upload.source === "prepared") {
-    return resolvePreparedOutboundLineMedia({
-      tenantId: input.tenantId,
-      upload: input.upload,
-      storage: input.storage,
-      expectedPurpose: input.expectedPurpose
-    });
-  }
-
-  const stored = await input.storage.store({
-    tenant_id: input.tenantId,
-    media_id: globalThis.crypto.randomUUID(),
-    media_type: input.upload.mediaType,
-    content_type: input.upload.contentType,
-    data: input.upload.data,
-    preview_content_type: input.upload.previewContentType,
-    preview_data: input.upload.previewData
+  return resolvePreparedOutboundLineMedia({
+    tenantId: input.tenantId,
+    upload: input.upload,
+    storage: input.storage,
+    expectedPurpose: input.expectedPurpose
   });
-
-  return {
-    mediaType: input.upload.mediaType,
-    mediaStoragePath: stored.media_storage_path,
-    previewStoragePath: stored.preview_storage_path,
-    originalContentUrl: stored.original_content_url,
-    previewImageUrl: stored.preview_image_url
-  };
 }
 
 async function resolvePreparedOutboundLineMedia(input: {
@@ -6014,51 +5829,94 @@ async function resolvePreparedOutboundLineMedia(input: {
   if (
     upload.purpose !== input.expectedPurpose ||
     !storage.resolveUpload ||
+    !storage.finalizeUpload ||
     !storage.removeUpload
   ) {
     throw new Error("Prepared outbound LINE media cannot be resolved.");
   }
 
   try {
-    const resolved = await storage.resolveUpload({
+    await runPreparedMediaValidation(input.tenantId, async () => {
+      const preparedPaths = await withPreparedMediaStorageTimeout(
+        storage.resolveUpload!({
+          tenant_id: input.tenantId,
+          media_id: upload.mediaId,
+          media_type: upload.mediaType,
+          content_type: upload.contentType,
+          preview_content_type: upload.previewContentType
+        }),
+        "Prepared outbound LINE media path resolution timed out."
+      );
+      const mediaMetadata = await withPreparedMediaStorageTimeout(
+        storage.inspect({
+          tenant_id: input.tenantId,
+          media_storage_path: preparedPaths.media_storage_path
+        }),
+        "Prepared outbound LINE media storage inspection timed out."
+      );
+      const previewMetadata = await withPreparedMediaStorageTimeout(
+        storage.inspect({
+          tenant_id: input.tenantId,
+          media_storage_path: preparedPaths.preview_storage_path
+        }),
+        "Prepared outbound LINE media preview inspection timed out."
+      );
+
+      if (
+        mediaMetadata.size !== upload.mediaSize ||
+        previewMetadata.size !== upload.previewSize ||
+        !isValidOutboundMediaSize(upload.mediaType, mediaMetadata.size) ||
+        previewMetadata.size <= 0 ||
+        previewMetadata.size > MAX_OUTBOUND_LINE_PREVIEW_BYTES ||
+        normalizeStoredMediaContentType(mediaMetadata.content_type) !== upload.contentType ||
+        normalizeStoredMediaContentType(previewMetadata.content_type) !== upload.previewContentType
+      ) {
+        throw new Error("Prepared outbound LINE media metadata validation failed.");
+      }
+
+      const mediaFile = await withPreparedMediaStorageTimeout(
+        storage.download({
+          tenant_id: input.tenantId,
+          media_storage_path: preparedPaths.media_storage_path
+        }),
+        "Prepared outbound LINE media storage download timed out."
+      );
+      const mediaSignature = await readBlobSignature(mediaFile.data);
+      const previewFile = await withPreparedMediaStorageTimeout(
+        storage.download({
+          tenant_id: input.tenantId,
+          media_storage_path: preparedPaths.preview_storage_path
+        }),
+        "Prepared outbound LINE media preview download timed out."
+      );
+      const previewSignature = await readBlobSignature(previewFile.data);
+
+      if (
+        mediaFile.data.size !== mediaMetadata.size ||
+        previewFile.data.size !== previewMetadata.size ||
+        normalizeStoredMediaContentType(mediaFile.content_type) !== upload.contentType ||
+        normalizeStoredMediaContentType(previewFile.content_type) !== upload.previewContentType ||
+        !hasOutboundMediaSignature(upload.contentType, mediaSignature) ||
+        !hasOutboundMediaSignature(upload.previewContentType, previewSignature)
+      ) {
+        throw new Error("Prepared outbound LINE media validation failed.");
+      }
+    });
+
+    const finalized = await storage.finalizeUpload({
       tenant_id: input.tenantId,
       media_id: upload.mediaId,
       media_type: upload.mediaType,
       content_type: upload.contentType,
       preview_content_type: upload.previewContentType
     });
-    const [mediaFile, previewFile] = await Promise.all([
-      storage.download({
-        tenant_id: input.tenantId,
-        media_storage_path: resolved.media_storage_path
-      }),
-      storage.download({
-        tenant_id: input.tenantId,
-        media_storage_path: resolved.preview_storage_path
-      })
-    ]);
-    const [mediaData, previewData] = await Promise.all([
-      blobToBytes(mediaFile.data),
-      blobToBytes(previewFile.data)
-    ]);
-
-    if (
-      mediaData.byteLength !== upload.mediaSize ||
-      previewData.byteLength !== upload.previewSize ||
-      normalizeStoredMediaContentType(mediaFile.content_type) !== upload.contentType ||
-      normalizeStoredMediaContentType(previewFile.content_type) !== upload.previewContentType ||
-      !hasOutboundMediaSignature(upload.contentType, mediaData) ||
-      !hasOutboundMediaSignature(upload.previewContentType, previewData)
-    ) {
-      throw new Error("Prepared outbound LINE media validation failed.");
-    }
 
     return {
       mediaType: upload.mediaType,
-      mediaStoragePath: resolved.media_storage_path,
-      previewStoragePath: resolved.preview_storage_path,
-      originalContentUrl: resolved.original_content_url,
-      previewImageUrl: resolved.preview_image_url
+      mediaStoragePath: finalized.media_storage_path,
+      previewStoragePath: finalized.preview_storage_path,
+      originalContentUrl: finalized.original_content_url,
+      previewImageUrl: finalized.preview_image_url
     };
   } catch (error) {
     await discardPreparedOutboundMedia({
@@ -6070,8 +5928,76 @@ async function resolvePreparedOutboundLineMedia(input: {
   }
 }
 
-async function blobToBytes(blob: Blob): Promise<Uint8Array> {
-  return new Uint8Array(await blob.arrayBuffer());
+async function readBlobSignature(blob: Blob): Promise<Uint8Array> {
+  return new Uint8Array(await blob.slice(0, 16).arrayBuffer());
+}
+
+function runPreparedMediaValidation<T>(tenantId: string, task: () => Promise<T>): Promise<T> {
+  const previous = preparedMediaValidationQueues.get(tenantId) ?? Promise.resolve();
+  const result = previous.then(
+    () => withPreparedMediaValidationSlot(task),
+    () => withPreparedMediaValidationSlot(task)
+  );
+  const settled = result.then(
+    () => undefined,
+    () => undefined
+  );
+  preparedMediaValidationQueues.set(tenantId, settled);
+  void settled.then(() => {
+    if (preparedMediaValidationQueues.get(tenantId) === settled) {
+      preparedMediaValidationQueues.delete(tenantId);
+    }
+  });
+  return result;
+}
+
+async function withPreparedMediaValidationSlot<T>(task: () => Promise<T>): Promise<T> {
+  await acquirePreparedMediaValidationSlot();
+  try {
+    return await task();
+  } finally {
+    releasePreparedMediaValidationSlot();
+  }
+}
+
+function acquirePreparedMediaValidationSlot(): Promise<void> {
+  if (activePreparedMediaValidations < OUTBOUND_MEDIA_VALIDATION_CONCURRENCY) {
+    activePreparedMediaValidations += 1;
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    preparedMediaValidationWaiters.push(() => {
+      activePreparedMediaValidations += 1;
+      resolve();
+    });
+  });
+}
+
+function releasePreparedMediaValidationSlot(): void {
+  activePreparedMediaValidations -= 1;
+  preparedMediaValidationWaiters.shift()?.();
+}
+
+async function withPreparedMediaStorageTimeout<T>(
+  operation: Promise<T>,
+  timeoutMessage: string
+): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error(timeoutMessage));
+        }, OUTBOUND_MEDIA_STORAGE_TIMEOUT_MS);
+      })
+    ]);
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
 }
 
 function normalizeStoredMediaContentType(value: string | null): string | null {
@@ -6093,12 +6019,15 @@ async function discardPreparedOutboundMedia(input: {
   }
 
   try {
-    await input.storage.removeUpload({
-      tenant_id: input.tenantId,
-      media_id: input.upload.mediaId,
-      content_type: input.upload.contentType,
-      preview_content_type: input.upload.previewContentType
-    });
+    await withPreparedMediaStorageTimeout(
+      input.storage.removeUpload({
+        tenant_id: input.tenantId,
+        media_id: input.upload.mediaId,
+        content_type: input.upload.contentType,
+        preview_content_type: input.upload.previewContentType
+      }),
+      "Prepared outbound LINE media cleanup timed out."
+    );
   } catch {
     // Best effort cleanup; unreferenced objects remain private.
   }
@@ -7159,16 +7088,39 @@ function resolveStaffLineWebhook(
   };
 }
 
+export async function assertApiRuntimeSchemaReady(
+  env: NodeJS.ProcessEnv = process.env,
+  dependencies: ApiRuntimeSchemaPreflightDependencies = {}
+): Promise<void> {
+  const config = loadAppConfig(env);
+
+  if (config.runtime.dataBackend !== "supabase") {
+    return;
+  }
+
+  await (
+    dependencies.assertSupabaseRuntimeSchemaReadyFromEnv ??
+    assertSupabaseRuntimeSchemaReadyFromEnv
+  )(env);
+}
+
+// Keep the exported app inert. The process entrypoint creates the runtime app
+// only after the database schema preflight has passed.
 export const app = createApiApp({
-  startOfficialSiteKnowledgeSync: isProductionRuntime(process.env)
+  startOfficialSiteKnowledgeSync: false
 });
 
-if (process.env.NODE_ENV !== "test") {
+async function startApiServer(): Promise<void> {
+  await assertApiRuntimeSchemaReady(process.env);
+
+  const runtimeApp = createApiApp({
+    startOfficialSiteKnowledgeSync: isProductionRuntime(process.env)
+  });
   const listenOptions = resolveApiServerListenOptions(process.env);
 
   serve(
     {
-      fetch: app.fetch,
+      fetch: runtimeApp.fetch,
       ...listenOptions
     },
     (info) => {
@@ -7177,4 +7129,11 @@ if (process.env.NODE_ENV !== "test") {
       );
     }
   );
+}
+
+if (process.env.NODE_ENV !== "test") {
+  void startApiServer().catch(() => {
+    console.error("API server startup blocked: runtime database schema is not ready.");
+    process.exitCode = 1;
+  });
 }

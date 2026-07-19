@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createApiApp, readStaffReplyStaffUserId } from "../../apps/api/src/index";
 import { REAL_LINE_PUSH_CONFIRMATION_VALUE } from "../../apps/api/src/admin/line-real-push-gate";
@@ -111,6 +111,14 @@ class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
   readonly removedUploads: Array<
     Parameters<NonNullable<OutboundLineMediaStorage["removeUpload"]>>[0]
   > = [];
+  readonly finalized: Array<
+    Parameters<NonNullable<OutboundLineMediaStorage["finalizeUpload"]>>[0]
+  > = [];
+  readonly inspected: string[] = [];
+  readonly downloaded: string[] = [];
+  readonly expiredCleanupCalls: Array<
+    Parameters<NonNullable<OutboundLineMediaStorage["removeExpiredUploads"]>>[0]
+  > = [];
 
   async prepareUpload(
     input: Parameters<NonNullable<OutboundLineMediaStorage["prepareUpload"]>>[0]
@@ -125,7 +133,6 @@ class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
   async resolveUpload(
     input: Parameters<NonNullable<OutboundLineMediaStorage["resolveUpload"]>>[0]
   ): Promise<Awaited<ReturnType<NonNullable<OutboundLineMediaStorage["resolveUpload"]>>>> {
-    const prefix = `${input.tenant_id}/outbound/${input.media_id}`;
     const mediaExtension =
       input.content_type === "video/mp4"
         ? "mp4"
@@ -133,6 +140,24 @@ class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
           ? "png"
           : "jpg";
     const previewExtension = input.preview_content_type === "image/png" ? "png" : "jpg";
+    return {
+      media_storage_path: `${input.tenant_id}/outbound-prepared/${input.media_id}-original.${mediaExtension}`,
+      preview_storage_path: `${input.tenant_id}/outbound-prepared/${input.media_id}-preview.${previewExtension}`
+    };
+  }
+
+  async finalizeUpload(
+    input: Parameters<NonNullable<OutboundLineMediaStorage["finalizeUpload"]>>[0]
+  ): Promise<Awaited<ReturnType<NonNullable<OutboundLineMediaStorage["finalizeUpload"]>>>> {
+    this.finalized.push(input);
+    const mediaExtension =
+      input.content_type === "video/mp4"
+        ? "mp4"
+        : input.content_type === "image/png"
+          ? "png"
+          : "jpg";
+    const previewExtension = input.preview_content_type === "image/png" ? "png" : "jpg";
+    const prefix = `${input.tenant_id}/outbound/${input.media_id}`;
     return {
       media_storage_path: `${prefix}/original.${mediaExtension}`,
       preview_storage_path: `${prefix}/preview.${previewExtension}`,
@@ -145,6 +170,13 @@ class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
     input: Parameters<NonNullable<OutboundLineMediaStorage["removeUpload"]>>[0]
   ): Promise<void> {
     this.removedUploads.push(input);
+  }
+
+  async removeExpiredUploads(
+    input: Parameters<NonNullable<OutboundLineMediaStorage["removeExpiredUploads"]>>[0]
+  ): Promise<number> {
+    this.expiredCleanupCalls.push(input);
+    return 0;
   }
 
   async store(
@@ -162,21 +194,47 @@ class InMemoryOutboundLineMediaStorage implements OutboundLineMediaStorage {
     };
   }
 
+  async inspect(
+    input: Parameters<OutboundLineMediaStorage["inspect"]>[0]
+  ): Promise<Awaited<ReturnType<OutboundLineMediaStorage["inspect"]>>> {
+    this.inspected.push(input.media_storage_path);
+    const data = this.blobForPath(input.media_storage_path);
+    return { size: data.size, content_type: data.type || null };
+  }
+
   async download(
     input: Parameters<OutboundLineMediaStorage["download"]>[0]
   ): Promise<{ data: Blob; content_type: string | null }> {
-    if (input.media_storage_path.endsWith(".mp4")) {
-      return { data: new Blob([MP4_BYTES], { type: "video/mp4" }), content_type: "video/mp4" };
-    }
-    if (input.media_storage_path.endsWith(".png")) {
-      const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-      return { data: new Blob([bytes], { type: "image/png" }), content_type: "image/png" };
-    }
-    return { data: new Blob([JPEG_BYTES], { type: "image/jpeg" }), content_type: "image/jpeg" };
+    this.downloaded.push(input.media_storage_path);
+    const data = this.blobForPath(input.media_storage_path);
+    return { data, content_type: data.type || null };
   }
 
   async remove(input: Parameters<OutboundLineMediaStorage["remove"]>[0]): Promise<void> {
     this.removed.push(input.media_storage_paths);
+  }
+
+  private blobForPath(path: string): Blob {
+    if (path.endsWith(".mp4")) {
+      return new Blob([MP4_BYTES], { type: "video/mp4" });
+    }
+    if (path.endsWith(".png")) {
+      const bytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+      return new Blob([bytes], { type: "image/png" });
+    }
+    return new Blob([JPEG_BYTES], { type: "image/jpeg" });
+  }
+}
+
+class StalledInspectOutboundLineMediaStorage extends InMemoryOutboundLineMediaStorage {
+  override async inspect(): Promise<never> {
+    return new Promise<never>(() => undefined);
+  }
+}
+
+class StalledExpiredCleanupOutboundLineMediaStorage extends InMemoryOutboundLineMediaStorage {
+  override async removeExpiredUploads(): Promise<never> {
+    return new Promise<never>(() => undefined);
   }
 }
 
@@ -511,7 +569,7 @@ describe("admin staff reply API", () => {
     });
   });
 
-  it("pushes text and an uploaded image, then records both timeline messages", async () => {
+  it("rejects legacy multipart image replies before buffering or sending", async () => {
     const customerRepository = new InMemoryCustomerRepository();
     const messageRepository = new InMemoryMessageRepository();
     const lineClient = new MockLineClient();
@@ -552,43 +610,11 @@ describe("admin staff reply API", () => {
         body: formData
       })
     );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(lineClient.pushes).toEqual([
-      {
-        to: "U_IMAGE_REPLY",
-        messages: [
-          { type: "text", text: "施工写真をお送りします" },
-          {
-            type: "image",
-            originalContentUrl: "https://media.example.invalid/original",
-            previewImageUrl: "https://media.example.invalid/preview"
-          }
-        ]
-      }
-    ]);
-    expect(body.messages).toEqual([
-      expect.objectContaining({ role: "staff", message_type: "text", body: "施工写真をお送りします" }),
-      expect.objectContaining({ role: "staff", message_type: "image", body: "画像" })
-    ]);
-    expect(outboundLineMediaStorage.stored).toHaveLength(1);
-    expect(outboundLineMediaStorage.stored[0]).toMatchObject({
-      tenant_id: "tenant_amamihome",
-      media_type: "image",
-      content_type: "image/jpeg",
-      preview_content_type: "image/jpeg"
-    });
-    expect(messageRepository.list()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ role: "staff", message_type: "text" }),
-        expect.objectContaining({
-          role: "staff",
-          message_type: "image",
-          media_storage_path: expect.stringContaining("tenant_amamihome/outbound/")
-        })
-      ])
-    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ ok: false, error: "invalid_reply_body" });
+    expect(lineClient.pushes).toHaveLength(0);
+    expect(outboundLineMediaStorage.stored).toHaveLength(0);
+    expect(messageRepository.list()).toHaveLength(0);
   });
 
   it("resolves a prepared image upload before pushing the staff reply", async () => {
@@ -665,8 +691,50 @@ describe("admin staff reply API", () => {
       }
     ]);
     expect(outboundLineMediaStorage.prepared).toHaveLength(1);
+    expect(outboundLineMediaStorage.finalized).toHaveLength(1);
+    expect(outboundLineMediaStorage.expiredCleanupCalls).toHaveLength(1);
     expect(outboundLineMediaStorage.stored).toHaveLength(0);
     expect(outboundLineMediaStorage.removedUploads).toHaveLength(0);
+  });
+
+  it("continues preparing an upload when expired upload cleanup times out", async () => {
+    const outboundLineMediaStorage = new StalledExpiredCleanupOutboundLineMediaStorage();
+    const app = createTestApp({
+      tenantId: "tenant_amamihome",
+      tenantSlug: "amamihome",
+      webhookSecret: "wh_dev_amamihome",
+      outboundLineMediaStorage
+    });
+
+    vi.useFakeTimers();
+    try {
+      const responsePromise = app.fetch(
+        new Request("http://localhost/api/admin/outbound-media/uploads/prepare", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-tenant-id": "tenant_amamihome",
+            "x-staff-id": "staff_001"
+          },
+          body: JSON.stringify({
+            purpose: "staff_reply",
+            media_type: "image",
+            content_type: "image/jpeg",
+            media_size: JPEG_BYTES.byteLength,
+            preview_content_type: "image/jpeg",
+            preview_size: JPEG_BYTES.byteLength
+          })
+        })
+      );
+
+      await vi.advanceTimersByTimeAsync(15_000);
+      const response = await responsePromise;
+
+      expect(response.status).toBe(200);
+      expect(outboundLineMediaStorage.prepared).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("discards a prepared image when the submitted size metadata is tampered", async () => {
@@ -735,10 +803,241 @@ describe("admin staff reply API", () => {
     });
     expect(lineClient.pushes).toHaveLength(0);
     expect(messageRepository.list()).toHaveLength(0);
+    expect(outboundLineMediaStorage.finalized).toHaveLength(0);
     expect(outboundLineMediaStorage.removedUploads).toHaveLength(1);
+    expect(outboundLineMediaStorage.inspected).toHaveLength(2);
+    expect(outboundLineMediaStorage.downloaded).toHaveLength(0);
   });
 
-  it("pushes a video-only reply when an explicit preview image is included", async () => {
+  it("stops before LINE push when prepared media inspection times out", async () => {
+    const customerRepository = new InMemoryCustomerRepository();
+    const messageRepository = new InMemoryMessageRepository();
+    const lineClient = new MockLineClient();
+    const outboundLineMediaStorage = new StalledInspectOutboundLineMediaStorage();
+    const app = createTestApp({
+      tenantId: "tenant_amamihome",
+      tenantSlug: "amamihome",
+      webhookSecret: "wh_dev_amamihome",
+      customerRepository,
+      messageRepository,
+      lineClient,
+      outboundLineMediaStorage
+    });
+    const customer = await customerRepository.save(
+      makeCustomer({
+        id: "customer_stalled_prepared_image_reply",
+        tenantId: "tenant_amamihome",
+        lineUserId: "U_STALLED_PREPARED_IMAGE_REPLY"
+      })
+    );
+    const prepareResponse = await app.fetch(
+      new Request("http://localhost/api/admin/outbound-media/uploads/prepare", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-tenant-id": "tenant_amamihome",
+          "x-staff-id": "staff_001"
+        },
+        body: JSON.stringify({
+          purpose: "staff_reply",
+          media_type: "image",
+          content_type: "image/jpeg",
+          media_size: JPEG_BYTES.byteLength,
+          preview_content_type: "image/jpeg",
+          preview_size: JPEG_BYTES.byteLength
+        })
+      })
+    );
+    const prepared = (await prepareResponse.json()) as {
+      media: Record<string, unknown>;
+    };
+
+    vi.useFakeTimers();
+    try {
+      const responsePromise = app.fetch(
+        new Request(`http://localhost/api/admin/customers/${customer.id}/reply`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-tenant-id": "tenant_amamihome",
+            "x-staff-id": "staff_001"
+          },
+          body: JSON.stringify({
+            ...realLinePushBody("施工写真をお送りします", "idem_stalled_image_reply_001"),
+            media: prepared.media
+          })
+        })
+      );
+
+      await vi.advanceTimersByTimeAsync(15_000);
+      const response = await responsePromise;
+
+      expect(prepareResponse.status).toBe(200);
+      expect(response.status).toBe(503);
+      await expect(response.json()).resolves.toEqual({
+        ok: false,
+        error: "outbound_media_storage_failed"
+      });
+      expect(lineClient.pushes).toHaveLength(0);
+      expect(messageRepository.list()).toHaveLength(0);
+      expect(outboundLineMediaStorage.finalized).toHaveLength(0);
+      expect(outboundLineMediaStorage.removedUploads).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("does not block another tenant when prepared media inspection stalls", async () => {
+    const stalledCustomerRepository = new InMemoryCustomerRepository();
+    const stalledMessageRepository = new InMemoryMessageRepository();
+    const stalledLineClient = new MockLineClient();
+    const stalledStorage = new StalledInspectOutboundLineMediaStorage();
+    const stalledApp = createTestApp({
+      tenantId: "tenant_amamihome",
+      tenantSlug: "amamihome",
+      webhookSecret: "wh_dev_amamihome",
+      customerRepository: stalledCustomerRepository,
+      messageRepository: stalledMessageRepository,
+      lineClient: stalledLineClient,
+      outboundLineMediaStorage: stalledStorage
+    });
+    const stalledCustomer = await stalledCustomerRepository.save(
+      makeCustomer({
+        id: "customer_stalled_tenant_reply",
+        tenantId: "tenant_amamihome",
+        lineUserId: "U_STALLED_TENANT_REPLY"
+      })
+    );
+
+    const healthyCustomerRepository = new InMemoryCustomerRepository();
+    const healthyMessageRepository = new InMemoryMessageRepository();
+    const healthyLineClient = new MockLineClient();
+    const healthyStorage = new InMemoryOutboundLineMediaStorage();
+    const healthyApp = createTestApp({
+      tenantId: "tenant_other",
+      tenantSlug: "other",
+      webhookSecret: "wh_dev_other",
+      customerRepository: healthyCustomerRepository,
+      messageRepository: healthyMessageRepository,
+      lineClient: healthyLineClient,
+      outboundLineMediaStorage: healthyStorage
+    });
+    const healthyCustomer = await healthyCustomerRepository.save(
+      makeCustomer({
+        id: "customer_healthy_tenant_reply",
+        tenantId: "tenant_other",
+        lineUserId: "U_HEALTHY_TENANT_REPLY"
+      })
+    );
+
+    const [stalledPrepareResponse, healthyPrepareResponse] = await Promise.all([
+      stalledApp.fetch(
+        new Request("http://localhost/api/admin/outbound-media/uploads/prepare", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-tenant-id": "tenant_amamihome",
+            "x-staff-id": "staff_001"
+          },
+          body: JSON.stringify({
+            purpose: "staff_reply",
+            media_type: "image",
+            content_type: "image/jpeg",
+            media_size: JPEG_BYTES.byteLength,
+            preview_content_type: "image/jpeg",
+            preview_size: JPEG_BYTES.byteLength
+          })
+        })
+      ),
+      healthyApp.fetch(
+        new Request("http://localhost/api/admin/outbound-media/uploads/prepare", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-tenant-id": "tenant_other",
+            "x-staff-id": "staff_002"
+          },
+          body: JSON.stringify({
+            purpose: "staff_reply",
+            media_type: "image",
+            content_type: "image/jpeg",
+            media_size: JPEG_BYTES.byteLength,
+            preview_content_type: "image/jpeg",
+            preview_size: JPEG_BYTES.byteLength
+          })
+        })
+      )
+    ]);
+    const stalledPrepared = (await stalledPrepareResponse.json()) as {
+      media: Record<string, unknown>;
+    };
+    const healthyPrepared = (await healthyPrepareResponse.json()) as {
+      media: Record<string, unknown>;
+    };
+
+    vi.useFakeTimers();
+    try {
+      const stalledResponsePromise = stalledApp.fetch(
+        new Request(
+          `http://localhost/api/admin/customers/${stalledCustomer.id}/reply`,
+          {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-tenant-id": "tenant_amamihome",
+              "x-staff-id": "staff_001"
+            },
+            body: JSON.stringify({
+              ...realLinePushBody("施工写真をお送りします", "idem_stalled_tenant_reply_001"),
+              media: stalledPrepared.media
+            })
+          }
+        )
+      );
+      const healthyResponsePromise = healthyApp.fetch(
+        new Request(
+          `http://localhost/api/admin/customers/${healthyCustomer.id}/reply`,
+          {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-tenant-id": "tenant_other",
+              "x-staff-id": "staff_002"
+            },
+            body: JSON.stringify({
+              ...realLinePushBody("完成写真をお送りします", "idem_healthy_tenant_reply_001"),
+              media: healthyPrepared.media
+            })
+          }
+        )
+      );
+
+      let healthyResponse: Response | undefined;
+      void healthyResponsePromise.then((response) => {
+        healthyResponse = response;
+      });
+      await vi.advanceTimersByTimeAsync(1);
+
+      expect(stalledPrepareResponse.status).toBe(200);
+      expect(healthyPrepareResponse.status).toBe(200);
+      expect(healthyResponse?.status).toBe(200);
+      expect(healthyLineClient.pushes).toHaveLength(1);
+      expect(healthyMessageRepository.list()).toHaveLength(2);
+      expect(healthyStorage.finalized).toHaveLength(1);
+
+      await vi.advanceTimersByTimeAsync(14_999);
+      const stalledResponse = await stalledResponsePromise;
+
+      expect(stalledResponse.status).toBe(503);
+      expect(stalledLineClient.pushes).toHaveLength(0);
+      expect(stalledMessageRepository.list()).toHaveLength(0);
+      expect(stalledStorage.removedUploads).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("rejects legacy multipart video replies before buffering or sending", async () => {
     const customerRepository = new InMemoryCustomerRepository();
     const messageRepository = new InMemoryMessageRepository();
     const lineClient = new MockLineClient();
@@ -779,29 +1078,11 @@ describe("admin staff reply API", () => {
         body: formData
       })
     );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(lineClient.pushes).toEqual([
-      {
-        to: "U_VIDEO_REPLY",
-        messages: [
-          {
-            type: "video",
-            originalContentUrl: "https://media.example.invalid/original",
-            previewImageUrl: "https://media.example.invalid/preview"
-          }
-        ]
-      }
-    ]);
-    expect(body.messages).toEqual([
-      expect.objectContaining({ role: "staff", message_type: "file", body: "動画" })
-    ]);
-    expect(outboundLineMediaStorage.stored[0]).toMatchObject({
-      media_type: "video",
-      content_type: "video/mp4",
-      preview_content_type: "image/jpeg"
-    });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ ok: false, error: "invalid_reply_body" });
+    expect(lineClient.pushes).toHaveLength(0);
+    expect(outboundLineMediaStorage.stored).toHaveLength(0);
+    expect(messageRepository.list()).toHaveLength(0);
     expect(outboundLineMediaStorage.removed).toHaveLength(0);
   });
 
@@ -993,7 +1274,7 @@ describe("admin staff reply API", () => {
     ));
 
     expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ ok: false, error: "internal_note_media_not_supported" });
+    expect(await response.json()).toEqual({ ok: false, error: "invalid_reply_body" });
     expect(outboundLineMediaStorage.stored).toHaveLength(0);
     expect(messageRepository.list()).toHaveLength(0);
   });
